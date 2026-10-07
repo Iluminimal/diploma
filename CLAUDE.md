@@ -30,10 +30,17 @@ Full requirements live in `@docs/SPEC.md`. Read the relevant sections before eac
 - Commit at the end of each phase with a clear message.
 - Do not run `npm audit fix --force`.
 
-## Commands (keep this section updated as the project grows)
-- `make dev`: run everything via docker compose
+## Commands
+- `make infra`: start Postgres (pgvector) and Redis via docker compose
+- `make api`: run FastAPI locally (native, so PyTorch can use Apple MPS)
+- `make web`: run Next.js locally
 - `make test`, `make lint`, `make typecheck`
 - `make ingest`: run the dataset ingestion script
+- Full-stack `docker compose` is for deployment, not daily development
+
+## Environment
+- Developer machine: Apple Silicon (M1) Mac. Use the `mps` device for PyTorch, fall back
+  to CPU. All Docker images must support linux/arm64.
 
 ## Gotchas
 - Kaggle `styles.csv` has malformed rows: parse with `on_bad_lines="skip"`.

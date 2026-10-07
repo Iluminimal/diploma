@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated, Literal
 
 from pydantic import field_validator
@@ -24,6 +25,21 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://lookalike:lookalike@localhost:5433/lookalike"
     redis_url: str = "redis://localhost:6379/0"
+
+    # Product images (thumbnails). LocalStorage writes here; the API serves it at
+    # `media_url_path`. Relative paths resolve against apps/api (where the API always runs).
+    media_dir: Path = Path("../../data/media")
+    media_url_path: str = "/media"
+    media_base_url: str = "http://localhost:8000/media"
+
+    # FashionCLIP. `embedding_resize_mode` and the model revision define what an embedding
+    # means: changing either requires re-embedding the catalogue (ingest detects this).
+    embedding_device: Literal["auto", "mps", "cpu", "cuda"] = "auto"
+    embedding_fp16: bool = False
+    embedding_resize_mode: Literal["crop", "pad"] = "pad"
+
+    # Where the Kaggle dataset lives (styles.csv + images/). Only ingestion needs it.
+    dataset_dir: Path | None = None
 
     # Upper bound for a single dependency probe in /readyz.
     readiness_timeout_seconds: float = 2.0

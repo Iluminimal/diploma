@@ -54,8 +54,8 @@ jobs:
           enable-cache: true
           cache-dependency-glob: apps/api/uv.lock
       - run: uv sync --frozen
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
+      - run: uv run ruff check . ../../scripts
+      - run: uv run ruff format --check . ../../scripts
       - run: uv run mypy
       - name: Migrations apply, roll back and re-apply cleanly
         run: |

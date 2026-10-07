@@ -4,9 +4,10 @@ Upload or capture a photo of clothing and get visually similar products, inside 
 minimal online store. Image embeddings come from FashionCLIP, similarity search from
 PostgreSQL + pgvector.
 
-> **Status:** Phase 1 (foundation). The web app, API skeleton, dev infrastructure, migrations and
-> CI are in place. Catalog, search and store features arrive in later phases; the product
-> requirements live in [`docs/SPEC.md`](docs/SPEC.md).
+> **Status:** Phase 2 (data + ML). The catalogue (41,885 products with thumbnails and FashionCLIP
+> embeddings in pgvector) can be ingested and measured; search endpoints and the store arrive in
+> later phases. Product requirements: [`docs/SPEC.md`](docs/SPEC.md). Pipeline details and
+> measurements: [`docs/ml-pipeline.md`](docs/ml-pipeline.md).
 
 ## Repository layout
 
@@ -15,7 +16,7 @@ apps/web     Next.js 16 (App Router, React 19, Tailwind v4, shadcn/ui, TanStack 
 apps/api     FastAPI (Python 3.12, SQLAlchemy 2 async, Alembic, uv)
 infra/       docker-compose for development infrastructure (Postgres + pgvector, Redis)
 docs/        Product & technical spec
-scripts/     Data ingestion scripts (later phase)
+scripts/     CLI entry points: ingest, recall check, latency and ML benchmarks
 ```
 
 ## Prerequisites
@@ -32,7 +33,8 @@ scripts/     Data ingestion scripts (later phase)
 ```bash
 make install   # API deps (uv sync) + web deps (npm ci)
 make infra     # Postgres+pgvector and Redis in Docker; creates .env from .env.example
-make migrate   # apply database migrations (enables the pgvector extension)
+make migrate   # apply database migrations (pgvector, products, categories)
+make ingest ARGS="--limit 500"   # optional: load a 500-product sample (needs DATASET_DIR in .env)
 
 make api       # terminal 1: FastAPI on http://localhost:8000
 make web       # terminal 2: Next.js on http://localhost:3000
@@ -59,14 +61,17 @@ Run `make help` for the full list.
 | --- | --- |
 | `make infra` / `make infra-down` / `make infra-reset` | Start / stop / stop and **delete data** |
 | `make migrate` | Apply Alembic migrations |
+| `make ingest` | Ingest the dataset (`ARGS="--limit 500"`, see `docs/ml-pipeline.md`) |
 | `make api` / `make web` | Run the dev servers |
 | `make lint` | Ruff (check + format check) and ESLint |
 | `make typecheck` | mypy (strict) and `tsc` |
 | `make test` | API tests (pytest) and web tests (Vitest) |
+| `make test-ml` | Tests that load the real FashionCLIP model (downloads ~600 MB once) |
 | `make format` | Auto-format and auto-fix the API |
 | `make openapi` | Export the OpenAPI schema to `docs/openapi.json` |
 
-API integration tests run against the real dev Postgres and Redis, so run `make infra` and
+Tests that write catalogue data use a throwaway `lookalike_test` database (created and dropped by
+the test run), so `make test` never touches the ingested catalogue. API integration tests run against the real dev Postgres and Redis, so run `make infra` and
 `make migrate` first. They fail with a clear message, rather than skipping, if the services are
 unreachable.
 
@@ -81,6 +86,9 @@ to `.env` (git-ignored) on first run. The API reads `.env` from the repository r
 | `REDIS_URL` | `redis://localhost:6379/0` | |
 | `CORS_ORIGINS` | `http://localhost:3000` | comma-separated |
 | `LOG_LEVEL` / `LOG_JSON` | `INFO` / `true` | set `LOG_JSON=false` for readable console logs |
+| `DATASET_DIR` | unset | folder with the Kaggle `styles.csv` and `images/` (ingestion only) |
+| `MEDIA_DIR` / `MEDIA_URL_PATH` | `../../data/media` / `/media` | thumbnails written by ingestion, served by the API |
+| `EMBEDDING_DEVICE` / `EMBEDDING_FP16` / `EMBEDDING_RESIZE_MODE` | `auto` / `false` / `pad` | see `docs/ml-pipeline.md` before changing |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | web, validated at startup (`apps/web/.env.example`) |
 
 Never commit real secrets; `.env*` files other than `*.example` are git-ignored.
@@ -105,6 +113,6 @@ Never commit real secrets; `.env*` files other than `*.example` are git-ignored.
 ## CI
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push to `main` and on pull requests:
-API lint, format check, mypy, migration apply/rollback/re-apply, `alembic check` and pytest against
+API (and scripts) lint, format check, mypy, migration apply/rollback/re-apply, `alembic check` and pytest (without the model-loading tests) against
 real Postgres+pgvector and Redis service containers; web lint, typecheck, Vitest and a production
 build; and validation of the compose file.

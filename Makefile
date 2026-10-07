@@ -5,8 +5,8 @@ COMPOSE := docker compose -f infra/docker-compose.dev.yml --env-file .env
 API     := cd apps/api &&
 WEB     := cd apps/web &&
 
-.PHONY: help install infra infra-down infra-reset infra-logs migrate api web \
-        lint format typecheck test test-api test-web openapi
+.PHONY: help install infra infra-down infra-reset infra-logs migrate api web ingest \
+        lint format typecheck test test-api test-web test-ml openapi
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -38,15 +38,18 @@ api: ## Run the FastAPI server natively on :8000 (auto-reload)
 	$(API) uv run uvicorn lookalike.main:create_app --factory --reload --reload-dir src \
 		--host 127.0.0.1 --port 8000 --no-access-log
 
+ingest: ## Ingest the dataset (needs `make infra migrate`); e.g. make ingest ARGS="--limit 500"
+	$(API) uv run python ../../scripts/ingest.py $(ARGS)
+
 web: ## Run the Next.js dev server on :3000
 	$(WEB) npm run dev
 
-lint: ## Lint and format-check API (ruff) and web (eslint)
-	$(API) uv run ruff check . && uv run ruff format --check .
+lint: ## Lint and format-check API + scripts (ruff) and web (eslint)
+	$(API) uv run ruff check . ../../scripts && uv run ruff format --check . ../../scripts
 	$(WEB) npm run lint
 
-format: ## Auto-format and auto-fix the API
-	$(API) uv run ruff format . && uv run ruff check --fix .
+format: ## Auto-format and auto-fix the API and scripts
+	$(API) uv run ruff format . ../../scripts && uv run ruff check --fix . ../../scripts
 
 typecheck: ## Typecheck API (mypy) and web (tsc)
 	$(API) uv run mypy
@@ -56,6 +59,9 @@ test: test-api test-web ## Run all tests (API tests need `make infra` + `make mi
 
 test-api:
 	$(API) uv run pytest
+
+test-ml: ## Tests that load the real FashionCLIP model (downloads ~600 MB once)
+	$(API) uv run pytest -m model
 
 test-web:
 	$(WEB) npm test

@@ -11,6 +11,7 @@ from lookalike.core.config import Settings, get_settings
 from lookalike.core.errors import register_exception_handlers
 from lookalike.core.logging import configure_logging, get_logger
 from lookalike.core.request_context import REQUEST_ID_HEADER, RequestContextMiddleware
+from lookalike.core.static import MediaFiles
 from lookalike.db.engine import create_engine
 
 
@@ -57,6 +58,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     register_exception_handlers(app)
+    # Product thumbnails (dev). Starlette checks the folder on the first request, so make
+    # sure it exists even before the first ingest.
+    settings.media_dir.mkdir(parents=True, exist_ok=True)
+    app.mount(settings.media_url_path, MediaFiles(directory=settings.media_dir), name="media")
     app.include_router(health.router)
     app.include_router(v1_router, prefix=settings.api_v1_prefix)
     return app

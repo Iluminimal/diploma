@@ -30,22 +30,18 @@ def service(repo: FakeRepository, embeddings: FakeEmbeddings | None = None) -> H
     return HealthService(repo, embeddings)  # type: ignore[arg-type]
 
 
-async def test_ready_without_model_configured() -> None:
-    result = await service(FakeRepository()).readiness()
-    assert result.checks == {"database": "ok", "redis": "ok", "model": "not_configured"}
-
-
 async def test_ready_with_loaded_model() -> None:
     result = await service(FakeRepository(), FakeEmbeddings(loaded=True)).readiness()
-    assert result.checks["model"] == "ok"
+    assert result.checks == {"database": "ok", "redis": "ok", "model": "ok"}
 
 
 @pytest.mark.parametrize(
     ("repo", "embeddings", "failing"),
     [
-        (FakeRepository(database=False), None, "database"),
-        (FakeRepository(redis=False), None, "redis"),
+        (FakeRepository(database=False), FakeEmbeddings(loaded=True), "database"),
+        (FakeRepository(redis=False), FakeEmbeddings(loaded=True), "redis"),
         (FakeRepository(), FakeEmbeddings(loaded=False), "model"),
+        (FakeRepository(), None, "model"),
     ],
 )
 async def test_not_ready_when_a_check_fails(

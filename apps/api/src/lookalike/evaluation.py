@@ -1,10 +1,14 @@
 """Helpers shared by the recall and latency scripts."""
 
+import io
 import random
+import time
 from collections.abc import Sequence
+from pathlib import Path
 
 import numpy as np
 from numpy.typing import NDArray
+from PIL import Image
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
@@ -41,6 +45,21 @@ async def exact_top_k(
         .limit(k)
     )
     return [row[0] for row in (await session.execute(statement)).all()]
+
+
+def make_upload(path: Path, longest_side: int | None) -> bytes:
+    """JPEG bytes as a browser would send: the original, or a phone-style downscaled copy."""
+    if longest_side is None:
+        return path.read_bytes()
+    with Image.open(path) as image:
+        image.thumbnail((longest_side, longest_side))
+        buffer = io.BytesIO()
+        image.convert("RGB").save(buffer, format="JPEG", quality=85)
+        return buffer.getvalue()
+
+
+def ms_since(start: float) -> float:
+    return (time.perf_counter() - start) * 1000
 
 
 def percentiles(values_ms: Sequence[float]) -> dict[str, float]:

@@ -50,6 +50,7 @@ class FashionClipEmbedder:
     """
 
     dimension = DIMENSION
+    logit_scale = 100.0  # replaced by the model's learned value in load()
 
     def __init__(
         self,
@@ -77,6 +78,7 @@ class FashionClipEmbedder:
         self._mean = torch.tensor(_MEAN, device=self.device, dtype=self._dtype).view(1, 3, 1, 1)
         self._std = torch.tensor(_STD, device=self.device, dtype=self._dtype).view(1, 3, 1, 1)
         self._model = model
+        self.logit_scale = float(model.logit_scale.detach().float().exp().item())
 
     def is_loaded(self) -> bool:
         return self._model is not None

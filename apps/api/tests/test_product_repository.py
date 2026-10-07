@@ -165,8 +165,8 @@ async def test_filters_are_applied(
         hits = await repo.search_similar(
             vectors[0],
             filters=SearchFilters(
-                gender="Men",
-                article_type="Shirts",
+                genders=("Men",),
+                article_types=("Shirts",),
                 in_stock_only=True,
                 min_price_cents=2000,
                 max_price_cents=5000,

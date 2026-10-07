@@ -12,17 +12,22 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import io
 import time
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from lookalike.core.config import get_settings
 from lookalike.db.engine import create_engine
-from lookalike.evaluation import exact_top_k, format_percentiles, percentiles, sample_products
+from lookalike.evaluation import (
+    exact_top_k,
+    format_percentiles,
+    make_upload,
+    ms_since,
+    percentiles,
+    sample_products,
+)
 from lookalike.ml.fashion_clip import FashionClipEmbedder, select_device
 from lookalike.ml.preprocess import load_image, to_clip_array
 from lookalike.models import Product
@@ -31,21 +36,6 @@ from lookalike.repositories.products import DEFAULT_EF_SEARCH, ProductRepository
 TARGET_IMAGE_P95_MS = 400.0
 TARGET_SIMILAR_P95_MS = 50.0
 WARMUP = 10
-
-
-def make_upload(path: Path, longest_side: int | None) -> bytes:
-    """JPEG bytes as a browser would send: the original, or a phone-style downscaled copy."""
-    if longest_side is None:
-        return path.read_bytes()
-    with Image.open(path) as image:
-        image.thumbnail((longest_side, longest_side))
-        buffer = io.BytesIO()
-        image.convert("RGB").save(buffer, format="JPEG", quality=85)
-        return buffer.getvalue()
-
-
-def ms_since(start: float) -> float:
-    return (time.perf_counter() - start) * 1000
 
 
 async def main_async(args: argparse.Namespace) -> int:
@@ -89,8 +79,8 @@ async def main_async(args: argparse.Namespace) -> int:
                 await ProductRepository(session).search_similar(
                     vector,
                     filters=SearchFilters(
-                        gender=top.gender,
-                        article_type=top.article_type,
+                        genders=(top.gender,),
+                        article_types=(top.article_type,),
                         in_stock_only=True,
                         min_price_cents=1000,
                         max_price_cents=15000,
@@ -177,7 +167,9 @@ async def sweeps(engine, sessions, sample, k) -> None:  # type: ignore[no-untype
                 product = await session.get(Product, product_id)
                 assert product is not None
                 filters = SearchFilters(
-                    gender=product.gender, article_type=product.article_type, in_stock_only=True
+                    genders=(product.gender,),
+                    article_types=(product.article_type,),
+                    in_stock_only=True,
                 )
                 truth = await exact_top_k(session, vector, k + 1, filters)
                 truth = [i for i in truth if i != product_id][:k]

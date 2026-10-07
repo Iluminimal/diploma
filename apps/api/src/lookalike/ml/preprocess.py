@@ -7,6 +7,7 @@ query-time search, so catalogue and query embeddings always see identical prepro
 from __future__ import annotations
 
 import io
+from collections.abc import Sequence
 from pathlib import Path
 from typing import BinaryIO, Literal
 
@@ -28,22 +29,30 @@ class InvalidImageError(ValueError):
     """The input is not a decodable, acceptably sized image."""
 
 
-def load_image(source: ImageSource, *, min_side: int | None = None) -> Image.Image:
+def load_image(
+    source: ImageSource,
+    *,
+    min_side: int | None = None,
+    formats: Sequence[str] | None = None,
+    max_pixels: int = MAX_PIXELS,
+) -> Image.Image:
     """Decode to an upright RGB image with EXIF metadata dropped.
 
     `min_side` lets the JPEG decoder skip work: it decodes at 1/2, 1/4 or 1/8 scale as long as
-    both dimensions stay >= `min_side`. Other formats ignore it.
+    both dimensions stay >= `min_side`. Other formats ignore it. Untrusted input (uploads)
+    passes `formats` (Pillow format names; anything else is rejected from its magic bytes, not
+    its filename or declared type) and a lower `max_pixels`. Only the first frame is decoded.
     """
     file: str | Path | BinaryIO = io.BytesIO(source) if isinstance(source, bytes) else source
     try:
-        image = Image.open(file)
+        image = Image.open(file, formats=None if formats is None else list(formats))
         width, height = image.size
-        if width <= 0 or height <= 0 or width * height > MAX_PIXELS:
+        if width <= 0 or height <= 0 or width * height > max_pixels:
             raise InvalidImageError(f"image dimensions {width}x{height} are not acceptable")
         if min_side is not None and image.format == "JPEG":
             image.draft("RGB", (min_side, min_side))
         image.load()
-        return _to_rgb(ImageOps.exif_transpose(image))
+        return _strip_metadata(_to_rgb(ImageOps.exif_transpose(image)))
     except InvalidImageError:
         raise
     except (
@@ -54,6 +63,14 @@ def load_image(source: ImageSource, *, min_side: int | None = None) -> Image.Ima
         Image.DecompressionBombError,
     ) as exc:
         raise InvalidImageError(f"cannot decode image: {exc}") from exc
+
+
+def _strip_metadata(image: Image.Image) -> Image.Image:
+    """Drop EXIF (camera, GPS, ...), ICC profile and comments. The orientation was already
+    applied, and nothing downstream needs them: the decoded image is never re-encoded."""
+    image.getexif().clear()
+    image.info.clear()
+    return image
 
 
 def _to_rgb(image: Image.Image) -> Image.Image:

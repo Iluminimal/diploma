@@ -20,6 +20,9 @@ class EmbeddingService(Protocol):
     # Identifies everything that makes vectors comparable (model revision + preprocessing).
     # Stored with each product so stale embeddings can be detected after a model change.
     version: str
+    # CLIP's learned temperature: softmax(logit_scale * cosine) turns similarities into
+    # probabilities (zero-shot classification).
+    logit_scale: float
 
     def is_loaded(self) -> bool: ...
 

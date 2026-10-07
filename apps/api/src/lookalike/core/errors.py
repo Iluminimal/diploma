@@ -11,12 +11,17 @@ from lookalike.core.request_context import REQUEST_ID_HEADER, get_request_id
 from lookalike.schemas.problem import FieldError, ProblemDetail
 
 PROBLEM_JSON = "application/problem+json"
+PRODUCT_NOT_FOUND_TYPE = "urn:lookalike:problem:product-not-found"
 
 log = get_logger(__name__)
 
 
-class ProblemError(Exception):
-    """Raise from services to produce an RFC 7807 response. Routes never build errors by hand."""
+class ProblemError(StarletteHTTPException):
+    """Raise from services to produce an RFC 7807 response. Routes never build errors by hand.
+
+    It is an HTTPException on purpose: FastAPI turns every other exception raised while it
+    parses a request body into a generic 400, and it must not do that to "413 too large".
+    """
 
     def __init__(
         self,
@@ -26,16 +31,16 @@ class ProblemError(Exception):
         *,
         type_: str = "about:blank",
         extensions: dict[str, Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
-        super().__init__(detail or title)
-        self.status_code = status_code
+        super().__init__(status_code, detail or title, headers or {})
         self.title = title
-        self.detail = detail
+        self.detail = detail  # type: ignore[assignment]  # None = omit from the response
         self.type = type_
         self.extensions = extensions or {}
 
 
-def _problem_response(
+def problem_response(
     request: Request, problem: ProblemDetail, headers: dict[str, str] | None = None
 ) -> JSONResponse:
     problem.instance = request.url.path
@@ -61,7 +66,7 @@ async def _handle_problem_error(request: Request, exc: ProblemError) -> JSONResp
         detail=exc.detail,
         **exc.extensions,
     )
-    return _problem_response(request, problem)
+    return problem_response(request, problem, dict(exc.headers or {}))
 
 
 async def _handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
@@ -72,7 +77,7 @@ async def _handle_http_exception(request: Request, exc: StarletteHTTPException) 
     problem = ProblemDetail(
         title=title, status=exc.status_code, detail=str(exc.detail) if exc.detail else None
     )
-    return _problem_response(request, problem, dict(exc.headers or {}))
+    return problem_response(request, problem, dict(exc.headers or {}))
 
 
 async def _handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
@@ -87,13 +92,13 @@ async def _handle_validation_error(request: Request, exc: RequestValidationError
         detail="One or more fields are invalid.",
         errors=errors,
     )
-    return _problem_response(request, problem)
+    return problem_response(request, problem)
 
 
 async def _handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
     log.error("unhandled_exception", exc_info=exc)
     problem = ProblemDetail(title="Internal Server Error", status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    return _problem_response(request, problem)
+    return problem_response(request, problem)
 
 
 def register_exception_handlers(app: FastAPI) -> None:

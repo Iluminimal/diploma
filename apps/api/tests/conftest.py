@@ -1,17 +1,24 @@
 import os
 import subprocess
 import sys
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+import uuid
+from collections.abc import AsyncIterator, Callable
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
+from fastapi import FastAPI
+from httpx import AsyncClient
 from redis.asyncio import Redis
 from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from lookalike.core.config import Settings
+from tests.catalogue import Entry, seed_catalogue
+from tests.fakes import FakeEmbedder
+from tests.helpers import running_app
 
 UNREACHABLE_DATABASE_URL = "postgresql+asyncpg://nobody:nobody@127.0.0.1:1/nothing"
 UNREACHABLE_REDIS_URL = "redis://127.0.0.1:1/0"
@@ -91,3 +98,52 @@ async def db_engine(migrated_database_url: str) -> AsyncIterator[AsyncEngine]:
         await connection.execute(text("TRUNCATE products, categories RESTART IDENTITY CASCADE"))
     yield engine
     await engine.dispose()
+
+
+# --- a running API on a small seeded catalogue ------------------------------------------------
+
+
+@dataclass
+class Api:
+    client: AsyncClient
+    app: FastAPI
+    embedder: "FakeEmbedder"
+    entries: list["Entry"]
+    settings: Settings
+
+
+ApiFactory = Callable[..., "AbstractAsyncContextManager[Api]"]
+
+
+@pytest.fixture
+async def api_factory(
+    settings: Settings, migrated_database_url: str, db_engine: AsyncEngine
+) -> ApiFactory:
+    """`async with api_factory(rate_limit_text="2/60") as api:` starts the real app (fake model)
+    on a freshly seeded catalogue. Settings overrides are keyword arguments. Rate limits are
+    generous and the Redis prefix and embedding version unique, so tests never see each other."""
+
+    @asynccontextmanager
+    async def start(
+        *, seed_count: int = 40, embedder: "FakeEmbedder | None" = None, **overrides: object
+    ) -> AsyncIterator[Api]:
+        model = embedder or FakeEmbedder(version=f"fake-{uuid.uuid4().hex[:8]}")
+        entries = await seed_catalogue(db_engine, model, seed_count) if seed_count else []
+        values: dict[str, object] = {
+            "database_url": migrated_database_url,
+            "rate_limit_prefix": f"rl-test-{uuid.uuid4().hex[:8]}",
+            "rate_limit_image": "10000/60",
+            "rate_limit_text": "10000/60",
+            "rate_limit_similar": "10000/60",
+        }
+        config = settings.model_copy(update={**values, **overrides})
+        async with running_app(config, embedder=model) as (client, app):
+            yield Api(client, app, model, entries, config)
+
+    return start
+
+
+@pytest.fixture
+async def api(api_factory: ApiFactory) -> AsyncIterator[Api]:
+    async with api_factory() as running:
+        yield running

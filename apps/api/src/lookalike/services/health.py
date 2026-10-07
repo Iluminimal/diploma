@@ -32,7 +32,5 @@ class HealthService:
         return ReadinessResponse(checks=checks)
 
     def _model_status(self) -> CheckStatus:
-        # No model is configured until the search phase; once one is, it must be loaded.
-        if self._embeddings is None:
-            return "not_configured"
-        return "ok" if self._embeddings.is_loaded() else "fail"
+        # Search cannot work without the model, so the pod must not receive traffic until it is.
+        return "ok" if self._embeddings is not None and self._embeddings.is_loaded() else "fail"

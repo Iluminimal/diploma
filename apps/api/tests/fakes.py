@@ -16,11 +16,15 @@ class FakeEmbedder:
     identical images get identical embeddings and different images get unrelated ones."""
 
     dimension = DIMENSION
+    logit_scale = 100.0
     version = "fake@test/pad"
 
-    def __init__(self) -> None:
+    def __init__(self, version: str | None = None) -> None:
+        if version is not None:
+            self.version = version
         self.calls = 0
         self.images_embedded = 0
+        self.texts_embedded = 0
 
     def is_loaded(self) -> bool:
         return True
@@ -37,6 +41,7 @@ class FakeEmbedder:
         )
 
     def embed_texts(self, texts: Sequence[str]) -> Embeddings:
+        self.texts_embedded += len(texts)
         return np.stack([self._vector(t.encode()) for t in texts]).astype(np.float32)
 
     async def aembed_images(self, images: Sequence[Image.Image]) -> Embeddings:

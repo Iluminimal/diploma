@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-CheckStatus = Literal["ok", "fail", "not_configured"]
+CheckStatus = Literal["ok", "fail"]
 
 
 class LivenessResponse(BaseModel):

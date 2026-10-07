@@ -1,0 +1,40 @@
+# Development infrastructure only (Postgres + pgvector, Redis). The API and web run natively
+# (`make api`, `make web`) so PyTorch can use Apple MPS. Full-stack compose is for deployment.
+name: lookalike
+
+services:
+  postgres:
+    # Multi-arch image (linux/amd64 + linux/arm64). pgvector >= 0.8 for hnsw.iterative_scan.
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lookalike}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lookalike}
+      POSTGRES_DB: ${POSTGRES_DB:-lookalike}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      # Postgres 18+ images keep PGDATA in a versioned subdirectory of /var/lib/postgresql.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    # Cache and rate-limit data only: no persistence needed in development.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:

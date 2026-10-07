@@ -1,0 +1,103 @@
+from http import HTTPStatus
+from typing import Any
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from lookalike.core.logging import get_logger
+from lookalike.core.request_context import REQUEST_ID_HEADER, get_request_id
+from lookalike.schemas.problem import FieldError, ProblemDetail
+
+PROBLEM_JSON = "application/problem+json"
+
+log = get_logger(__name__)
+
+
+class ProblemError(Exception):
+    """Raise from services to produce an RFC 7807 response. Routes never build errors by hand."""
+
+    def __init__(
+        self,
+        status_code: int,
+        title: str,
+        detail: str | None = None,
+        *,
+        type_: str = "about:blank",
+        extensions: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(detail or title)
+        self.status_code = status_code
+        self.title = title
+        self.detail = detail
+        self.type = type_
+        self.extensions = extensions or {}
+
+
+def _problem_response(
+    request: Request, problem: ProblemDetail, headers: dict[str, str] | None = None
+) -> JSONResponse:
+    problem.instance = request.url.path
+    request_id = get_request_id(request.scope)
+    problem.request_id = request_id
+    response_headers = dict(headers or {})
+    if request_id:
+        # The 500 handler runs outside RequestContextMiddleware, so set the header here too.
+        response_headers[REQUEST_ID_HEADER] = request_id
+    return JSONResponse(
+        problem.model_dump(exclude_none=True),
+        status_code=problem.status,
+        media_type=PROBLEM_JSON,
+        headers=response_headers,
+    )
+
+
+async def _handle_problem_error(request: Request, exc: ProblemError) -> JSONResponse:
+    problem = ProblemDetail(
+        type=exc.type,
+        title=exc.title,
+        status=exc.status_code,
+        detail=exc.detail,
+        **exc.extensions,
+    )
+    return _problem_response(request, problem)
+
+
+async def _handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    try:
+        title = HTTPStatus(exc.status_code).phrase
+    except ValueError:
+        title = "Error"
+    problem = ProblemDetail(
+        title=title, status=exc.status_code, detail=str(exc.detail) if exc.detail else None
+    )
+    return _problem_response(request, problem, dict(exc.headers or {}))
+
+
+async def _handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+    # Deliberately drop `input` and `ctx`: they can echo user data or be unserializable.
+    errors = [
+        FieldError(loc=[str(part) for part in err["loc"]], msg=err["msg"], type=err["type"])
+        for err in exc.errors()
+    ]
+    problem = ProblemDetail(
+        title="Request validation failed",
+        status=HTTPStatus.UNPROCESSABLE_ENTITY,
+        detail="One or more fields are invalid.",
+        errors=errors,
+    )
+    return _problem_response(request, problem)
+
+
+async def _handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
+    log.error("unhandled_exception", exc_info=exc)
+    problem = ProblemDetail(title="Internal Server Error", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    return _problem_response(request, problem)
+
+
+def register_exception_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(ProblemError, _handle_problem_error)  # type: ignore[arg-type]
+    app.add_exception_handler(StarletteHTTPException, _handle_http_exception)  # type: ignore[arg-type]
+    app.add_exception_handler(RequestValidationError, _handle_validation_error)  # type: ignore[arg-type]
+    app.add_exception_handler(Exception, _handle_unexpected_error)

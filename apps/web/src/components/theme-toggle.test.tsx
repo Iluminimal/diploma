@@ -24,11 +24,10 @@ describe("ThemeToggle", () => {
         <ThemeToggle />
       </ThemeProvider>,
     );
-    const button = await screen.findByRole("button", { name: /switch to dark/i });
+    const button = await screen.findByRole("button", { name: /toggle dark mode/i });
     await userEvent.click(button);
     expect(document.documentElement).toHaveClass("dark");
-    expect(
-      await screen.findByRole("button", { name: /switch to light/i }),
-    ).toBeInTheDocument();
+    await userEvent.click(button);
+    expect(document.documentElement).not.toHaveClass("dark");
   });
 });

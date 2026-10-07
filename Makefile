@@ -6,7 +6,7 @@ API     := cd apps/api &&
 WEB     := cd apps/web &&
 
 .PHONY: help install infra infra-down infra-reset infra-logs migrate api web ingest \
-        lint format typecheck test test-api test-web test-ml openapi latency
+        lint format typecheck test test-api test-web test-ml openapi api-types browser-check latency
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -65,6 +65,12 @@ test-ml: ## Tests that load the real FashionCLIP model (downloads ~600 MB once)
 
 test-web:
 	$(WEB) npm test
+
+api-types: openapi ## Regenerate the web app's typed API client (apps/web/src/lib/api/schema.d.ts)
+	$(WEB) npm run api:types
+
+browser-check: ## Drive the running app in headless Chromium: screenshots + visual-search flows (needs make api and make web)
+	$(WEB) node scripts/browser-check.mjs ../../docs/screenshots
 
 latency: ## End-to-end API latency report on the real catalogue; e.g. make latency DEVICE=mps
 	$(API) uv run python ../../scripts/measure_api_latency.py --device $(or $(DEVICE),cpu)

@@ -33,6 +33,12 @@ describe("userMessage", () => {
     expect(userMessage(make(422, "urn:lookalike:problem:invalid-image"))).toMatch(/couldn't read/i);
   });
 
+  it("tells a refused origin apart from a missing permission", () => {
+    expect(userMessage(make(403, "urn:lookalike:problem:forbidden-origin"))).toMatch(/blocked for your safety/);
+    expect(userMessage(make(403, "urn:lookalike:problem:forbidden"))).toMatch(/isn't allowed/);
+    expect(userMessage(make(403))).toMatch(/isn't allowed/);
+  });
+
   it("includes the wait time for rate limits", () => {
     expect(userMessage(make(429, undefined, 30))).toContain("30 seconds");
     expect(userMessage(make(429))).toMatch(/wait a moment/);

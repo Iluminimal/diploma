@@ -1,3 +1,4 @@
+import type { AdminCategory, AdminOrder, AdminProduct } from "@/features/admin/admin-api";
 import type { CatalogFilterOptions, Product, SearchResponse } from "@/features/catalog/product";
 
 export function makeProduct(overrides: Partial<Product> = {}): Product {
@@ -146,6 +147,53 @@ export function makeOrder(overrides: Partial<Order> = {}): Order {
         line_total_cents: product.price_cents * 2,
       },
     ],
+    ...overrides,
+  };
+}
+
+export function makeAdminCategory(overrides: Partial<AdminCategory> = {}): AdminCategory {
+  return {
+    id: 9,
+    path: "apparel/topwear/shirts",
+    master_category: "Apparel",
+    sub_category: "Topwear",
+    article_type: "Shirts",
+    ...overrides,
+  };
+}
+
+export function makeAdminProduct(overrides: Partial<AdminProduct> = {}): AdminProduct {
+  const { image, ...product } = makeProduct({ id: 7, name: "Linen camp shirt", article_type: "Shirts" });
+  return {
+    ...product,
+    slug: "linen-camp-shirt-1a2b3c4d",
+    category_id: 9,
+    stock_quantity: 12,
+    is_active: true,
+    source_id: null,
+    embedding_version: "fashion-clip@test",
+    image,
+    created_at: "2026-10-08T10:00:00Z",
+    updated_at: "2026-10-08T10:00:00Z",
+    ...overrides,
+  };
+}
+
+export function makeAdminOrder(overrides: Partial<AdminOrder> = {}): AdminOrder {
+  return {
+    ...makeOrder(),
+    user_id: 3,
+    cancel_reason: null,
+    cancelled_at: null,
+    payment: {
+      provider: "offline",
+      provider_payment_id: "pi_offline_123",
+      status: "succeeded",
+      amount_cents: 7497,
+      currency: "USD",
+      last_error: null,
+      refund_id: null,
+    },
     ...overrides,
   };
 }

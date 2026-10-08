@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { Field, fieldAria } from "@/components/form-field";
+import { Field, fieldAria, selectClass } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -51,9 +51,6 @@ type Props = {
   onSubmit: (address: AddressInput) => Promise<unknown>;
   onCancel?: () => void;
 };
-
-const selectClass =
-  "border-input bg-background focus-visible:ring-ring/50 focus-visible:border-ring h-11 w-full rounded-xl border px-3 text-base outline-none focus-visible:ring-3 md:text-sm dark:bg-input/30";
 
 export function AddressForm({ initial, submitLabel = "Save address", askDefault = true, onSubmit, onCancel }: Props) {
   const {

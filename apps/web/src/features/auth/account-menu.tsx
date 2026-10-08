@@ -1,6 +1,6 @@
 "use client";
 
-import { Heart, LogOut, MapPin, Package, User } from "lucide-react";
+import { Heart, LayoutDashboard, LogOut, MapPin, Package, User } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -89,6 +89,16 @@ export function AccountMenu() {
             </Link>
           </DropdownMenuItem>
         ))}
+        {user.role === "admin" && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/admin/products">
+                <LayoutDashboard /> Admin
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void leave()}>
           <LogOut /> Sign out

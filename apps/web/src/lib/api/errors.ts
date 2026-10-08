@@ -18,6 +18,8 @@ const TYPE = {
   paymentProvider: "urn:lookalike:problem:payment-provider-error",
   paymentInProgress: "urn:lookalike:problem:payment-in-progress",
   forbiddenOrigin: "urn:lookalike:problem:forbidden-origin",
+  forbidden: "urn:lookalike:problem:forbidden",
+  invalidCategory: "urn:lookalike:problem:invalid-category",
 } as const;
 
 /** An RFC 7807 problem returned by the API, or a transport failure (`status` 0). */
@@ -119,6 +121,10 @@ export function userMessage(error: unknown): string {
       return error.detail ?? "A payment is already in progress for your last order.";
     case error.is("forbiddenOrigin"):
       return "This request was blocked for your safety. Reload the page and try again.";
+    case error.is("forbidden") || error.status === 403:
+      return "Your account isn't allowed to do that.";
+    case error.is("invalidCategory"):
+      return error.detail ?? "Choose a valid category.";
     case error.status === 0:
       return "We can't reach the server. Check your connection and try again.";
     case error.type === TYPE.rateLimited || error.status === 429:

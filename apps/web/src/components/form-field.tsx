@@ -31,6 +31,10 @@ export function Field({ id, label, error, hint, className, children }: Props) {
   );
 }
 
+/** Styling for a native `<select>` that matches `Input`. */
+export const selectClass =
+  "border-input bg-background focus-visible:ring-ring/50 focus-visible:border-ring h-11 w-full rounded-xl border px-3 text-base outline-none focus-visible:ring-3 md:text-sm dark:bg-input/30";
+
 /** `aria-*` props for the control inside a `Field`. */
 export function fieldAria(id: string, error?: string, hint?: string) {
   return {

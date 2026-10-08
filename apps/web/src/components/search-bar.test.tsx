@@ -53,6 +53,20 @@ describe("SearchBar", () => {
     await waitFor(() => expect(push).toHaveBeenCalledWith("/products/41885/alma-women-blue-kurta-60000"));
   });
 
+  it("Escape hides the suggestions without clearing the text or leaving one selected", async () => {
+    suggest.mockResolvedValue([makeProduct()]);
+    renderBar();
+    const box = screen.getByRole("combobox");
+    await userEvent.type(box, "kurta");
+    await screen.findByRole("option", { name: /Alma/ });
+    await userEvent.keyboard("{ArrowDown}{Escape}");
+
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(box).toHaveValue("kurta");
+    await userEvent.keyboard("{Enter}");
+    expect(push).toHaveBeenCalledWith("/products?q=kurta");
+  });
+
   it("does nothing for an empty query", async () => {
     renderBar();
     await userEvent.type(screen.getByRole("combobox"), "   {Enter}");

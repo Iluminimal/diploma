@@ -56,58 +56,81 @@ function CheckRow({
 
 const TREE_KEY: Record<number, MultiKey> = { 1: "master_category", 2: "sub_category", 3: "article_type" };
 
-function CategoryTree<T extends CatalogFilters>({
-  nodes,
-  value,
-  onChange,
-  idPrefix,
-}: {
-  nodes: CategoryNode[];
+function hasSelectedDescendant(node: CategoryNode, value: CatalogFilters): boolean {
+  return node.children.some((child) => {
+    const key = TREE_KEY[child.level];
+    return (key && value[key].includes(child.name)) || hasSelectedDescendant(child, value);
+  });
+}
+
+type TreeProps<T extends CatalogFilters> = {
   value: T;
   onChange: (next: T) => void;
   idPrefix: string;
-}) {
+};
+
+/**
+ * A category with children. The chevron is a button of its own (a checkbox inside a `<summary>`
+ * would nest interactive controls); the branch opens by itself while something inside it is
+ * selected, until the user opens or closes it by hand.
+ */
+function CategoryBranch<T extends CatalogFilters>({
+  node,
+  value,
+  onChange,
+  idPrefix,
+}: TreeProps<T> & { node: CategoryNode }) {
+  const key = TREE_KEY[node.level]!;
+  const selected = value[key].includes(node.name);
+  const [manual, setManual] = useState<boolean | null>(null);
+  const open = manual ?? (selected || hasSelectedDescendant(node, value));
+  const panel = `${idPrefix}-${node.path}-children`;
+  return (
+    <li>
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => setManual(!open)}
+          aria-expanded={open}
+          aria-controls={panel}
+          aria-label={`${open ? "Hide" : "Show"} ${node.name} subcategories`}
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/60 grid size-7 shrink-0 place-items-center rounded-md outline-none focus-visible:ring-3"
+        >
+          <ChevronDown aria-hidden className={cn("size-3.5 transition-transform", !open && "-rotate-90")} />
+        </button>
+        <div className="flex-1">
+          <CheckRow
+            id={`${idPrefix}-${node.path}`}
+            label={node.name}
+            checked={selected}
+            onCheckedChange={() => onChange(toggleValue(value, key, node.name))}
+          />
+        </div>
+      </div>
+      {open && (
+        <div id={panel} className="border-border ml-3 border-l pl-3">
+          <CategoryTree nodes={node.children} value={value} onChange={onChange} idPrefix={idPrefix} />
+        </div>
+      )}
+    </li>
+  );
+}
+
+function CategoryTree<T extends CatalogFilters>({ nodes, ...props }: TreeProps<T> & { nodes: CategoryNode[] }) {
   return (
     <ul className="space-y-0.5">
       {nodes.map((node) => {
         const key = TREE_KEY[node.level];
         if (!key) return null;
-        const selected = value[key].includes(node.name);
-        const hasSelectedDescendant = (n: CategoryNode): boolean =>
-          n.children.some((c) => {
-            const k = TREE_KEY[c.level];
-            return (k && value[k].includes(c.name)) || hasSelectedDescendant(c);
-          });
-        const expandable = node.children.length > 0;
+        if (node.children.length > 0) return <CategoryBranch key={node.path} node={node} {...props} />;
         return (
-          <li key={node.path}>
-            {expandable ? (
-              <details open={selected || hasSelectedDescendant(node)} className="group/node">
-                <summary className="flex cursor-pointer list-none items-center gap-1 [&::-webkit-details-marker]:hidden">
-                  <ChevronDown className="text-muted-foreground size-3.5 -rotate-90 transition-transform group-open/node:rotate-0" />
-                  <div className="flex-1" onClick={(e) => e.preventDefault()}>
-                    <CheckRow
-                      id={`${idPrefix}-${node.path}`}
-                      label={node.name}
-                      checked={selected}
-                      onCheckedChange={() => onChange(toggleValue(value, key, node.name))}
-                    />
-                  </div>
-                </summary>
-                <div className="border-border ml-2 border-l pl-3">
-                  <CategoryTree nodes={node.children} value={value} onChange={onChange} idPrefix={idPrefix} />
-                </div>
-              </details>
-            ) : (
-              <div className="pl-5">
-                <CheckRow
-                  id={`${idPrefix}-${node.path}`}
-                  label={node.name}
-                  checked={selected}
-                  onCheckedChange={() => onChange(toggleValue(value, key, node.name))}
-                />
-              </div>
-            )}
+          <li key={node.path} className="pl-8">
+            <CheckRow
+              id={`${props.idPrefix}-${node.path}`}
+              label={node.name}
+              checked={props.value[key].includes(node.name)}
+              onCheckedChange={() => props.onChange(toggleValue(props.value, key, node.name))}
+            />
           </li>
         );
       })}

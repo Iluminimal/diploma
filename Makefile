@@ -5,7 +5,7 @@ COMPOSE := docker compose -f infra/docker-compose.dev.yml --env-file .env
 API     := cd apps/api &&
 WEB     := cd apps/web &&
 
-.PHONY: help install infra infra-down infra-reset infra-logs migrate api web ingest create-admin \
+.PHONY: help install infra infra-down infra-reset infra-logs migrate api web web-prod ingest create-admin e2e \
         lint format typecheck test test-api test-web test-ml openapi api-types browser-check browser-check-commerce latency
 
 help: ## Show this help
@@ -47,6 +47,13 @@ ingest: ## Ingest the dataset (needs `make infra migrate`); e.g. make ingest ARG
 
 web: ## Run the Next.js dev server on :3000
 	$(WEB) npm run dev
+
+web-prod: ## Build and serve the web app as in production on :3000 (what e2e and Lighthouse measure)
+	$(WEB) npm run build && npm run start
+
+e2e: ## Playwright end-to-end tests against the running stack; e.g. make e2e ARGS="e2e/cart.spec.ts"
+	@echo "Needs: make infra migrate, the API (RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline make api) and make web-prod. See docs/e2e.md."
+	$(WEB) npx playwright test $(ARGS)
 
 lint: ## Lint and format-check API + scripts (ruff) and web (eslint)
 	$(API) uv run ruff check . ../../scripts && uv run ruff format --check . ../../scripts

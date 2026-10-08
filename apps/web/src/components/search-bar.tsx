@@ -89,8 +89,13 @@ export function SearchBar({ className }: { className?: string }) {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={(e) => {
-            if (e.key === "Escape") setOpen(false);
-            else if (e.key === "ArrowDown" && items.length) {
+            if (e.key === "Escape") {
+              // Only dismiss the suggestions: a search field would otherwise clear itself, and
+              // a highlighted suggestion that is no longer shown must not be what Enter opens.
+              if (showList) e.preventDefault();
+              setOpen(false);
+              setActive(-1);
+            } else if (e.key === "ArrowDown" && items.length) {
               e.preventDefault();
               setOpen(true);
               setActive((i) => (i + 1) % items.length);

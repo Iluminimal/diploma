@@ -22,7 +22,7 @@ export function SiteFooter() {
           <ul className="text-muted-foreground space-y-2 text-sm">
             {SHOP.map((item) => (
               <li key={item.href}>
-                <Link href={item.href} className="hover:text-foreground transition-colors">
+                <Link href={item.href} className="hover:text-foreground focus-visible:ring-ring/60 rounded-sm transition-colors outline-none focus-visible:ring-3">
                   {item.label}
                 </Link>
               </li>
@@ -33,12 +33,12 @@ export function SiteFooter() {
           <p className="text-sm font-medium">Discover</p>
           <ul className="text-muted-foreground space-y-2 text-sm">
             <li>
-              <Link href="/search" className="hover:text-foreground transition-colors">
+              <Link href="/search" className="hover:text-foreground focus-visible:ring-ring/60 rounded-sm transition-colors outline-none focus-visible:ring-3">
                 Search by photo
               </Link>
             </li>
             <li>
-              <Link href="/products" className="hover:text-foreground transition-colors">
+              <Link href="/products" className="hover:text-foreground focus-visible:ring-ring/60 rounded-sm transition-colors outline-none focus-visible:ring-3">
                 All products
               </Link>
             </li>

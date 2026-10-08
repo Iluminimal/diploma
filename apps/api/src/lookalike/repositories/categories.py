@@ -3,7 +3,7 @@ from typing import Any
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy.orm import InstrumentedAttribute, aliased
 
 from lookalike.models import Category, Product
 
@@ -18,6 +18,17 @@ class FilterOptions:
     max_price_cents: int
 
 
+@dataclass(frozen=True)
+class LeafCategory:
+    """An article type with the names of its ancestors, which products copy."""
+
+    id: int
+    path: str
+    master_category: str
+    sub_category: str
+    article_type: str
+
+
 class CategoryRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -27,6 +38,22 @@ class CategoryRepository:
             select(Category).order_by(Category.level, Category.name)
         )
         return list(result.scalars())
+
+    async def leaf_categories(self, category_id: int | None = None) -> list[LeafCategory]:
+        """Every article type (level 3), active products or not, for the admin's category picker."""
+        sub = aliased(Category)
+        master = aliased(Category)
+        statement = (
+            select(Category.id, Category.path, master.name, sub.name, Category.name)
+            .join(sub, Category.parent_id == sub.id)
+            .join(master, sub.parent_id == master.id)
+            .where(Category.level == 3)
+            .order_by(master.name, sub.name, Category.name)
+        )
+        if category_id is not None:
+            statement = statement.where(Category.id == category_id)
+        rows = await self._session.execute(statement)
+        return [LeafCategory(*row) for row in rows.all()]
 
     async def searchable_article_types(self) -> list[Category]:
         """Leaf categories that have active products (what search can return), the one with

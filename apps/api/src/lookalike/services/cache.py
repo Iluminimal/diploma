@@ -114,6 +114,26 @@ class SearchCache:
     async def set_catalog_filters(self, filters: CatalogFilters) -> None:
         await self._set(self._filters_key, filters.model_dump_json().encode(), self._filters_ttl)
 
+    # --- invalidation ----------------------------------------------------------------------
+
+    async def invalidate_catalogue(self) -> None:
+        """Forget cached similar-product lists and filter options after an admin change, so a
+        deactivated or repriced product does not linger in them until their TTL runs out."""
+        try:
+            await asyncio.wait_for(self._invalidate(), self._timeout * 20)
+        except Exception as exc:
+            log.warning("cache_unavailable", op="invalidate", error=type(exc).__name__)
+
+    async def _invalidate(self) -> None:
+        batch: list[bytes] = [self._filters_key.encode()]
+        async for key in self._redis.scan_iter(match=f"sim:{self._version}:*", count=500):
+            batch.append(key)
+            if len(batch) >= 500:
+                await self._redis.delete(*batch)
+                batch = []
+        if batch:
+            await self._redis.delete(*batch)
+
     # --- plumbing --------------------------------------------------------------------------
 
     async def _get(self, key: str) -> bytes | None:

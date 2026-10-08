@@ -68,6 +68,23 @@ def make_blur_data_url(image: Image.Image) -> str:
     return f"data:image/webp;base64,{encoded}"
 
 
+@dataclass(frozen=True)
+class Thumbnails:
+    webp: dict[int, bytes]  # size -> encoded image
+    blur_data_url: str
+
+
+def build_thumbnails(image: Image.Image) -> Thumbnails:
+    """All thumbnail sizes plus the blur placeholder for one decoded image, in memory (admin
+    uploads; ingestion writes straight to storage in `process_image`)."""
+    webp: dict[int, bytes] = {}
+    current = image
+    for size in sorted(THUMBNAIL_SIZES, reverse=True):
+        current = fit_longest_side(current, size)
+        webp[size] = encode_webp(current)
+    return Thumbnails(webp, make_blur_data_url(current))
+
+
 def process_image(job: ImageJob, storage: Storage) -> ImageResult:
     """Never raises for bad input: an unreadable image comes back as `error`."""
     try:

@@ -33,6 +33,7 @@ PAYMENT_IN_PROGRESS_TYPE = f"{_PREFIX}payment-in-progress"
 INVALID_SIGNATURE_TYPE = f"{_PREFIX}invalid-signature"
 ADDRESS_LIMIT_TYPE = f"{_PREFIX}address-limit"
 WISHLIST_FULL_TYPE = f"{_PREFIX}wishlist-full"
+INVALID_CATEGORY_TYPE = f"{_PREFIX}invalid-category"
 
 log = get_logger(__name__)
 

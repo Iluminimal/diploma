@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from lookalike.api.v1 import (
     addresses,
+    admin,
     auth,
     cart,
     catalog,
@@ -24,3 +25,4 @@ router.include_router(addresses.router)
 router.include_router(checkout.router)
 router.include_router(orders.router)
 router.include_router(webhooks.router)
+router.include_router(admin.router)

@@ -12,6 +12,8 @@ class Storage(Protocol):
 
     def exists(self, key: str) -> bool: ...
 
+    def delete(self, key: str) -> None: ...
+
     def url(self, key: str) -> str: ...
 
 
@@ -39,6 +41,10 @@ class LocalStorage:
 
     def exists(self, key: str) -> bool:
         return self._path(key).is_file()
+
+    def delete(self, key: str) -> None:
+        """Removing a file that is not there is fine: cleanup must be safe to repeat."""
+        self._path(key).unlink(missing_ok=True)
 
     def url(self, key: str) -> str:
         self._path(key)

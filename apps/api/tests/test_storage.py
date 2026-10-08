@@ -35,3 +35,24 @@ def test_unsafe_keys_are_rejected(tmp_path: Path, key: str) -> None:
     with pytest.raises(InvalidStorageKeyError):
         storage.exists(key)
     assert not (tmp_path / "escape.webp").exists()
+
+
+def test_delete_removes_a_file_and_is_safe_to_repeat(tmp_path: Path) -> None:
+    storage = LocalStorage(tmp_path, "/media")
+    storage.put("a/b.webp", b"data")
+
+    storage.delete("a/b.webp")
+    storage.delete("a/b.webp")
+
+    assert not storage.exists("a/b.webp")
+
+
+def test_delete_rejects_keys_that_escape_the_root(tmp_path: Path) -> None:
+    outside = tmp_path / "outside.txt"
+    outside.write_text("keep")
+    storage = LocalStorage(tmp_path / "media", "/media")
+
+    with pytest.raises(InvalidStorageKeyError):
+        storage.delete("../outside.txt")
+
+    assert outside.read_text() == "keep"

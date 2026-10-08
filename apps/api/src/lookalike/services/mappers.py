@@ -4,6 +4,7 @@ from lookalike.ingestion.images import thumbnail_key
 from lookalike.models import Order, OrderItem, Product
 from lookalike.repositories.products import SearchFilters
 from lookalike.schemas.address import AddressSnapshot
+from lookalike.schemas.admin import AdminProductOut
 from lookalike.schemas.order import OrderItemOut, OrderOut, OrderSummary
 from lookalike.schemas.product import FilterParams, ProductImage, ProductOut
 from lookalike.storage import Storage
@@ -34,6 +35,32 @@ def to_product_out(product: Product, storage: Storage) -> ProductOut:
         currency=product.currency,
         in_stock=product.stock_quantity > 0,
         image=_image(product.image_key, product.blur_data_url, storage),
+    )
+
+
+def to_admin_product_out(product: Product, storage: Storage) -> AdminProductOut:
+    return AdminProductOut(
+        id=product.id,
+        slug=product.slug,
+        name=product.name,
+        category_id=product.category_id,
+        gender=product.gender,
+        master_category=product.master_category,
+        sub_category=product.sub_category,
+        article_type=product.article_type,
+        base_colour=product.base_colour,
+        season=product.season,
+        usage=product.usage,
+        year=product.year,
+        price_cents=product.price_cents,
+        currency=product.currency,
+        stock_quantity=product.stock_quantity,
+        is_active=product.is_active,
+        source_id=product.source_id,
+        embedding_version=product.embedding_version,
+        image=_image(product.image_key, product.blur_data_url, storage),
+        created_at=product.created_at,
+        updated_at=product.updated_at,
     )
 
 

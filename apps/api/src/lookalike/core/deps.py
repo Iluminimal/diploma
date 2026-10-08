@@ -25,6 +25,7 @@ from lookalike.payments import PaymentGateway
 from lookalike.repositories.health import HealthRepository
 from lookalike.repositories.users import UserRepository
 from lookalike.services.addresses import AddressService
+from lookalike.services.admin_products import AdminProductService
 from lookalike.services.auth import AuthService
 from lookalike.services.cache import SearchCache
 from lookalike.services.cart import CartOwner, CartService
@@ -118,6 +119,28 @@ def get_search_service(
 
 
 SearchServiceDep = Annotated[SearchService, Depends(get_search_service)]
+
+
+def get_admin_product_service(
+    request: Request, settings: SettingsDep, session: SessionDep, storage: StorageDep
+) -> AdminProductService:
+    embedder: EmbeddingService | None = request.app.state.embedding_service
+    if embedder is None or not embedder.is_loaded():
+        raise ProblemError(
+            HTTPStatus.SERVICE_UNAVAILABLE, "Model unavailable", "The model is not loaded yet."
+        )
+    cache: SearchCache = request.app.state.search_cache
+    return AdminProductService(
+        session,
+        storage,
+        embedder,
+        cache,
+        currency=settings.currency,
+        max_upload_pixels=settings.max_upload_pixels,
+    )
+
+
+AdminProductServiceDep = Annotated[AdminProductService, Depends(get_admin_product_service)]
 
 
 def get_catalog_service(

@@ -4,7 +4,7 @@ from typing import Any, Literal
 
 import numpy as np
 from numpy.typing import NDArray
-from sqlalchemy import ColumnElement, UnaryExpression, func, literal_column, select, text
+from sqlalchemy import ColumnElement, UnaryExpression, func, literal_column, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import defer
 from sqlalchemy.sql.base import ExecutableOption
@@ -66,6 +66,17 @@ _LIGHT_ROWS: tuple[ExecutableOption, ...] = (
     defer(Product.embedding),
     defer(Product.search_vector),
 )
+
+
+# Longer digit strings cannot be a bigint id.
+MAX_ID_DIGITS = 18
+AdminStatus = Literal["all", "active", "inactive"]
+AdminSort = Literal["newest", "price_asc", "price_desc", "stock_asc"]
+
+
+def _like_pattern(text_query: str) -> str:
+    escaped = text_query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
 
 
 @dataclass(frozen=True)
@@ -151,6 +162,66 @@ class ProductRepository:
             .options(*_LIGHT_ROWS)
         )
         return list(rows.scalars()), total
+
+    # --- admin: everything below sees inactive products too ----------------------------------
+
+    async def get_any(self, product_id: int, *, for_update: bool = False) -> Product | None:
+        statement = select(Product).where(Product.id == product_id).options(*_LIGHT_ROWS)
+        if for_update:
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        return (await self._session.execute(statement)).scalar_one_or_none()
+
+    async def list_all(
+        self,
+        *,
+        text_query: str | None,
+        status: AdminStatus,
+        category_id: int | None,
+        sort: AdminSort,
+        offset: int,
+        limit: int,
+    ) -> tuple[list[Product], int]:
+        """Admin listing. A plain substring match on the name (or the exact id), because an admin
+        types half a word; the storefront's stemmed full-text search would miss it."""
+        clauses: list[ColumnElement[bool]] = []
+        if text_query:
+            by_name = Product.name.ilike(_like_pattern(text_query), escape="\\")
+            is_id = text_query.isdigit() and len(text_query) <= MAX_ID_DIGITS
+            clauses.append(or_(by_name, Product.id == int(text_query)) if is_id else by_name)
+        if status != "all":
+            clauses.append(Product.is_active.is_(status == "active"))
+        if category_id is not None:
+            clauses.append(Product.category_id == category_id)
+        orders: dict[AdminSort, list[UnaryExpression[Any]]] = {
+            "newest": [Product.created_at.desc(), Product.id.desc()],
+            "price_asc": [Product.price_cents.asc(), Product.id.asc()],
+            "price_desc": [Product.price_cents.desc(), Product.id.asc()],
+            "stock_asc": [Product.stock_quantity.asc(), Product.id.asc()],
+        }
+        order = orders[sort]
+        total = (
+            await self._session.execute(select(func.count()).select_from(Product).where(*clauses))
+        ).scalar_one()
+        rows = await self._session.execute(
+            select(Product)
+            .where(*clauses)
+            .order_by(*order)
+            .offset(offset)
+            .limit(limit)
+            .options(*_LIGHT_ROWS)
+        )
+        return list(rows.scalars()), total
+
+    async def add(self, product: Product) -> Product:
+        self._session.add(product)
+        return await self.save(product)
+
+    async def save(self, product: Product) -> Product:
+        """Flush and reload the database-generated timestamps (expired by the write, and a lazy
+        reload is impossible in async code)."""
+        await self._session.flush()
+        await self._session.refresh(product, ["created_at", "updated_at"])
+        return product
 
     async def get_embedding(self, product_id: int) -> NDArray[np.float32] | None:
         result = await self._session.execute(

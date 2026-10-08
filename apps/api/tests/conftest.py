@@ -149,6 +149,7 @@ async def api_factory(
             "rate_limit_login": "10000/60",
             "rate_limit_login_email": "10000/60",
             "rate_limit_refresh": "10000/60",
+            "rate_limit_admin": "10000/60",
             # Commerce: a fixed signing key, and the in-process payment gateway.
             "jwt_secret": "test-jwt-secret-0123456789-0123456789",
             "payments_mode": "offline",

@@ -6,6 +6,7 @@ counted as the body streams in, so neither a lying Content-Length nor chunked en
 past the limit.
 """
 
+import re
 from http import HTTPStatus
 
 from fastapi import UploadFile
@@ -18,7 +19,8 @@ from lookalike.schemas.problem import ProblemDetail
 ALLOWED_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/webp"})
 # Pillow format names matching the content types above.
 ALLOWED_FORMATS = ("JPEG", "PNG", "WEBP")
-UPLOAD_PATHS = ("/search/image", "/search/hybrid")
+UPLOAD_PATHS = ("/search/image", "/search/hybrid", "/admin/products")
+_ADMIN_IMAGE_PATH = re.compile(r"^/admin/products/\d+/image$")
 # Multipart framing and the small form fields that accompany the file.
 _FORM_OVERHEAD_BYTES = 64 * 1024
 
@@ -71,10 +73,20 @@ class BodySizeLimitMiddleware:
         self.app = app
         self.limit = max_file_bytes + _FORM_OVERHEAD_BYTES
         self.max_file_bytes = max_file_bytes
+        self.api_prefix = api_prefix
         self.paths = tuple(f"{api_prefix}{path}" for path in UPLOAD_PATHS)
 
+    def _is_upload(self, scope: Scope) -> bool:
+        path: str = scope["path"]
+        if scope["method"] == "POST" and path in self.paths:
+            return True
+        # PUT /admin/products/{id}/image replaces a product's photo.
+        return scope["method"] == "PUT" and bool(
+            _ADMIN_IMAGE_PATH.match(path.removeprefix(self.api_prefix))
+        )
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http" or scope["method"] != "POST" or scope["path"] not in self.paths:
+        if scope["type"] != "http" or not self._is_upload(scope):
             await self.app(scope, receive, send)
             return
 

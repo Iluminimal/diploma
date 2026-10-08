@@ -76,6 +76,7 @@ class Settings(BaseSettings):
     rate_limit_login: str = "10/300"
     rate_limit_login_email: str = "5/300"
     rate_limit_refresh: str = "60/60"
+    rate_limit_admin: str = "120/60"
 
     # --- cart and checkout ----------------------------------------------------------------
     cart_max_quantity: int = 10

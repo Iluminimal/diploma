@@ -3,10 +3,10 @@ import pytest
 from redis.asyncio import Redis
 from sqlalchemy import text
 
+from lookalike.ml.fake import FakeEmbedder
 from lookalike.repositories.products import SearchFilters
 from lookalike.services.cache import SearchCache, normalize_query
 from tests.conftest import UNREACHABLE_REDIS_URL, ApiFactory
-from tests.fakes import FakeEmbedder
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 

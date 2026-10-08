@@ -58,6 +58,8 @@ describe("NewProductView", () => {
     expect(await screen.findByText("Enter a name")).toBeInTheDocument();
     expect(screen.getByText("Choose a category")).toBeInTheDocument();
     expect(screen.getByText("Enter a price like 49.99")).toBeInTheDocument();
+    // The missing photo is reported together with the rest, not one attempt later.
+    expect(screen.getByText("Choose a photo of the product.")).toBeInTheDocument();
     await fillRequired();
     await userEvent.click(screen.getByRole("button", { name: "Create product" }));
     expect(await screen.findByText("Choose a photo of the product.")).toBeInTheDocument();

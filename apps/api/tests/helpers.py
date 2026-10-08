@@ -8,8 +8,8 @@ from httpx import ASGITransport, AsyncClient
 from lookalike.core.config import Settings
 from lookalike.main import create_app
 from lookalike.ml.embeddings import EmbeddingService
+from lookalike.ml.fake import FakeEmbedder
 from lookalike.payments import PaymentGateway
-from tests.fakes import FakeEmbedder
 
 
 @asynccontextmanager

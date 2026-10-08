@@ -6,7 +6,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { launch } from "chrome-launcher";
 import lighthouse from "lighthouse";
-import { chromium } from "playwright";
+import { chromium } from "@playwright/test";
 
 const arg = (name, fallback) => {
   const i = process.argv.indexOf(`--${name}`);

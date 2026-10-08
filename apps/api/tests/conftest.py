@@ -16,9 +16,9 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from lookalike.core.config import Settings
+from lookalike.ml.fake import FakeEmbedder
 from lookalike.payments import PaymentGateway
 from tests.catalogue import Entry, seed_catalogue
-from tests.fakes import FakeEmbedder
 from tests.helpers import running_app
 
 WEBHOOK_SECRET = "whsec_test_secret"

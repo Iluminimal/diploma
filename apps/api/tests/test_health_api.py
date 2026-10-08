@@ -1,9 +1,9 @@
 import pytest
 
 from lookalike.core.config import Settings
+from lookalike.ml.fake import FakeEmbedder
 
 from .conftest import UNREACHABLE_DATABASE_URL, UNREACHABLE_REDIS_URL
-from .fakes import FakeEmbedder
 from .helpers import running_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]

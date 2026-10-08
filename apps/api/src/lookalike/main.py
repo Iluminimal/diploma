@@ -42,7 +42,12 @@ from lookalike.storage import LocalStorage
 log = get_logger(__name__)
 
 
-async def _load_embedder(settings: Settings) -> FashionClipEmbedder:
+async def _load_embedder(settings: Settings) -> EmbeddingService:
+    if settings.embedder == "fake":
+        from lookalike.ml.fake import FakeEmbedder
+
+        log.warning("fake_embedder", hint="EMBEDDER=fake: search results are not meaningful")
+        return FakeEmbedder(version="fake@e2e")
     embedder = FashionClipEmbedder(
         device=select_device(settings.embedding_device),
         fp16=settings.embedding_fp16,

@@ -71,17 +71,23 @@ export function ProductForm({ categories, product, submitLabel, onSubmit }: Prop
     setPhoto(problem || !previewUrl.current ? null : { file, url: previewUrl.current });
   };
 
-  const submit = handleSubmit(async (values) => {
-    if (creating && !photo) {
-      setPhotoError("Choose a photo of the product.");
-      return;
-    }
-    try {
-      await onSubmit(toPayload(values), photo?.file ?? null);
-    } catch {
-      // The mutation hook already showed the reason; keep the form so nothing typed is lost.
-    }
-  });
+  const missingPhoto = () => {
+    if (!creating || photo) return false;
+    setPhotoError("Choose a photo of the product.");
+    return true;
+  };
+  const submit = handleSubmit(
+    async (values) => {
+      if (missingPhoto()) return;
+      try {
+        await onSubmit(toPayload(values), photo?.file ?? null);
+      } catch {
+        // The mutation hook already showed the reason; keep the form so nothing typed is lost.
+      }
+    },
+    // Every problem at once, the missing photo included, not one per attempt.
+    () => void missingPhoto(),
+  );
 
   return (
     <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2" aria-label="Product details">

@@ -16,9 +16,10 @@ from lookalike.ingestion.pipeline import (
     ingest_products,
 )
 from lookalike.ingestion.pricing import generate_price_and_stock
+from lookalike.ml.fake import FakeEmbedder
 from lookalike.models import Category, Product
 from lookalike.storage import LocalStorage
-from tests.fakes import FakeEmbedder, write_jpeg
+from tests.fakes import write_jpeg
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 

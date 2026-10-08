@@ -15,8 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from lookalike.ingestion.cleaning import CleanProduct
 from lookalike.ingestion.pipeline import _upsert, build_row, ensure_categories
+from lookalike.ml.fake import FakeEmbedder
 from lookalike.ml.preprocess import load_image
-from tests.fakes import FakeEmbedder
 
 GENDERS = ("Men", "Women", "Unisex")
 TYPES = (

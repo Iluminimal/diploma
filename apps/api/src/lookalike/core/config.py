@@ -34,6 +34,9 @@ class Settings(BaseSettings):
 
     # FashionCLIP. `embedding_resize_mode` and the model revision define what an embedding
     # means: changing either requires re-embedding the catalogue (ingest detects this).
+    # `fake` is a deterministic stand-in for the end-to-end tests in CI (no model download); it
+    # knows nothing about clothes, so production refuses it.
+    embedder: Literal["fashion-clip", "fake"] = "fashion-clip"
     embedding_device: Literal["auto", "mps", "cpu", "cuda"] = "auto"
     embedding_fp16: bool = False
     embedding_resize_mode: Literal["crop", "pad"] = "pad"
@@ -120,6 +123,8 @@ class Settings(BaseSettings):
         if self.app_env == "prod":
             if not self.jwt_secret:
                 raise ValueError("JWT_SECRET is required when APP_ENV=prod")
+            if self.embedder != "fashion-clip":
+                raise ValueError("EMBEDDER=fake is not allowed when APP_ENV=prod")
             if self.payments_mode != "stripe":
                 raise ValueError("PAYMENTS_MODE=offline is not allowed when APP_ENV=prod")
             if not (self.stripe_secret_key and self.stripe_webhook_secret):

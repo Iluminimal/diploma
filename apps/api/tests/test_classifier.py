@@ -7,7 +7,7 @@ from lookalike.ml.classifier import (
     WholeImageLocalizer,
     ZeroShotCategoryClassifier,
 )
-from tests.fakes import FakeEmbedder
+from lookalike.ml.fake import FakeEmbedder
 
 LABELS = [
     CategoryLabel("Shirts", "apparel/topwear/shirts", "Shirts"),

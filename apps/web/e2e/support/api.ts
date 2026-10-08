@@ -65,14 +65,22 @@ export async function signInAccount(request: APIRequestContext, email: string, p
 
 const bearer = (account: Account) => ({ ...json, Authorization: `Bearer ${account.token}` });
 
+/** Adds to the cart in size M, or in the first size the product has (kids' and shoes have others). */
 export async function addToCart(request: APIRequestContext, account: Account, productId: number, quantity = 1) {
-  await ok(
-    await request.post(`${API_URL}/api/v1/cart/items`, {
+  let size = "M";
+  for (let attempt = 0; ; attempt += 1) {
+    const response = await request.post(`${API_URL}/api/v1/cart/items`, {
       headers: bearer(account),
-      data: { product_id: productId, size: "M", quantity },
-    }),
-    "adding to the cart",
-  );
+      data: { product_id: productId, size, quantity },
+    });
+    if (response.ok()) return;
+    const problem = (await response.json().catch(() => ({}))) as { type?: string; sizes?: string[] };
+    if (attempt === 0 && problem.type === "urn:lookalike:problem:invalid-size" && problem.sizes?.[0]) {
+      size = problem.sizes[0];
+      continue;
+    }
+    throw new Error(`adding to the cart failed: ${response.status()} ${JSON.stringify(problem)}`);
+  }
 }
 
 export async function addAddress(request: APIRequestContext, account: Account): Promise<number> {

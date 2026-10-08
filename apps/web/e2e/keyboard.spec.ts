@@ -58,7 +58,7 @@ test("the search box works from the keyboard", async ({ page }) => {
 test("the mini-cart keeps focus inside, closes with Escape and gives focus back", async ({ page, products }) => {
   const [product] = products;
   await page.goto(`/products/${product!.id}/${product!.slug}`);
-  await page.locator("label", { hasText: /^M$/ }).click();
+  await page.locator("fieldset label").first().click();
   await page.getByRole("button", { name: /add to cart/i }).click();
   const drawer = page.getByRole("dialog");
   await expect(drawer).toBeVisible();

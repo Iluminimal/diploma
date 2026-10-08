@@ -22,6 +22,8 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
+    // A synthetic camera, so "Take a photo" can be tested; nothing else touches it.
+    launchOptions: { args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"] },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 });

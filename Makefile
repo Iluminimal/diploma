@@ -5,8 +5,8 @@ COMPOSE := docker compose -f infra/docker-compose.dev.yml --env-file .env
 API     := cd apps/api &&
 WEB     := cd apps/web &&
 
-.PHONY: help install infra infra-down infra-reset infra-logs migrate api web web-prod ingest create-admin e2e lighthouse \
-        lint format typecheck test test-api test-web test-ml openapi api-types browser-check browser-check-commerce latency
+.PHONY: help install infra infra-down infra-reset infra-logs migrate api web web-prod ingest create-admin e2e e2e-clean seed-e2e lighthouse \
+        lint format typecheck test test-api test-web test-ml openapi api-types latency
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
@@ -51,6 +51,12 @@ web: ## Run the Next.js dev server on :3000
 web-prod: ## Build and serve the web app as in production on :3000 (what e2e and Lighthouse measure)
 	$(WEB) npm run build && npm run start
 
+e2e-clean: ## Remove the customers, orders and products the e2e tests left in the dev database
+	$(API) uv run python ../../scripts/e2e_clean.py
+
+seed-e2e: ## Synthetic catalogue for e2e (CI): EMBEDDER=fake; refuses prod; e.g. make seed-e2e ARGS="--count 60"
+	$(API) uv run python ../../scripts/seed_e2e.py $(ARGS)
+
 e2e: ## Playwright end-to-end tests against the running stack; e.g. make e2e ARGS="e2e/cart.spec.ts"
 	@echo "Needs: make infra migrate, the API (RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline make api) and make web-prod. See docs/e2e.md."
 	$(WEB) npx playwright test $(ARGS)
@@ -83,11 +89,7 @@ test-web:
 api-types: openapi ## Regenerate the web app's typed API client (apps/web/src/lib/api/schema.d.ts)
 	$(WEB) npm run api:types
 
-browser-check: ## Drive the running app in headless Chromium: screenshots + visual-search flows (needs make api and make web)
-	$(WEB) node scripts/browser-check.mjs ../../docs/screenshots
 
-browser-check-commerce: ## Drive the cart, checkout and account flows in headless Chromium (needs make api with PAYMENTS_MODE=offline, and make web)
-	$(WEB) node scripts/commerce-check.mjs ../../docs/screenshots
 
 latency: ## End-to-end API latency report on the real catalogue; e.g. make latency DEVICE=mps
 	$(API) uv run python ../../scripts/measure_api_latency.py --device $(or $(DEVICE),cpu)

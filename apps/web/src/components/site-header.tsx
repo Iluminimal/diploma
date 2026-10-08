@@ -4,6 +4,7 @@ import { MobileNav } from "@/components/mobile-nav";
 import { NAV_LINKS } from "@/components/nav-links";
 import { SearchBar } from "@/components/search-bar";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { AccountMenu } from "@/features/auth/account-menu";
 import { Button } from "@/components/ui/button";
 
 export function SiteHeader() {
@@ -33,6 +34,7 @@ export function SiteHeader() {
             </Link>
           </Button>
           <ThemeToggle />
+          <AccountMenu />
         </div>
       </div>
       <div className="container-page pb-3 md:hidden">

@@ -6,9 +6,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { NAV_LINKS } from "@/components/nav-links";
+import { ACCOUNT_LINKS } from "@/features/auth/account-menu";
+import { useAuth } from "@/features/auth/auth-store";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const status = useAuth((state) => state.status);
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -31,6 +34,26 @@ export function MobileNav() {
               {link.label}
             </Link>
           ))}
+          {status === "signedIn" ? (
+            ACCOUNT_LINKS.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="border-border text-muted-foreground border-b py-3.5 text-base"
+              >
+                {link.label}
+              </Link>
+            ))
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="border-border text-muted-foreground border-b py-3.5 text-base"
+            >
+              Sign in
+            </Link>
+          )}
         </nav>
       </SheetContent>
     </Sheet>

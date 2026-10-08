@@ -1,4 +1,6 @@
 import asyncio
+import contextlib
+import secrets
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
@@ -14,7 +16,9 @@ from lookalike.api.v1.router import router as v1_router
 from lookalike.core.config import Settings, get_settings
 from lookalike.core.errors import register_exception_handlers
 from lookalike.core.logging import configure_logging, get_logger
+from lookalike.core.mail import ConsoleMailer
 from lookalike.core.request_context import REQUEST_ID_HEADER, RequestContextMiddleware
+from lookalike.core.security_headers import SecurityHeadersMiddleware
 from lookalike.core.static import MediaFiles
 from lookalike.core.uploads import BodySizeLimitMiddleware
 from lookalike.db.engine import create_engine
@@ -28,9 +32,11 @@ from lookalike.ml.classifier import (
 from lookalike.ml.embeddings import EmbeddingService
 from lookalike.ml.fashion_clip import FashionClipEmbedder, select_device
 from lookalike.models import Category
+from lookalike.payments import PaymentGateway, build_gateway
 from lookalike.repositories.categories import CategoryRepository
 from lookalike.repositories.products import ProductRepository
 from lookalike.services.cache import SearchCache
+from lookalike.services.expiry import OrderExpirer
 from lookalike.storage import LocalStorage
 
 log = get_logger(__name__)
@@ -80,9 +86,12 @@ def _classifier_factory(
 
 
 def create_app(
-    settings: Settings | None = None, embedder: EmbeddingService | None = None
+    settings: Settings | None = None,
+    embedder: EmbeddingService | None = None,
+    payment_gateway: PaymentGateway | None = None,
 ) -> FastAPI:
-    """`embedder` is for tests: pass a ready-to-use model instead of loading FashionCLIP."""
+    """`embedder` and `payment_gateway` are for tests: pass ready-made ones instead of loading
+    FashionCLIP and building the gateway from the settings."""
     settings = settings or get_settings()
     configure_logging(settings.log_level, json_logs=settings.log_json)
 
@@ -98,6 +107,16 @@ def create_app(
             socket_timeout=settings.redis_op_timeout_seconds,
         )
         app.state.storage = LocalStorage(settings.media_dir, settings.media_base_url)
+        app.state.mailer = ConsoleMailer(log_body=settings.app_env != "prod")
+        app.state.payment_gateway = payment_gateway or build_gateway(settings)
+        if not settings.jwt_secret:
+            # Fine for development; every restart signs everyone out.
+            log.warning(
+                "jwt_secret_generated", hint="set JWT_SECRET to keep sessions across restarts"
+            )
+        app.state.jwt_secret = settings.jwt_secret or secrets.token_urlsafe(48)
+        if app.state.payment_gateway is None:
+            log.warning("payments_disabled", hint="set STRIPE_SECRET_KEY or PAYMENTS_MODE=offline")
 
         # The model is loaded once, here; /readyz stays red until it is. Inference later runs
         # on the embedder's own worker thread, never on the event loop.
@@ -123,9 +142,14 @@ def create_app(
         except Exception as exc:  # database not up yet: the first requests pay instead
             log.warning("database_warm_up_skipped", error=type(exc).__name__)
         log.info("startup", app_env=settings.app_env, embedding_version=model.version)
+        expirer = OrderExpirer(app.state.sessions, app.state.payment_gateway, settings)
+        expiry_task = asyncio.create_task(expirer.run_forever(), name="order-expiry")
         try:
             yield
         finally:
+            expiry_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await expiry_task
             close = getattr(model, "close", None)
             if embedder is None and callable(close):
                 await asyncio.to_thread(close)
@@ -151,6 +175,7 @@ def create_app(
         api_prefix=settings.api_v1_prefix,
     )
     # Added last = outermost: CORS must see (and short-circuit) preflights before anything else.
+    app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,

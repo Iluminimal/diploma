@@ -16,10 +16,12 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from lookalike.core.config import Settings
+from lookalike.payments import PaymentGateway
 from tests.catalogue import Entry, seed_catalogue
 from tests.fakes import FakeEmbedder
 from tests.helpers import running_app
 
+WEBHOOK_SECRET = "whsec_test_secret"
 UNREACHABLE_DATABASE_URL = "postgresql+asyncpg://nobody:nobody@127.0.0.1:1/nothing"
 UNREACHABLE_REDIS_URL = "redis://127.0.0.1:1/0"
 
@@ -95,7 +97,11 @@ async def db_engine(migrated_database_url: str) -> AsyncIterator[AsyncEngine]:
     """Engine on the test database with empty catalogue tables."""
     engine = create_async_engine(migrated_database_url)
     async with engine.begin() as connection:
-        await connection.execute(text("TRUNCATE products, categories RESTART IDENTITY CASCADE"))
+        # CASCADE follows the foreign keys: users takes carts, orders, payments, addresses and
+        # refresh tokens with it, products the cart, wishlist and order lines.
+        await connection.execute(
+            text("TRUNCATE users, products, categories, stripe_events RESTART IDENTITY CASCADE")
+        )
     yield engine
     await engine.dispose()
 
@@ -125,7 +131,11 @@ async def api_factory(
 
     @asynccontextmanager
     async def start(
-        *, seed_count: int = 40, embedder: "FakeEmbedder | None" = None, **overrides: object
+        *,
+        seed_count: int = 40,
+        embedder: "FakeEmbedder | None" = None,
+        gateway: PaymentGateway | None = None,
+        **overrides: object,
     ) -> AsyncIterator[Api]:
         model = embedder or FakeEmbedder(version=f"fake-{uuid.uuid4().hex[:8]}")
         entries = await seed_catalogue(db_engine, model, seed_count) if seed_count else []
@@ -135,9 +145,18 @@ async def api_factory(
             "rate_limit_image": "10000/60",
             "rate_limit_text": "10000/60",
             "rate_limit_similar": "10000/60",
+            "rate_limit_register": "10000/60",
+            "rate_limit_login": "10000/60",
+            "rate_limit_login_email": "10000/60",
+            "rate_limit_refresh": "10000/60",
+            # Commerce: a fixed signing key, and the in-process payment gateway.
+            "jwt_secret": "test-jwt-secret-0123456789-0123456789",
+            "payments_mode": "offline",
+            "stripe_webhook_secret": WEBHOOK_SECRET,
+            "order_sweep_interval_seconds": 3600,
         }
         config = settings.model_copy(update={**values, **overrides})
-        async with running_app(config, embedder=model) as (client, app):
+        async with running_app(config, embedder=model, payment_gateway=gateway) as (client, app):
             yield Api(client, app, model, entries, config)
 
     return start

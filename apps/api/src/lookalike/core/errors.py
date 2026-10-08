@@ -11,7 +11,27 @@ from lookalike.core.request_context import REQUEST_ID_HEADER, get_request_id
 from lookalike.schemas.problem import FieldError, ProblemDetail
 
 PROBLEM_JSON = "application/problem+json"
-PRODUCT_NOT_FOUND_TYPE = "urn:lookalike:problem:product-not-found"
+
+_PREFIX = "urn:lookalike:problem:"
+PRODUCT_NOT_FOUND_TYPE = f"{_PREFIX}product-not-found"
+UNAUTHENTICATED_TYPE = f"{_PREFIX}unauthenticated"
+INVALID_CREDENTIALS_TYPE = f"{_PREFIX}invalid-credentials"
+EMAIL_TAKEN_TYPE = f"{_PREFIX}email-taken"
+FORBIDDEN_ORIGIN_TYPE = f"{_PREFIX}forbidden-origin"
+ADDRESS_NOT_FOUND_TYPE = f"{_PREFIX}address-not-found"
+CART_ITEM_NOT_FOUND_TYPE = f"{_PREFIX}cart-item-not-found"
+ORDER_NOT_FOUND_TYPE = f"{_PREFIX}order-not-found"
+INVALID_SIZE_TYPE = f"{_PREFIX}invalid-size"
+INSUFFICIENT_STOCK_TYPE = f"{_PREFIX}insufficient-stock"
+CART_EMPTY_TYPE = f"{_PREFIX}cart-empty"
+CHECKOUT_BUSY_TYPE = f"{_PREFIX}checkout-busy"
+CART_FULL_TYPE = f"{_PREFIX}cart-full"
+PAYMENTS_UNAVAILABLE_TYPE = f"{_PREFIX}payments-unavailable"
+PAYMENT_PROVIDER_TYPE = f"{_PREFIX}payment-provider-error"
+PAYMENT_IN_PROGRESS_TYPE = f"{_PREFIX}payment-in-progress"
+INVALID_SIGNATURE_TYPE = f"{_PREFIX}invalid-signature"
+ADDRESS_LIMIT_TYPE = f"{_PREFIX}address-limit"
+WISHLIST_FULL_TYPE = f"{_PREFIX}wishlist-full"
 
 log = get_logger(__name__)
 

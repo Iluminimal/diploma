@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
@@ -64,6 +64,39 @@ class Settings(BaseSettings):
     # Behind a trusted reverse proxy the client address is the first X-Forwarded-For entry.
     trust_proxy_headers: bool = False
 
+    # --- auth -----------------------------------------------------------------------------
+    # HS256 signing key for access tokens. Required (>= 32 chars) in prod; elsewhere an empty
+    # value means "generate one per process", which logs everyone out on restart.
+    jwt_secret: str = ""
+    access_token_ttl_seconds: int = 15 * 60
+    refresh_token_ttl_days: int = 30
+    # Refresh and guest-cart cookies. Secure is forced on in prod; dev runs on plain http.
+    cookie_secure: bool = False
+    rate_limit_register: str = "5/3600"
+    rate_limit_login: str = "10/300"
+    rate_limit_login_email: str = "5/300"
+    rate_limit_refresh: str = "60/60"
+
+    # --- cart and checkout ----------------------------------------------------------------
+    cart_max_quantity: int = 10
+    cart_max_lines: int = 50
+    cart_guest_ttl_days: int = 30
+    currency: str = "USD"
+    shipping_standard_cents: int = 499
+    shipping_express_cents: int = 1299
+    # Standard shipping is free from this subtotal.
+    free_shipping_threshold_cents: int = 10_000
+    # Stock is reserved when an order is created; unpaid orders give it back after this long.
+    order_pending_ttl_minutes: int = 30
+    order_sweep_interval_seconds: int = 60
+
+    # --- payments -------------------------------------------------------------------------
+    # `stripe`: real PaymentIntents (test keys in dev). `offline`: an in-process gateway so the
+    # whole flow can be exercised without Stripe keys; refused in prod.
+    payments_mode: Literal["stripe", "offline"] = "stripe"
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+
     # Where the Kaggle dataset lives (styles.csv + images/). Only ingestion needs it.
     dataset_dir: Path | None = None
 
@@ -78,6 +111,20 @@ class Settings(BaseSettings):
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
+
+    @model_validator(mode="after")
+    def _check_production(self) -> "Settings":
+        if self.jwt_secret and len(self.jwt_secret) < 32:
+            raise ValueError("JWT_SECRET must be at least 32 characters")
+        if self.app_env == "prod":
+            if not self.jwt_secret:
+                raise ValueError("JWT_SECRET is required when APP_ENV=prod")
+            if self.payments_mode != "stripe":
+                raise ValueError("PAYMENTS_MODE=offline is not allowed when APP_ENV=prod")
+            if not (self.stripe_secret_key and self.stripe_webhook_secret):
+                raise ValueError("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are required in prod")
+            self.cookie_secure = True
+        return self
 
 
 @lru_cache

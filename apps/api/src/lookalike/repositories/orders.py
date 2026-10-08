@@ -1,0 +1,134 @@
+from collections.abc import Sequence
+from datetime import datetime
+
+from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from lookalike.models import Order, OrderItem, Payment, StripeEvent
+
+_WITH_DETAILS = (selectinload(Order.items), selectinload(Order.payment))
+
+
+class OrderRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def add(self, order: Order, items: Sequence[OrderItem]) -> Order:
+        self._session.add(order)
+        await self._session.flush()
+        for item in items:
+            item.order_id = order.id
+            self._session.add(item)
+        await self._session.flush()
+        return order
+
+    async def get_by_idempotency_key(self, user_id: int, key: str) -> Order | None:
+        result = await self._session.execute(
+            select(Order)
+            .where(Order.user_id == user_id, Order.idempotency_key == key)
+            .options(*_WITH_DETAILS)
+            .execution_options(populate_existing=True)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_for_user(self, user_id: int, number: str) -> Order | None:
+        """Scoped to the owner: someone else's order number is indistinguishable from a typo."""
+        result = await self._session.execute(
+            select(Order)
+            .where(Order.user_id == user_id, Order.number == number)
+            .options(*_WITH_DETAILS)
+            .execution_options(populate_existing=True)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_id(self, order_id: int) -> Order | None:
+        result = await self._session.execute(
+            select(Order)
+            .where(Order.id == order_id)
+            .options(*_WITH_DETAILS)
+            .execution_options(populate_existing=True)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_for_update(self, order_id: int) -> Order | None:
+        """Lock the order row; state changes are decided one at a time. Items and payment are
+        loaded in separate queries (no lock) because FOR UPDATE and eager joins do not mix."""
+        result = await self._session.execute(
+            select(Order)
+            .where(Order.id == order_id)
+            .options(*_WITH_DETAILS)
+            .with_for_update(of=Order)
+            .execution_options(populate_existing=True)
+        )
+        return result.scalar_one_or_none()
+
+    async def list_for_user(self, user_id: int, *, limit: int, offset: int) -> list[Order]:
+        result = await self._session.execute(
+            select(Order)
+            .where(Order.user_id == user_id)
+            .options(selectinload(Order.items))
+            .order_by(Order.created_at.desc(), Order.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(result.scalars())
+
+    async def count_for_user(self, user_id: int) -> int:
+        result = await self._session.execute(
+            select(func.count()).select_from(Order).where(Order.user_id == user_id)
+        )
+        return int(result.scalar_one())
+
+    async def pending_for_user(self, user_id: int) -> list[Order]:
+        result = await self._session.execute(
+            select(Order)
+            .where(Order.user_id == user_id, Order.status == "pending")
+            .options(selectinload(Order.payment))
+            .order_by(Order.id)
+        )
+        return list(result.scalars())
+
+    async def pending_older_than(self, cutoff: datetime, limit: int) -> list[Order]:
+        result = await self._session.execute(
+            select(Order)
+            .where(Order.status == "pending", Order.created_at < cutoff)
+            .options(selectinload(Order.payment))
+            .order_by(Order.created_at)
+            .limit(limit)
+        )
+        return list(result.scalars())
+
+    async def add_payment_if_missing(self, payment: Payment) -> None:
+        """A replayed checkout may race with the request that is already creating the payment:
+        the unique `order_id` makes the second insert a no-op."""
+        await self._session.execute(
+            insert(Payment)
+            .values(
+                order_id=payment.order_id,
+                provider=payment.provider,
+                provider_payment_id=payment.provider_payment_id,
+                client_secret=payment.client_secret,
+                status=payment.status,
+                amount_cents=payment.amount_cents,
+                currency=payment.currency,
+            )
+            .on_conflict_do_nothing(index_elements=[Payment.order_id])
+        )
+
+    async def get_payment_by_provider_id(self, provider_payment_id: str) -> Payment | None:
+        result = await self._session.execute(
+            select(Payment).where(Payment.provider_payment_id == provider_payment_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def record_event(self, event_id: str, event_type: str) -> bool:
+        """True the first time an event id is seen, False for every redelivery."""
+        result = await self._session.execute(
+            insert(StripeEvent)
+            .values(id=event_id, type=event_type)
+            .on_conflict_do_nothing()
+            .returning(StripeEvent.id)
+        )
+        return result.scalar_one_or_none() is not None

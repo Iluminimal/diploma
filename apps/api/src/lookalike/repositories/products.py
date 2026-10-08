@@ -86,6 +86,27 @@ class ProductRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_many(
+        self, product_ids: Sequence[int], *, for_update: bool = False
+    ) -> dict[int, Product]:
+        """Products by id, inactive ones included (a cart line must still show a product that
+        was withdrawn). `for_update` takes row locks in id order: every transaction that locks
+        several products does so in the same order, so two checkouts cannot deadlock."""
+        if not product_ids:
+            return {}
+        statement = (
+            select(Product)
+            .where(Product.id.in_(set(product_ids)))
+            .options(*_LIGHT_ROWS)
+            .order_by(Product.id)
+        )
+        if for_update:
+            # populate_existing: the values read under the lock must replace anything this
+            # session cached earlier, or the stock arithmetic would start from a stale number.
+            statement = statement.with_for_update().execution_options(populate_existing=True)
+        result = await self._session.execute(statement)
+        return {product.id: product for product in result.scalars()}
+
     async def list_products(
         self,
         *,

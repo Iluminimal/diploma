@@ -1,10 +1,20 @@
 """ORM rows and request models to DTOs and repository inputs."""
 
 from lookalike.ingestion.images import thumbnail_key
-from lookalike.models import Product
+from lookalike.models import Order, OrderItem, Product
 from lookalike.repositories.products import SearchFilters
+from lookalike.schemas.address import AddressSnapshot
+from lookalike.schemas.order import OrderItemOut, OrderOut, OrderSummary
 from lookalike.schemas.product import FilterParams, ProductImage, ProductOut
 from lookalike.storage import Storage
+
+
+def _image(image_key: str, blur_data_url: str | None, storage: Storage) -> ProductImage:
+    return ProductImage(
+        thumb_400=storage.url(thumbnail_key(image_key, 400)),
+        thumb_800=storage.url(thumbnail_key(image_key, 800)),
+        blur_data_url=blur_data_url,
+    )
 
 
 def to_product_out(product: Product, storage: Storage) -> ProductOut:
@@ -23,11 +33,7 @@ def to_product_out(product: Product, storage: Storage) -> ProductOut:
         price_cents=product.price_cents,
         currency=product.currency,
         in_stock=product.stock_quantity > 0,
-        image=ProductImage(
-            thumb_400=storage.url(thumbnail_key(product.image_key, 400)),
-            thumb_800=storage.url(thumbnail_key(product.image_key, 800)),
-            blur_data_url=product.blur_data_url,
-        ),
+        image=_image(product.image_key, product.blur_data_url, storage),
     )
 
 
@@ -43,4 +49,46 @@ def to_search_filters(params: FilterParams) -> SearchFilters:
         min_price_cents=params.min_price,
         max_price_cents=params.max_price,
         in_stock_only=params.in_stock,
+    )
+
+
+def to_order_item_out(item: OrderItem, storage: Storage) -> OrderItemOut:
+    return OrderItemOut(
+        product_id=item.product_id,
+        name=item.product_name,
+        slug=item.product_slug,
+        image=_image(item.image_key, None, storage),
+        size=item.size,
+        unit_price_cents=item.unit_price_cents,
+        quantity=item.quantity,
+        line_total_cents=item.unit_price_cents * item.quantity,
+    )
+
+
+def to_order_out(order: Order, storage: Storage) -> OrderOut:
+    return OrderOut(
+        number=order.number,
+        status=order.status,
+        created_at=order.created_at,
+        paid_at=order.paid_at,
+        currency=order.currency,
+        subtotal_cents=order.subtotal_cents,
+        shipping_cents=order.shipping_cents,
+        total_cents=order.total_cents,
+        shipping_method=order.shipping_method,
+        shipping_address=AddressSnapshot.model_validate(order.shipping_address),
+        contact_email=order.contact_email,
+        items=[to_order_item_out(item, storage) for item in order.items],
+    )
+
+
+def to_order_summary(order: Order, storage: Storage) -> OrderSummary:
+    return OrderSummary(
+        number=order.number,
+        status=order.status,
+        created_at=order.created_at,
+        currency=order.currency,
+        total_cents=order.total_cents,
+        item_count=sum(item.quantity for item in order.items),
+        images=[_image(item.image_key, None, storage) for item in order.items[:4]],
     )

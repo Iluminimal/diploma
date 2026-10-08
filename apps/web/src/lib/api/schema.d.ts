@@ -4,6 +4,180 @@
  */
 
 export interface paths {
+    "/api/v1/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Saved addresses, default first */
+        get: operations["list_addresses_api_v1_addresses_get"];
+        put?: never;
+        /** Save an address */
+        post: operations["create_address_api_v1_addresses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/addresses/{address_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete an address (past orders keep their copy) */
+        delete: operations["delete_address_api_v1_addresses__address_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change an address */
+        patch: operations["update_address_api_v1_addresses__address_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign in (merges the guest cart into the account's) */
+        post: operations["login_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** End this session */
+        post: operations["logout_api_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The signed-in user */
+        get: operations["me_api_v1_auth_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trade the refresh cookie for a new access token (and a new refresh cookie) */
+        post: operations["refresh_api_v1_auth_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create an account and sign in */
+        post: operations["register_api_v1_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The current cart (the user's, or the guest's) */
+        get: operations["get_cart_api_v1_cart_get"];
+        put?: never;
+        post?: never;
+        /** Empty the cart */
+        delete: operations["clear_cart_api_v1_cart_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add a product (adds up with the same product and size) */
+        post: operations["add_item_api_v1_cart_items_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/cart/items/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a line */
+        delete: operations["remove_item_api_v1_cart_items__item_id__delete"];
+        options?: never;
+        head?: never;
+        /** Set a line's quantity */
+        patch: operations["update_item_api_v1_cart_items__item_id__patch"];
+        trace?: never;
+    };
     "/api/v1/catalog/filters": {
         parameters: {
             query?: never;
@@ -13,6 +187,94 @@ export interface paths {
         };
         /** Categories and filter options for building a filter UI */
         get: operations["catalog_filters_api_v1_catalog_filters_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reserve the cart's stock and start the payment
+         * @description Creates a pending order from the signed-in user's cart, reserves its stock and returns what the browser needs to pay. Unpaid orders expire and release their stock. A previous unpaid order of the same user is cancelled first.
+         */
+        post: operations["create_checkout_api_v1_checkout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/orders/{number}/simulate-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Development only: pay for an order without a card (PAYMENTS_MODE=offline) */
+        post: operations["simulate_payment_api_v1_checkout_orders__number__simulate_payment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/checkout/shipping-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Shipping options and prices */
+        get: operations["shipping_methods_api_v1_checkout_shipping_methods_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Your orders, newest first */
+        get: operations["list_orders_api_v1_orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{number}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One of your orders, with the prices as they were charged */
+        get: operations["get_order_api_v1_orders__number__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -123,6 +385,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/webhooks/stripe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stripe webhook (payment_intent.succeeded / payment_failed / canceled)
+         * @description Server-to-server: authenticated by the `Stripe-Signature` header, not by a session. Idempotent by event id, so redeliveries are acknowledged and ignored.
+         */
+        post: operations["stripe_webhook_api_v1_webhooks_stripe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wishlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Saved products, newest first */
+        get: operations["list_wishlist_api_v1_wishlist_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/wishlist/{product_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save a product (idempotent) */
+        put: operations["add_to_wishlist_api_v1_wishlist__product_id__put"];
+        post?: never;
+        /** Remove a product (idempotent) */
+        delete: operations["remove_from_wishlist_api_v1_wishlist__product_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -161,6 +478,155 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AddressIn */
+        AddressIn: {
+            /** City */
+            city: string;
+            /** Country */
+            country: string;
+            /** Full Name */
+            full_name: string;
+            /**
+             * Is Default
+             * @default false
+             */
+            is_default: boolean;
+            /** Line1 */
+            line1: string;
+            /** Line2 */
+            line2?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Postal Code */
+            postal_code: string;
+            /** Region */
+            region?: string | null;
+        };
+        /** AddressList */
+        AddressList: {
+            /** Items */
+            items?: components["schemas"]["AddressOut"][];
+        };
+        /** AddressOut */
+        AddressOut: {
+            /** City */
+            city: string;
+            /** Country */
+            country: string;
+            /** Full Name */
+            full_name: string;
+            /** Id */
+            id: number;
+            /** Is Default */
+            is_default: boolean;
+            /** Line1 */
+            line1: string;
+            /** Line2 */
+            line2: string | null;
+            /** Phone */
+            phone: string | null;
+            /** Postal Code */
+            postal_code: string;
+            /** Region */
+            region: string | null;
+        };
+        /**
+         * AddressSnapshot
+         * @description An address as it was when the order was placed.
+         */
+        AddressSnapshot: {
+            /** City */
+            city: string;
+            /** Country */
+            country: string;
+            /** Full Name */
+            full_name: string;
+            /** Line1 */
+            line1: string;
+            /** Line2 */
+            line2?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Postal Code */
+            postal_code: string;
+            /** Region */
+            region?: string | null;
+        };
+        /**
+         * AddressUpdate
+         * @description PATCH: only the fields that are sent change.
+         */
+        AddressUpdate: {
+            /** City */
+            city?: string | null;
+            /** Country */
+            country?: string | null;
+            /** Full Name */
+            full_name?: string | null;
+            /** Is Default */
+            is_default?: boolean | null;
+            /** Line1 */
+            line1?: string | null;
+            /** Line2 */
+            line2?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Postal Code */
+            postal_code?: string | null;
+            /** Region */
+            region?: string | null;
+        };
+        /** CartItemIn */
+        CartItemIn: {
+            /** Product Id */
+            product_id: number;
+            /**
+             * Quantity
+             * @default 1
+             */
+            quantity: number;
+            /**
+             * Size
+             * @default
+             */
+            size: string;
+        };
+        /** CartItemUpdate */
+        CartItemUpdate: {
+            /** Quantity */
+            quantity: number;
+        };
+        /** CartLineOut */
+        CartLineOut: {
+            /** Id */
+            id: number;
+            /** Issue */
+            issue?: ("out_of_stock" | "low_stock") | null;
+            /** Line Total Cents */
+            line_total_cents: number;
+            /** Max Quantity */
+            max_quantity: number;
+            product: components["schemas"]["ProductOut"];
+            /** Quantity */
+            quantity: number;
+            /** Size */
+            size: string;
+            /** Unit Price Cents */
+            unit_price_cents: number;
+        };
+        /** CartOut */
+        CartOut: {
+            /** Currency */
+            currency: string;
+            /** Has Issues */
+            has_issues: boolean;
+            /** Item Count */
+            item_count: number;
+            /** Lines */
+            lines: components["schemas"]["CartLineOut"][];
+            /** Subtotal Cents */
+            subtotal_cents: number;
+        };
         /**
          * CatalogFilters
          * @description Everything a filter sidebar needs to render.
@@ -195,6 +661,21 @@ export interface components {
             path: string;
             /** Slug */
             slug: string;
+        };
+        /** CheckoutOut */
+        CheckoutOut: {
+            order: components["schemas"]["OrderOut"];
+            payment: components["schemas"]["PaymentOut"];
+        };
+        /** CheckoutRequest */
+        CheckoutRequest: {
+            /** Address Id */
+            address_id: number;
+            /**
+             * Shipping Method
+             * @enum {string}
+             */
+            shipping_method: "standard" | "express";
         };
         /** DetectedCategory */
         DetectedCategory: {
@@ -407,6 +888,116 @@ export interface components {
              */
             status: "ok";
         };
+        /** LoginRequest */
+        LoginRequest: {
+            /** Email */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        /** OrderItemOut */
+        OrderItemOut: {
+            image: components["schemas"]["ProductImage"];
+            /** Line Total Cents */
+            line_total_cents: number;
+            /** Name */
+            name: string;
+            /** Product Id */
+            product_id: number;
+            /** Quantity */
+            quantity: number;
+            /** Size */
+            size: string;
+            /** Slug */
+            slug: string;
+            /** Unit Price Cents */
+            unit_price_cents: number;
+        };
+        /** OrderOut */
+        OrderOut: {
+            /** Contact Email */
+            contact_email: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Items */
+            items: components["schemas"]["OrderItemOut"][];
+            /** Number */
+            number: string;
+            /** Paid At */
+            paid_at: string | null;
+            shipping_address: components["schemas"]["AddressSnapshot"];
+            /** Shipping Cents */
+            shipping_cents: number;
+            /**
+             * Shipping Method
+             * @enum {string}
+             */
+            shipping_method: "standard" | "express";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "paid" | "cancelled";
+            /** Subtotal Cents */
+            subtotal_cents: number;
+            /** Total Cents */
+            total_cents: number;
+        };
+        /** OrderPage */
+        OrderPage: {
+            /** Items */
+            items: components["schemas"]["OrderSummary"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Pages */
+            pages: number;
+            /** Total */
+            total: number;
+        };
+        /** OrderSummary */
+        OrderSummary: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency: string;
+            /** Images */
+            images: components["schemas"]["ProductImage"][];
+            /** Item Count */
+            item_count: number;
+            /** Number */
+            number: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "paid" | "cancelled";
+            /** Total Cents */
+            total_cents: number;
+        };
+        /**
+         * PaymentOut
+         * @description What the browser needs to collect payment. `stripe`: confirm the PaymentIntent with
+         *     Stripe.js using `client_secret`. `offline` (development): call the simulate endpoint.
+         */
+        PaymentOut: {
+            /** Client Secret */
+            client_secret: string | null;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "stripe" | "offline";
+        };
         /** PriceRange */
         PriceRange: {
             /** Max Cents */
@@ -506,6 +1097,18 @@ export interface components {
              */
             status: "ok";
         };
+        /** RegisterRequest */
+        RegisterRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Full Name */
+            full_name: string;
+            /** Password */
+            password: string;
+        };
         /** SearchHit */
         SearchHit: {
             product: components["schemas"]["ProductOut"];
@@ -542,6 +1145,49 @@ export interface components {
             /** Total Ms */
             total_ms: number;
         };
+        /**
+         * SessionOut
+         * @description The access token goes in `Authorization: Bearer` and is kept in memory by the client.
+         *     The refresh token never appears in a body: it is an httpOnly cookie.
+         */
+        SessionOut: {
+            /** Access Token */
+            access_token: string;
+            /** Expires In */
+            expires_in: number;
+            /**
+             * Token Type
+             * @default bearer
+             * @constant
+             */
+            token_type: "bearer";
+            user: components["schemas"]["UserOut"];
+        };
+        /** ShippingMethodList */
+        ShippingMethodList: {
+            /** Currency */
+            currency: string;
+            /** Free Shipping Threshold Cents */
+            free_shipping_threshold_cents: number;
+            /** Items */
+            items: components["schemas"]["ShippingMethodOut"][];
+        };
+        /** ShippingMethodOut */
+        ShippingMethodOut: {
+            /** Description */
+            description: string;
+            /** Estimated Days */
+            estimated_days: string;
+            /**
+             * Id
+             * @enum {string}
+             */
+            id: "standard" | "express";
+            /** Label */
+            label: string;
+            /** Price Cents */
+            price_cents: number;
+        };
         /** TextSearchRequest */
         TextSearchRequest: {
             /**
@@ -565,6 +1211,15 @@ export interface components {
             /** Query */
             query: string;
         };
+        /** UserOut */
+        UserOut: {
+            /** Email */
+            email: string;
+            /** Full Name */
+            full_name: string;
+            /** Id */
+            id: number;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -578,6 +1233,11 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /** WishlistOut */
+        WishlistOut: {
+            /** Items */
+            items: components["schemas"]["ProductOut"][];
+        };
     };
     responses: never;
     parameters: never;
@@ -587,6 +1247,548 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    list_addresses_api_v1_addresses_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressList"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    create_address_api_v1_addresses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_address_api_v1_addresses__address_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                address_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not one of your addresses */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_address_api_v1_addresses__address_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                address_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddressUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddressOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not one of your addresses */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_api_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Not signed in or credentials rejected */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_api_v1_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    me_api_v1_auth_me_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserOut"];
+                };
+            };
+            /** @description Not signed in or credentials rejected */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    refresh_api_v1_auth_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Not signed in or credentials rejected */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_api_v1_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionOut"];
+                };
+            };
+            /** @description Email already registered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_cart_api_v1_cart_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartOut"];
+                };
+            };
+        };
+    };
+    clear_cart_api_v1_cart_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartOut"];
+                };
+            };
+        };
+    };
+    add_item_api_v1_cart_items_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartItemIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartOut"];
+                };
+            };
+            /** @description Unknown product or cart item */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not enough stock (`available` says how much) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Invalid size or quantity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    remove_item_api_v1_cart_items__item_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartOut"];
+                };
+            };
+            /** @description Unknown product or cart item */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not enough stock (`available` says how much) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Invalid size or quantity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    update_item_api_v1_cart_items__item_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                item_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CartItemUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CartOut"];
+                };
+            };
+            /** @description Unknown product or cart item */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not enough stock (`available` says how much) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Invalid size or quantity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     catalog_filters_api_v1_catalog_filters_get: {
         parameters: {
             query?: never;
@@ -603,6 +1805,237 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogFilters"];
+                };
+            };
+        };
+    };
+    create_checkout_api_v1_checkout_post: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Repeating a request with the same key returns the same order. */
+                "idempotency-key": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CheckoutOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Address not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Empty cart, or items no longer in stock */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The payment provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Payments are not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    simulate_payment_api_v1_checkout_orders__number__simulate_payment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not in offline mode, or no such order */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    shipping_methods_api_v1_checkout_shipping_methods_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShippingMethodList"];
+                };
+            };
+        };
+    };
+    list_orders_api_v1_orders_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPage"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_order_api_v1_orders__number__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not one of your orders */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -902,6 +2335,171 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    stripe_webhook_api_v1_webhooks_stripe_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "Stripe-Signature"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+            /** @description Bad or missing signature */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Payments not configured */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    list_wishlist_api_v1_wishlist_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WishlistOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    add_to_wishlist_api_v1_wishlist__product_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Unknown or inactive product */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_from_wishlist_api_v1_wishlist__product_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

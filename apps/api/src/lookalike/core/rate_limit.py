@@ -22,7 +22,7 @@ from lookalike.core.logging import get_logger
 log = get_logger(__name__)
 
 RATE_LIMITED_TYPE = "urn:lookalike:problem:rate-limited"
-LimitName = Literal["image", "text", "similar"]
+LimitName = Literal["image", "text", "similar", "register", "login", "refresh"]
 
 _SCRIPT = """
 local count = redis.call('INCR', KEYS[1])
@@ -79,6 +79,36 @@ class RateLimiter:
             reset_seconds=max(1, int(ttl)),
         )
 
+    async def peek(self, name: str, client: str, rate: Rate) -> Decision:
+        """The state of a counter without counting a hit (used for failed-login counters)."""
+        key = f"{self._prefix}:{name}:{client}"
+        try:
+            count, ttl = await asyncio.wait_for(self._peek_script(key), self._timeout)
+        except Exception as exc:
+            log.warning("rate_limit_unavailable", error=type(exc).__name__)
+            return Decision(True, rate.requests, rate.requests, rate.window_seconds)
+        return Decision(
+            allowed=count < rate.requests,
+            limit=rate.requests,
+            remaining=max(0, rate.requests - count),
+            reset_seconds=max(1, ttl),
+        )
+
+    async def _peek_script(self, key: str) -> tuple[int, int]:
+        pipe = self._redis.pipeline(transaction=False)
+        pipe.get(key)
+        pipe.ttl(key)
+        raw, ttl = await pipe.execute()
+        return int(raw or 0), int(ttl)
+
+    async def reset(self, name: str, client: str) -> None:
+        try:
+            await asyncio.wait_for(
+                self._redis.delete(f"{self._prefix}:{name}:{client}"), self._timeout
+            )
+        except Exception as exc:
+            log.warning("rate_limit_unavailable", error=type(exc).__name__)
+
 
 def client_address(request: Request, *, trust_proxy_headers: bool) -> str:
     if trust_proxy_headers:
@@ -95,6 +125,9 @@ def _rate_for(settings: Settings, name: LimitName) -> Rate:
             "image": settings.rate_limit_image,
             "text": settings.rate_limit_text,
             "similar": settings.rate_limit_similar,
+            "register": settings.rate_limit_register,
+            "login": settings.rate_limit_login,
+            "refresh": settings.rate_limit_refresh,
         }[name]
     )
 

@@ -5,6 +5,7 @@ import { NAV_LINKS } from "@/components/nav-links";
 import { SearchBar } from "@/components/search-bar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AccountMenu } from "@/features/auth/account-menu";
+import { CartButton } from "@/features/cart/cart-button";
 import { Button } from "@/components/ui/button";
 
 export function SiteHeader() {
@@ -35,6 +36,7 @@ export function SiteHeader() {
           </Button>
           <ThemeToggle />
           <AccountMenu />
+          <CartButton />
         </div>
       </div>
       <div className="container-page pb-3 md:hidden">

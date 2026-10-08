@@ -1,0 +1,97 @@
+"use client";
+
+import { ArrowRight, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { Price } from "@/components/price";
+import { Button } from "@/components/ui/button";
+import { userMessage } from "@/lib/api/errors";
+import { CartLines } from "./cart-lines";
+import { useCart } from "./use-cart";
+
+export function CartView() {
+  const { data: cart, isPending, error, refetch } = useCart();
+
+  if (isPending) {
+    return (
+      <div className="grid gap-8 lg:grid-cols-[1fr_22rem]" aria-busy aria-label="Loading your cart">
+        <div className="space-y-4">
+          {[0, 1, 2].map((n) => (
+            <div key={n} className="bg-muted h-32 animate-pulse rounded-2xl" />
+          ))}
+        </div>
+        <div className="bg-muted h-56 animate-pulse rounded-2xl" />
+      </div>
+    );
+  }
+  if (error || !cart) {
+    return (
+      <div className="space-y-3">
+        <p role="alert" className="text-destructive">
+          {userMessage(error)}
+        </p>
+        <Button variant="outline" onClick={() => void refetch()}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  if (cart.lines.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-5 py-16 text-center">
+        <span className="bg-muted grid size-16 place-items-center rounded-full">
+          <ShoppingBag className="text-muted-foreground size-7" />
+        </span>
+        <div className="space-y-1">
+          <p className="text-lg font-medium">Your cart is empty</p>
+          <p className="text-muted-foreground text-sm">Browse the collection or search with a photo.</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button asChild size="lg" className="h-11 rounded-xl px-5">
+            <Link href="/products">Shop all</Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="h-11 rounded-xl px-5">
+            <Link href="/search">Search by photo</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
+      <CartLines cart={cart} />
+      <aside
+        aria-label="Order summary"
+        className="border-border bg-card space-y-4 rounded-2xl border p-5 lg:sticky lg:top-24"
+      >
+        <h2 className="text-base font-semibold">Summary</h2>
+        <dl className="space-y-2 text-sm">
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">Subtotal ({cart.item_count} items)</dt>
+            <dd>
+              <Price cents={cart.subtotal_cents} currency={cart.currency} />
+            </dd>
+          </div>
+          <div className="flex justify-between">
+            <dt className="text-muted-foreground">Shipping</dt>
+            <dd className="text-muted-foreground">Calculated at checkout</dd>
+          </div>
+        </dl>
+        <div className="border-border flex items-baseline justify-between border-t pt-4">
+          <span className="font-medium">Estimated total</span>
+          <Price cents={cart.subtotal_cents} currency={cart.currency} className="text-lg font-semibold" />
+        </div>
+        {cart.has_issues && (
+          <p role="status" className="text-destructive text-sm">
+            Some items need your attention before you can check out.
+          </p>
+        )}
+        <Button asChild size="lg" className="h-11 w-full rounded-xl text-sm" aria-disabled={cart.has_issues}>
+          <Link href="/checkout">
+            Checkout <ArrowRight />
+          </Link>
+        </Button>
+      </aside>
+    </div>
+  );
+}

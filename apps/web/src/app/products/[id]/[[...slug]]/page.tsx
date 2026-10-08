@@ -17,7 +17,7 @@ import { breadcrumbTrail, productDescription, productJsonLd, serializeJsonLd } f
 import { productPath } from "@/features/catalog/product";
 import { ProductGallery } from "@/features/catalog/product-gallery";
 import { sizesFor } from "@/features/catalog/sizes";
-import { SizeSelector } from "@/features/catalog/size-selector";
+import { PurchasePanel } from "@/features/cart/purchase-panel";
 import { RailSkeleton, SimilarProducts } from "@/features/catalog/similar-products";
 import { Camera, Check } from "lucide-react";
 
@@ -114,7 +114,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
             </p>
           </header>
 
-          {sizes && <SizeSelector label={sizes.label} sizes={sizes.sizes} disabled={!product.in_stock} />}
+          <PurchasePanel product={product} sizes={sizes} />
 
           <Button asChild variant="outline" size="lg" className="h-11 w-full sm:w-fit">
             <Link href="/search">

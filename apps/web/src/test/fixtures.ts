@@ -66,3 +66,31 @@ export function makeSearchResponse(products: Product[] = [makeProduct()]): Searc
     cached: false,
   };
 }
+
+import type { Cart, CartLine } from "@/features/cart/cart-api";
+
+export function makeCartLine(overrides: Partial<CartLine> = {}): CartLine {
+  const product = overrides.product ?? makeProduct();
+  const quantity = overrides.quantity ?? 1;
+  return {
+    id: 1,
+    product,
+    size: "M",
+    quantity,
+    unit_price_cents: product.price_cents,
+    line_total_cents: product.price_cents * quantity,
+    max_quantity: 7,
+    issue: null,
+    ...overrides,
+  };
+}
+
+export function makeCart(lines: CartLine[] = []): Cart {
+  return {
+    lines,
+    item_count: lines.reduce((sum, line) => sum + line.quantity, 0),
+    subtotal_cents: lines.reduce((sum, line) => sum + line.line_total_cents, 0),
+    currency: "USD",
+    has_issues: lines.some((line) => line.issue),
+  };
+}

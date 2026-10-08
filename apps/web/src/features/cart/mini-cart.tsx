@@ -1,0 +1,81 @@
+"use client";
+
+import { ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { Price } from "@/components/price";
+import { Button } from "@/components/ui/button";
+import { userMessage } from "@/lib/api/errors";
+import { CartLines } from "./cart-lines";
+import { useCart } from "./use-cart";
+
+export function MiniCartSkeleton() {
+  return (
+    <div className="space-y-4 px-4" aria-hidden>
+      {[0, 1].map((n) => (
+        <div key={n} className="flex gap-3">
+          <div className="bg-muted aspect-[3/4] w-20 animate-pulse rounded-xl" />
+          <div className="flex-1 space-y-2 pt-1">
+            <div className="bg-muted h-3.5 w-4/5 animate-pulse rounded" />
+            <div className="bg-muted h-3 w-2/5 animate-pulse rounded" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** The drawer's content. Loaded lazily (see cart-button.tsx) to keep it out of every page's JS. */
+export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
+  const { data: cart, isPending, error, refetch } = useCart();
+
+  if (isPending) return <MiniCartSkeleton />;
+  if (error || !cart) {
+    return (
+      <div className="space-y-3 px-4 text-sm">
+        <p role="alert" className="text-destructive">
+          {userMessage(error)}
+        </p>
+        <Button variant="outline" onClick={() => void refetch()}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  if (cart.lines.length === 0) {
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 pb-16 text-center">
+        <span className="bg-muted grid size-14 place-items-center rounded-full">
+          <ShoppingBag className="text-muted-foreground size-6" />
+        </span>
+        <div className="space-y-1">
+          <p className="font-medium">Your cart is empty</p>
+          <p className="text-muted-foreground text-sm">Find something you love and it will wait for you here.</p>
+        </div>
+        <Button asChild variant="outline" size="lg" className="h-10 rounded-xl px-5" onClick={onNavigate}>
+          <Link href="/products">Continue shopping</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4">
+        <CartLines cart={cart} onNavigate={onNavigate} />
+      </div>
+      <div className="border-border space-y-3 border-t p-4">
+        <div className="flex items-baseline justify-between">
+          <span className="text-sm font-medium">Subtotal</span>
+          <Price cents={cart.subtotal_cents} currency={cart.currency} className="text-base font-semibold" />
+        </div>
+        <p className="text-muted-foreground text-xs">Shipping is calculated at checkout.</p>
+        <Button asChild size="lg" className="h-11 w-full rounded-xl text-sm" onClick={onNavigate}>
+          <Link href="/checkout">Checkout</Link>
+        </Button>
+        <Button asChild variant="outline" size="lg" className="h-11 w-full rounded-xl text-sm" onClick={onNavigate}>
+          <Link href="/cart">View cart</Link>
+        </Button>
+      </div>
+    </>
+  );
+}

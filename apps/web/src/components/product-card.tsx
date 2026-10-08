@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ProductImage } from "@/components/product-image";
+import { WishlistButton } from "@/features/wishlist/wishlist-button";
 import { formatPrice, productPath, productSubtitle, type Product } from "@/features/catalog/product";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
         href={productPath(product)}
         className="focus-visible:ring-ring/60 block rounded-2xl outline-none focus-visible:ring-3"
       >
-        <div className="bg-muted relative aspect-[3/4] overflow-hidden rounded-2xl">
+        <div className="bg-muted relative aspect-3/4 overflow-hidden rounded-2xl">
           <ProductImage
             product={product}
             sizes={sizes}
@@ -47,6 +48,7 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
         </div>
       </Link>
       {badge && <div className="pointer-events-none absolute top-2 left-2">{badge}</div>}
+      <WishlistButton product={product} className="absolute top-2 right-2" />
     </article>
   );
 }
@@ -54,7 +56,7 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
 export function ProductCardSkeleton() {
   return (
     <div aria-hidden>
-      <div className="bg-muted aspect-[3/4] animate-pulse rounded-2xl" />
+      <div className="bg-muted aspect-3/4 animate-pulse rounded-2xl" />
       <div className="mt-3 space-y-2 px-0.5">
         <div className="bg-muted h-3.5 w-4/5 animate-pulse rounded" />
         <div className="bg-muted h-3 w-2/5 animate-pulse rounded" />

@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach } from "vitest";
+import { afterEach, vi } from "vitest";
 
 afterEach(() => cleanup());
 
@@ -14,3 +14,11 @@ globalThis.ResizeObserver ??= ResizeObserverStub;
 window.HTMLElement.prototype.scrollIntoView ??= () => {};
 window.HTMLElement.prototype.hasPointerCapture ??= () => false;
 window.HTMLElement.prototype.releasePointerCapture ??= () => {};
+
+// Components use the App Router hooks, which throw outside a mounted router. Tests that care
+// about navigation replace this with their own `vi.mock("next/navigation", ...)`.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+}));

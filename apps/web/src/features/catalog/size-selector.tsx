@@ -8,11 +8,19 @@ type Props = {
   sizes: string[];
   /** Sold-out products show the sizes but cannot be selected. */
   disabled?: boolean;
+  /** Controlled use: the parent owns the selection (needed to add the chosen size to the cart). */
+  value?: string | null;
+  onChange?: (size: string) => void;
 };
 
-export function SizeSelector({ label, sizes, disabled }: Props) {
+export function SizeSelector({ label, sizes, disabled, value, onChange }: Props) {
   const name = useId();
-  const [selected, setSelected] = useState<string | null>(null);
+  const [internal, setInternal] = useState<string | null>(null);
+  const selected = value !== undefined ? value : internal;
+  const setSelected = (size: string) => {
+    setInternal(size);
+    onChange?.(size);
+  };
 
   return (
     <fieldset disabled={disabled} className="space-y-3">

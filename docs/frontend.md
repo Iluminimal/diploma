@@ -15,6 +15,9 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 | `/cart` | static shell | the cart is client data (guest or account), see below |
 | `/checkout`, `/checkout/confirmation/{number}` | static shell | needs a session; demo payment |
 | `/account/orders`, `/account/orders/{number}`, `/account/addresses`, `/account/wishlist` | static shell | need a session |
+| `/admin/products` (+ `new`, `{id}`), `/admin/orders` (+ `{number}`) | static shell | administrators only; `noindex`; see `docs/admin.md` |
+| `/sitemap/{n}.xml`, `/robots.txt` | per request | 10,000 products per sitemap file (`GET /catalog/sitemap` gives id, slug and last change); private and low-value paths are disallowed; `robots.txt` still works when the API is down |
+| `/icon`, `/apple-icon`, `/opengraph-image` | static | generated (no binary assets) |
 
 * **One canonical product URL.** The API id is the lookup key; `/products/41885` or a stale slug answer with a 308 to
   `/products/41885/alma-women-blue-kurta-60000`. (The numeric suffix of the slug is the dataset id, not the API id.)
@@ -26,7 +29,9 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
   time (CI, Docker image builds). The API client's fetch cache (`revalidate`) keeps them cheap.
 * **Images.** The API serves each photo as WebP at 400 and 800 px with a blur placeholder. `src/lib/image-loader.ts`
   hands `next/image` the matching file for the requested width, so Next's optimizer (which also refuses `localhost`
-  sources) is not involved. Pass `sizes` for every grid.
+  sources) is not involved, and rewrites API photo URLs onto this site's own `/media` route (a rewrite in
+  `next.config.ts`), so photos reuse the page's connection instead of opening one to a second origin. Pass `sizes` for
+  every grid.
 * **Sizes** (`catalog/sizes.ts`) come from the category (clothing, shoes, kids, belts; none for watches, bags, ...) because
   the catalogue has no size data. The API validates against the same table (`apps/api/.../services/sizes.py`); keep the
   two in step.
@@ -87,30 +92,85 @@ Not done: cropping the photo before searching (SPEC §5 mentions "preview with c
 
 ## Checks
 
-* `npm test`: Vitest + Testing Library (filters, product helpers, JSON-LD, error mapping, image normalization, search
-  request building, product card, filter fields, pagination, search bar, drop zone, detected chip, whole search view).
-* `make browser-check-commerce`: the commerce flows at 390 px and 1440 px (see below). Last run: 51/51. Needs
-  `make api` with `PAYMENTS_MODE=offline` (set in `.env`; `.env.example` has it) and `make web`.
-  * guest adds to the cart (size required, drawer, badge), quantity stepper and stock limit, guest wishlist click goes to
-    sign in and back, registering merges the guest cart, wishlist save, new address at checkout, express shipping changes the
-    total, demo payment to confirmation, order history and detail, address default/delete, mobile menu, sign out, protected
-    page redirect, wrong password message, sign in again, session survives a reload, no console errors.
-* `make browser-check`: Chromium against the live app; saves screenshots to `docs/screenshots` and asserts the
-  flows below. Last run: 26/26.
-  * a catalogue photo's own product ranks first with a match badge; override sends `article_type`; refinement uses
-    `/search/hybrid`; a gender chip adds `gender`; paste, drop, fake-camera capture and a real HEIC file all start a search;
-    a text file is refused with a message; filters, sort and page land in the URL; product JSON-LD parses;
-    no console errors on any page, in light and dark, at 390 px and 1440 px.
-* Lighthouse (mobile preset, simulated slow 4G, production build, API on the same machine):
+* `npm test`: Vitest + Testing Library, 267 tests (filters, product helpers, JSON-LD and sitemap, error mapping, image
+  normalization, search, cart, checkout, account, orders, admin screens and their payload logic, forms, the access gate).
+* `make e2e`: Playwright, 52 end-to-end tests against a running stack: visual search, cart, checkout with the demo
+  payment, login, admin, plus axe accessibility sweeps and keyboard checks. See `docs/e2e.md`; CI runs it on a seeded
+  stack with a fake model.
+* `make lighthouse`: Lighthouse on the production build (below).
+* The screenshots in `docs/screenshots` are from the retired `browser-check` scripts (Phase 4 and 5); their flows are now
+  e2e specs.
 
-  | Page | Performance | Accessibility | Best practices | SEO |
-  | --- | --- | --- | --- | --- |
-  | Home | 88 | 100 | 100 | 100 |
-  | Listing | 87 | 100 | 100 | 100 |
-  | Product | 93 | 100 | 100 | 100 |
-  | Search | 94 | 100 | 100 | 100 |
+## Accessibility
 
-  Home and listing are just under the spec's 90 target: the simulated LCP is ~3.9 s although the real LCP measured in the
-  browser is 50-125 ms, so the gap is Lighthouse's CPU/network throttling of the ~230 KB of JavaScript (React, Next, Radix),
-  not slow content. Shrinking the header's client code is the next lever. These numbers predate the account menu and cart
-  button in the header (a little more client JavaScript) and have not been re-measured.
+Target: WCAG 2.1 AA. What is checked automatically, and what is not:
+
+* **axe** (`e2e/a11y.spec.ts`, rules `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `best-practice`) on home, listing (plain,
+  filtered, empty), product, search (empty and with results), sign in, register, cart, 404, the mini-cart, the header
+  suggestions, the phone filter sheet, account, checkout, confirmation and the admin screens, each in light and dark mode at
+  390 px and 1440 px, with reduced motion so nothing is caught mid-animation. Zero violations.
+* **Keyboard** (`e2e/keyboard.spec.ts`): the skip link is the first stop and moves focus into `<main>`; the first 25 tab
+  stops of a page all show focus; the search combobox (arrows, Escape, Enter); dialogs keep focus inside, close on Escape and
+  give focus back; the category toggles work with Enter and Space and announce their state; form errors are tied to their
+  fields; reduced motion switches animations off.
+* **Not covered**: a screen reader (VoiceOver, NVDA) was not used, nor a real phone with switch access or zoom. Automated
+  tools find roughly a third of accessibility problems, so treat "zero axe violations" as a floor.
+
+What the first run found, and the fixes:
+
+| Finding | Fix |
+| --- | --- |
+| `nested-interactive` in the category filter: a checkbox inside a `<summary>` | the expand toggle is its own button (`aria-expanded`, `aria-controls`); the branch opens by itself while something inside is selected |
+| Muted text on muted backgrounds 4.34:1 | `--muted-foreground` oklch(0.556) to oklch(0.5): 5.5:1 on `bg-muted`, 6:1 on white |
+| "Paid" badge 3.75:1, "Withdrawn"/"Cancelled" badge 3.99:1 | `--success` oklch(0.55 0.13 155) to oklch(0.45 0.12 155) (5.5:1); `--destructive` to oklch(0.52 0.22 27) (5.0:1) |
+| Focus ring 2.6:1 against white (and drawn at 50-60% opacity) | `--ring` light oklch(0.4) (9.2:1 solid, 3.1:1 at 60%); dark oklch(0.75) |
+| Escape in the search box left a hidden suggestion highlighted, so Enter opened a product instead of searching (found by the keyboard spec) | Escape only dismisses the list and clears the highlight, and does not let the browser clear the field |
+| `<main>` could not receive the skip link's focus; footer links had no focus style | `tabIndex={-1}` on `<main>`; focus rings on footer links |
+
+Contrast ratios were computed from the OKLCH values, not guessed (the colours are CSS variables in `globals.css`).
+
+## Performance
+
+Measured with Lighthouse 13.5 (`scripts/lighthouse.mjs`, `make lighthouse`): mobile preset, simulated slow 4G and 4x CPU,
+production build (`make web-prod`), API and database on the same machine, **median of 5 runs** (the spread was 91 to 93
+for home). "Before" is the same script on the commit before this pass (`docs/perf/lighthouse-before.json`, 3 runs).
+
+  | Page | Before | After | A11y | Best practices | SEO | LCP | First-load JS | Transfer |
+  | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+  | Home | 86 | **91** | 100 | 100 | 100 | 3.5 s | 204 KB | 348 KB |
+  | Listing | 87 | **91** | 100 | 100 | 100 | 3.6 s | 202 KB | 404 KB |
+  | Listing, filtered | 87 | **92** | 100 | 100 | 100 | 3.4 s | 202 KB | 370 KB |
+  | Product | 86 | **97** | 100 | 100 | 100 | 2.6 s | 216 KB | 367 KB |
+  | Search | 91 | **92** | 100 | 100 | 100 | 3.3 s | 292 KB | 379 KB |
+  | Cart | 79 | **95** | 100 | 100 | 63 | 3.0 s | 202 KB | 266 KB |
+  | Sign in | 96 | **96** | 100 | 100 | 63 | 2.8 s | 241 KB | 310 KB |
+
+  Raw numbers: `docs/perf/lighthouse.json`. The SEO score of 63 on cart and sign-in is Lighthouse reporting the
+  deliberate `noindex` ("page is blocked from indexing"). The score moves a few points between machines and runs; the
+  script exits non-zero if home, listing or product fall below 90.
+
+**How the score was reached.** Blocking time is tiny (about 25 ms) and nothing shifts, so the whole gap was the LCP the
+simulation reported (about 4.2 s), although the real LCP in a browser is 60-110 ms. What the investigation showed, in order
+of effect:
+
+1. **`scroll-smooth` on the "new arrivals" carousel.** With `scroll-snap` it starts a smooth-scroll animation while the page
+   loads, and Chrome then reported the page's largest paint about 900 ms late (observed LCP 900 ms to 110 ms once removed;
+   in isolation home went 88 to 92). Bisected by removing sections, then classes. `ScrollRail` now has a comment saying not to add it
+   back; the arrow buttons scroll smoothly themselves (and respect `prefers-reduced-motion`).
+2. **First-load JavaScript 276 KB to 204 KB (home).** `env.ts` imported zod just to check two URLs, and the listing URL
+   parser shared a module with browser code (about 29 KB on every page): both are plain TypeScript or their own module now.
+   Overlays that most visitors never open load on first use instead of with the page: cart drawer, mobile menu, account
+   dropdown (all a plain button first, the real component on the first click, which opens it), phone filter sheet, camera
+   dialog, desktop filter sidebar (phones never fetch it) and the toast renderer. The sort control is a native `<select>`
+   (no Radix Select).
+3. **Fewer early image bytes.** `content-visibility: auto` (`defer-render`) on sections and grid rows below the first screen:
+   a short mobile page otherwise fetches every "lazy" photo up front (12 photos, 102 KB on home became 5, 37 KB). Thumbnails
+   come through this site's origin (no second connection) and the monospace font is not preloaded.
+4. **Cart layout shift 0.21 to 0**: the empty state now has the loading skeleton's height.
+
+Conventions that keep it this way: new overlays (dialog, sheet, dropdown, popover) go behind `next/dynamic` and a plain
+trigger; keep schema libraries out of modules that browser code shares; do not use `scroll-smooth` on snap containers;
+check with `make lighthouse` after touching the header or the home page.
+
+Not done: statically generating the home page (it reads the API at request time, see Routes), and Lighthouse in CI
+(runner variance would make a hard gate flaky; `make lighthouse` is the gate).

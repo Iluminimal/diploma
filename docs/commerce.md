@@ -8,7 +8,7 @@ Interactive docs: `/api/v1/docs`. The browser side is described in `docs/fronten
 ```bash
 make infra && make migrate && make api     # .env needs PAYMENTS_MODE=offline (copied from .env.example)
 make web
-make browser-check-commerce                # whole flow in Chromium, screenshots in docs/screenshots
+make e2e                                   # whole flow in Chromium (see docs/e2e.md)
 make test                                  # API integration tests need make infra
 ```
 
@@ -72,4 +72,4 @@ element and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
   "in stock" briefly after the last unit was reserved.
 * Registration reveals whether an email exists (409); it is rate limited, and the alternative would need email verification.
 * Emails are logged, not sent (`core/mail.py`).
-* No admin area, reviews or refund UI yet.
+* No reviews or refund UI. Orders can be looked at in the admin area (`docs/admin.md`) but not changed.

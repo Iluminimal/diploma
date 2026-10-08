@@ -4,10 +4,12 @@ Upload or capture a photo of clothing and get visually similar products, inside 
 minimal online store. Image embeddings come from FashionCLIP, similarity search from
 PostgreSQL + pgvector.
 
-> **Status:** Phase 2 (data + ML). The catalogue (41,885 products with thumbnails and FashionCLIP
-> embeddings in pgvector) can be ingested and measured; search endpoints and the store arrive in
-> later phases. Product requirements: [`docs/SPEC.md`](docs/SPEC.md). Pipeline details and
-> measurements: [`docs/ml-pipeline.md`](docs/ml-pipeline.md).
+> **Status:** Phase 6 (admin, SEO, accessibility, performance, end-to-end tests). A working store:
+> visual, text and hybrid search over 41,885 products, accounts, cart, checkout with a demo payment,
+> orders, and a small admin area. Product requirements: [`docs/SPEC.md`](docs/SPEC.md). Details:
+> [`ml-pipeline`](docs/ml-pipeline.md), [`search-api`](docs/search-api.md), [`commerce`](docs/commerce.md),
+> [`frontend`](docs/frontend.md) (accessibility and performance results), [`admin`](docs/admin.md),
+> [`e2e`](docs/e2e.md).
 
 ## Repository layout
 
@@ -38,6 +40,7 @@ make ingest ARGS="--limit 500"   # optional: load a 500-product sample (needs DA
 
 make api       # terminal 1: FastAPI on http://localhost:8000
 make web       # terminal 2: Next.js on http://localhost:3000
+make create-admin EMAIL=you@example.com   # optional: an administrator for http://localhost:3000/admin
 ```
 
 Then open <http://localhost:3000>. The status line on the home page shows whether the browser can
@@ -68,6 +71,11 @@ Run `make help` for the full list.
 | `make test` | API tests (pytest) and web tests (Vitest) |
 | `make test-ml` | Tests that load the real FashionCLIP model (downloads ~600 MB once) |
 | `make format` | Auto-format and auto-fix the API |
+| `make create-admin EMAIL=...` | Create or promote an administrator (`docs/admin.md`) |
+| `make web-prod` | Build and serve the web app as in production on :3000 (what e2e and Lighthouse measure) |
+| `make e2e` / `make e2e-clean` | Playwright end-to-end tests against the running stack / remove what they created (`docs/e2e.md`) |
+| `make seed-e2e` | Synthetic 60-product catalogue for CI (`EMBEDDER=fake`) |
+| `make lighthouse` | Lighthouse on the production build; fails below 90 on home, listing and product |
 | `make openapi` | Export the OpenAPI schema to `docs/openapi.json` |
 
 Tests that write catalogue data use a throwaway `lookalike_test` database (created and dropped by
@@ -88,8 +96,11 @@ to `.env` (git-ignored) on first run. The API reads `.env` from the repository r
 | `LOG_LEVEL` / `LOG_JSON` | `INFO` / `true` | set `LOG_JSON=false` for readable console logs |
 | `DATASET_DIR` | unset | folder with the Kaggle `styles.csv` and `images/` (ingestion only) |
 | `MEDIA_DIR` / `MEDIA_URL_PATH` | `../../data/media` / `/media` | thumbnails written by ingestion, served by the API |
+| `EMBEDDER` | `fashion-clip` | `fake` is a deterministic stand-in for CI end-to-end tests; refused when `APP_ENV=prod` |
 | `EMBEDDING_DEVICE` / `EMBEDDING_FP16` / `EMBEDDING_RESIZE_MODE` | `auto` / `false` / `pad` | see `docs/ml-pipeline.md` before changing |
-| `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | web, validated at startup (`apps/web/.env.example`) |
+| `RATE_LIMIT_ENABLED`, `RATE_LIMIT_*` | on | per client address; the e2e tests need `RATE_LIMIT_ENABLED=false` (`RATE_LIMIT_ADMIN` limits the admin area) |
+| `PAYMENTS_MODE` | `stripe` | `offline` is the in-process demo gateway (refused in prod) |
+| `NEXT_PUBLIC_API_URL` / `NEXT_PUBLIC_SITE_URL` | `http://localhost:8000` / `http://localhost:3000` | web, validated at startup (`apps/web/.env.example`); the site URL feeds canonical links and the sitemap |
 
 Never commit real secrets; `.env*` files other than `*.example` are git-ignored.
 
@@ -115,4 +126,5 @@ Never commit real secrets; `.env*` files other than `*.example` are git-ignored.
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push to `main` and on pull requests:
 API (and scripts) lint, format check, mypy, migration apply/rollback/re-apply, `alembic check` and pytest (without the model-loading tests) against
 real Postgres+pgvector and Redis service containers; web lint, typecheck, Vitest and a production
-build; and validation of the compose file.
+build; an end-to-end job (Playwright against a seeded catalogue, the fake embedder and the production web build; the
+report is kept when it fails); and validation of the compose file.

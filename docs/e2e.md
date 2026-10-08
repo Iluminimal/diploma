@@ -1,0 +1,70 @@
+# End-to-end tests (Playwright)
+
+`apps/web/e2e`, run with `make e2e`. They drive a real browser (Chromium) against a running stack: API, web app, Postgres
+and Redis. 52 tests:
+
+| File | Covers |
+| --- | --- |
+| `visual-search.spec.ts` | a photo search shows results, match badges and a detected category; the user can override the category; words refine (hybrid) and filter chips narrow; paste, drop and a fake camera start a search; a non-image is refused; through the API a catalogue photo finds its own product first |
+| `cart.spec.ts` | size required, drawer and badge, quantity stepper stopping at the stock limit, guest cart survives a reload, guest cart merges on sign-in, wishlist asks a guest to sign in |
+| `checkout.spec.ts` | checkout needs an account; an empty cart cannot be paid; address, express shipping, **demo payment to the confirmation page and the order in the account**; a repeated checkout or payment never makes a second order; another customer cannot see an order (app and API) |
+| `login.spec.ts` | register (short password refused), duplicate email refused, wrong then right password, return to the page that asked for sign-in, `next` cannot leave the site, session survives a reload, sign-out clears the session and the cart |
+| `admin.spec.ts` | customers and visitors are kept out (UI and API); create a product from a photo, edit, replace the photo, withdraw and restore; order with its payment record |
+| `a11y.spec.ts` | axe (WCAG 2.1 A/AA + best practices) on every kind of screen, in light and dark, at 390 and 1440 px |
+| `keyboard.spec.ts` | skip link, visible focus, search combobox, dialog focus, category toggles, form errors, reduced motion |
+
+## Against your development stack
+
+The tests register their own customers, so the API must not rate limit registration, and checkout needs the offline
+payment gateway. Production-like web output is also needed (the dev server is slow and adds an overlay).
+
+```bash
+make infra migrate                                            # Postgres + Redis
+RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline make api       # terminal 1 (environment beats .env)
+make web-prod                                                 # terminal 2: build + serve on :3000
+make e2e                                                      # terminal 3 (ARGS="e2e/cart.spec.ts" for one file)
+make e2e-clean                                                # afterwards: remove what the tests created
+```
+
+This is the real catalogue and the real FashionCLIP model. `global-setup.ts` creates the e2e administrator
+(`e2e-admin@example.com`, password in `e2e/support/env.ts`) with the same CLI an operator uses. `make e2e-clean` deletes
+`e2e-*@example.com` customers with their orders, and the products named `E2E ...` (the API can withdraw a product but not
+delete it) with their photos. It refuses to run when `APP_ENV=prod`.
+
+## Hermetic (what CI does)
+
+CI has no dataset and no model download, so the job (`.github/workflows/ci.yml`, `e2e`) seeds 60 synthetic products and
+runs the API with `EMBEDDER=fake`:
+
+```bash
+# an empty database with pgvector, then:
+EMBEDDER=fake PAYMENTS_MODE=offline RATE_LIMIT_ENABLED=false (cd apps/api && uv run alembic upgrade head)
+make seed-e2e ARGS="--count 60"       # drawn garments, thumbnails, embeddings from the served thumbnails
+# start the API and `make web-prod`, then
+E2E_FAKE_MODEL=1 make e2e
+```
+
+`FakeEmbedder` (`lookalike.ml.fake`) makes a vector from the pixels: identical images match perfectly, different ones are
+unrelated. So search "works" but means nothing, and the browser re-encodes every upload (JPEG, 1600 px) which a pixel hash
+cannot survive. Hence `E2E_FAKE_MODEL=1` skips only the UI assertion that a re-encoded photo finds its product first; the
+API test with the original bytes still runs in both modes. `APP_ENV=prod` refuses `EMBEDDER=fake`, and the seeder refuses
+to run in prod. The failure artifacts (HTML report, traces, API and web logs) are uploaded for 7 days.
+
+To run the same thing locally without touching your data, use a second database and Redis db, the fake model and other
+ports (`CORS_ORIGINS` must name the web origin). That is how the job was validated: 52/52, and 148/148 over four repeats of
+the functional specs.
+
+## Writing specs
+
+* `fixtures.ts`: `account` (a customer made through the API), `shopperPage` / `adminPage` (a page already signed in, by
+  moving the session cookies into the browser: no slow UI sign-up), `products` (in-stock apparel), `api`.
+* Pick products with `pickProduct` so parallel tests rarely buy the last unit of the same one. Sizes differ (kids, shoes):
+  use `chooseSize`/`addToCart` rather than hard-coding "M".
+* Fixtures that must not collide use unique emails (`uniqueEmail`). Generated test images come from `support/images.ts`
+  (valid PNGs, no dependency).
+* Do not add `scroll-smooth` to a scroll-snap container (see `docs/frontend.md`, Performance).
+
+## Not covered
+
+HEIC upload (needs a HEIC file and macOS `sips`; unit-tested in `normalize-image.test.ts`), Stripe (offline gateway only),
+and anything with a screen reader or a real phone.

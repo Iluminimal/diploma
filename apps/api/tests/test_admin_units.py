@@ -5,7 +5,7 @@ from starlette.types import ASGIApp, Scope
 
 from lookalike.core.uploads import BodySizeLimitMiddleware
 from lookalike.ingestion.images import THUMBNAIL_SIZES, build_thumbnails
-from lookalike.repositories.products import _like_pattern
+from lookalike.repositories.patterns import contains_pattern, prefix_pattern
 
 
 def test_thumbnails_cover_every_size_and_never_upscale() -> None:
@@ -25,7 +25,8 @@ def test_thumbnails_cover_every_size_and_never_upscale() -> None:
 
 
 def test_like_patterns_treat_wildcards_literally() -> None:
-    assert _like_pattern("50%_off\\") == "%50\\%\\_off\\\\%"
+    assert contains_pattern("50%_off\\") == "%50\\%\\_off\\\\%"
+    assert prefix_pattern("LK_1") == "LK\\_1%"
 
 
 def middleware() -> BodySizeLimitMiddleware:

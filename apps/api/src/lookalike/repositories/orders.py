@@ -1,12 +1,13 @@
 from collections.abc import Sequence
 from datetime import datetime
 
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from lookalike.models import Order, OrderItem, Payment, StripeEvent
+from lookalike.repositories.patterns import contains_pattern, prefix_pattern
 
 _WITH_DETAILS = (selectinload(Order.items), selectinload(Order.payment))
 
@@ -80,6 +81,45 @@ class OrderRepository:
             select(func.count()).select_from(Order).where(Order.user_id == user_id)
         )
         return int(result.scalar_one())
+
+    # --- admin: every customer's orders ------------------------------------------------------
+
+    @staticmethod
+    def _admin_clauses(text_query: str | None, status: str) -> list[ColumnElement[bool]]:
+        clauses: list[ColumnElement[bool]] = []
+        if text_query:
+            clauses.append(
+                or_(
+                    Order.number.ilike(prefix_pattern(text_query), escape="\\"),
+                    Order.contact_email.ilike(contains_pattern(text_query), escape="\\"),
+                )
+            )
+        if status != "all":
+            clauses.append(Order.status == status)
+        return clauses
+
+    async def list_all(
+        self, *, text_query: str | None, status: str, limit: int, offset: int
+    ) -> tuple[list[Order], int]:
+        clauses = self._admin_clauses(text_query, status)
+        total = (
+            await self._session.execute(select(func.count()).select_from(Order).where(*clauses))
+        ).scalar_one()
+        rows = await self._session.execute(
+            select(Order)
+            .where(*clauses)
+            .options(*_WITH_DETAILS)
+            .order_by(Order.created_at.desc(), Order.id.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        return list(rows.scalars()), int(total)
+
+    async def get_by_number(self, number: str) -> Order | None:
+        result = await self._session.execute(
+            select(Order).where(Order.number == number).options(*_WITH_DETAILS)
+        )
+        return result.scalar_one_or_none()
 
     async def pending_for_user(self, user_id: int) -> list[Order]:
         result = await self._session.execute(

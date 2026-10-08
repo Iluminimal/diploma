@@ -1,8 +1,9 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Form, Query, status
+from fastapi import APIRouter, Depends, Form, Path, Query, status
 
 from lookalike.core.deps import (
+    AdminOrderServiceDep,
     AdminProductServiceDep,
     SettingsDep,
     get_current_admin,
@@ -12,6 +13,9 @@ from lookalike.core.rate_limit import rate_limit
 from lookalike.core.uploads import read_image_upload
 from lookalike.schemas.admin import (
     AdminCategory,
+    AdminOrderListQuery,
+    AdminOrderOut,
+    AdminOrderPage,
     AdminProductCreateForm,
     AdminProductImageForm,
     AdminProductListQuery,
@@ -117,3 +121,21 @@ async def deactivate_product(product_id: int, service: AdminProductServiceDep) -
 @router.post("/products/{product_id}/activate", summary="Put a product back", responses=_NOT_FOUND)
 async def activate_product(product_id: int, service: AdminProductServiceDep) -> AdminProductOut:
     return await service.set_active(product_id, active=True)
+
+
+@router.get("/orders", summary="Every customer's orders, newest first")
+async def list_orders(
+    query: Annotated[AdminOrderListQuery, Query()], service: AdminOrderServiceDep
+) -> AdminOrderPage:
+    return await service.list(query)
+
+
+@router.get(
+    "/orders/{number}",
+    summary="One order with its payment record",
+    responses={404: {"model": ProblemDetail, "description": "No such order"}},
+)
+async def get_order(
+    number: Annotated[str, Path(min_length=4, max_length=20)], service: AdminOrderServiceDep
+) -> AdminOrderOut:
+    return await service.get(number)

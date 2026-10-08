@@ -25,6 +25,7 @@ from lookalike.payments import PaymentGateway
 from lookalike.repositories.health import HealthRepository
 from lookalike.repositories.users import UserRepository
 from lookalike.services.addresses import AddressService
+from lookalike.services.admin_orders import AdminOrderService
 from lookalike.services.admin_products import AdminProductService
 from lookalike.services.auth import AuthService
 from lookalike.services.cache import SearchCache
@@ -141,6 +142,13 @@ def get_admin_product_service(
 
 
 AdminProductServiceDep = Annotated[AdminProductService, Depends(get_admin_product_service)]
+
+
+def get_admin_order_service(session: SessionDep, storage: StorageDep) -> AdminOrderService:
+    return AdminOrderService(session, storage)
+
+
+AdminOrderServiceDep = Annotated[AdminOrderService, Depends(get_admin_order_service)]
 
 
 def get_catalog_service(

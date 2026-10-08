@@ -10,6 +10,7 @@ from sqlalchemy.orm import defer
 from sqlalchemy.sql.base import ExecutableOption
 
 from lookalike.models import Product
+from lookalike.repositories.patterns import contains_pattern
 
 # Measured on the full catalogue (docs/ml-pipeline.md): 200 gives recall@10 = 1.0 at the same
 # latency as 80. Above ~300 the planner's cost estimate flips to an exact sequential scan
@@ -72,11 +73,6 @@ _LIGHT_ROWS: tuple[ExecutableOption, ...] = (
 MAX_ID_DIGITS = 18
 AdminStatus = Literal["all", "active", "inactive"]
 AdminSort = Literal["newest", "price_asc", "price_desc", "stock_asc"]
-
-
-def _like_pattern(text_query: str) -> str:
-    escaped = text_query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
-    return f"%{escaped}%"
 
 
 @dataclass(frozen=True)
@@ -185,7 +181,7 @@ class ProductRepository:
         types half a word; the storefront's stemmed full-text search would miss it."""
         clauses: list[ColumnElement[bool]] = []
         if text_query:
-            by_name = Product.name.ilike(_like_pattern(text_query), escape="\\")
+            by_name = Product.name.ilike(contains_pattern(text_query), escape="\\")
             is_id = text_query.isdigit() and len(text_query) <= MAX_ID_DIGITS
             clauses.append(or_(by_name, Product.id == int(text_query)) if is_id else by_name)
         if status != "all":

@@ -4,7 +4,12 @@ from lookalike.ingestion.images import thumbnail_key
 from lookalike.models import Order, OrderItem, Product
 from lookalike.repositories.products import SearchFilters
 from lookalike.schemas.address import AddressSnapshot
-from lookalike.schemas.admin import AdminProductOut
+from lookalike.schemas.admin import (
+    AdminOrderOut,
+    AdminOrderSummary,
+    AdminPaymentOut,
+    AdminProductOut,
+)
 from lookalike.schemas.order import OrderItemOut, OrderOut, OrderSummary
 from lookalike.schemas.product import FilterParams, ProductImage, ProductOut
 from lookalike.storage import Storage
@@ -118,4 +123,40 @@ def to_order_summary(order: Order, storage: Storage) -> OrderSummary:
         total_cents=order.total_cents,
         item_count=sum(item.quantity for item in order.items),
         images=[_image(item.image_key, None, storage) for item in order.items[:4]],
+    )
+
+
+def to_admin_order_summary(order: Order) -> AdminOrderSummary:
+    return AdminOrderSummary(
+        number=order.number,
+        status=order.status,
+        created_at=order.created_at,
+        currency=order.currency,
+        total_cents=order.total_cents,
+        item_count=sum(item.quantity for item in order.items),
+        customer_email=order.contact_email,
+        customer_name=order.shipping_address.get("full_name", ""),
+        payment_status=order.payment.status if order.payment else None,
+    )
+
+
+def to_admin_order_out(order: Order, storage: Storage) -> AdminOrderOut:
+    base = to_order_out(order, storage)
+    payment = order.payment
+    return AdminOrderOut(
+        **base.model_dump(),
+        user_id=order.user_id,
+        cancel_reason=order.cancel_reason,
+        cancelled_at=order.cancelled_at,
+        payment=AdminPaymentOut(
+            provider=payment.provider,
+            provider_payment_id=payment.provider_payment_id,
+            status=payment.status,
+            amount_cents=payment.amount_cents,
+            currency=payment.currency,
+            last_error=payment.last_error,
+            refund_id=payment.refund_id,
+        )
+        if payment
+        else None,
     )

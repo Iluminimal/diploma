@@ -339,6 +339,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/sitemap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Active products (id, slug, last change) for building a sitemap
+         * @description Pages of up to 10,000 products in id order.
+         */
+        get: operations["catalog_sitemap_api_v1_catalog_sitemap_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/checkout": {
         parameters: {
             query?: never;
@@ -1588,6 +1608,34 @@ export interface components {
             label: string;
             /** Price Cents */
             price_cents: number;
+        };
+        /** SitemapEntry */
+        SitemapEntry: {
+            /** Id */
+            id: number;
+            /** Slug */
+            slug: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * SitemapPage
+         * @description Every active product, in id order, lightly: what a sitemap needs and nothing else.
+         */
+        SitemapPage: {
+            /** Items */
+            items: components["schemas"]["SitemapEntry"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Pages */
+            pages: number;
+            /** Total */
+            total: number;
         };
         /** TextSearchRequest */
         TextSearchRequest: {
@@ -2890,6 +2938,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogFilters"];
+                };
+            };
+        };
+    };
+    catalog_sitemap_api_v1_catalog_sitemap_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SitemapPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

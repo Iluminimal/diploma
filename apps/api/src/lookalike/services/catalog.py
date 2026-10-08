@@ -7,7 +7,14 @@ from lookalike.core.errors import PRODUCT_NOT_FOUND_TYPE, ProblemError
 from lookalike.models import Category
 from lookalike.repositories.categories import CategoryRepository
 from lookalike.repositories.products import ProductRepository, ProductSort
-from lookalike.schemas.catalog import CatalogFilters, CategoryNode, PriceRange
+from lookalike.schemas.catalog import (
+    CatalogFilters,
+    CategoryNode,
+    PriceRange,
+    SitemapEntry,
+    SitemapPage,
+    SitemapQuery,
+)
 from lookalike.schemas.product import ProductListQuery, ProductOut, ProductPage
 from lookalike.services.cache import SearchCache
 from lookalike.services.mappers import to_product_out, to_search_filters
@@ -67,6 +74,19 @@ class CatalogService:
                 type_=PRODUCT_NOT_FOUND_TYPE,
             )
         return to_product_out(product, self._storage)
+
+    async def sitemap(self, query: SitemapQuery) -> SitemapPage:
+        async with self._session.begin():
+            rows, total = await ProductRepository(self._session).sitemap_entries(
+                offset=(query.page - 1) * query.page_size, limit=query.page_size
+            )
+        return SitemapPage(
+            items=[SitemapEntry(id=i, slug=slug, updated_at=at) for i, slug, at in rows],
+            total=total,
+            page=query.page,
+            page_size=query.page_size,
+            pages=math.ceil(total / query.page_size),
+        )
 
     async def filters(self) -> CatalogFilters:
         """Changes only when products are added or recoloured, so a few minutes of caching is

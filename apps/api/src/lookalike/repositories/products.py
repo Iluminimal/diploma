@@ -1,5 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Literal
 
 import numpy as np
@@ -158,6 +159,24 @@ class ProductRepository:
             .options(*_LIGHT_ROWS)
         )
         return list(rows.scalars()), total
+
+    async def sitemap_entries(
+        self, *, offset: int, limit: int
+    ) -> tuple[list[tuple[int, str, datetime]], int]:
+        """(id, slug, updated_at) of active products in id order, plus how many there are."""
+        total = (
+            await self._session.execute(
+                select(func.count()).select_from(Product).where(Product.is_active.is_(True))
+            )
+        ).scalar_one()
+        rows = await self._session.execute(
+            select(Product.id, Product.slug, Product.updated_at)
+            .where(Product.is_active.is_(True))
+            .order_by(Product.id)
+            .offset(offset)
+            .limit(limit)
+        )
+        return [(r.id, r.slug, r.updated_at) for r in rows.all()], int(total)
 
     # --- admin: everything below sees inactive products too ----------------------------------
 

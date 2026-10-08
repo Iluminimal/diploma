@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   title: "Search by photo",
   description: "Upload, drop, paste or capture a photo of clothing and find visually similar products.",
   alternates: { canonical: "/search" },
+  openGraph: { title: "Search by photo", url: "/search" },
 };
 
 // Rendered per request: the page reads the catalogue API, which isn't available at build time (CI, Docker).

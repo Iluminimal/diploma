@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { SITE_URL } from "@/lib/site";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -20,7 +20,8 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: "Lookalike: shop by photo", template: "%s · Lookalike" },
   description: "Upload a photo of something you love and find clothing that looks like it.",
-  openGraph: { siteName: "Lookalike", type: "website" },
+  openGraph: { siteName: SITE_NAME, type: "website", locale: "en_US" },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = {

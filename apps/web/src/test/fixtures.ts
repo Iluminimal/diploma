@@ -94,3 +94,58 @@ export function makeCart(lines: CartLine[] = []): Cart {
     has_issues: lines.some((line) => line.issue),
   };
 }
+
+import type { Address } from "@/features/account/addresses-api";
+import type { Order } from "@/features/orders/orders-api";
+
+export function makeAddress(overrides: Partial<Address> = {}): Address {
+  return {
+    id: 1,
+    full_name: "Ada Lovelace",
+    line1: "12 Analytical Way",
+    line2: null,
+    city: "London",
+    region: null,
+    postal_code: "N1 9GU",
+    country: "GB",
+    phone: null,
+    is_default: true,
+    ...overrides,
+  };
+}
+
+export function makeOrder(overrides: Partial<Order> = {}): Order {
+  const product = makeProduct();
+  return {
+    number: "LK-ABCD2345",
+    status: "paid",
+    created_at: "2026-10-08T10:00:00Z",
+    paid_at: "2026-10-08T10:00:05Z",
+    currency: "USD",
+    subtotal_cents: product.price_cents * 2,
+    shipping_cents: 499,
+    total_cents: product.price_cents * 2 + 499,
+    shipping_method: "standard",
+    shipping_address: {
+      full_name: "Ada Lovelace",
+      line1: "12 Analytical Way",
+      city: "London",
+      postal_code: "N1 9GU",
+      country: "GB",
+    },
+    contact_email: "ada@example.com",
+    items: [
+      {
+        product_id: product.id,
+        name: product.name,
+        slug: product.slug,
+        image: product.image,
+        size: "M",
+        unit_price_cents: product.price_cents,
+        quantity: 2,
+        line_total_cents: product.price_cents * 2,
+      },
+    ],
+    ...overrides,
+  };
+}

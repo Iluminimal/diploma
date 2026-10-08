@@ -9,14 +9,21 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from lookalike.core.config import Settings
 from lookalike.core.cookies import CART_COOKIE, set_cart_cookie
-from lookalike.core.errors import PAYMENTS_UNAVAILABLE_TYPE, UNAUTHENTICATED_TYPE, ProblemError
+from lookalike.core.errors import (
+    FORBIDDEN_TYPE,
+    PAYMENTS_UNAVAILABLE_TYPE,
+    UNAUTHENTICATED_TYPE,
+    ProblemError,
+)
 from lookalike.core.mail import Mailer
 from lookalike.core.rate_limit import RateLimiter
 from lookalike.core.security import decode_access_token, new_opaque_token
 from lookalike.ml.classifier import GarmentLocalizer, LazyCategoryClassifier
 from lookalike.ml.embeddings import EmbeddingService
+from lookalike.models import User
 from lookalike.payments import PaymentGateway
 from lookalike.repositories.health import HealthRepository
+from lookalike.repositories.users import UserRepository
 from lookalike.services.addresses import AddressService
 from lookalike.services.auth import AuthService
 from lookalike.services.cache import SearchCache
@@ -158,6 +165,26 @@ def get_current_user_id(user_id: Annotated[int | None, Depends(get_optional_user
 
 OptionalUserDep = Annotated[int | None, Depends(get_optional_user_id)]
 CurrentUserDep = Annotated[int, Depends(get_current_user_id)]
+
+
+async def get_current_admin(user_id: CurrentUserDep, session: SessionDep) -> User:
+    """The signed-in administrator. The role is read from the database on every request (it is
+    not in the token), so demoting or deactivating someone takes effect at once."""
+    async with session.begin():
+        user = await UserRepository(session).get(user_id)
+        if user is None or not user.is_active:
+            raise _unauthenticated("Please sign in again.")
+        if not user.is_admin:
+            raise ProblemError(
+                HTTPStatus.FORBIDDEN,
+                "Administrators only",
+                "Your account is not allowed to use the admin area.",
+                type_=FORBIDDEN_TYPE,
+            )
+    return user
+
+
+AdminDep = Annotated[User, Depends(get_current_admin)]
 
 
 def get_cart_owner(request: Request, user_id: OptionalUserDep) -> CartOwner:

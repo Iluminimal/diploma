@@ -1219,6 +1219,11 @@ export interface components {
             full_name: string;
             /** Id */
             id: number;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "customer" | "admin";
         };
         /** ValidationError */
         ValidationError: {

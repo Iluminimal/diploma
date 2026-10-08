@@ -6,7 +6,7 @@ const session = {
   access_token: "token-1",
   token_type: "bearer",
   expires_in: 900,
-  user: { id: 1, email: "ada@example.com", full_name: "Ada" },
+  user: { id: 1, email: "ada@example.com", full_name: "Ada", role: "customer" as const },
 };
 
 const json = (body: unknown, status = 200) =>

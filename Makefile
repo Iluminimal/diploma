@@ -5,7 +5,7 @@ COMPOSE := docker compose -f infra/docker-compose.dev.yml --env-file .env
 API     := cd apps/api &&
 WEB     := cd apps/web &&
 
-.PHONY: help install infra infra-down infra-reset infra-logs migrate api web ingest \
+.PHONY: help install infra infra-down infra-reset infra-logs migrate api web ingest create-admin \
         lint format typecheck test test-api test-web test-ml openapi api-types browser-check browser-check-commerce latency
 
 help: ## Show this help
@@ -37,6 +37,10 @@ migrate: ## Apply database migrations (needs `make infra`)
 api: ## Run the FastAPI server natively on :8000 (auto-reload)
 	$(API) uv run uvicorn lookalike.main:create_app --factory --reload --reload-dir src \
 		--host 127.0.0.1 --port 8000 --no-access-log
+
+create-admin: ## Create or promote an administrator: make create-admin EMAIL=you@example.com
+	@test -n "$(EMAIL)" || { echo "usage: make create-admin EMAIL=you@example.com"; exit 2; }
+	$(API) uv run python -m lookalike.cli create-admin --email "$(EMAIL)" $(ARGS)
 
 ingest: ## Ingest the dataset (needs `make infra migrate`); e.g. make ingest ARGS="--limit 500"
 	$(API) uv run python ../../scripts/ingest.py $(ARGS)

@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn() }) }));
 
 const product = makeProduct();
-const user = { id: 1, email: "ada@example.com", full_name: "Ada" };
+const user = { id: 1, email: "ada@example.com", full_name: "Ada", role: "customer" as const };
 
 beforeEach(() => push.mockReset());
 afterEach(() => vi.unstubAllGlobals());

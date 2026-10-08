@@ -45,6 +45,7 @@ class UserOut(BaseModel):
     id: int
     email: str
     full_name: str
+    role: Literal["customer", "admin"]
 
 
 class SessionOut(BaseModel):

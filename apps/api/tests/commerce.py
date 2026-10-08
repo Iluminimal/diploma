@@ -110,6 +110,14 @@ async def stock_of(engine: AsyncEngine, product_id: int) -> int:
     return int(value)
 
 
+async def set_role(engine: AsyncEngine, user_id: int, role: str) -> None:
+    """Promote or demote straight in the database, as `make create-admin` would."""
+    async with engine.begin() as connection:
+        await connection.execute(
+            text("UPDATE users SET role = :role WHERE id = :id"), {"role": role, "id": user_id}
+        )
+
+
 async def set_product(engine: AsyncEngine, product_id: int, **columns: Any) -> None:
     assignments = ", ".join(f"{name} = :{name}" for name in columns)
     async with engine.begin() as connection:

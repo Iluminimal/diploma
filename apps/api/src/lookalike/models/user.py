@@ -18,6 +18,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 from lookalike.db.base import Base
 from lookalike.models.mixins import TimestampMixin
 
+ROLE_CUSTOMER = "customer"
+ROLE_ADMIN = "admin"
+
 
 class User(TimestampMixin, Base):
     __tablename__ = "users"
@@ -25,6 +28,7 @@ class User(TimestampMixin, Base):
         # Emails are stored lower-cased; the constraint makes a missed normalisation a loud error
         # instead of two accounts that differ only by case.
         CheckConstraint("email = lower(email)", name="email_lowercase"),
+        CheckConstraint(f"role IN ('{ROLE_CUSTOMER}', '{ROLE_ADMIN}')", name="role_valid"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
@@ -32,6 +36,13 @@ class User(TimestampMixin, Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(120))
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
+    # Read from the database on every admin request, never copied into the access token, so
+    # demoting someone takes effect at once.
+    role: Mapped[str] = mapped_column(String(20), server_default=ROLE_CUSTOMER)
+
+    @property
+    def is_admin(self) -> bool:
+        return self.role == ROLE_ADMIN
 
 
 class RefreshToken(TimestampMixin, Base):

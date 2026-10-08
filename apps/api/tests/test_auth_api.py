@@ -35,6 +35,7 @@ async def test_register_signs_the_user_in(api_factory: ApiFactory) -> None:
             "id": body["user"]["id"],
             "email": "ada@example.com",
             "full_name": "Ada",
+            "role": "customer",
         }
         assert body["token_type"] == "bearer"
         assert body["expires_in"] == api.settings.access_token_ttl_seconds

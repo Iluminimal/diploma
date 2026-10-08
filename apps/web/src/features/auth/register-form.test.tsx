@@ -14,7 +14,7 @@ const session = {
   access_token: "t1",
   token_type: "bearer",
   expires_in: 900,
-  user: { id: 1, email: "ada@example.com", full_name: "Ada" },
+  user: { id: 1, email: "ada@example.com", full_name: "Ada", role: "customer" as const },
 };
 
 beforeEach(() => {

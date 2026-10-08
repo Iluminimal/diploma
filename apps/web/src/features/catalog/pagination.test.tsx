@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { ActiveFilters } from "./active-filters";
-import { parseListingQuery } from "./filters";
+import { parseListingQuery } from "./parse-listing-query";
 import { Pagination, pageWindow } from "./pagination";
 
 describe("pageWindow", () => {

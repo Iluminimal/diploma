@@ -34,7 +34,7 @@ export async function SimilarProducts({ productId }: { productId: number }) {
   const { results } = await getSimilarProducts(productId, 12);
   if (results.length === 0) return null;
   return (
-    <section aria-labelledby="similar-heading" className="mt-20">
+    <section aria-labelledby="similar-heading" className="defer-render mt-20">
       <h2 id="similar-heading" className="mb-6 text-xl font-semibold tracking-tight">
         You may also like
       </h2>

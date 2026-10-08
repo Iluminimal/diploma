@@ -19,7 +19,7 @@ export function CartView() {
             <div key={n} className="bg-muted h-32 animate-pulse rounded-2xl" />
           ))}
         </div>
-        <div className="bg-muted h-56 animate-pulse rounded-2xl" />
+        <div className="bg-muted hidden h-56 animate-pulse rounded-2xl lg:block" />
       </div>
     );
   }
@@ -37,7 +37,8 @@ export function CartView() {
   }
   if (cart.lines.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-5 py-16 text-center">
+      // As tall as the loading skeleton (3 rows of 8rem and their gaps), so the page below does not jump.
+      <div className="flex min-h-[26rem] flex-col items-center justify-center gap-5 py-16 text-center">
         <span className="bg-muted grid size-16 place-items-center rounded-full">
           <ShoppingBag className="text-muted-foreground size-7" />
         </span>

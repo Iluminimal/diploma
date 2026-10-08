@@ -173,6 +173,17 @@
   }
 }
 
+/*
+ * Content far below the fold is not laid out, painted or (for lazy images) fetched until it is
+ * near the viewport. Without this a short mobile page loads every "lazy" photo up front, which
+ * is most of the bytes of the first load. It stays in the accessibility tree and in find-in-page;
+ * `auto` remembers the real height once it has been shown, so the scrollbar does not jump.
+ */
+@utility defer-render {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
+}
+
 @utility hide-scrollbar {
   scrollbar-width: none;
   &::-webkit-scrollbar {

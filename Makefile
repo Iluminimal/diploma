@@ -5,7 +5,7 @@ COMPOSE := docker compose -f infra/docker-compose.dev.yml --env-file .env
 API     := cd apps/api &&
 WEB     := cd apps/web &&
 
-.PHONY: help install infra infra-down infra-reset infra-logs migrate api web web-prod ingest create-admin e2e \
+.PHONY: help install infra infra-down infra-reset infra-logs migrate api web web-prod ingest create-admin e2e lighthouse \
         lint format typecheck test test-api test-web test-ml openapi api-types browser-check browser-check-commerce latency
 
 help: ## Show this help
@@ -54,6 +54,9 @@ web-prod: ## Build and serve the web app as in production on :3000 (what e2e and
 e2e: ## Playwright end-to-end tests against the running stack; e.g. make e2e ARGS="e2e/cart.spec.ts"
 	@echo "Needs: make infra migrate, the API (RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline make api) and make web-prod. See docs/e2e.md."
 	$(WEB) npx playwright test $(ARGS)
+
+lighthouse: ## Lighthouse on the running production build (make web-prod); e.g. make lighthouse ARGS="--runs 5"
+	$(WEB) node scripts/lighthouse.mjs $(ARGS)
 
 lint: ## Lint and format-check API + scripts (ruff) and web (eslint)
 	$(API) uv run ruff check . ../../scripts && uv run ruff format --check . ../../scripts

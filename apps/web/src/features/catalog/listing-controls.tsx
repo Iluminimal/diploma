@@ -1,33 +1,19 @@
 "use client";
 
 import { SlidersHorizontal } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import dynamic from "next/dynamic";
+import { useState, useSyncExternalStore } from "react";
+import { selectClass } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { FilterFields } from "./filter-fields";
-import {
-  activeFilterCount,
-  toHref,
-  type ListingQuery,
-  type Sort,
-} from "./filters";
+import { cn } from "@/lib/utils";
+import { activeFilterCount, type ListingQuery, type Sort } from "./filters";
 import type { CatalogFilterOptions } from "./product";
+import { useListingNavigation } from "./use-listing-navigation";
+
+// The phone filter sheet is fetched the first time it is opened, together with the dialog library.
+const MobileFiltersSheet = dynamic(() => import("./mobile-filters-sheet").then((m) => m.MobileFiltersSheet), {
+  ssr: false,
+});
 
 const SORT_LABELS: Record<Sort, string> = {
   relevance: "Most relevant",
@@ -36,74 +22,40 @@ const SORT_LABELS: Record<Sort, string> = {
   price_desc: "Price: high to low",
 };
 
-/** URL is the single source of truth: every change is a `replace` navigation with page reset. */
-function useListingNavigation(query: ListingQuery) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const [pending, startTransition] = useTransition();
+// Phones never show the sidebar, so they never download it.
+const WideSidebar = dynamic(() => import("./sidebar-filters").then((m) => m.SidebarFilters), { ssr: false });
 
-  function apply(next: ListingQuery) {
-    startTransition(() => {
-      router.replace(toHref(pathname, { ...next, page: 1 }), { scroll: false });
-    });
-  }
-  return { apply, pending, query };
-}
+const DESKTOP = "(min-width: 64rem)";
+const subscribeToWidth = (notify: () => void) => {
+  const media = window.matchMedia(DESKTOP);
+  media.addEventListener("change", notify);
+  return () => media.removeEventListener("change", notify);
+};
 
-export function FilterSidebar({
-  options,
-  query,
-}: {
-  options: CatalogFilterOptions;
-  query: ListingQuery;
-}) {
-  const { apply } = useListingNavigation(query);
-  return (
-    <FilterFields
-      options={options}
-      value={query}
-      onChange={apply}
-      idPrefix="side"
-    />
+/** The desktop filter column. On a narrow screen nothing is rendered or loaded for it. */
+export function FilterSidebar({ options, query }: { options: CatalogFilterOptions; query: ListingQuery }) {
+  const wide = useSyncExternalStore(
+    subscribeToWidth,
+    () => window.matchMedia(DESKTOP).matches,
+    () => false,
   );
+  if (!wide) return <div aria-hidden className="bg-muted/50 h-96 animate-pulse rounded-2xl" />;
+  return <WideSidebar options={options} query={query} />;
 }
 
-export function MobileFilters({
-  options,
-  query,
-}: {
-  options: CatalogFilterOptions;
-  query: ListingQuery;
-}) {
-  const [open, setOpen] = useState(false);
-  const { apply } = useListingNavigation(query);
+export function MobileFilters({ options, query }: { options: CatalogFilterOptions; query: ListingQuery }) {
+  const [requested, setRequested] = useState(false);
+  if (requested) return <MobileFiltersSheet options={options} query={query} defaultOpen />;
   const count = activeFilterCount(query);
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="lg" className="lg:hidden">
-          <SlidersHorizontal />
-          Filters{count > 0 && ` (${count})`}
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="bottom" className="max-h-[88dvh] gap-0 rounded-t-3xl">
-        <SheetHeader>
-          <SheetTitle>Filters</SheetTitle>
-          <SheetDescription className="sr-only">Narrow down the products shown.</SheetDescription>
-        </SheetHeader>
-        <div className="overflow-y-auto px-4 pb-4">
-          <FilterFields options={options} value={query} onChange={apply} idPrefix="sheet" />
-        </div>
-        <SheetFooter className="border-border border-t">
-          <Button size="lg" className="h-11 w-full" onClick={() => setOpen(false)}>
-            Show results
-          </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+    <Button variant="outline" size="lg" className="lg:hidden" aria-haspopup="dialog" onClick={() => setRequested(true)}>
+      <SlidersHorizontal />
+      Filters{count > 0 && ` (${count})`}
+    </Button>
   );
 }
 
+/** A native select: no script to load, the platform's own picker on phones, and fully accessible. */
 export function SortSelect({ query }: { query: ListingQuery }) {
   const { apply } = useListingNavigation(query);
   const fallback: Sort = query.q ? "relevance" : "newest";
@@ -111,20 +63,20 @@ export function SortSelect({ query }: { query: ListingQuery }) {
     ? ["relevance", "newest", "price_asc", "price_desc"]
     : ["newest", "price_asc", "price_desc"];
   return (
-    <Select
+    <select
+      aria-label="Sort by"
+      className={cn(selectClass, "h-9 w-auto min-w-44 rounded-lg py-0 text-sm")}
       value={query.sort ?? fallback}
-      onValueChange={(v) => apply({ ...query, sort: v === fallback ? undefined : (v as Sort) })}
+      onChange={(event) => {
+        const sort = event.target.value as Sort;
+        apply({ ...query, sort: sort === fallback ? undefined : sort });
+      }}
     >
-      <SelectTrigger aria-label="Sort by" className="h-9 min-w-44">
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent align="end">
-        {options.map((s) => (
-          <SelectItem key={s} value={s}>
-            {SORT_LABELS[s]}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+      {options.map((sort) => (
+        <option key={sort} value={sort}>
+          {SORT_LABELS[sort]}
+        </option>
+      ))}
+    </select>
   );
 }

@@ -35,14 +35,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="container-page pb-16 md:pb-24" aria-label="Departments">
+      <section className="container-page defer-render pb-16 md:pb-24" aria-label="Departments">
         <SectionHeading title="Shop by department" href="/products" linkLabel="All products" />
         <Suspense fallback={<ProductGridSkeleton count={4} columns={4} />}>
           <CategoryTiles />
         </Suspense>
       </section>
 
-      <section className="container-page" aria-label="New arrivals">
+      <section className="container-page defer-render" aria-label="New arrivals">
         <SectionHeading title="New arrivals" href="/products?sort=newest" />
         <Suspense fallback={<RailSkeleton />}>
           <NewArrivals />

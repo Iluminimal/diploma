@@ -1,0 +1,155 @@
+{
+  "lighthouse": "13.5.0",
+  "preset": "mobile, simulated slow 4G",
+  "runs": 5,
+  "measured": "2026-10-08T10:42:54.586Z",
+  "pages": {
+    "home": {
+      "url": "/",
+      "runs": [
+        91,
+        91,
+        91,
+        91,
+        91
+      ],
+      "performance": 91,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 1061,
+      "lcp": 3487,
+      "tbt": 26,
+      "cls": 0,
+      "si": 1061,
+      "transferKb": 348,
+      "jsKb": 204
+    },
+    "listing": {
+      "url": "/products",
+      "runs": [
+        93,
+        91,
+        91,
+        93,
+        91
+      ],
+      "performance": 91,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 1057,
+      "lcp": 3576,
+      "tbt": 33,
+      "cls": 0,
+      "si": 1057,
+      "transferKb": 404,
+      "jsKb": 202
+    },
+    "filtered": {
+      "url": "/products?gender=Women&sort=price_asc",
+      "runs": [
+        91,
+        92,
+        92,
+        92,
+        92
+      ],
+      "performance": 92,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 1060,
+      "lcp": 3406,
+      "tbt": 21,
+      "cls": 0,
+      "si": 1060,
+      "transferKb": 370,
+      "jsKb": 202
+    },
+    "product": {
+      "url": "/products/41881/avirate-black-dress-59995",
+      "runs": [
+        94,
+        97,
+        97,
+        93,
+        97
+      ],
+      "performance": 97,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 906,
+      "lcp": 2558,
+      "tbt": 32,
+      "cls": 0,
+      "si": 906,
+      "transferKb": 367,
+      "jsKb": 216
+    },
+    "search": {
+      "url": "/search",
+      "runs": [
+        92,
+        92,
+        92,
+        92,
+        92
+      ],
+      "performance": 92,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 1059,
+      "lcp": 3312,
+      "tbt": 28,
+      "cls": 0,
+      "si": 1059,
+      "transferKb": 379,
+      "jsKb": 292
+    },
+    "cart": {
+      "url": "/cart",
+      "runs": [
+        94,
+        95,
+        95,
+        95,
+        95
+      ],
+      "performance": 95,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 63,
+      "fcp": 907,
+      "lcp": 2992,
+      "tbt": 48,
+      "cls": 0,
+      "si": 907,
+      "transferKb": 266,
+      "jsKb": 202
+    },
+    "login": {
+      "url": "/login",
+      "runs": [
+        96,
+        96,
+        96,
+        97,
+        96
+      ],
+      "performance": 96,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 63,
+      "fcp": 906,
+      "lcp": 2805,
+      "tbt": 25,
+      "cls": 0,
+      "si": 906,
+      "transferKb": 310,
+      "jsKb": 241
+    }
+  }
+}

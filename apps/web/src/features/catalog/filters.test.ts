@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   activeFilterCount,
   emptyFilters,
-  parseListingQuery,
   toApiFilters,
   toHref,
   toSearchParams,
   toggleValue,
 } from "./filters";
+import { parseListingQuery } from "./parse-listing-query";
 
 describe("parseListingQuery", () => {
   it("returns defaults for an empty URL", () => {

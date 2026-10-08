@@ -21,7 +21,8 @@ export function ProductGrid({
   return (
     <ul className={cn(GRID, columns === 4 && "lg:grid-cols-4", className)}>
       {products.map((product, i) => (
-        <li key={product.id}>
+        // Rows below the first screen are not rendered (or their photos fetched) until needed.
+        <li key={product.id} className={i >= priorityCount + 3 ? "defer-render [contain-intrinsic-size:auto_380px]" : undefined}>
           <ProductCard product={product} priority={i < priorityCount} headingLevel={headingLevel} />
         </li>
       ))}

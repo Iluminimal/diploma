@@ -4,14 +4,22 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
-/** Native scroll-snap carousel; the arrows are an enhancement for pointer users. */
+/**
+ * Native scroll-snap carousel; the arrows are an enhancement for pointer users.
+ *
+ * Do not add the `scroll-smooth` class here: with snapping it starts a smooth-scroll animation
+ * while the page loads, which makes Chrome report the page's largest paint hundreds of
+ * milliseconds late (Lighthouse LCP 88 -> 92 on the home page). The arrows ask for smooth
+ * scrolling themselves.
+ */
 export function ScrollRail({ children, label }: { children: ReactNode; label: string }) {
   const ref = useRef<HTMLUListElement>(null);
 
   function scrollBy(direction: 1 | -1) {
     const el = ref.current;
     if (!el) return;
-    el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: "smooth" });
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: reduced ? "auto" : "smooth" });
   }
 
   return (
@@ -20,7 +28,7 @@ export function ScrollRail({ children, label }: { children: ReactNode; label: st
         ref={ref}
         aria-label={label}
         tabIndex={0}
-        className="hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-2 sm:-mx-6 sm:gap-5 sm:px-6 lg:mx-0 lg:px-0 focus-visible:ring-ring/60 rounded-2xl outline-none focus-visible:ring-3"
+        className="hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:gap-5 sm:px-6 lg:mx-0 lg:px-0 focus-visible:ring-ring/60 rounded-2xl outline-none focus-visible:ring-3"
       >
         {children}
       </ul>

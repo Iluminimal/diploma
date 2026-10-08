@@ -1,0 +1,141 @@
+{
+  "lighthouse": "13.5.0",
+  "preset": "mobile, simulated slow 4G",
+  "runs": 3,
+  "measured": "2026-10-08T09:42:35.200Z",
+  "pages": {
+    "home": {
+      "url": "/",
+      "runs": [
+        85,
+        86,
+        86
+      ],
+      "performance": 86,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 909,
+      "lcp": 4281,
+      "tbt": 23,
+      "cls": 0,
+      "si": 909,
+      "transferKb": 488,
+      "jsKb": 276
+    },
+    "listing": {
+      "url": "/products",
+      "runs": [
+        88,
+        87,
+        87
+      ],
+      "performance": 87,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 1064,
+      "lcp": 4083,
+      "tbt": 22,
+      "cls": 0,
+      "si": 1217,
+      "transferKb": 607,
+      "jsKb": 290
+    },
+    "filtered": {
+      "url": "/products?gender=Women&sort=price_asc",
+      "runs": [
+        87,
+        86,
+        87
+      ],
+      "performance": 87,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 1064,
+      "lcp": 4121,
+      "tbt": 25,
+      "cls": 0,
+      "si": 1177,
+      "transferKb": 547,
+      "jsKb": 290
+    },
+    "product": {
+      "url": "/products/41881/avirate-black-dress-59995",
+      "runs": [
+        86,
+        86,
+        86
+      ],
+      "performance": 86,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 909,
+      "lcp": 4199,
+      "tbt": 16,
+      "cls": 0,
+      "si": 909,
+      "transferKb": 497,
+      "jsKb": 274
+    },
+    "search": {
+      "url": "/search",
+      "runs": [
+        91,
+        91,
+        91
+      ],
+      "performance": 91,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 100,
+      "fcp": 909,
+      "lcp": 3472,
+      "tbt": 17,
+      "cls": 0,
+      "si": 909,
+      "transferKb": 395,
+      "jsKb": 307
+    },
+    "cart": {
+      "url": "/cart",
+      "runs": [
+        80,
+        79,
+        79
+      ],
+      "performance": 79,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 63,
+      "fcp": 907,
+      "lcp": 3739,
+      "tbt": 26,
+      "cls": 0.211,
+      "si": 907,
+      "transferKb": 360,
+      "jsKb": 270
+    },
+    "login": {
+      "url": "/login",
+      "runs": [
+        93,
+        96,
+        96
+      ],
+      "performance": 96,
+      "accessibility": 100,
+      "bestPractices": 100,
+      "seo": 63,
+      "fcp": 906,
+      "lcp": 2715,
+      "tbt": 14,
+      "cls": 0,
+      "si": 906,
+      "transferKb": 374,
+      "jsKb": 283
+    }
+  }
+}

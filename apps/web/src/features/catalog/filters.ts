@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 /** Filter dimensions that accept several values (`?gender=Men&gender=Unisex`). */
 export const MULTI_KEYS = [
   "gender",
@@ -16,7 +14,7 @@ export const SORTS = ["newest", "price_asc", "price_desc", "relevance"] as const
 export type Sort = (typeof SORTS)[number];
 
 export const MAX_VALUES_PER_KEY = 12;
-const MAX_PRICE_CENTS = 10_000_000;
+export const MAX_PRICE_CENTS = 10_000_000;
 
 /** Filters shared by listing, similar and every search endpoint. Prices are integer cents. */
 export type CatalogFilters = Record<MultiKey, string[]> & {
@@ -32,61 +30,6 @@ export type ListingQuery = CatalogFilters & {
 };
 
 export type RawParams = Record<string, string | string[] | undefined>;
-
-const multi = z
-  .union([z.string(), z.array(z.string())])
-  .transform((v) => (Array.isArray(v) ? v : [v]))
-  .transform((v) => [...new Set(v.map((s) => s.trim()).filter(Boolean))].slice(0, MAX_VALUES_PER_KEY))
-  .catch([]);
-
-const cents = z.coerce.number().int().min(0).max(MAX_PRICE_CENTS).optional().catch(undefined);
-
-const schema = z.object({
-  gender: multi.default([]),
-  master_category: multi.default([]),
-  sub_category: multi.default([]),
-  article_type: multi.default([]),
-  color: multi.default([]),
-  season: multi.default([]),
-  usage: multi.default([]),
-  min_price: cents,
-  max_price: cents,
-  in_stock: z
-    .union([z.string(), z.array(z.string())])
-    .transform((v) => (Array.isArray(v) ? v[0] : v) === "true")
-    .catch(false)
-    .default(false),
-  q: z
-    .union([z.string(), z.array(z.string())])
-    .transform((v) => (Array.isArray(v) ? v[0] : v)?.trim().slice(0, 200) || undefined)
-    .catch(undefined),
-  sort: z
-    .union([z.string(), z.array(z.string())])
-    .transform((v) => (Array.isArray(v) ? v[0] : v))
-    .pipe(z.enum(SORTS))
-    .optional()
-    .catch(undefined),
-  page: z.coerce.number().int().min(1).max(10_000).default(1).catch(1),
-});
-
-/**
- * Parse untrusted URL params into a valid listing query. Anything malformed is dropped
- * (never throws), so a hand-edited URL can't break the page or cause an API 422.
- */
-export function parseListingQuery(params: RawParams): ListingQuery {
-  const parsed = schema.parse(params);
-  const query: ListingQuery = { ...parsed };
-  // The API rejects `relevance` without a text query, and a reversed price range.
-  if (!query.q && query.sort === "relevance") query.sort = undefined;
-  if (
-    query.min_price !== undefined &&
-    query.max_price !== undefined &&
-    query.min_price > query.max_price
-  ) {
-    [query.min_price, query.max_price] = [query.max_price, query.min_price];
-  }
-  return query;
-}
 
 export function emptyFilters(): CatalogFilters {
   return {

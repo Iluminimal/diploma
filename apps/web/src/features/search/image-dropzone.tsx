@@ -1,11 +1,14 @@
 "use client";
 
 import { Camera, ImagePlus, Loader2 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRef, useState, type DragEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CameraDialog } from "./camera-dialog";
 import { firstImage, useImageInput, usePasteImage } from "./use-image-input";
+
+// The camera dialog (and the dialog library behind it) is only needed once someone asks for it.
+const CameraDialog = dynamic(() => import("./camera-dialog").then((module) => module.CameraDialog));
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif";
 
@@ -29,6 +32,7 @@ export function ImageDropzone({ onPicked, listenForPaste = false, className, siz
   const captureRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraRequested, setCameraRequested] = useState(false);
 
   async function accept(file: File | Blob | undefined | null) {
     if (!file) return;
@@ -47,7 +51,10 @@ export function ImageDropzone({ onPicked, listenForPaste = false, className, siz
 
   function takePhoto() {
     if (prefersNativeCamera() || !navigator.mediaDevices?.getUserMedia) captureRef.current?.click();
-    else setCameraOpen(true);
+    else {
+      setCameraRequested(true);
+      setCameraOpen(true);
+    }
   }
 
   return (
@@ -119,7 +126,9 @@ export function ImageDropzone({ onPicked, listenForPaste = false, className, siz
           e.target.value = "";
         }}
       />
-      <CameraDialog open={cameraOpen} onOpenChange={setCameraOpen} onCapture={(file) => void accept(file)} />
+      {cameraRequested && (
+        <CameraDialog open={cameraOpen} onOpenChange={setCameraOpen} onCapture={(file) => void accept(file)} />
+      )}
     </div>
   );
 }

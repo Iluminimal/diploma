@@ -11,9 +11,12 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
+// Only a keyboard hint on the home page uses it: no preload, so it never competes with the
+// text font for the first paint.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  preload: false,
 });
 
 export const metadata: Metadata = {

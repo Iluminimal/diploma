@@ -21,6 +21,7 @@ from lookalike.core.security import decode_access_token, new_opaque_token
 from lookalike.ml.classifier import GarmentLocalizer, LazyCategoryClassifier
 from lookalike.ml.embeddings import EmbeddingService
 from lookalike.models import User
+from lookalike.oauth import OAuthProvider
 from lookalike.payments import PaymentGateway
 from lookalike.repositories.health import HealthRepository
 from lookalike.repositories.users import UserRepository
@@ -33,6 +34,7 @@ from lookalike.services.cart import CartOwner, CartService
 from lookalike.services.catalog import CatalogService
 from lookalike.services.checkout import CheckoutService
 from lookalike.services.health import HealthService
+from lookalike.services.oauth import OAuthService
 from lookalike.services.orders import OrderService
 from lookalike.services.payments import PaymentSettlement
 from lookalike.services.search import SearchService
@@ -271,6 +273,23 @@ def get_auth_service(
 
 
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
+
+
+def get_oauth_service(
+    request: Request,
+    settings: SettingsDep,
+    session: SessionDep,
+    auth: AuthServiceDep,
+    mailer: Annotated[Mailer, Depends(get_mailer)],
+) -> OAuthService | None:
+    provider: OAuthProvider | None = request.app.state.oauth_provider
+    if provider is None:
+        return None
+    return OAuthService(session, settings, request.app.state.jwt_secret, provider, auth, mailer)
+
+
+# None when sign-in with Google is not configured.
+OAuthServiceDep = Annotated[OAuthService | None, Depends(get_oauth_service)]
 
 
 def get_cart_service(

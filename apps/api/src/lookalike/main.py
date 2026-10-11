@@ -32,6 +32,7 @@ from lookalike.ml.classifier import (
 from lookalike.ml.embeddings import EmbeddingService
 from lookalike.ml.fashion_clip import FashionClipEmbedder, select_device
 from lookalike.models import Category
+from lookalike.oauth import build_oauth_provider
 from lookalike.payments import PaymentGateway, build_gateway
 from lookalike.repositories.categories import CategoryRepository
 from lookalike.repositories.products import ProductRepository
@@ -114,6 +115,7 @@ def create_app(
         app.state.storage = LocalStorage(settings.media_dir, settings.media_base_url)
         app.state.mailer = ConsoleMailer(log_body=settings.app_env != "prod")
         app.state.payment_gateway = payment_gateway or build_gateway(settings)
+        app.state.oauth_provider = build_oauth_provider(settings)
         if not settings.jwt_secret:
             # Fine for development; every restart signs everyone out.
             log.warning(

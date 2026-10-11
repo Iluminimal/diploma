@@ -2,13 +2,14 @@ from lookalike.models.cart import Cart, CartItem, WishlistItem
 from lookalike.models.category import Category
 from lookalike.models.order import Order, OrderItem, Payment, StripeEvent
 from lookalike.models.product import Product
-from lookalike.models.user import Address, RefreshToken, User
+from lookalike.models.user import Address, OAuthIdentity, RefreshToken, User
 
 __all__ = [
     "Address",
     "Cart",
     "CartItem",
     "Category",
+    "OAuthIdentity",
     "Order",
     "OrderItem",
     "Payment",

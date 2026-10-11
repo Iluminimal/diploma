@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { GoogleSignIn } from "@/features/auth/google-sign-in";
 import { AuthShell } from "@/features/auth/auth-shell";
 import { RegisterForm } from "@/features/auth/register-form";
 import { safeNext } from "@/features/auth/safe-next";
@@ -17,6 +18,7 @@ export default async function RegisterPage({
       title="Create an account"
       subtitle="Save your cart, favourites and order history."
     >
+      <GoogleSignIn next={next} />
       <RegisterForm next={next} />
     </AuthShell>
   );

@@ -120,6 +120,7 @@ async def test_provision_admin_creates_then_promotes_without_a_new_password(
     assert created.id == again.id
     assert again.email == "boss@example.com"
     assert again.role == "admin"
+    assert again.password_hash is not None
     assert verify_password(PASSWORD, again.password_hash)
 
 

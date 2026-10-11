@@ -10,6 +10,7 @@ from sqlalchemy import (
     Identity,
     Index,
     String,
+    UniqueConstraint,
     Uuid,
     text,
 )
@@ -33,7 +34,9 @@ class User(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
     email: Mapped[str] = mapped_column(String(320), unique=True)
-    password_hash: Mapped[str] = mapped_column(String(255))
+    # None for accounts that only sign in with Google (and for ones whose password was removed
+    # when Google was linked): password login never succeeds for them.
+    password_hash: Mapped[str | None] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(120))
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     # Read from the database on every admin request, never copied into the access token, so
@@ -43,6 +46,23 @@ class User(TimestampMixin, Base):
     @property
     def is_admin(self) -> bool:
         return self.role == ROLE_ADMIN
+
+
+class OAuthIdentity(TimestampMixin, Base):
+    """A login at an identity provider, e.g. ("google", Google's stable `sub`) -> a user. The
+    subject, not the email, identifies the person: Google accounts can change their address."""
+
+    __tablename__ = "oauth_identities"
+    __table_args__ = (
+        UniqueConstraint("provider", "subject"),
+        Index("ix_oauth_identities_user_id", "user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    provider: Mapped[str] = mapped_column(String(20))
+    subject: Mapped[str] = mapped_column(String(255))
+    email: Mapped[str] = mapped_column(String(320))
 
 
 class RefreshToken(TimestampMixin, Base):

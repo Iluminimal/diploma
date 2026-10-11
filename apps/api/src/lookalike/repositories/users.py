@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lookalike.models import Address, RefreshToken, User
+from lookalike.models import Address, OAuthIdentity, RefreshToken, User
 from lookalike.models.user import ROLE_CUSTOMER
 
 
@@ -19,8 +19,29 @@ class UserRepository:
         result = await self._session.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
+    async def get_by_identity(self, provider: str, subject: str) -> User | None:
+        result = await self._session.execute(
+            select(User)
+            .join(OAuthIdentity, OAuthIdentity.user_id == User.id)
+            .where(OAuthIdentity.provider == provider, OAuthIdentity.subject == subject)
+        )
+        return result.scalar_one_or_none()
+
+    async def add_identity(
+        self, *, user_id: int, provider: str, subject: str, email: str
+    ) -> OAuthIdentity:
+        identity = OAuthIdentity(user_id=user_id, provider=provider, subject=subject, email=email)
+        self._session.add(identity)
+        await self._session.flush()
+        return identity
+
     async def create(
-        self, *, email: str, password_hash: str, full_name: str, role: str = ROLE_CUSTOMER
+        self,
+        *,
+        email: str,
+        password_hash: str | None,
+        full_name: str,
+        role: str = ROLE_CUSTOMER,
     ) -> User:
         user = User(email=email, password_hash=password_hash, full_name=full_name, role=role)
         self._session.add(user)

@@ -56,3 +56,9 @@ class SessionOut(BaseModel):
     token_type: Literal["bearer"] = "bearer"  # noqa: S105 - OAuth scheme name
     expires_in: int
     user: UserOut
+
+
+class ProvidersOut(BaseModel):
+    """Which ways of signing in besides a password are available, so the page shows only those."""
+
+    google: bool

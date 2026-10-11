@@ -80,6 +80,19 @@ class Settings(BaseSettings):
     rate_limit_login_email: str = "5/300"
     rate_limit_refresh: str = "60/60"
     rate_limit_admin: str = "120/60"
+    rate_limit_oauth: str = "30/300"
+
+    # --- sign in with Google --------------------------------------------------------------
+    # `google`: the real flow (needs the client id and secret). `fake`: an in-process stand-in
+    # that signs in whoever `login_hint` names, for tests and CI; refused in prod.
+    oauth_mode: Literal["google", "fake"] = "google"
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    # Registered in the Google console. It is on the web origin (Next proxies /api/v1 to the API)
+    # so the session cookies the callback sets are first-party.
+    google_redirect_uri: str = "http://localhost:3000/api/v1/auth/google/callback"
+    # Where the callback sends the browser afterwards (and on failure, to /login).
+    web_base_url: str = "http://localhost:3000"
 
     # --- cart and checkout ----------------------------------------------------------------
     cart_max_quantity: int = 10
@@ -109,6 +122,12 @@ class Settings(BaseSettings):
     # Cache and rate-limit calls give up quickly: a slow Redis must not slow searches down.
     redis_op_timeout_seconds: float = 0.5
 
+    @property
+    def google_enabled(self) -> bool:
+        return self.oauth_mode == "fake" or bool(
+            self.google_client_id and self.google_client_secret
+        )
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, value: object) -> object:
@@ -127,6 +146,8 @@ class Settings(BaseSettings):
                 raise ValueError("EMBEDDER=fake is not allowed when APP_ENV=prod")
             if self.payments_mode != "stripe":
                 raise ValueError("PAYMENTS_MODE=offline is not allowed when APP_ENV=prod")
+            if self.oauth_mode != "google":
+                raise ValueError("OAUTH_MODE=fake is not allowed when APP_ENV=prod")
             if not (self.stripe_secret_key and self.stripe_webhook_secret):
                 raise ValueError("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are required in prod")
             self.cookie_secure = True

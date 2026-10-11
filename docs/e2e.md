@@ -1,7 +1,7 @@
 # End-to-end tests (Playwright)
 
 `apps/web/e2e`, run with `make e2e`. They drive a real browser (Chromium) against a running stack: API, web app, Postgres
-and Redis. 61 tests:
+and Redis. 68 tests:
 
 | File | Covers |
 | --- | --- |
@@ -11,6 +11,7 @@ and Redis. 61 tests:
 | `login.spec.ts` | register (short password refused), duplicate email refused, wrong then right password, return to the page that asked for sign-in, `next` cannot leave the site, session survives a reload, sign-out clears the session and the cart |
 | `admin.spec.ts` | customers and visitors are kept out (UI and API); create a product from a photo, edit, replace the photo, withdraw and restore; order with its payment record |
 | `navigation.spec.ts` | the department menu (hover, keyboard, phone drill-down) leads to category pages with breadcrumb and counts; the sidebar drills down; an unknown category is a real 404; the camera button inside the search bar starts a photo search; the search box suggests categories and remembers searches |
+| `google.spec.ts` | sign in with Google (the API's `OAUTH_MODE=fake` stand-in): a new customer lands on the page they asked for, the guest cart comes along, an existing password account is linked and its password stops working, cancelling and unverified emails end on the login page with a message, hostile `?error=` and `?next=` are harmless. Skips when the API has no Google configured |
 | `a11y.spec.ts` | axe (WCAG 2.1 A/AA + best practices) on every kind of screen (including category pages, the open department menu and the photo dialog), in light and dark, at 390 and 1440 px |
 | `keyboard.spec.ts` | skip link, visible focus, search combobox, dialog focus, category toggles, form errors, reduced motion |
 
@@ -21,7 +22,7 @@ payment gateway. Production-like web output is also needed (the dev server is sl
 
 ```bash
 make infra migrate                                            # Postgres + Redis
-RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline make api       # terminal 1 (environment beats .env)
+RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline OAUTH_MODE=fake make api   # terminal 1 (environment beats .env)
 make web-prod                                                 # terminal 2: build + serve on :3000
 make e2e                                                      # terminal 3 (ARGS="e2e/cart.spec.ts" for one file)
 make e2e-clean                                                # afterwards: remove what the tests created
@@ -39,7 +40,7 @@ runs the API with `EMBEDDER=fake`:
 
 ```bash
 # an empty database with pgvector, then:
-EMBEDDER=fake PAYMENTS_MODE=offline RATE_LIMIT_ENABLED=false (cd apps/api && uv run alembic upgrade head)
+EMBEDDER=fake PAYMENTS_MODE=offline OAUTH_MODE=fake RATE_LIMIT_ENABLED=false (cd apps/api && uv run alembic upgrade head)
 make seed-e2e ARGS="--count 60"       # drawn garments, thumbnails, embeddings from the served thumbnails
 # start the API and `make web-prod`, then
 E2E_FAKE_MODEL=1 make e2e

@@ -129,7 +129,9 @@ class AuthService:
         async with self._session.begin():
             user = await self._users.get_by_email(request.email)
         # Always verify something, so an unknown email costs the same as a wrong password.
-        if user is None or not user.is_active:
+        # No password hash: an account that only signs in with Google. It looks like any other
+        # failed login, so the form never reveals which emails exist or how they sign in.
+        if user is None or not user.is_active or user.password_hash is None:
             await asyncio.to_thread(burn_password_check, request.password)
             await self._count_failure(request.email, failure_rate)
             raise _invalid_credentials()
@@ -146,8 +148,7 @@ class AuthService:
             if new_hash is not None:
                 user.password_hash = new_hash
                 self._session.add(user)
-            await self._merge_cart(user.id, guest_cart_token)
-            return await self._issue(user, family_id=uuid.uuid4())
+            return await self.start_session(user, guest_cart_token)
 
     async def refresh(self, refresh_token: str | None) -> IssuedSession:
         if not refresh_token:
@@ -197,6 +198,12 @@ class AuthService:
         if user is None or not user.is_active:
             raise _unauthenticated()
         return user
+
+    async def start_session(self, user: User, guest_cart_token: str | None) -> IssuedSession:
+        """A new login: the guest cart joins the account's and a new refresh family begins.
+        Runs inside the caller's transaction (password login and sign-in with Google)."""
+        await self._merge_cart(user.id, guest_cart_token)
+        return await self._issue(user, family_id=uuid.uuid4())
 
     # --- helpers --------------------------------------------------------------------------
 

@@ -122,6 +122,8 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
       EMBEDDER: fake
       PAYMENTS_MODE: offline
+      # Sign in with Google without Google: the API's stand-in runs the real flow minus the consent screen.
+      OAUTH_MODE: fake
       RATE_LIMIT_ENABLED: "false"
       JWT_SECRET: ci-only-jwt-secret-0123456789-0123456789
       CORS_ORIGINS: http://localhost:3000

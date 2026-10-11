@@ -12,7 +12,7 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 | `/c/{department}[/{group}[/{sub}[/{type}]]]` | per request | category pages, e.g. `/c/men/apparel/topwear/tshirts`: breadcrumbs (+ `BreadcrumbList` JSON-LD), drill-down sidebar with counts, the same filters and grid as `/products`; an unknown or empty category is a real 404 |
 | `/products/{id}/{slug}` | per request | gallery, size selector, breadcrumbs, similar-products rail, metadata, JSON-LD (Product + BreadcrumbList) |
 | `/search` | per request | visual search (client side) |
-| `/login`, `/register` | per request | forms (React Hook Form + Zod); `?next=` is honoured for same-site paths only |
+| `/login`, `/register` | per request | forms (React Hook Form + Zod); `?next=` is honoured for same-site paths only; "Continue with Google" appears when the API has it configured (`GET /auth/providers`), and `/login?error=` shows a message for the few known codes (see `docs/commerce.md`) |
 | `/cart` | static shell | the cart is client data (guest or account), see below |
 | `/checkout`, `/checkout/confirmation/{number}` | static shell | needs a session; demo payment |
 | `/account/orders`, `/account/orders/{number}`, `/account/addresses`, `/account/wishlist` | static shell | need a session |

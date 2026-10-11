@@ -22,7 +22,7 @@ from lookalike.core.logging import get_logger
 log = get_logger(__name__)
 
 RATE_LIMITED_TYPE = "urn:lookalike:problem:rate-limited"
-LimitName = Literal["image", "text", "similar", "register", "login", "refresh", "admin"]
+LimitName = Literal["image", "text", "similar", "register", "login", "refresh", "admin", "oauth"]
 
 _SCRIPT = """
 local count = redis.call('INCR', KEYS[1])
@@ -129,6 +129,7 @@ def _rate_for(settings: Settings, name: LimitName) -> Rate:
             "login": settings.rate_limit_login,
             "refresh": settings.rate_limit_refresh,
             "admin": settings.rate_limit_admin,
+            "oauth": settings.rate_limit_oauth,
         }[name]
     )
 

@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { getProduct } from "@/features/catalog/api";
-import { breadcrumbTrail, productDescription, productJsonLd, serializeJsonLd } from "@/features/catalog/json-ld";
+import { breadcrumbTrail, productDescription, productJsonLd } from "@/features/catalog/json-ld";
+import { JsonLdScripts } from "@/features/seo/json-ld-scripts";
 import { productPath } from "@/features/catalog/product";
 import { ProductGallery } from "@/features/catalog/product-gallery";
 import { sizesFor } from "@/features/catalog/sizes";
@@ -68,10 +69,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
 
   return (
     <div className="container-page py-6 md:py-10">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: serializeJsonLd(productJsonLd(product)) }}
-      />
+      <JsonLdScripts nodes={productJsonLd(product)} />
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>

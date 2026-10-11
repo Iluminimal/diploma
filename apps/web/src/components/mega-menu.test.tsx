@@ -1,6 +1,6 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { catalogNav } from "@/test/fixtures";
 import { MegaMenu } from "./mega-menu";
 
@@ -8,7 +8,15 @@ let data: typeof catalogNav | undefined = catalogNav;
 vi.mock("@/features/catalog/use-catalog-nav", () => ({ useCatalogNav: () => ({ data }) }));
 
 const trigger = (name: string) => screen.getByRole("link", { name });
-const panel = (name: string) => within(screen.getByRole("region", { name: `${name} categories`, hidden: true }));
+const region = (name: string) => screen.getByRole("region", { name: `${name} categories`, hidden: true });
+const panel = (name: string) => within(region(name));
+const flyout = () => document.querySelector<HTMLElement>(".mega-flyout")!;
+const expanded = (name: string) => trigger(name).getAttribute("aria-expanded");
+
+afterEach(() => {
+  data = catalogNav;
+  vi.unstubAllGlobals();
+});
 
 describe("MegaMenu", () => {
   it("renders the departments as links before any data arrives", () => {
@@ -20,50 +28,132 @@ describe("MegaMenu", () => {
     expect(trigger("Kids")).toHaveAttribute("href", "/c/kids");
     expect(trigger("New")).toHaveAttribute("href", "/products?sort=newest");
     expect(trigger("Men")).not.toHaveAttribute("aria-expanded");
-    data = catalogNav;
   });
 
-  it("opens a department's panel on hover and closes it when the pointer leaves", async () => {
+  it("opens the shared flyout on hover and closes it when the pointer leaves", async () => {
     render(<MegaMenu />);
-    expect(trigger("Men")).toHaveAttribute("aria-expanded", "false");
+    expect(flyout()).toHaveAttribute("data-open", "false");
 
     await userEvent.hover(trigger("Men"));
-    await waitFor(() => expect(trigger("Men")).toHaveAttribute("aria-expanded", "true"));
-    expect(trigger("Women")).toHaveAttribute("aria-expanded", "false");
+    await waitFor(() => expect(expanded("Men")).toBe("true"));
+    expect(flyout()).toHaveAttribute("data-open", "true");
     expect(panel("Men").getByRole("link", { name: "Topwear" })).toHaveAttribute("href", "/c/men/apparel/topwear");
 
     await userEvent.unhover(trigger("Men"));
-    await waitFor(() => expect(trigger("Men")).toHaveAttribute("aria-expanded", "false"));
+    await waitFor(() => expect(flyout()).toHaveAttribute("data-open", "false"));
+    expect(expanded("Men")).toBe("false");
   });
 
-  it("lists popular article types", async () => {
+  it("has one flyout for every department, and switching between them is immediate", async () => {
+    render(<MegaMenu />);
+    expect(document.querySelectorAll(".mega-flyout")).toHaveLength(1);
+    await userEvent.hover(trigger("Men"));
+    await waitFor(() => expect(expanded("Men")).toBe("true"));
+
+    await userEvent.hover(trigger("Women"));
+
+    // No waiting for a delay: the flyout stays open and shows the other department.
+    expect(expanded("Women")).toBe("true");
+    expect(expanded("Men")).toBe("false");
+    expect(flyout()).toHaveAttribute("data-open", "true");
+    expect(region("Women")).toHaveAttribute("data-active", "true");
+    expect(region("Men")).toHaveAttribute("data-active", "false");
+  });
+
+  it("closes when the pointer goes to an entry that has no flyout", async () => {
     render(<MegaMenu />);
     await userEvent.hover(trigger("Men"));
+    await waitFor(() => expect(flyout()).toHaveAttribute("data-open", "true"));
 
-    expect(panel("Men").getByRole("link", { name: "T-shirts" })).toHaveAttribute("href", "/c/men/apparel/topwear/tshirts");
+    await userEvent.hover(trigger("New"));
+
+    await waitFor(() => expect(flyout()).toHaveAttribute("data-open", "false"));
   });
 
-  it("ArrowDown moves into the panel and Escape returns to the department link", async () => {
+  it("stays open while the pointer moves from the bar into the flyout", async () => {
     render(<MegaMenu />);
-    trigger("Men").focus();
+    await userEvent.hover(trigger("Men"));
+    await waitFor(() => expect(flyout()).toHaveAttribute("data-open", "true"));
 
-    await userEvent.keyboard("{ArrowDown}");
-    await waitFor(() => expect(trigger("Men")).toHaveAttribute("aria-expanded", "true"));
-    await waitFor(() => expect(panel("Men").getByRole("link", { name: "Clothing" })).toHaveFocus());
+    await userEvent.hover(panel("Men").getByRole("link", { name: "Topwear" }));
+    await new Promise((resolve) => setTimeout(resolve, 350));
 
-    await userEvent.keyboard("{Escape}");
-    expect(trigger("Men")).toHaveAttribute("aria-expanded", "false");
-    expect(trigger("Men")).toHaveFocus();
+    expect(flyout()).toHaveAttribute("data-open", "true");
   });
 
-  it("closes when focus leaves the department", async () => {
+  it("lists popular article types and numbers each link for the fade-in sequence", () => {
     render(<MegaMenu />);
-    trigger("Men").focus();
-    await userEvent.keyboard("{ArrowDown}");
-    await waitFor(() => expect(trigger("Men")).toHaveAttribute("aria-expanded", "true"));
 
-    trigger("New").focus();
+    const link = panel("Men").getByRole("link", { name: "T-shirts" });
+    expect(link).toHaveAttribute("href", "/c/men/apparel/topwear/tshirts");
+    expect(link.closest(".mega-item")?.getAttribute("style")).toContain("--i: 4");
+  });
 
-    await waitFor(() => expect(trigger("Men")).toHaveAttribute("aria-expanded", "false"));
+  it("makes the flyout as tall as the department shown, and nothing when closed", async () => {
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(private callback: () => void) {}
+        observe() {
+          this.callback();
+        }
+        disconnect() {}
+      },
+    );
+    const height = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(312);
+    render(<MegaMenu />);
+    expect(flyout().style.height).toBe("0px");
+
+    await userEvent.hover(trigger("Men"));
+
+    await waitFor(() => expect(flyout().style.height).toBe("312px"));
+    height.mockRestore();
+  });
+
+  describe("touch", () => {
+    it("opens the flyout on the first tap instead of leaving the page", () => {
+      render(<MegaMenu />);
+      fireEvent.pointerDown(trigger("Men"), { pointerType: "touch" });
+
+      const followed = fireEvent.click(trigger("Men"), { detail: 1 });
+
+      expect(followed).toBe(false); // preventDefault was called: no navigation
+      expect(expanded("Men")).toBe("true");
+    });
+
+    it("does not treat a mouse click as a tap", () => {
+      render(<MegaMenu />);
+      fireEvent.pointerDown(trigger("Men"), { pointerType: "mouse" });
+      fireEvent.click(trigger("Men"), { detail: 1 });
+
+      expect(expanded("Men")).toBe("false");
+    });
+  });
+
+  describe("keyboard", () => {
+    it("ArrowDown moves into the flyout and Escape returns to the department link", async () => {
+      render(<MegaMenu />);
+      trigger("Men").focus();
+
+      await userEvent.keyboard("{ArrowDown}");
+      await waitFor(() => expect(expanded("Men")).toBe("true"));
+      await waitFor(() => expect(panel("Men").getByRole("link", { name: "Clothing" })).toHaveFocus());
+
+      await userEvent.keyboard("{Escape}");
+      expect(expanded("Men")).toBe("false");
+      expect(trigger("Men")).toHaveFocus();
+    });
+
+    it("closes when focus leaves the menu", async () => {
+      render(<MegaMenu />);
+      trigger("Men").focus();
+      await userEvent.keyboard("{ArrowDown}");
+      await waitFor(() => expect(expanded("Men")).toBe("true"));
+
+      document.body.focus();
+      fireEvent.blur(panel("Men").getByRole("link", { name: "Clothing" }), { relatedTarget: null });
+
+      await waitFor(() => expect(expanded("Men")).toBe("false"));
+    });
   });
 });

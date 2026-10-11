@@ -1,7 +1,7 @@
 # End-to-end tests (Playwright)
 
 `apps/web/e2e`, run with `make e2e`. They drive a real browser (Chromium) against a running stack: API, web app, Postgres
-and Redis. 84 tests:
+and Redis. 85 tests:
 
 | File | Covers |
 | --- | --- |
@@ -10,7 +10,7 @@ and Redis. 84 tests:
 | `checkout.spec.ts` | checkout needs an account; an empty cart cannot be paid; address, express shipping, **demo payment to the confirmation page and the order in the account**; a repeated checkout or payment never makes a second order; another customer cannot see an order (app and API) |
 | `login.spec.ts` | register (short password refused), duplicate email refused, wrong then right password, return to the page that asked for sign-in, `next` cannot leave the site, session survives a reload, sign-out clears the session and the cart |
 | `admin.spec.ts` | customers and visitors are kept out (UI and API); create a product from a photo, edit, replace the photo, withdraw and restore; order with its payment record |
-| `navigation.spec.ts` | the department menu (hover, keyboard, phone drill-down) leads to category pages with breadcrumb and counts; the sidebar drills down; an unknown category is a real 404; the camera button inside the search bar starts a photo search; the search box suggests categories and remembers searches |
+| `navigation.spec.ts` | the department menu (hover, one shared flyout with instant switching, solid bar, closing on New or on leaving, keyboard, phone drill-down) leads to category pages with breadcrumb and counts; the sidebar drills down; an unknown category is a real 404; the camera button inside the search bar starts a photo search; the search box suggests categories and remembers searches |
 | `google.spec.ts` | sign in with Google (the API's `OAUTH_MODE=fake` stand-in): a new customer lands on the page they asked for, the guest cart comes along, an existing password account is linked and its password stops working, cancelling and unverified emails end on the login page with a message, hostile `?error=` and `?next=` are harmless. Skips when the API has no Google configured |
 | `home.spec.ts` | the headline, the hero's photo button, the departments / category pills / shelves, the pinned story (sticky stage while scrolling; stacked list under reduced motion), Recently viewed appearing after a product visit |
 | `profile.spec.ts` | the profile page; rename shows in the header and survives a reload; change password (wrong current refused, old password stops working); a Google account sees "Connected" and adds a password; delete account (wrong password refused, then signed out for good); the account menu leads to the profile |

@@ -15,7 +15,7 @@ export function SiteHeader() {
     <header
       // Named so page transitions leave it in place (see globals.css).
       style={{ viewTransitionName: "site-header" }}
-      className="header-elevate bg-background/80 sticky top-0 z-40 border-b border-transparent backdrop-blur-xl backdrop-saturate-150"
+      className="header-elevate bg-background/80 has-[.mega-flyout[data-open=true]]:bg-background sticky top-0 z-40 border-b border-transparent backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300"
     >
       <div className="container-page flex h-12 items-center gap-1 md:h-11 md:gap-4">
         <MobileNav />

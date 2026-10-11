@@ -392,43 +392,87 @@
 }
 
 /*
- * The department menu panel. Opening shows it at once (so focus can move into it in the same
- * frame) while it fades and drops in; closing fades out first and only then hides it.
+ * The department flyout (components/mega-menu.tsx): ONE panel under the bar. Its height follows
+ * the department shown (set from script), its contents swap with a quick crossfade, and the links
+ * fade in one after another. It becomes visible at once when opening (so focus can move into it in
+ * the same frame) and is hidden only after it has finished closing.
  */
-.mega-panel {
+.mega-flyout {
+  visibility: hidden;
+  transition:
+    height 380ms var(--ease-out-expo),
+    visibility 0s linear 380ms;
+}
+.mega-flyout[data-open="true"] {
+  visibility: visible;
+  transition:
+    height 380ms var(--ease-out-expo),
+    visibility 0s;
+}
+.mega-content {
+  position: absolute;
+  inset: 0 0 auto 0;
   visibility: hidden;
   opacity: 0;
-  translate: 0 -0.5rem;
   pointer-events: none;
   transition:
-    opacity 300ms var(--ease-out-expo),
-    translate 300ms var(--ease-out-expo),
-    visibility 0s linear 300ms;
+    opacity 160ms ease-out,
+    visibility 0s linear 160ms;
 }
-.mega-panel[data-open="true"] {
+.mega-content[data-active="true"] {
+  position: relative;
   visibility: visible;
   opacity: 1;
-  translate: 0 0;
   pointer-events: auto;
   transition:
-    opacity 300ms var(--ease-out-expo),
-    translate 300ms var(--ease-out-expo),
+    opacity 260ms ease-out 90ms,
     visibility 0s;
+}
+.mega-item {
+  opacity: 0;
+  translate: 0 -6px;
+  transition:
+    opacity 120ms ease-out,
+    translate 120ms ease-out;
+}
+.mega-content[data-active="true"] .mega-item {
+  opacity: 1;
+  translate: 0 0;
+  transition:
+    opacity 380ms ease-out calc(80ms + var(--i, 0) * 28ms),
+    translate 520ms var(--ease-out-expo) calc(80ms + var(--i, 0) * 28ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mega-item {
+    opacity: 1;
+    translate: none;
+  }
 }
 
 /*
- * The department menu's page dimmer: the panel's own pseudo-element reaches down over the page
- * and blurs it, like apple.com. It lets pointer events through, so moving the mouse down onto the
- * page still closes the menu.
+ * Behind the flyout the page is dimmed and blurred, like apple.com. It lets pointer events through,
+ * so moving the mouse down onto the page still closes the menu. While the flyout is open the bar
+ * turns solid (see the header) so bar and flyout read as one surface.
  */
-.mega-panel::before {
-  content: "";
+.mega-scrim {
   position: absolute;
   inset: 100% 0 auto 0;
   height: 100dvh;
   background: color-mix(in oklab, var(--background) 55%, transparent);
   backdrop-filter: blur(18px) saturate(1.4);
   pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 300ms ease-out,
+    visibility 0s linear 300ms;
+}
+.mega-scrim[data-open="true"] {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity 300ms ease-out,
+    visibility 0s;
 }
 
 /* The search panel and the dimmer behind it, shown at once and hidden after they fade. */

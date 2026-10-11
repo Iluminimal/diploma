@@ -50,9 +50,20 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 * **Header** (`components/site-header.tsx`): a 44px translucent bar (backdrop blur and saturation) with the logo on the left,
   small centred department links, and search, account and cart on the right. A hairline fades in under it as the page scrolls
   (a scroll-driven animation). The theme toggle lives in the footer.
-* **Department menu** (`components/mega-menu.tsx`): a full-width flyout under the bar with large semibold links; the page
-  behind it is dimmed and blurred by the panel's own `::before`, which lets pointer events through so moving down onto the
-  page closes it.
+* **Department menu** (`components/mega-menu.tsx`) follows apple.com's global nav:
+  * the entries in the bar are real links (they work before any script or data arrive);
+  * hovering one opens **one shared flyout** after a short delay (120 ms); moving to another entry swaps the content at
+    once (a crossfade) while the flyout's height animates to fit it (a `ResizeObserver` on the active content);
+  * it closes 200 ms after the pointer leaves the bar and flyout, and at once-ish when the pointer goes to an entry
+    without a flyout ("New");
+  * while open the bar turns solid (`has-[.mega-flyout[data-open=true]]` on the header) so bar and flyout read as one surface,
+    and the page behind is dimmed and blurred by `.mega-scrim` (it lets pointer events through, so moving down onto the page
+    closes the menu); the links fade in one after another (`--i` on `.mega-item`);
+  * touch: the first tap on an entry opens its flyout, the second follows the link (a click with `detail > 0` after a
+    non-mouse `pointerdown`; Enter on the keyboard is unaffected);
+  * keyboard: ArrowDown on an entry opens it and moves into it, Escape closes it and returns to the entry, focus leaving
+    the menu closes it. Content that is not shown is `visibility: hidden`, so only the open department is in the tab order
+    and the accessibility tree.
 * **Search** (`components/header-search.tsx`): the magnifier opens a full-width panel over the bar with a large field (the
   `overlay` variant of `SearchBar`), live suggestions, recent searches and quick links, and dims the page. Escape closes it and
   returns focus to the magnifier. The panel is portalled to `<body>` because the header's backdrop blur would otherwise make

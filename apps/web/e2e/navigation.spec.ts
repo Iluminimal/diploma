@@ -1,5 +1,6 @@
 import { test, expect } from "./fixtures";
 import { pickCategory } from "./support/catalog";
+import { API_URL } from "./support/env";
 import { openSearch } from "./support/ui";
 import { productPhoto } from "./support/api";
 
@@ -43,6 +44,42 @@ test("the sidebar drills down with counts and every step is a link", async ({ pa
   await expect(page).toHaveURL(new RegExp(`/c/${department.slug}/${sub.path}$`));
   await expect(tree.getByRole("link", { name: sub.name, exact: false }).first()).toBeVisible();
   await expect(tree.getByRole("link", { name: `All ${department.name}` })).not.toHaveAttribute("aria-current", "page");
+});
+
+test("the department menu behaves like one flyout: instant switching, a solid bar, closing on New or leaving", async ({
+  page,
+  api,
+}) => {
+  const { departments } = await (await api.get(`${API_URL}/api/v1/catalog/nav`)).json();
+  const [first, second] = departments as { slug: string; name: string }[];
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const link = (name: string) => mainNav(page).getByRole("link", { name, exact: true });
+  const flyout = page.locator(".mega-flyout");
+  const barBackground = () => page.getByRole("banner").evaluate((el) => getComputedStyle(el).backgroundColor);
+  await expect(link(first!.name)).toHaveAttribute("aria-expanded", "false", { timeout: 15_000 });
+  const translucent = await barBackground();
+
+  await link(first!.name).hover();
+  await expect(flyout).toHaveAttribute("data-open", "true");
+  await expect(page.getByRole("region", { name: `${first!.name} categories`, exact: true })).toBeVisible();
+  await expect.poll(barBackground).not.toBe(translucent);
+
+  // To another department: no close and reopen, the one flyout just shows the other content.
+  await link(second!.name).hover();
+  await expect(link(second!.name)).toHaveAttribute("aria-expanded", "true");
+  await expect(link(first!.name)).toHaveAttribute("aria-expanded", "false");
+  await expect(flyout).toHaveAttribute("data-open", "true");
+  await expect(page.getByRole("region", { name: `${second!.name} categories`, exact: true })).toBeVisible();
+
+  await link("New").hover();
+  await expect(flyout).toHaveAttribute("data-open", "false");
+
+  await link(first!.name).hover();
+  await expect(flyout).toHaveAttribute("data-open", "true");
+  await page.mouse.move(720, 880);
+  await expect(flyout).toHaveAttribute("data-open", "false");
+  await expect.poll(barBackground).toBe(translucent);
 });
 
 test("the department menu works from the keyboard", async ({ page, api }) => {

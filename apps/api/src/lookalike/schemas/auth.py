@@ -40,12 +40,42 @@ class LoginRequest(BaseModel):
 
 
 class UserOut(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
     id: int
     email: str
     full_name: str
     role: Literal["customer", "admin"]
+    avatar_url: str | None
+    # False for accounts that only sign in with Google (they may add one on the profile page).
+    has_password: bool
+    # Sign-in providers linked to the account, e.g. ["google"].
+    providers: list[str]
+
+
+class UpdateProfileRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    full_name: FullName
+
+
+class ChangePasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Required when the account has a password; Google-only accounts leave it out.
+    current_password: Annotated[str, Field(min_length=1, max_length=128)] | None = None
+    new_password: Password
+
+
+class DeleteAccountRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # Typed back by the person, so a stolen tab cannot delete an account with one click.
+    confirm_email: Annotated[str, Field(min_length=1, max_length=320)]
+    password: Annotated[str, Field(min_length=1, max_length=128)] | None = None
+
+    @field_validator("confirm_email", mode="after")
+    @classmethod
+    def _lower(cls, value: str) -> str:
+        return _normalise_email(value)
 
 
 class SessionOut(BaseModel):

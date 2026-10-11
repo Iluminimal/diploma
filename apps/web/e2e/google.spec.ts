@@ -26,7 +26,7 @@ async function signInAs(page: Page, email: string) {
 
 // Next adds its own role="alert" (the route announcer): ours is the paragraph.
 const problem = (page: Page) => page.locator('p[role="alert"]');
-const google = (page: Page) => page.getByRole("link", { name: "Continue with Google" });
+const google = (page: Page) => page.getByRole("link", { name: /^(Continue|Sign up) with Google$/ });
 
 async function whoAmI(page: Page) {
   // The page restores its own session on load, rotating the refresh token: let that finish, or

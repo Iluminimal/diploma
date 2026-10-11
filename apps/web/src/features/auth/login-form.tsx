@@ -10,7 +10,8 @@ import { z } from "zod";
 import { Field, fieldAria } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { userMessage } from "@/lib/api/errors";
+import { PasswordInput } from "@/components/password-input";
+import { ApiError, userMessage } from "@/lib/api/errors";
 import { useAuthActions } from "./use-auth-actions";
 import { useRedirectWhenSignedIn } from "./use-redirect-when-signed-in";
 
@@ -38,7 +39,12 @@ export function LoginForm({ next }: { next: string }) {
       router.replace(next);
       router.refresh();
     } catch (error) {
-      setFormError(userMessage(error));
+      setFormError(
+        error instanceof ApiError && error.is("invalidCredentials")
+          ? // The same words for every email (so this never reveals who has an account), plus the way out for people who signed up with Google.
+            `${userMessage(error)} Signed up with Google? Use “Continue with Google” instead.`
+          : userMessage(error),
+      );
     }
   });
 
@@ -61,8 +67,7 @@ export function LoginForm({ next }: { next: string }) {
           />
         </Field>
         <Field id="password" label="Password" error={errors.password?.message}>
-          <Input
-            type="password"
+          <PasswordInput
             autoComplete="current-password"
             className="h-11 rounded-xl"
             {...fieldAria("password", errors.password?.message)}

@@ -25,6 +25,7 @@ from lookalike.oauth import OAuthProvider
 from lookalike.payments import PaymentGateway
 from lookalike.repositories.health import HealthRepository
 from lookalike.repositories.users import UserRepository
+from lookalike.services.account import AccountService
 from lookalike.services.addresses import AddressService
 from lookalike.services.admin_orders import AdminOrderService
 from lookalike.services.admin_products import AdminProductService
@@ -273,6 +274,13 @@ def get_auth_service(
 
 
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
+
+
+def get_account_service(session: SessionDep, auth: AuthServiceDep) -> AccountService:
+    return AccountService(session, auth)
+
+
+AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 
 
 def get_oauth_service(

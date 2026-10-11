@@ -7,7 +7,7 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 
 | Route | Rendering | Notes |
 | --- | --- | --- |
-| `/` | per request | hero with upload drop zone, department tiles, New arrivals ("most recently added": the dataset has no release dates) |
+| `/` | per request | storytelling home page, see "The home page" below |
 | `/products` | per request | URL-synced filters, sort and pagination; everything in the query string; the place for free-text search results |
 | `/c/{department}[/{group}[/{sub}[/{type}]]]` | per request | category pages, e.g. `/c/men/apparel/topwear/tshirts`: breadcrumbs (+ `BreadcrumbList` JSON-LD), drill-down sidebar with counts, the same filters and grid as `/products`; an unknown or empty category is a real 404 |
 | `/products/{id}/{slug}` | per request | gallery, size selector, breadcrumbs, similar-products rail, metadata, JSON-LD (Product + BreadcrumbList) |
@@ -15,7 +15,7 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 | `/login`, `/register` | per request | forms (React Hook Form + Zod); `?next=` is honoured for same-site paths only; "Continue with Google" appears when the API has it configured (`GET /auth/providers`), and `/login?error=` shows a message for the few known codes (see `docs/commerce.md`) |
 | `/cart` | static shell | the cart is client data (guest or account), see below |
 | `/checkout`, `/checkout/confirmation/{number}` | static shell | needs a session; demo payment |
-| `/account/orders`, `/account/orders/{number}`, `/account/addresses`, `/account/wishlist` | static shell | need a session |
+| `/account/profile`, `/account/orders`, `/account/orders/{number}`, `/account/addresses`, `/account/wishlist` | static shell | need a session. The profile page: name, how you sign in (Google / password: set or change), delete account |
 | `/admin/products` (+ `new`, `{id}`), `/admin/orders` (+ `{number}`) | static shell | administrators only; `noindex`; see `docs/admin.md` |
 | `/sitemap/{n}.xml`, `/robots.txt` | per request | 10,000 products per sitemap file (`GET /catalog/sitemap` gives id, slug and last change); private and low-value paths are disallowed; `robots.txt` still works when the API is down |
 | `/icon`, `/apple-icon`, `/opengraph-image` | static | generated (no binary assets) |
@@ -36,6 +36,29 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 * **Sizes** (`catalog/sizes.ts`) come from the category (clothing, shoes, kids, belts; none for watches, bags, ...) because
   the catalogue has no size data. The API validates against the same table (`apps/api/.../services/sizes.py`); keep the
   two in step.
+
+## The home page
+
+Apple-style storytelling on top, Amazon-style shelves below. Nothing on it is invented: no discounts, ratings or
+"best sellers" (the dataset has none); every product, count and sentence is real.
+
+| Section | What it is |
+| --- | --- |
+| Promo strip (in the layout, every page) | one thin line: the real free-shipping threshold (`features/home/store-promises.ts`, mirrors the API's default) and a link to photo search |
+| Hero | huge headline, "Search with a photo" (opens the photo picker) and Shop women / men; below it five real photos (newest in stock per department) that drift at different speeds as you scroll (`.drift`). The headline is plain text, never hidden: it is what the page is measured on |
+| How it works | a pinned story. A 340vh track with a sticky full-screen stage; the track's scroll position (a named view timeline, `.story-*` in `globals.css`) plays the three steps: the photo appears, a scan line sweeps it and what was detected fades in, then its real nearest neighbours (`getSimilarProducts`) rise in. Phones, browsers without scroll-driven animation and reduced motion get the three captions and the finished result stacked |
+| Departments | three large cards (Women / Men / Kids) that grow into place (`.zoom-in`) |
+| Shelves | "Shop by category" pills (biggest article types from `GET /catalog/nav`), New arrivals, Under $25, three "<type> for <department>" rails, and **Recently viewed** |
+| Photo band | the full drop zone on a dark band |
+| Trust strip | free shipping over $100, photos are never stored, this is a demo store |
+
+* **Recently viewed** is per browser: product pages record the last 12 products they showed in `localStorage`
+  (`features/catalog/recently-viewed.ts`, `RecordView`); the shelf reads it with `useSyncExternalStore` and is absent on a
+  first visit. Entries keep the price seen at that visit; clicking opens the live page. Blocked storage means no shelf.
+* **All motion is CSS** (scroll-driven animations behind `@supports (animation-timeline: ...)` and
+  `prefers-reduced-motion: no-preference`), so the page costs no animation script.
+* `ProductRail` lives in `features/catalog/product-rail.tsx`, apart from the server-only API module, because the client-side
+  Recently viewed shelf renders it.
 
 ## Navigation, categories and motion
 
@@ -207,6 +230,14 @@ of effect:
    a short mobile page otherwise fetches every "lazy" photo up front (12 photos, 102 KB on home became 5, 37 KB). Thumbnails
    come through this site's origin (no second connection) and the monospace font is not preloaded.
 4. **Cart layout shift 0.21 to 0**: the empty state now has the loading skeleton's height.
+
+**After the home page and account pass** (5 runs, median, real catalogue; `docs/perf/lighthouse.json` is this run): home 91,
+listing 90, filtered listing 91, category page 90, product 97, search 91, cart 91, sign in 94. The margins on home and
+listing are thin (single runs range from 83 to 95). First-load FCP rose by one or two round trips (150 ms each) on most pages:
+the global stylesheet is now 17 KB gzipped and the login HTML 15 KB, both above TCP's first flight of about 14.6 KB, so each
+needs another round trip on the simulated 4G link; the promo strip alone pushed the login HTML over that line. Next time the
+score drops, shrink the global CSS (move route-specific rules such as the home page's `.story-*` into a route-level CSS file)
+before anything else.
 
 **After the navigation and motion pass** (3 runs, median; `docs/perf/lighthouse.json` is this run): home 96, listing 91,
 filtered listing 92, category page 91, product 94, search 92, cart 91, sign in 98; first-load JS 209 KB on home (+5 KB),

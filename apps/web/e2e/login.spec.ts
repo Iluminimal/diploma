@@ -10,10 +10,10 @@ test("registering signs the new customer in", async ({ page }) => {
 
   await page.getByLabel("Full name").fill("E2E Newcomer");
   await page.getByLabel("Email").fill(uniqueEmail("register"));
-  await page.getByLabel("Password").fill("short");
+  await page.getByLabel("Password", { exact: true }).fill("short");
   await page.getByRole("button", { name: "Create account" }).click();
   await expect(page.getByText("Use at least 10 characters")).toBeVisible();
-  await page.getByLabel("Password").fill(PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Create account" }).click();
 
   await expect(page).toHaveURL("/");
@@ -25,7 +25,7 @@ test("an email that is already registered is refused", async ({ page, account })
 
   await page.getByLabel("Full name").fill("Someone Else");
   await page.getByLabel("Email").fill(account.email);
-  await page.getByLabel("Password").fill(PASSWORD);
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: "Create account" }).click();
 
   await expect(page.getByRole("alert").getByText(/already exists/)).toBeVisible();
@@ -35,12 +35,12 @@ test("signing in with the right password, and a wrong one", async ({ page, accou
   await page.goto("/login");
 
   await page.getByLabel("Email").fill(account.email);
-  await page.getByLabel("Password").fill("not the password");
+  await page.getByLabel("Password", { exact: true }).fill("not the password");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("alert").getByText(/don't match/)).toBeVisible();
   await expect(page).toHaveURL(/\/login/);
 
-  await page.getByLabel("Password").fill(account.password);
+  await page.getByLabel("Password", { exact: true }).fill(account.password);
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await expect(page).toHaveURL("/");

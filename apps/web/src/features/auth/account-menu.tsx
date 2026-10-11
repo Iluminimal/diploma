@@ -1,6 +1,7 @@
 "use client";
 
 import { User } from "lucide-react";
+import { UserAvatar } from "@/components/user-avatar";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -34,7 +35,7 @@ export function AccountMenu() {
   if (!requested) {
     return (
       <Button variant="ghost" size="icon" aria-label={`Account: ${user.full_name}`} aria-haspopup="menu" onClick={() => setRequested(true)}>
-        <User />
+        <UserAvatar user={user} size={28} />
       </Button>
     );
   }

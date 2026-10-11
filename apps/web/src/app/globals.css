@@ -9,6 +9,16 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
   --animate-pop: pop 420ms var(--ease-out-expo);
+  --animate-float: float 7s ease-in-out infinite;
+  @keyframes float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -10px;
+    }
+  }
   @keyframes pop {
     0% {
       transform: scale(0.6);
@@ -210,6 +220,147 @@
       opacity: 0.15;
       scale: 0.95;
       translate: 0 3rem;
+    }
+  }
+}
+
+/*
+ * Homepage scroll effects. All of them are scroll-driven CSS animations: no script, nothing to
+ * download. Browsers without `animation-timeline`, and visitors who asked for less motion, get the
+ * plain, fully visible layout.
+ */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Hero photos drift upwards at their own speed while the page scrolls away from the top. */
+    .drift {
+      animation: drift linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 90vh;
+    }
+    @keyframes drift {
+      to {
+        translate: 0 var(--drift, -60px);
+      }
+    }
+    /* Cards grow into place as they enter the screen. */
+    .zoom-in {
+      animation: zoom-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 85%;
+    }
+    @keyframes zoom-in {
+      from {
+        scale: 0.92;
+        opacity: 0.35;
+      }
+    }
+  }
+}
+
+/*
+ * "How it works": a tall track with a sticky full-screen stage. The scroll position of the track
+ * (a named view timeline) plays the story: the photo appears, a scan line sweeps over it, labels
+ * appear, and the matching products rise in. Without support, on phones, or with reduced motion
+ * this is just three captions and the finished result, stacked.
+ */
+@supports (animation-timeline: view()) {
+  @media (min-width: 48rem) and (prefers-reduced-motion: no-preference) {
+    .story-track {
+      view-timeline: --story block;
+      height: 340vh;
+    }
+    .story-stage {
+      position: sticky;
+      top: 0;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-block: 5.5rem 2rem;
+    }
+    .story-captions {
+      position: relative;
+      height: 8.5rem;
+    }
+    .story-caption {
+      position: absolute;
+      inset: 0 0 auto 0;
+    }
+    .story-photo,
+    .story-scan,
+    .story-chips,
+    .story-caption,
+    .story-result {
+      animation-timeline: --story;
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+    }
+    .story-photo {
+      animation-name: story-photo;
+      animation-range: cover 8% cover 24%;
+    }
+    .story-scan {
+      animation-name: story-scan;
+      animation-range: cover 30% cover 54%;
+    }
+    .story-chips {
+      animation-name: story-reveal;
+      animation-range: cover 46% cover 52%;
+    }
+    .story-caption[data-step="1"] {
+      animation-name: story-leave;
+      animation-range: cover 38% cover 43%;
+    }
+    .story-caption[data-step="2"] {
+      animation-name: story-enter, story-leave;
+      animation-range:
+        cover 41% cover 46%,
+        cover 55% cover 60%;
+    }
+    .story-caption[data-step="3"] {
+      animation-name: story-enter;
+      animation-range: cover 59% cover 64%;
+    }
+    .story-result {
+      animation-name: story-rise;
+      animation-range: cover calc(62% + var(--i, 0) * 3%) cover calc(70% + var(--i, 0) * 3%);
+    }
+    @keyframes story-photo {
+      from {
+        opacity: 0;
+        scale: 0.86;
+      }
+    }
+    @keyframes story-scan {
+      from {
+        translate: 0 -100%;
+      }
+      to {
+        translate: 0 420%;
+      }
+    }
+    @keyframes story-reveal {
+      from {
+        opacity: 0;
+      }
+    }
+    @keyframes story-enter {
+      from {
+        opacity: 0;
+        translate: 0 14px;
+      }
+    }
+    @keyframes story-leave {
+      to {
+        opacity: 0;
+        translate: 0 -14px;
+      }
+    }
+    @keyframes story-rise {
+      from {
+        opacity: 0;
+        translate: 0 28px;
+      }
     }
   }
 }

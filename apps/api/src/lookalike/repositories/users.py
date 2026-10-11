@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lookalike.models import Address, OAuthIdentity, RefreshToken, User
@@ -18,6 +18,14 @@ class UserRepository:
     async def get_by_email(self, email: str) -> User | None:
         result = await self._session.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
+
+    async def providers(self, user_id: int) -> list[str]:
+        result = await self._session.execute(
+            select(OAuthIdentity.provider)
+            .where(OAuthIdentity.user_id == user_id)
+            .order_by(OAuthIdentity.provider)
+        )
+        return list(result.scalars())
 
     async def get_by_identity(self, provider: str, subject: str) -> User | None:
         result = await self._session.execute(
@@ -69,6 +77,17 @@ class RefreshTokenRepository:
             select(RefreshToken).where(RefreshToken.token_hash == token_hash).with_for_update()
         )
         return result.scalar_one_or_none()
+
+    async def revoke_all_for_user(self, user_id: int, now: datetime) -> None:
+        """Every login of this user ends: used when the password changes."""
+        await self._session.execute(
+            update(RefreshToken)
+            .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
+            .values(revoked_at=now)
+        )
+
+    async def delete_all_for_user(self, user_id: int) -> None:
+        await self._session.execute(delete(RefreshToken).where(RefreshToken.user_id == user_id))
 
     async def revoke_family(self, family_id: uuid.UUID, now: datetime) -> None:
         await self._session.execute(

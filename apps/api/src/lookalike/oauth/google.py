@@ -16,6 +16,13 @@ ISSUERS = {"https://accounts.google.com", "accounts.google.com"}
 CLOCK_SKEW_SECONDS = 60
 
 
+def _https_url(value: object) -> str | None:
+    """Only https photos are kept: the value ends up in an <img src> on our pages."""
+    if isinstance(value, str) and value.startswith("https://") and len(value) <= 500:
+        return value
+    return None
+
+
 class GoogleOAuth:
     """Authorization code flow with PKCE against Google.
 
@@ -105,7 +112,9 @@ class GoogleOAuth:
             raise OAuthError("google_failed", "missing subject or email")
         verified = claims.get("email_verified")
         name = claims.get("name")
+        picture = claims.get("picture")
         return OAuthProfile(
+            picture=_https_url(picture),
             subject=subject,
             email=email,
             email_verified=verified is True or verified == "true",

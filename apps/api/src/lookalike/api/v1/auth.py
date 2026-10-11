@@ -15,6 +15,7 @@ from lookalike.core.cookies import (
 )
 from lookalike.core.csrf import require_same_origin
 from lookalike.core.deps import (
+    AccountServiceDep,
     AuthServiceDep,
     CurrentUserDep,
     OAuthServiceDep,
@@ -24,10 +25,13 @@ from lookalike.core.deps import (
 from lookalike.core.errors import ProblemError
 from lookalike.core.rate_limit import rate_limit
 from lookalike.schemas.auth import (
+    ChangePasswordRequest,
+    DeleteAccountRequest,
     LoginRequest,
     ProvidersOut,
     RegisterRequest,
     SessionOut,
+    UpdateProfileRequest,
     UserOut,
 )
 from lookalike.schemas.problem import ProblemDetail
@@ -56,7 +60,7 @@ def _respond(issued: IssuedSession, response: Response, settings: SettingsDep) -
     return SessionOut(
         access_token=issued.access.value,
         expires_in=issued.access.expires_in,
-        user=UserOut.model_validate(issued.user),
+        user=issued.user.out(),
     )
 
 
@@ -125,7 +129,60 @@ async def logout(
 
 @router.get("/me", summary="The signed-in user", responses=_UNAUTHORIZED)
 async def me(user_id: CurrentUserDep, service: AuthServiceDep) -> UserOut:
-    return UserOut.model_validate(await service.me(user_id))
+    return (await service.me(user_id)).out()
+
+
+@router.patch("/me", summary="Change the name on the account", responses=_UNAUTHORIZED)
+async def update_me(
+    body: UpdateProfileRequest, user_id: CurrentUserDep, service: AccountServiceDep
+) -> UserOut:
+    return (await service.update_name(user_id, body.full_name)).out()
+
+
+@router.put(
+    "/password",
+    summary="Set or change the password",
+    description="Accounts that have a password must send the current one; Google-only accounts "
+    "can simply set one. Every other login ends and this browser gets a new session.",
+    dependencies=[Depends(rate_limit("login"))],
+    responses={
+        **_UNAUTHORIZED,
+        403: {"model": ProblemDetail, "description": "The current password is wrong"},
+    },
+)
+async def change_password(
+    body: ChangePasswordRequest,
+    response: Response,
+    user_id: CurrentUserDep,
+    service: AccountServiceDep,
+    settings: SettingsDep,
+) -> SessionOut:
+    return _respond(await service.change_password(user_id, body), response, settings)
+
+
+@router.delete(
+    "/me",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete the account",
+    description="The account is anonymized: its details are removed and nobody can sign in to it, "
+    "but past orders are kept for the shop's records. Administrators cannot do this here.",
+    dependencies=[Depends(rate_limit("login"))],
+    responses={
+        **_UNAUTHORIZED,
+        403: {"model": ProblemDetail, "description": "Wrong password, or an administrator"},
+        422: {"model": ProblemDetail, "description": "The typed email does not match"},
+    },
+)
+async def delete_me(
+    body: DeleteAccountRequest,
+    response: Response,
+    user_id: CurrentUserDep,
+    service: AccountServiceDep,
+    settings: SettingsDep,
+) -> None:
+    await service.delete(user_id, body)
+    clear_session_cookies(response, settings)
+    clear_cart_cookie(response, settings)
 
 
 # --- sign in with Google -------------------------------------------------------------------------

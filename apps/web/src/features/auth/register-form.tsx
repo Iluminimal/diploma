@@ -5,12 +5,14 @@ import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Field, fieldAria } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/password-input";
+import { PasswordStrengthMeter } from "./password-strength-meter";
 import { ApiError, userMessage } from "@/lib/api/errors";
 import { useAuthActions } from "./use-auth-actions";
 import { useRedirectWhenSignedIn } from "./use-redirect-when-signed-in";
@@ -38,8 +40,10 @@ export function RegisterForm({ next }: { next: string }) {
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<Values>({ resolver: zodResolver(schema) });
+  const typedPassword = useWatch({ control, name: "password" });
 
   const submit = handleSubmit(async (values) => {
     setFormError(null);
@@ -93,8 +97,7 @@ export function RegisterForm({ next }: { next: string }) {
           error={errors.password?.message}
           hint="At least 10 characters."
         >
-          <Input
-            type="password"
+          <PasswordInput
             autoComplete="new-password"
             className="h-11 rounded-xl"
             {...fieldAria(
@@ -105,6 +108,7 @@ export function RegisterForm({ next }: { next: string }) {
             {...register("password")}
           />
         </Field>
+        <PasswordStrengthMeter password={typedPassword ?? ""} id="password-strength" />
         {formError && (
           <p
             role="alert"

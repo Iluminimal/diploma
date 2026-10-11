@@ -33,7 +33,7 @@ export function googleStartHref(next: string): string {
  * "Continue with Google" and the divider under it, only when the API has Google configured. A
  * plain link: signing in is a whole-page trip to Google and back, so it works without scripts.
  */
-export async function GoogleSignIn({ next }: { next: string }) {
+export async function GoogleSignIn({ next, mode = "signin" }: { next: string; mode?: "signin" | "signup" }) {
   const { google } = await getAuthProviders();
   if (!google) return null;
   return (
@@ -42,9 +42,14 @@ export async function GoogleSignIn({ next }: { next: string }) {
         {/* A navigation to the API, not a page of this app: <Link> would try to prefetch and route it. */}
         <a href={googleStartHref(next)}>
           <GoogleMark />
-          Continue with Google
+          {mode === "signup" ? "Sign up with Google" : "Continue with Google"}
         </a>
       </Button>
+      <p className="text-muted-foreground -mt-2 text-center text-xs">
+        {mode === "signup"
+          ? "We'll create your account from your Google name and email."
+          : "New here? Signing in with Google creates your account."}
+      </p>
       <div className="text-muted-foreground flex items-center gap-3 text-xs" role="separator">
         <span className="bg-border h-px flex-1" />
         or

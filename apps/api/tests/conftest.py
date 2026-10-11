@@ -151,6 +151,10 @@ async def api_factory(
             "rate_limit_refresh": "10000/60",
             "rate_limit_admin": "10000/60",
             "rate_limit_oauth": "10000/60",
+            # Whatever .env says (a preview may use the fake), tests start with Google off.
+            "oauth_mode": "google",
+            "google_client_id": "",
+            "google_client_secret": "",
             # Commerce: a fixed signing key, and the in-process payment gateway.
             "jwt_secret": "test-jwt-secret-0123456789-0123456789",
             "payments_mode": "offline",

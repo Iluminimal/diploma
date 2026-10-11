@@ -9,7 +9,7 @@ const SHOP = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-border mt-24 border-t">
+    <footer className="border-border mt-16 border-t">
       <div className="container-page grid gap-10 py-12 sm:grid-cols-[1.5fr_1fr_1fr]">
         <div className="max-w-xs space-y-3">
           <p className="text-lg font-semibold tracking-tight">Lookalike</p>

@@ -31,7 +31,7 @@ from lookalike.models import User
 from lookalike.repositories.carts import CartRepository
 from lookalike.repositories.products import ProductRepository
 from lookalike.repositories.users import RefreshTokenRepository, UserRepository
-from lookalike.schemas.auth import LoginRequest, RegisterRequest
+from lookalike.schemas.auth import LoginRequest, RegisterRequest, UserOut
 from lookalike.services.cart import merge_guest_cart
 
 log = get_logger(__name__)
@@ -43,11 +43,31 @@ _LOGIN_FAILURES = "login-fail"
 
 
 @dataclass(frozen=True)
+class UserView:
+    """A user with the sign-in providers linked to them: what the API shows of an account."""
+
+    user: User
+    providers: list[str]
+
+    def out(self) -> UserOut:
+        user = self.user
+        return UserOut(
+            id=user.id,
+            email=user.email,
+            full_name=user.full_name,
+            role="admin" if user.is_admin else "customer",
+            avatar_url=user.avatar_url,
+            has_password=user.password_hash is not None,
+            providers=self.providers,
+        )
+
+
+@dataclass(frozen=True)
 class IssuedSession:
     access: AccessToken
     refresh_token: str
     refresh_max_age: int
-    user: User
+    user: UserView
 
 
 def _invalid_credentials() -> ProblemError:
@@ -113,19 +133,7 @@ class AuthService:
     async def login(self, request: LoginRequest, guest_cart_token: str | None) -> IssuedSession:
         # Failed attempts per email, on top of the per-address limit on the route: this is what
         # slows a distributed guessing attack on one account.
-        failure_rate = Rate.parse(self._settings.rate_limit_login_email)
-        if self._settings.rate_limit_enabled:
-            decision = await self._limiter.peek(
-                _LOGIN_FAILURES, hash_token(request.email), failure_rate
-            )
-            if not decision.allowed:
-                raise ProblemError(
-                    HTTPStatus.TOO_MANY_REQUESTS,
-                    "Too many failed attempts",
-                    f"Try again in {decision.reset_seconds} s.",
-                    type_=RATE_LIMITED_TYPE,
-                    headers={"Retry-After": str(decision.reset_seconds)},
-                )
+        failure_rate = await self.check_failure_limit(request.email)
         async with self._session.begin():
             user = await self._users.get_by_email(request.email)
         # Always verify something, so an unknown email costs the same as a wrong password.
@@ -192,12 +200,40 @@ class AuthService:
             if row is not None:
                 await self._tokens.revoke_family(row.family_id, datetime.now(UTC))
 
-    async def me(self, user_id: int) -> User:
+    async def me(self, user_id: int) -> UserView:
         async with self._session.begin():
             user = await self._users.get(user_id)
-        if user is None or not user.is_active:
-            raise _unauthenticated()
-        return user
+            if user is None or not user.is_active:
+                raise _unauthenticated()
+            return UserView(user, await self._users.providers(user.id))
+
+    # --- failed-attempt limit (shared with the account endpoints that check a password) ----
+
+    async def check_failure_limit(self, email: str) -> Rate:
+        """Raises 429 when this email has had too many wrong passwords lately."""
+        rate = Rate.parse(self._settings.rate_limit_login_email)
+        if self._settings.rate_limit_enabled:
+            decision = await self._limiter.peek(_LOGIN_FAILURES, hash_token(email), rate)
+            if not decision.allowed:
+                raise ProblemError(
+                    HTTPStatus.TOO_MANY_REQUESTS,
+                    "Too many failed attempts",
+                    f"Try again in {decision.reset_seconds} s.",
+                    type_=RATE_LIMITED_TYPE,
+                    headers={"Retry-After": str(decision.reset_seconds)},
+                )
+        return rate
+
+    async def record_failure(self, email: str, rate: Rate) -> None:
+        await self._count_failure(email, rate)
+
+    async def clear_failures(self, email: str) -> None:
+        await self._limiter.reset(_LOGIN_FAILURES, hash_token(email))
+
+    async def issue_session(self, user: User) -> IssuedSession:
+        """A new login (new refresh family) without touching the cart. Runs in the caller's
+        transaction."""
+        return await self._issue(user, family_id=uuid.uuid4())
 
     async def start_session(self, user: User, guest_cart_token: str | None) -> IssuedSession:
         """A new login: the guest cart joins the account's and a new refresh family begins.
@@ -217,7 +253,8 @@ class AuthService:
             expires_at=datetime.now(UTC) + timedelta(seconds=max_age),
         )
         access = create_access_token(user.id, self._secret, self._settings.access_token_ttl_seconds)
-        return IssuedSession(access, refresh_token, max_age, user)
+        view = UserView(user, await self._users.providers(user.id))
+        return IssuedSession(access, refresh_token, max_age, view)
 
     async def _merge_cart(self, user_id: int, guest_cart_token: str | None) -> None:
         await merge_guest_cart(

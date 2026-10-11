@@ -32,6 +32,15 @@ describe("GoogleSignIn", () => {
     expect(screen.getByRole("separator")).toBeInTheDocument();
   });
 
+  it("says 'Sign up' on the register page and explains what happens", async () => {
+    providers.mockResolvedValue({ google: true });
+
+    render(await GoogleSignIn({ next: "/", mode: "signup" }));
+
+    expect(screen.getByRole("link", { name: "Sign up with Google" })).toBeInTheDocument();
+    expect(screen.getByText(/create your account from your Google name and email/)).toBeInTheDocument();
+  });
+
   it("is not there when Google is not configured", async () => {
     providers.mockResolvedValue({ google: false });
 

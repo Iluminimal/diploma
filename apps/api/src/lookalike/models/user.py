@@ -38,6 +38,8 @@ class User(TimestampMixin, Base):
     # when Google was linked): password login never succeeds for them.
     password_hash: Mapped[str | None] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(120))
+    # Google's profile photo (an https URL), kept so the header can show it. None: initials.
+    avatar_url: Mapped[str | None] = mapped_column(String(500))
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     # Read from the database on every admin request, never copied into the access token, so
     # demoting someone takes effect at once.

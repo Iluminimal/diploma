@@ -14,7 +14,7 @@ const session = {
   access_token: "t1",
   token_type: "bearer",
   expires_in: 900,
-  user: { id: 1, email: "ada@example.com", full_name: "Ada", role: "customer" as const },
+  user: { id: 1, email: "ada@example.com", full_name: "Ada", role: "customer" as const, avatar_url: null, has_password: true, providers: [] as string[] },
 };
 
 beforeEach(() => {
@@ -68,6 +68,19 @@ describe("LoginForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("don't match");
     expect(replace).not.toHaveBeenCalled();
     expect(useAuth.getState().status).toBe("signedOut");
+  });
+
+  it("points people who signed up with Google to the Google button, in the same words for everyone", async () => {
+    stubApi({
+      "POST /api/v1/auth/login": problem(401, "Invalid email or password", { type: "urn:lookalike:problem:invalid-credentials" }),
+    });
+    renderWithQuery(<LoginForm next="/" />);
+
+    await userEvent.type(screen.getByLabelText("Email"), "ada@example.com");
+    await userEvent.type(screen.getByLabelText("Password"), "wrong password");
+    await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Signed up with Google? Use “Continue with Google” instead.");
   });
 
   it("keeps the destination when the shopper switches to registering", () => {

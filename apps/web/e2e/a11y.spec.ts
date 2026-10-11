@@ -55,6 +55,31 @@ test.describe("storefront", () => {
     expectNoViolations(found, "department menu and photo dialog");
   });
 
+  test("the profile page and its dialogs", async ({ shopperPage: page }) => {
+    const found = [];
+    for (const variant of VARIANTS) {
+      await page.setViewportSize(VIEWPORTS[variant.viewport]);
+      await page.emulateMedia({ colorScheme: variant.scheme, reducedMotion: "reduce" });
+      await page.goto("/account/profile");
+      await expect(page.getByRole("heading", { level: 2, name: "Profile" })).toBeVisible();
+      await settled(page);
+      found.push(...(await scan(page, `${variant.viewport}/${variant.scheme}/page`)));
+
+      await page.getByRole("button", { name: /Change password/ }).click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      await settled(page);
+      found.push(...(await scan(page, `${variant.viewport}/${variant.scheme}/password`)));
+      await page.keyboard.press("Escape");
+
+      await page.getByRole("button", { name: /Delete my account/ }).click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      await settled(page);
+      found.push(...(await scan(page, `${variant.viewport}/${variant.scheme}/delete`)));
+      await page.keyboard.press("Escape");
+    }
+    expectNoViolations(found, "/account/profile");
+  });
+
   test("an empty listing", async ({ page }) => {
     await sweep(page, "/products?q=zzzzzzzz", { ready: heading(page) });
   });

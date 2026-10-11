@@ -57,6 +57,8 @@ class TestProductionSettings:
     PROD: ClassVar[dict[str, object]] = {
         "app_env": "prod",
         "jwt_secret": "x" * 40,
+        # .env may run the fake Google; prod is checked as itself.
+        "oauth_mode": "google",
         "payments_mode": "stripe",
         "stripe_secret_key": "sk_test_x",
         "stripe_webhook_secret": "whsec_x",

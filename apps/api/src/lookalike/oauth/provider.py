@@ -17,6 +17,8 @@ class OAuthProfile:
     email: str
     email_verified: bool
     name: str | None
+    # An https URL of the person's photo, if the provider gave a usable one.
+    picture: str | None = None
 
 
 class OAuthProvider(Protocol):

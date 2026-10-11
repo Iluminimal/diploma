@@ -26,6 +26,20 @@ make test                                  # API integration tests need make inf
 Endpoints: `POST /auth/register|login|refresh|logout`, `GET /auth/me`. Register and login return the access token in
 the body and set the cookies; both merge the guest cart.
 
+### Your account (profile, password, deletion)
+
+All three need a bearer token. `GET /auth/me` and the session responses carry `avatar_url`, `has_password` and `providers`
+(e.g. `["google"]`).
+
+| Endpoint | What it does |
+| --- | --- |
+| `PATCH /auth/me` `{full_name}` | rename |
+| `PUT /auth/password` `{current_password?, new_password}` | set or change the password. An account with a password must send the current one (wrong: **403**, not 401, because the person is signed in; counted against the same per-email failure limit as login). A Google-only account may just set one. Every other login ends (all refresh tokens revoked) and this browser gets a new session |
+| `DELETE /auth/me` `{confirm_email, password?}` | anonymizes the account: email becomes `deleted-<id>@deleted.invalid`, name "Deleted user", password, photo, Google link, addresses, wishlist, cart and refresh tokens removed, `is_active = false`. Orders stay (`orders.user_id` is `RESTRICT`, and the shop keeps its records) with their own address and price snapshots. The typed email must match; a password is required if there is one. Administrators are refused (no lock-out). The address can be registered again |
+
+The web app's `/account/profile` page uses them. Google's profile photo (https URLs only, up to 500 characters) is stored in
+`users.avatar_url` and refreshed at each Google sign-in; without one the header shows initials.
+
 ## Sign in with Google
 
 Authorization code flow with PKCE, run by the API; the browser only follows redirects, so it works without scripts and no
@@ -64,7 +78,7 @@ the email, identifies the person.
    `oauth_identities` table, nullable `password_hash`), restart `make api`, open `/login`.
 
 `OAUTH_MODE=fake` replaces Google with an in-process stand-in for tests and CI: "signing in" skips the consent screen and
-`login_hint` chooses the email (`unverified:<email>` yields an unverified one). `APP_ENV=prod` refuses it. Limits:
+`login_hint` chooses the email (`unverified:<email>` yields an unverified one, `<email>;picture=https://...` gives it a photo). `APP_ENV=prod` refuses it. Limits:
 `RATE_LIMIT_OAUTH` (default 30 per 5 minutes per address).
 
 ## Cart, wishlist, addresses
@@ -111,8 +125,8 @@ element and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
 
 * Stock is per product, not per size (the dataset has none). Listing and similar-product caches (60 s to 5 min) can show
   "in stock" briefly after the last unit was reserved.
-* Google is the only external provider, and a Google-only account cannot add a password (there is no profile or password
-  reset page yet).
+* Google is the only external provider. There is no "forgot password" and no email verification (emails are only logged),
+  so a password can only be set or changed while signed in.
 * Registration reveals whether an email exists (409); it is rate limited, and the alternative would need email verification.
 * Emails are logged, not sent (`core/mail.py`).
 * No reviews or refund UI. Orders can be looked at in the admin area (`docs/admin.md`) but not changed.

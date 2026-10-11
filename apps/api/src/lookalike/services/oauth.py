@@ -102,6 +102,9 @@ class OAuthService:
                     user, created = await self._link_or_create(email, profile.subject, profile.name)
                 if not user.is_active:
                     raise OAuthFailure("account_disabled")
+                if profile.picture and user.avatar_url != profile.picture:
+                    user.avatar_url = profile.picture
+                    self._session.add(user)
                 issued = await self._auth.start_session(user, guest_cart_token)
         except IntegrityError:
             # Lost a race with the same person signing in twice at once: they can simply retry.

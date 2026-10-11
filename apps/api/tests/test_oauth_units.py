@@ -85,6 +85,22 @@ class TestGoogleClaims:
 
         assert profile.subject == "1234567890"
 
+    @pytest.mark.parametrize(
+        ("picture", "kept"),
+        [
+            ("https://lh3.googleusercontent.com/a/abc=s96-c", True),
+            ("http://lh3.googleusercontent.com/a/abc", False),
+            ("javascript:alert(1)", False),
+            ("data:image/svg+xml,<svg/>", False),
+            ("https://example.com/" + "a" * 500, False),
+            (None, False),
+        ],
+    )
+    async def test_only_https_photos_are_kept(self, picture: str | None, kept: bool) -> None:
+        profile = await exchange(google_returning(picture=picture))
+
+        assert profile.picture == (picture if kept else None)
+
     async def test_an_unverified_email_is_reported_not_hidden(self) -> None:
         profile = await exchange(google_returning(email_verified=False))
 
@@ -220,11 +236,26 @@ class TestSafeNext:
 
 class TestProviders:
     def test_none_without_keys_or_fake_mode(self) -> None:
-        assert build_oauth_provider(Settings(app_env="test")) is None
+        assert (
+            build_oauth_provider(
+                Settings(
+                    app_env="test",
+                    oauth_mode="google",
+                    google_client_id="",
+                    google_client_secret="",
+                )
+            )
+            is None
+        )
 
     def test_google_with_keys(self) -> None:
         provider = build_oauth_provider(
-            Settings(app_env="test", google_client_id="id", google_client_secret="secret")
+            Settings(
+                app_env="test",
+                oauth_mode="google",
+                google_client_id="id",
+                google_client_secret="secret",
+            )
         )
 
         assert isinstance(provider, GoogleOAuth)

@@ -1,10 +1,11 @@
 "use client";
 
-import { LayoutDashboard, LogOut, User } from "lucide-react";
+import { LayoutDashboard, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/user-avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,13 +38,16 @@ export function AccountDropdown({ user, defaultOpen }: { user: SessionUser; defa
     <DropdownMenu defaultOpen={defaultOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" aria-label={`Account: ${user.full_name}`}>
-          <User />
+          <UserAvatar user={user} size={28} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="space-y-0.5">
-          <span className="block truncate text-sm font-medium">{user.full_name}</span>
-          <span className="text-muted-foreground block truncate text-xs font-normal">{user.email}</span>
+        <DropdownMenuLabel className="flex items-center gap-3">
+          <UserAvatar user={user} size={36} />
+          <span className="min-w-0 space-y-0.5">
+            <span className="block truncate text-sm font-medium">{user.full_name}</span>
+            <span className="text-muted-foreground block truncate text-xs font-normal">{user.email}</span>
+          </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {ACCOUNT_LINKS.map(({ href, label, icon: Icon }) => (

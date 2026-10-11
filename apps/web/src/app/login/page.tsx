@@ -27,7 +27,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           {problem}
         </p>
       )}
-      <GoogleSignIn next={next} />
+      <GoogleSignIn next={next} mode="signin" />
       <LoginForm next={next} />
     </AuthShell>
   );

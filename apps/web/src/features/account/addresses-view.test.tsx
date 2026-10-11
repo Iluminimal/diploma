@@ -13,7 +13,7 @@ const home = makeAddress({ id: 1, line1: "12 Analytical Way", is_default: true }
 const work = makeAddress({ id: 2, full_name: "Ada at Work", line1: "1 Engine Road", is_default: false });
 
 beforeEach(() =>
-  useAuth.setState({ status: "signedIn", accessToken: "t", user: { id: 1, email: "a@b.co", full_name: "Ada", role: "customer" as const } }),
+  useAuth.setState({ status: "signedIn", accessToken: "t", user: { id: 1, email: "a@b.co", full_name: "Ada", role: "customer" as const, avatar_url: null, has_password: true, providers: [] as string[] } }),
 );
 afterEach(() => vi.unstubAllGlobals());
 

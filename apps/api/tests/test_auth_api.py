@@ -36,10 +36,15 @@ async def test_register_signs_the_user_in(api_factory: ApiFactory) -> None:
             "email": "ada@example.com",
             "full_name": "Ada",
             "role": "customer",
+            "avatar_url": None,
+            "has_password": True,
+            "providers": [],
         }
         assert body["token_type"] == "bearer"
         assert body["expires_in"] == api.settings.access_token_ttl_seconds
-        assert "password" not in response.text
+        # Neither the password nor its hash comes back (`has_password` is only a flag).
+        assert PASSWORD not in response.text
+        assert "password_hash" not in response.text
         me = await api.client.get(ME, headers={"Authorization": f"Bearer {body['access_token']}"})
         assert me.status_code == 200
         assert me.json()["email"] == "ada@example.com"

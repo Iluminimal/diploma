@@ -27,7 +27,7 @@ export async function addToCartFromProductPage(page: Page, product: CatalogProdu
 
 export async function signInThroughTheForm(page: Page, email: string, password: string) {
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill(password);
+  await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
 }
 

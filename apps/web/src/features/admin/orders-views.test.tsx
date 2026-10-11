@@ -30,7 +30,7 @@ beforeEach(() => {
   useAuth.setState({
     status: "signedIn",
     accessToken: "t",
-    user: { id: 1, email: "a@b.co", full_name: "Admin", role: "admin" },
+    user: { id: 1, email: "a@b.co", full_name: "Admin", role: "admin", avatar_url: null, has_password: true, providers: [] as string[] },
   });
 });
 afterEach(() => vi.unstubAllGlobals());

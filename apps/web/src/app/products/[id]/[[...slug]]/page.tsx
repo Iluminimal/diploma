@@ -1,3 +1,4 @@
+import { RecordView } from "@/features/catalog/record-view";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
@@ -19,7 +20,8 @@ import { productPath } from "@/features/catalog/product";
 import { ProductGallery } from "@/features/catalog/product-gallery";
 import { sizesFor } from "@/features/catalog/sizes";
 import { PurchasePanel } from "@/features/cart/purchase-panel";
-import { RailSkeleton, SimilarProducts } from "@/features/catalog/similar-products";
+import { RailSkeleton } from "@/features/catalog/product-rail";
+import { SimilarProducts } from "@/features/catalog/similar-products";
 import { Camera, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -71,6 +73,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
   return (
     <div className="container-page py-6 md:py-10">
       <JsonLdScripts nodes={productJsonLd(product)} />
+      <RecordView product={product} />
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>

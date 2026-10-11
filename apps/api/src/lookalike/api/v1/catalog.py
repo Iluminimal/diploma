@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query, Response
 
 from lookalike.core.deps import CatalogServiceDep
-from lookalike.schemas.catalog import CatalogFilters, SitemapPage, SitemapQuery
+from lookalike.schemas.catalog import CatalogFilters, CatalogNav, SitemapPage, SitemapQuery
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -11,6 +11,17 @@ router = APIRouter(prefix="/catalog", tags=["catalog"])
 @router.get("/filters", summary="Categories and filter options for building a filter UI")
 async def catalog_filters(service: CatalogServiceDep) -> CatalogFilters:
     return await service.filters()
+
+
+@router.get(
+    "/nav",
+    summary="Departments with their category tree and product counts",
+    description="Women, Men and Kids, each with Clothing / Shoes / Accessories groups, "
+    "sub-categories and article types. Node paths feed the `category` listing filter.",
+)
+async def catalog_nav(service: CatalogServiceDep, response: Response) -> CatalogNav:
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return await service.nav()
 
 
 @router.get(

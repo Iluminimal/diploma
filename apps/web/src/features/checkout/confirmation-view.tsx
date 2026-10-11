@@ -10,6 +10,7 @@ import { fetchOrder } from "@/features/orders/orders-api";
 import { OrderDetail } from "@/features/orders/order-detail";
 import { ApiError, userMessage } from "@/lib/api/errors";
 import { queryKeys } from "@/lib/query-keys";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ConfirmationView({ number }: { number: string }) {
   const status = useAuth((state) => state.status);
@@ -42,7 +43,7 @@ export function ConfirmationView({ number }: { number: string }) {
     );
   }
   if (!order) {
-    return <div aria-busy aria-label="Loading your order" className="bg-muted h-64 animate-pulse rounded-2xl" />;
+    return <Skeleton aria-busy aria-label="Loading your order" className="h-64 rounded-2xl" />;
   }
 
   const Icon = order.status === "paid" ? CheckCircle2 : order.status === "pending" ? Clock : XCircle;

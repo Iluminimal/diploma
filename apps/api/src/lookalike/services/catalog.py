@@ -1,14 +1,16 @@
 import math
+from dataclasses import replace
 from http import HTTPStatus
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from lookalike.core.errors import PRODUCT_NOT_FOUND_TYPE, ProblemError
+from lookalike.core.errors import CATEGORY_NOT_FOUND_TYPE, PRODUCT_NOT_FOUND_TYPE, ProblemError
 from lookalike.models import Category
 from lookalike.repositories.categories import CategoryRepository
-from lookalike.repositories.products import ProductRepository, ProductSort
+from lookalike.repositories.products import ProductRepository, ProductSort, SearchFilters
 from lookalike.schemas.catalog import (
     CatalogFilters,
+    CatalogNav,
     CategoryNode,
     PriceRange,
     SitemapEntry,
@@ -18,6 +20,7 @@ from lookalike.schemas.catalog import (
 from lookalike.schemas.product import ProductListQuery, ProductOut, ProductPage
 from lookalike.services.cache import SearchCache
 from lookalike.services.mappers import to_product_out, to_search_filters
+from lookalike.services.taxonomy import DEPARTMENT_BY_SLUG, TaxonomySnapshot, build_snapshot
 from lookalike.storage import Storage
 
 
@@ -47,9 +50,14 @@ class CatalogService:
                 "Invalid sort",
                 "Sorting by relevance needs a search term (q).",
             )
+        filters = await self._navigation_filters(query)
+        if filters is None:
+            return ProductPage(
+                items=[], total=0, page=query.page, page_size=query.page_size, pages=0
+            )
         async with self._session.begin():
             products, total = await ProductRepository(self._session).list_products(
-                filters=to_search_filters(query),
+                filters=filters,
                 text_query=query.q,
                 sort=sort,
                 offset=(query.page - 1) * query.page_size,
@@ -62,6 +70,30 @@ class CatalogService:
             page_size=query.page_size,
             pages=math.ceil(total / query.page_size),
         )
+
+    async def _navigation_filters(self, query: ProductListQuery) -> SearchFilters | None:
+        """The query's filters with `department` and `category` resolved, or None when they
+        exclude every product (a department and an explicit gender that do not overlap)."""
+        filters = to_search_filters(query)
+        if query.department is not None:
+            department = DEPARTMENT_BY_SLUG.get(query.department)
+            if department is None:
+                raise _category_not_found(f"There is no department {query.department!r}.")
+            genders = (
+                tuple(g for g in filters.genders if g in department.genders)
+                if filters.genders
+                else department.genders
+            )
+            if not genders:
+                return None
+            filters = replace(filters, genders=genders)
+        if query.category is not None:
+            snapshot = await self.taxonomy()
+            ids = snapshot.category_ids.get(query.category.strip("/"))
+            if ids is None:
+                raise _category_not_found(f"There is no category {query.category!r}.")
+            filters = replace(filters, category_ids=tuple(ids))
+        return filters
 
     async def get_product(self, product_id: int) -> ProductOut:
         async with self._session.begin():
@@ -110,3 +142,26 @@ class CatalogService:
         )
         await self._cache.set_catalog_filters(result)
         return result
+
+    async def taxonomy(self) -> TaxonomySnapshot:
+        """Departments with counts plus the ids behind every node. Counts only move when the
+        catalogue does, so it is cached together with the filter options."""
+        cached = await self._cache.get_taxonomy()
+        if cached is not None:
+            return cached
+        async with self._session.begin():
+            repository = CategoryRepository(self._session)
+            categories = await repository.all_categories()
+            counts = await repository.gender_category_counts()
+        snapshot = build_snapshot(categories, counts)
+        await self._cache.set_taxonomy(snapshot)
+        return snapshot
+
+    async def nav(self) -> CatalogNav:
+        return (await self.taxonomy()).nav
+
+
+def _category_not_found(detail: str) -> ProblemError:
+    return ProblemError(
+        HTTPStatus.NOT_FOUND, "Category not found", detail, type_=CATEGORY_NOT_FOUND_TYPE
+    )

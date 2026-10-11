@@ -18,6 +18,7 @@ import {
   useSetProductActive,
   useUpdateProduct,
 } from "./use-admin";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function BackLink() {
   return (
@@ -28,7 +29,7 @@ function BackLink() {
 }
 
 function Loading({ label }: { label: string }) {
-  return <div aria-busy aria-label={label} className="bg-muted h-80 animate-pulse rounded-2xl" />;
+  return <Skeleton aria-busy aria-label={label} className="h-80 rounded-2xl" />;
 }
 
 export function NewProductView() {

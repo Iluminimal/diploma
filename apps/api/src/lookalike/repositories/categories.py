@@ -55,6 +55,15 @@ class CategoryRepository:
         rows = await self._session.execute(statement)
         return [LeafCategory(*row) for row in rows.all()]
 
+    async def gender_category_counts(self) -> list[tuple[str, int, int]]:
+        """(gender, article type id, active products), one row per populated combination."""
+        rows = await self._session.execute(
+            select(Product.gender, Product.category_id, func.count(Product.id))
+            .where(Product.is_active.is_(True), Product.category_id.is_not(None))
+            .group_by(Product.gender, Product.category_id)
+        )
+        return [(gender, category_id, n) for gender, category_id, n in rows.all()]
+
     async def searchable_article_types(self) -> list[Category]:
         """Leaf categories that have active products (what search can return), the one with
         the most products first. A few article types (e.g. "Shorts") exist under several parents."""

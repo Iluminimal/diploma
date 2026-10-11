@@ -21,6 +21,7 @@ import { sizesFor } from "@/features/catalog/sizes";
 import { PurchasePanel } from "@/features/cart/purchase-panel";
 import { RailSkeleton, SimilarProducts } from "@/features/catalog/similar-products";
 import { Camera, Check } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function parseId(raw: string): number | null {
   return /^\d{1,15}$/.test(raw) ? Number(raw) : null;
@@ -136,7 +137,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
       <Suspense
         fallback={
           <section className="mt-20" aria-label="Similar products">
-            <div className="bg-muted mb-6 h-7 w-44 animate-pulse rounded" />
+            <Skeleton className="mb-6 h-7 w-44 rounded" />
             <RailSkeleton />
           </section>
         }

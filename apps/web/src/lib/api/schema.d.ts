@@ -339,6 +339,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/catalog/nav": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Departments with their category tree and product counts
+         * @description Women, Men and Kids, each with Clothing / Shoes / Accessories groups, sub-categories and article types. Node paths feed the `category` listing filter.
+         */
+        get: operations["catalog_nav_api_v1_catalog_nav_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/catalog/sitemap": {
         parameters: {
             query?: never;
@@ -1065,6 +1085,14 @@ export interface components {
             /** Usages */
             usages: string[];
         };
+        /**
+         * CatalogNav
+         * @description Women / Men / Kids, each with its own counts, for the mega menu and category pages.
+         */
+        CatalogNav: {
+            /** Departments */
+            departments: components["schemas"]["NavDepartment"][];
+        };
         /** CategoryNode */
         CategoryNode: {
             /**
@@ -1315,6 +1343,41 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** NavDepartment */
+        NavDepartment: {
+            /** Genders */
+            genders: string[];
+            /** Groups */
+            groups: components["schemas"]["NavNode"][];
+            /** Name */
+            name: string;
+            /** Product Count */
+            product_count: number;
+            /** Slug */
+            slug: string;
+        };
+        /**
+         * NavNode
+         * @description A group, sub-category or article type in the shopper-facing tree. `path` is what the
+         *     `category` listing filter and the /c/... URLs take, e.g. "apparel/topwear/tshirts".
+         */
+        NavNode: {
+            /**
+             * Children
+             * @default []
+             */
+            children: components["schemas"]["NavNode"][];
+            /** Level */
+            level: number;
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /** Product Count */
+            product_count: number;
+            /** Slug */
+            slug: string;
         };
         /** OrderItemOut */
         OrderItemOut: {
@@ -2942,6 +3005,26 @@ export interface operations {
             };
         };
     };
+    catalog_nav_api_v1_catalog_nav_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogNav"];
+                };
+            };
+        };
+    };
     catalog_sitemap_api_v1_catalog_sitemap_get: {
         parameters: {
             query?: {
@@ -3219,6 +3302,8 @@ export interface operations {
                 max_price?: number | null;
                 in_stock?: boolean;
                 q?: string | null;
+                department?: string | null;
+                category?: string | null;
                 sort?: ("newest" | "price_asc" | "price_desc" | "relevance") | null;
                 page?: number;
                 page_size?: number;

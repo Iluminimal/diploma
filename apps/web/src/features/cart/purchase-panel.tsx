@@ -1,8 +1,10 @@
 "use client";
 
 import { Loader2, ShoppingBag } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Price } from "@/components/price";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { SizeSelector } from "@/features/catalog/size-selector";
 import type { Product } from "@/features/catalog/product";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
@@ -21,10 +23,23 @@ export function PurchasePanel({ product, sizes }: Props) {
   const [missingSize, setMissingSize] = useState(false);
   const add = useAddToCart();
   const openDrawer = useCartDrawer((state) => state.setOpen);
+  const buttonRow = useRef<HTMLDivElement>(null);
+  // On phones the page is long: once the main button has scrolled out of sight, a bar keeps it in reach.
+  const [barVisible, setBarVisible] = useState(false);
+
+  useEffect(() => {
+    const row = buttonRow.current;
+    if (!row || !product.in_stock) return;
+    const observer = new IntersectionObserver(([entry]) => setBarVisible(entry ? !entry.isIntersecting : false));
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [product.in_stock]);
 
   const addToCart = () => {
     if (sizes && !size) {
       setMissingSize(true);
+      // From the bar the size picker is off-screen: bring it back.
+      buttonRow.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     add.mutate(
@@ -54,7 +69,7 @@ export function PurchasePanel({ product, sizes }: Props) {
           )}
         </div>
       )}
-      <div className="flex gap-2">
+      <div ref={buttonRow} className="flex gap-2">
         <Button
           type="button"
           size="lg"
@@ -66,6 +81,32 @@ export function PurchasePanel({ product, sizes }: Props) {
           {product.in_stock ? "Add to cart" : "Sold out"}
         </Button>
         <WishlistButton product={product} variant="button" />
+      </div>
+      <div
+        // Slides up when the main button leaves the screen; hidden (and out of the tab order) otherwise.
+        aria-hidden={!barVisible}
+        inert={!barVisible}
+        className={cn(
+          "bg-background/90 border-border fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-lg transition-[translate,visibility] duration-500 ease-[var(--ease-out-expo)] md:hidden",
+          barVisible ? "visible translate-y-0" : "invisible translate-y-full",
+        )}
+      >
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">{product.name}</p>
+          <Price cents={product.price_cents} currency={product.currency} className="text-muted-foreground text-sm" />
+        </div>
+        <Button
+          type="button"
+          size="lg"
+          className="h-11 rounded-xl px-6 text-sm"
+          disabled={add.isPending}
+          // Not the same name as the main button: a screen reader meets both on this page.
+          aria-label={`Add ${product.name} to cart`}
+          onClick={addToCart}
+        >
+          {add.isPending ? <Loader2 className="animate-spin" /> : <ShoppingBag />}
+          Add to cart
+        </Button>
       </div>
     </div>
   );

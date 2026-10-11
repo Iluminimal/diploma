@@ -16,6 +16,7 @@ import { userMessage } from "@/lib/api/errors";
 import { AddressForm, formatAddress } from "./address-form";
 import type { Address } from "./addresses-api";
 import { useAddresses, useCreateAddress, useDeleteAddress, useUpdateAddress } from "./use-addresses";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function AddressesView() {
   const { data: addresses, isPending, error, refetch } = useAddresses();
@@ -27,7 +28,7 @@ export function AddressesView() {
   const [deleting, setDeleting] = useState<Address | null>(null);
 
   if (isPending) {
-    return <div aria-busy aria-label="Loading your addresses" className="bg-muted h-40 animate-pulse rounded-2xl" />;
+    return <Skeleton aria-busy aria-label="Loading your addresses" className="h-40 rounded-2xl" />;
   }
   if (error || !addresses) {
     return (

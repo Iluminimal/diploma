@@ -1,7 +1,7 @@
 # End-to-end tests (Playwright)
 
 `apps/web/e2e`, run with `make e2e`. They drive a real browser (Chromium) against a running stack: API, web app, Postgres
-and Redis. 52 tests:
+and Redis. 61 tests:
 
 | File | Covers |
 | --- | --- |
@@ -10,7 +10,8 @@ and Redis. 52 tests:
 | `checkout.spec.ts` | checkout needs an account; an empty cart cannot be paid; address, express shipping, **demo payment to the confirmation page and the order in the account**; a repeated checkout or payment never makes a second order; another customer cannot see an order (app and API) |
 | `login.spec.ts` | register (short password refused), duplicate email refused, wrong then right password, return to the page that asked for sign-in, `next` cannot leave the site, session survives a reload, sign-out clears the session and the cart |
 | `admin.spec.ts` | customers and visitors are kept out (UI and API); create a product from a photo, edit, replace the photo, withdraw and restore; order with its payment record |
-| `a11y.spec.ts` | axe (WCAG 2.1 A/AA + best practices) on every kind of screen, in light and dark, at 390 and 1440 px |
+| `navigation.spec.ts` | the department menu (hover, keyboard, phone drill-down) leads to category pages with breadcrumb and counts; the sidebar drills down; an unknown category is a real 404; the camera button inside the search bar starts a photo search; the search box suggests categories and remembers searches |
+| `a11y.spec.ts` | axe (WCAG 2.1 A/AA + best practices) on every kind of screen (including category pages, the open department menu and the photo dialog), in light and dark, at 390 and 1440 px |
 | `keyboard.spec.ts` | skip link, visible focus, search combobox, dialog focus, category toggles, form errors, reduced motion |
 
 ## Against your development stack
@@ -52,7 +53,7 @@ to run in prod. The failure artifacts (HTML report, traces, API and web logs) ar
 
 To run the same thing locally without touching your data, use a second database and Redis db, the fake model and other
 ports (`CORS_ORIGINS` must name the web origin). That is how the job was validated: 52/52, and 148/148 over four repeats of
-the functional specs.
+the functional specs (61/61 after the navigation pass).
 
 ## Writing specs
 

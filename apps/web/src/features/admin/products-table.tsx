@@ -34,6 +34,7 @@ import type { AdminProduct, ProductListParams } from "./admin-api";
 import { toQuery } from "./list-params";
 import { ListPagination } from "./list-pagination";
 import { useAdminProducts, useSetProductActive } from "./use-admin";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DEFAULTS = { q: "", status: "all", sort: "newest", page: 1 };
 const SORT_LABELS: Record<ProductListParams["sort"], string> = {
@@ -114,7 +115,7 @@ export function ProductsTable({ params }: { params: ProductListParams }) {
       </div>
 
       {isPending ? (
-        <div aria-busy aria-label="Loading products" className="bg-muted h-80 animate-pulse rounded-2xl" />
+        <Skeleton aria-busy aria-label="Loading products" className="h-80 rounded-2xl" />
       ) : error || !data ? (
         <div className="space-y-3">
           <p role="alert" className="text-destructive">

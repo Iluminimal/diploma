@@ -8,7 +8,8 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 | Route | Rendering | Notes |
 | --- | --- | --- |
 | `/` | per request | hero with upload drop zone, department tiles, New arrivals ("most recently added": the dataset has no release dates) |
-| `/products` | per request | URL-synced filters, sort and pagination; everything in the query string |
+| `/products` | per request | URL-synced filters, sort and pagination; everything in the query string; the place for free-text search results |
+| `/c/{department}[/{group}[/{sub}[/{type}]]]` | per request | category pages, e.g. `/c/men/apparel/topwear/tshirts`: breadcrumbs (+ `BreadcrumbList` JSON-LD), drill-down sidebar with counts, the same filters and grid as `/products`; an unknown or empty category is a real 404 |
 | `/products/{id}/{slug}` | per request | gallery, size selector, breadcrumbs, similar-products rail, metadata, JSON-LD (Product + BreadcrumbList) |
 | `/search` | per request | visual search (client side) |
 | `/login`, `/register` | per request | forms (React Hook Form + Zod); `?next=` is honoured for same-site paths only |
@@ -35,6 +36,45 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 * **Sizes** (`catalog/sizes.ts`) come from the category (clothing, shoes, kids, belts; none for watches, bags, ...) because
   the catalogue has no size data. The API validates against the same table (`apps/api/.../services/sizes.py`); keep the
   two in step.
+
+## Navigation, categories and motion
+
+**Categories.** `GET /catalog/nav` (`services/taxonomy.py`) turns the dataset's master > sub > article type tree into what
+shoppers expect: three departments (Women = Women + Unisex, Men = Men + Unisex, Kids = Boys + Girls) with counts per node.
+The 11 article-type names that sit under two parents in the data (a "Tshirts" under Belts, "Dresses" under Topwear) are
+merged into the parent with the most products, so every name has one place and nothing is counted twice. `GET /products`
+takes `department` and `category` (a node `path`); unknown values are a 404 problem. Display names ("Tshirts" -> "T-shirts",
+"Apparel" -> "Clothing") are a small table in the taxonomy module.
+
+* **Desktop menu** (`components/mega-menu.tsx`): the department names are ordinary links (they work before any script or
+  data arrive); a panel with the category tree opens on hover or keyboard focus (ArrowDown enters it, Escape returns to the
+  link). The tree is fetched in the browser (`useCatalogNav`, shared TanStack Query cache) rather than by the layout, so
+  pages that are static stay static and a slow API cannot take the header down.
+* **Phones** (`components/mobile-nav-menu.tsx`): a drawer that drills down level by level, each step sliding in.
+* **Category pages** (`app/c/...`): the segment layout validates the URL against the nav *before* streaming, so a dead
+  category answers 404 (a `notFound()` inside a page behind `loading.tsx` would already be a 200). Do not put a
+  `loading.tsx` on `/products/[id]`: the page's 308 canonical redirect and 404 need the status line to be unsent.
+* **Search bar** (`components/search-bar.tsx`): the camera button sits inside the field and opens the photo picker
+  (`features/search/photo-search-dialog.tsx`, which reuses the whole `ImageDropzone` pipeline: upload, drop, paste, camera,
+  HEIC). A photo can also be dropped on the bar or pasted into it. Suggestions are grouped: recent searches (localStorage,
+  last five, never required) when empty; matching categories (with counts) above products when typing.
+
+**Motion.** Restrained, and almost all CSS, because the first load budget is tight (see Performance).
+
+| What | How |
+| --- | --- |
+| Scroll reveals of sections, tiles, grid rows below the first row | `Reveal` flips `data-in` through an `IntersectionObserver`; the transition is in `globals.css` |
+| Hero recedes while scrolling | `.scroll-fade`, CSS scroll-driven animation (`animation-timeline: view()`); browsers without it show the hero unchanged |
+| Header gains a shadow after scrolling | `.header-elevate`, CSS scroll-driven animation |
+| Page transitions | React `<ViewTransition>` in `app/template.tsx` (new page fades up, old one fades out); the header is named `site-header` and stays put |
+| Menu panel, suggestions, sticky add-to-cart bar, heart and cart-badge pops | CSS transitions and keyframes |
+| A cart line sliding shut when removed | the only use of the `motion` library (`AnimatePresence`), inside the lazily loaded cart drawer and `/cart` |
+
+Curves and durations are tokens (`--ease-out-expo`, `--ease-in-out-quart`; `components/motion/easing.ts` mirrors them). Rules
+to keep: never start the largest element of the first screen hidden (it would delay the largest contentful paint: the hero
+headline has no entrance); everything that starts hidden is shown without scripting and with `prefers-reduced-motion`
+(`[data-reveal]` in `globals.css`; Motion alone would still fade opacity); view-transition animations are switched off under
+reduced motion too.
 
 ## Accounts, cart and checkout
 
@@ -167,6 +207,12 @@ of effect:
    a short mobile page otherwise fetches every "lazy" photo up front (12 photos, 102 KB on home became 5, 37 KB). Thumbnails
    come through this site's origin (no second connection) and the monospace font is not preloaded.
 4. **Cart layout shift 0.21 to 0**: the empty state now has the loading skeleton's height.
+
+**After the navigation and motion pass** (3 runs, median; `docs/perf/lighthouse.json` is this run): home 96, listing 91,
+filtered listing 92, category page 91, product 94, search 92, cart 91, sign in 98; first-load JS 209 KB on home (+5 KB),
+208 KB on the listing, 224 KB on the product page. A first version with the Motion library in the root layout cost about
+55 KB on every page and pushed the product page from 97 to 91; scroll reveals, the hero and the sticky bar are CSS now and
+Motion loads only with the cart. Cart has 250 KB because `/cart` shows the animated lines inline.
 
 Conventions that keep it this way: new overlays (dialog, sheet, dropdown, popover) go behind `next/dynamic` and a plain
 trigger; keep schema libraries out of modules that browser code shares; do not use `scroll-smooth` on snap containers;

@@ -22,10 +22,14 @@ const ONLY = arg("pages", "")
 
 const listing = await (await fetch(`${API}/api/v1/products?in_stock=true&master_category=Apparel&page_size=1`)).json();
 const product = listing.items[0];
+// The biggest department's first group, whatever the catalogue holds.
+const nav = await (await fetch(`${API}/api/v1/catalog/nav`)).json();
+const department = [...nav.departments].sort((a, b) => b.product_count - a.product_count)[0];
 const PAGES = {
   home: "/",
   listing: "/products",
   filtered: "/products?gender=Women&sort=price_asc",
+  category: `/c/${department.slug}/${department.groups[0].path}`,
   product: `/products/${product.id}/${product.slug}`,
   search: "/search",
   cart: "/cart",

@@ -34,8 +34,10 @@ export function CartButton() {
         <ShoppingBag />
         {count > 0 && (
           <span
+            // Remounts when the count changes, which replays the pop.
+            key={count}
             aria-hidden
-            className="bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 grid min-w-4.5 place-items-center rounded-full px-1 text-[0.65rem] leading-4.5 font-semibold tabular-nums"
+            className="animate-pop bg-primary text-primary-foreground absolute -top-0.5 -right-0.5 grid min-w-4.5 place-items-center rounded-full px-1 text-[0.65rem] leading-4.5 font-semibold tabular-nums"
           >
             {count > 99 ? "99+" : count}
           </span>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
 import { CartLines } from "./cart-lines";
 import { useCart } from "./use-cart";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function CartView() {
   const { data: cart, isPending, error, refetch } = useCart();
@@ -16,10 +17,10 @@ export function CartView() {
       <div className="grid gap-8 lg:grid-cols-[1fr_22rem]" aria-busy aria-label="Loading your cart">
         <div className="space-y-4">
           {[0, 1, 2].map((n) => (
-            <div key={n} className="bg-muted h-32 animate-pulse rounded-2xl" />
+            <Skeleton key={n} className="h-32 rounded-2xl" />
           ))}
         </div>
-        <div className="bg-muted hidden h-56 animate-pulse rounded-2xl lg:block" />
+        <Skeleton className="hidden h-56 rounded-2xl lg:block" />
       </div>
     );
   }

@@ -29,6 +29,32 @@ class CatalogFilters(BaseModel):
     price_range: PriceRange
 
 
+class NavNode(BaseModel):
+    """A group, sub-category or article type in the shopper-facing tree. `path` is what the
+    `category` listing filter and the /c/... URLs take, e.g. "apparel/topwear/tshirts"."""
+
+    name: str
+    slug: str
+    path: str
+    level: int
+    product_count: int
+    children: list["NavNode"] = []
+
+
+class NavDepartment(BaseModel):
+    slug: str
+    name: str
+    genders: list[str]
+    product_count: int
+    groups: list[NavNode]
+
+
+class CatalogNav(BaseModel):
+    """Women / Men / Kids, each with its own counts, for the mega menu and category pages."""
+
+    departments: list[NavDepartment]
+
+
 class SitemapEntry(BaseModel):
     id: int
     slug: str

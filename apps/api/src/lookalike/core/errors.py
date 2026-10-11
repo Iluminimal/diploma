@@ -34,6 +34,7 @@ INVALID_SIGNATURE_TYPE = f"{_PREFIX}invalid-signature"
 ADDRESS_LIMIT_TYPE = f"{_PREFIX}address-limit"
 WISHLIST_FULL_TYPE = f"{_PREFIX}wishlist-full"
 INVALID_CATEGORY_TYPE = f"{_PREFIX}invalid-category"
+CATEGORY_NOT_FOUND_TYPE = f"{_PREFIX}category-not-found"
 
 log = get_logger(__name__)
 

@@ -4,6 +4,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Motion tokens: the same curves are used by Motion (components/motion/easing.ts). */
+@theme {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  --animate-pop: pop 420ms var(--ease-out-expo);
+  @keyframes pop {
+    0% {
+      transform: scale(0.6);
+    }
+    55% {
+      transform: scale(1.18);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -14,19 +32,6 @@
   --color-brand-foreground: var(--brand-foreground);
   --color-success: var(--success);
   --shadow-soft: var(--elevation-soft);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -75,20 +80,7 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.4 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
   --radius: 0.75rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
 }
 
 .dark {
@@ -114,19 +106,6 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.75 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
 }
 
 @layer base {
@@ -188,5 +167,145 @@
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/*
+ * Scroll reveal (components/motion/reveal.tsx adds `data-in` when the element is on screen).
+ * Without scripting, or for visitors who asked for less motion, content is simply there.
+ */
+[data-reveal] {
+  opacity: 0;
+  translate: 0 var(--reveal-y, 18px);
+  transition:
+    opacity 800ms var(--ease-out-expo) var(--reveal-delay, 0s),
+    translate 800ms var(--ease-out-expo) var(--reveal-delay, 0s);
+}
+[data-reveal][data-in] {
+  opacity: 1;
+  translate: 0 0;
+}
+@media (scripting: none), (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    translate: none;
+    transition: none;
+  }
+}
+
+/*
+ * The hero recedes as it scrolls away, driven by the scroll position (no script). Browsers
+ * without scroll-driven animations leave it as it is.
+ */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-fade {
+      animation: scroll-fade linear both;
+      animation-timeline: view();
+      animation-range: exit 0% exit 100%;
+    }
+  }
+  @keyframes scroll-fade {
+    to {
+      opacity: 0.15;
+      scale: 0.95;
+      translate: 0 3rem;
+    }
+  }
+}
+
+/*
+ * The header gains a hairline shadow as the page scrolls away from the top. Pure CSS, driven by
+ * the scroll position, so it costs no script; browsers without scroll-driven animations keep the
+ * plain border.
+ */
+@supports (animation-timeline: scroll()) {
+  .header-elevate {
+    animation: header-elevate linear both;
+    animation-timeline: scroll();
+    animation-range: 0 64px;
+  }
+  @keyframes header-elevate {
+    from {
+      box-shadow: 0 0 0 0 transparent;
+    }
+    to {
+      box-shadow: 0 8px 24px -16px oklch(0 0 0 / 22%);
+    }
+  }
+}
+
+/*
+ * The department menu panel. Opening shows it at once (so focus can move into it in the same
+ * frame) while it fades and drops in; closing fades out first and only then hides it.
+ */
+.mega-panel {
+  visibility: hidden;
+  opacity: 0;
+  translate: 0 -0.5rem;
+  pointer-events: none;
+  transition:
+    opacity 300ms var(--ease-out-expo),
+    translate 300ms var(--ease-out-expo),
+    visibility 0s linear 300ms;
+}
+.mega-panel[data-open="true"] {
+  visibility: visible;
+  opacity: 1;
+  translate: 0 0;
+  pointer-events: auto;
+  transition:
+    opacity 300ms var(--ease-out-expo),
+    translate 300ms var(--ease-out-expo),
+    visibility 0s;
+}
+
+/*
+ * Page transitions (React <ViewTransition> in app/template.tsx): the new page rises in while the
+ * old one fades out. The header is anchored so only the content appears to move.
+ */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+::view-transition-old(.page-exit) {
+  animation: 160ms var(--ease-out-expo) both page-fade reverse;
+}
+::view-transition-new(.page-enter) {
+  animation:
+    420ms var(--ease-out-expo) 80ms both page-fade,
+    620ms var(--ease-out-expo) 80ms both page-rise;
+}
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes page-rise {
+  from {
+    translate: 0 14px;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
   }
 }

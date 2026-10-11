@@ -11,6 +11,7 @@ import { userMessage } from "@/lib/api/errors";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchOrders } from "./orders-api";
 import { StatusBadge } from "./status-badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function OrdersList({ page }: { page: number }) {
   const status = useAuth((state) => state.status);
@@ -24,7 +25,7 @@ export function OrdersList({ page }: { page: number }) {
     return (
       <div className="space-y-3" aria-busy aria-label="Loading your orders">
         {[0, 1, 2].map((n) => (
-          <div key={n} className="bg-muted h-28 animate-pulse rounded-2xl" />
+          <Skeleton key={n} className="h-28 rounded-2xl" />
         ))}
       </div>
     );

@@ -25,6 +25,9 @@ export type CatalogFilters = Record<MultiKey, string[]> & {
 
 export type ListingQuery = CatalogFilters & {
   q?: string;
+  /** Set by the /c/... pages from the URL path (never serialized into the query string). */
+  department?: string;
+  category?: string;
   sort?: Sort;
   page: number;
 };

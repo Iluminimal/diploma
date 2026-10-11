@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { categoryPaths, type CatalogNav } from "@/features/catalog/nav";
 import { productPath } from "@/features/catalog/product";
 import { absoluteUrl } from "@/lib/site";
 
@@ -11,22 +12,22 @@ export function sitemapIds(total: number): { id: number }[] {
   return Array.from({ length: files }, (_, id) => ({ id }));
 }
 
-// One gender per URL: Next writes the URL into the XML as it is, and a "&" (as in
-// `?gender=Girls&gender=Boys`) would make the whole file invalid.
-const DEPARTMENT_GENDERS = ["Women", "Men", "Girls", "Boys"] as const;
-
-/** Pages that are not products: the home page, the listing, the search tool and the departments. */
+/** Pages that are not products or categories: the home page, the listing and the search tool. */
 export function staticEntries(): MetadataRoute.Sitemap {
   return [
     { url: absoluteUrl("/"), changeFrequency: "daily", priority: 1 },
     { url: absoluteUrl("/products"), changeFrequency: "daily", priority: 0.8 },
     { url: absoluteUrl("/search"), changeFrequency: "monthly", priority: 0.5 },
-    ...DEPARTMENT_GENDERS.map((gender) => ({
-      url: absoluteUrl(`/products?gender=${gender}`),
-      changeFrequency: "daily" as const,
-      priority: 0.7,
-    })),
   ];
+}
+
+/** Every department and category page (/c/men, /c/men/apparel/topwear, ...). Shallower pages rank higher. */
+export function categoryEntries(nav: CatalogNav): MetadataRoute.Sitemap {
+  return categoryPaths(nav).map((path) => ({
+    url: absoluteUrl(path),
+    changeFrequency: "daily",
+    priority: Math.max(0.4, 0.8 - 0.1 * (path.split("/").length - 3)),
+  }));
 }
 
 export function productEntries(items: { id: number; slug: string; updated_at: string }[]): MetadataRoute.Sitemap {

@@ -20,6 +20,7 @@ import { createCheckout, fetchShippingMethods, payDemoOrder, type ShippingMethod
 import { shippingCostFor } from "./checkout-math";
 import { ChoiceCard } from "./choice-card";
 import { cardSchema, DEMO_CARD, PaymentForm, type CardValues } from "./payment-form";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function Section({ step, title, children }: { step: number; title: string; children: React.ReactNode }) {
   return (
@@ -40,10 +41,10 @@ function CheckoutSkeleton() {
     <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem]" aria-busy aria-label="Loading checkout">
       <div className="space-y-4">
         {[0, 1, 2].map((n) => (
-          <div key={n} className="bg-muted h-40 animate-pulse rounded-2xl" />
+          <Skeleton key={n} className="h-40 rounded-2xl" />
         ))}
       </div>
-      <div className="bg-muted h-80 animate-pulse rounded-2xl" />
+      <Skeleton className="h-80 rounded-2xl" />
     </div>
   );
 }

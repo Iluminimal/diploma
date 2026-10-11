@@ -8,6 +8,7 @@ import { ApiError, userMessage } from "@/lib/api/errors";
 import { queryKeys } from "@/lib/query-keys";
 import { OrderDetail } from "./order-detail";
 import { fetchOrder } from "./orders-api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function OrderPageView({ number }: { number: string }) {
   const status = useAuth((state) => state.status);
@@ -30,7 +31,7 @@ export function OrderPageView({ number }: { number: string }) {
       ) : order ? (
         <OrderDetail order={order} />
       ) : (
-        <div aria-busy aria-label="Loading the order" className="bg-muted h-64 animate-pulse rounded-2xl" />
+        <Skeleton aria-busy aria-label="Loading the order" className="h-64 rounded-2xl" />
       )}
     </div>
   );

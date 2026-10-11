@@ -4,6 +4,7 @@ import { ProductImage } from "@/components/product-image";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
 import { formatPrice, productPath, productSubtitle, type Product } from "@/features/catalog/product";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Props = {
   product: Product;
@@ -56,11 +57,11 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
 export function ProductCardSkeleton() {
   return (
     <div aria-hidden>
-      <div className="bg-muted aspect-3/4 animate-pulse rounded-2xl" />
+      <Skeleton className="aspect-3/4 rounded-2xl" />
       <div className="mt-3 space-y-2 px-0.5">
-        <div className="bg-muted h-3.5 w-4/5 animate-pulse rounded" />
-        <div className="bg-muted h-3 w-2/5 animate-pulse rounded" />
-        <div className="bg-muted h-3.5 w-1/4 animate-pulse rounded" />
+        <Skeleton className="h-3.5 w-4/5 rounded" />
+        <Skeleton className="h-3 w-2/5 rounded" />
+        <Skeleton className="h-3.5 w-1/4 rounded" />
       </div>
     </div>
   );

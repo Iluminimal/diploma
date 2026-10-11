@@ -6,9 +6,11 @@ import { useState, useSyncExternalStore } from "react";
 import { selectClass } from "@/components/form-field";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { FilterGroup } from "./filter-fields";
 import { activeFilterCount, type ListingQuery, type Sort } from "./filters";
 import type { CatalogFilterOptions } from "./product";
 import { useListingNavigation } from "./use-listing-navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // The phone filter sheet is fetched the first time it is opened, together with the dialog library.
 const MobileFiltersSheet = dynamic(() => import("./mobile-filters-sheet").then((m) => m.MobileFiltersSheet), {
@@ -33,19 +35,29 @@ const subscribeToWidth = (notify: () => void) => {
 };
 
 /** The desktop filter column. On a narrow screen nothing is rendered or loaded for it. */
-export function FilterSidebar({ options, query }: { options: CatalogFilterOptions; query: ListingQuery }) {
+type FilterScope = { showCategories?: boolean; groups?: FilterGroup[] };
+
+export function FilterSidebar({
+  options,
+  query,
+  ...scope
+}: { options: CatalogFilterOptions; query: ListingQuery } & FilterScope) {
   const wide = useSyncExternalStore(
     subscribeToWidth,
     () => window.matchMedia(DESKTOP).matches,
     () => false,
   );
-  if (!wide) return <div aria-hidden className="bg-muted/50 h-96 animate-pulse rounded-2xl" />;
-  return <WideSidebar options={options} query={query} />;
+  if (!wide) return <Skeleton aria-hidden className="bg-muted/50 h-96 rounded-2xl" />;
+  return <WideSidebar options={options} query={query} {...scope} />;
 }
 
-export function MobileFilters({ options, query }: { options: CatalogFilterOptions; query: ListingQuery }) {
+export function MobileFilters({
+  options,
+  query,
+  ...scope
+}: { options: CatalogFilterOptions; query: ListingQuery } & FilterScope) {
   const [requested, setRequested] = useState(false);
-  if (requested) return <MobileFiltersSheet options={options} query={query} defaultOpen />;
+  if (requested) return <MobileFiltersSheet options={options} query={query} defaultOpen {...scope} />;
   const count = activeFilterCount(query);
   return (
     <Button variant="outline" size="lg" className="lg:hidden" aria-haspopup="dialog" onClick={() => setRequested(true)}>

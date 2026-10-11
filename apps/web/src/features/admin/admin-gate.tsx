@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-store";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /**
  * Keeps the admin screens away from everyone but administrators. This is for the visitor's
@@ -22,7 +23,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
   }, [status, pathname, router]);
 
   if (status !== "signedIn") {
-    return <div aria-busy aria-label="Checking your access" className="bg-muted h-64 animate-pulse rounded-2xl" />;
+    return <Skeleton aria-busy aria-label="Checking your access" className="h-64 rounded-2xl" />;
   }
   if (role !== "admin") {
     return (

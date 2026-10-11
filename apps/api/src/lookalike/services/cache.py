@@ -16,6 +16,7 @@ from lookalike.core.logging import get_logger
 from lookalike.repositories.products import SearchFilters
 from lookalike.schemas.catalog import CatalogFilters
 from lookalike.schemas.search import SearchHit
+from lookalike.services.taxonomy import TaxonomySnapshot
 
 log = get_logger(__name__)
 
@@ -114,6 +115,24 @@ class SearchCache:
     async def set_catalog_filters(self, filters: CatalogFilters) -> None:
         await self._set(self._filters_key, filters.model_dump_json().encode(), self._filters_ttl)
 
+    # --- category navigation -----------------------------------------------------------------
+
+    @property
+    def _nav_key(self) -> str:
+        return f"catalog:nav:{self._version}"
+
+    async def get_taxonomy(self) -> TaxonomySnapshot | None:
+        raw = await self._get(self._nav_key)
+        if raw is None:
+            return None
+        try:
+            return TaxonomySnapshot.model_validate_json(raw)
+        except ValueError:
+            return None
+
+    async def set_taxonomy(self, snapshot: TaxonomySnapshot) -> None:
+        await self._set(self._nav_key, snapshot.model_dump_json().encode(), self._filters_ttl)
+
     # --- invalidation ----------------------------------------------------------------------
 
     async def invalidate_catalogue(self) -> None:
@@ -125,7 +144,7 @@ class SearchCache:
             log.warning("cache_unavailable", op="invalidate", error=type(exc).__name__)
 
     async def _invalidate(self) -> None:
-        batch: list[bytes] = [self._filters_key.encode()]
+        batch: list[bytes] = [self._filters_key.encode(), self._nav_key.encode()]
         async for key in self._redis.scan_iter(match=f"sim:{self._version}:*", count=500):
             batch.append(key)
             if len(batch) >= 500:

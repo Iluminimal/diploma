@@ -28,6 +28,7 @@ routes traffic to a pod that cannot search. `/healthz` stays independent of them
 | `GET /products` | listing, see below |
 | `GET /products/{id}` | one product (404 if unknown or inactive) |
 | `GET /catalog/filters` | category tree, option lists and price range for a filter UI (cached 10 min) |
+| `GET /catalog/nav` | Women / Men / Kids, each with Clothing, Footwear and Accessories groups, sub-categories and article types, with active-product counts and the `path` the listing's `category` filter takes (cached 10 min, `Cache-Control: public, max-age=300`) |
 | `GET /catalog/sitemap` | active products as `id`, `slug`, `updated_at`, in id order, `page`/`page_size` up to 10,000 (the web app builds `/sitemap/{n}.xml` from it) |
 
 All four searches return the same envelope:

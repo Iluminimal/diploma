@@ -42,19 +42,22 @@ export function productJsonLd(p: Product) {
     },
     {
       "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { label: "Home", href: "/" },
-        ...trail,
-        { label: p.name, href: productPath(p) },
-      ].map((item, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        name: item.label,
-        item: `${SITE_URL}${item.href}`,
-      })),
+      ...breadcrumbList([{ label: "Home", href: "/" }, ...trail, { label: p.name, href: productPath(p) }]),
     },
   ];
+}
+
+/** The body of a schema.org BreadcrumbList (`@type` and `itemListElement`) for site-relative links. */
+export function breadcrumbList(items: { label: string; href: string }[]) {
+  return {
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: item.label,
+      item: `${SITE_URL}${item.href}`,
+    })),
+  };
 }
 
 /** Serialize for a `<script type="application/ld+json">`; `<` is escaped so data can't close the tag. */

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { productEntries, robotsFor, sitemapIds, sitemapUrl, SITEMAP_CHUNK, staticEntries } from "./sitemap";
+import { catalogNav } from "@/test/fixtures";
+import { categoryEntries, productEntries, robotsFor, sitemapIds, sitemapUrl, SITEMAP_CHUNK, staticEntries } from "./sitemap";
 
 describe("sitemapIds", () => {
   it.each([
@@ -18,23 +19,32 @@ describe("sitemapIds", () => {
 });
 
 describe("entries", () => {
-  it("lists the home page, the catalogue, search and the departments with absolute URLs", () => {
+  it("lists the home page, the catalogue and search with absolute URLs", () => {
     const urls = staticEntries().map((entry) => entry.url);
 
     expect(urls).toContain("http://localhost:3000/");
     expect(urls).toContain("http://localhost:3000/products");
     expect(urls).toContain("http://localhost:3000/search");
-    expect(urls).toContain("http://localhost:3000/products?gender=Women");
-    expect(urls).toContain("http://localhost:3000/products?gender=Girls");
-    expect(urls).toContain("http://localhost:3000/products?gender=Boys");
     // "New" is a sort of the whole catalogue, not a page of its own.
     expect(urls.some((url) => url.includes("sort="))).toBe(false);
     expect(urls.every((url) => url.startsWith("http://localhost:3000"))).toBe(true);
   });
 
+  it("lists every department and category page, shallow ones first", () => {
+    const entries = categoryEntries(catalogNav);
+    const urls = entries.map((entry) => entry.url);
+
+    expect(urls).toContain("http://localhost:3000/c/men");
+    expect(urls).toContain("http://localhost:3000/c/men/apparel/topwear/tshirts");
+    expect(urls).toContain("http://localhost:3000/c/women/apparel");
+    const priority = (path: string) => entries.find((e) => e.url.endsWith(path))?.priority ?? 0;
+    expect(priority("/c/men")).toBeGreaterThan(priority("/c/men/apparel/topwear/tshirts"));
+  });
+
   it("only contains URLs that are valid inside XML as they are written", () => {
     const urls = [
       ...staticEntries(),
+      ...categoryEntries(catalogNav),
       ...productEntries([{ id: 1, slug: "a-b-c-1", updated_at: "2026-10-08T10:00:00Z" }]),
     ].map((entry) => entry.url);
 

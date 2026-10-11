@@ -25,6 +25,7 @@ import type { OrderListParams } from "./admin-api";
 import { toQuery } from "./list-params";
 import { ListPagination } from "./list-pagination";
 import { useAdminOrder, useAdminOrders } from "./use-admin";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const DEFAULTS = { q: "", status: "all", page: 1 };
 const STATUS_LABELS: Record<OrderListParams["status"], string> = {
@@ -79,7 +80,7 @@ export function OrdersTable({ params }: { params: OrderListParams }) {
       </div>
 
       {isPending ? (
-        <div aria-busy aria-label="Loading orders" className="bg-muted h-80 animate-pulse rounded-2xl" />
+        <Skeleton aria-busy aria-label="Loading orders" className="h-80 rounded-2xl" />
       ) : error || !data ? (
         <div className="space-y-3">
           <p role="alert" className="text-destructive">
@@ -216,7 +217,7 @@ export function AdminOrderView({ number }: { number: string }) {
           </section>
         </div>
       ) : (
-        <div aria-busy aria-label="Loading the order" className="bg-muted h-64 animate-pulse rounded-2xl" />
+        <Skeleton aria-busy aria-label="Loading the order" className="h-64 rounded-2xl" />
       )}
     </div>
   );

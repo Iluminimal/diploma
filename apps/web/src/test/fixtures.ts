@@ -1,4 +1,5 @@
 import type { AdminCategory, AdminOrder, AdminProduct } from "@/features/admin/admin-api";
+import type { CatalogNav } from "@/features/catalog/nav";
 import type { CatalogFilterOptions, Product, SearchResponse } from "@/features/catalog/product";
 
 export function makeProduct(overrides: Partial<Product> = {}): Product {
@@ -197,3 +198,63 @@ export function makeAdminOrder(overrides: Partial<AdminOrder> = {}): AdminOrder 
     ...overrides,
   };
 }
+
+export const catalogNav: CatalogNav = {
+  departments: [
+    {
+      slug: "men",
+      name: "Men",
+      genders: ["Men", "Unisex"],
+      product_count: 300,
+      groups: [
+        {
+          name: "Clothing",
+          slug: "apparel",
+          path: "apparel",
+          level: 1,
+          product_count: 300,
+          children: [
+            {
+              name: "Topwear",
+              slug: "topwear",
+              path: "apparel/topwear",
+              level: 2,
+              product_count: 300,
+              children: [
+                { name: "T-shirts", slug: "tshirts", path: "apparel/topwear/tshirts", level: 3, product_count: 200, children: [] },
+                { name: "Shirts", slug: "shirts", path: "apparel/topwear/shirts", level: 3, product_count: 100, children: [] },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      slug: "women",
+      name: "Women",
+      genders: ["Women", "Unisex"],
+      product_count: 120,
+      groups: [
+        {
+          name: "Clothing",
+          slug: "apparel",
+          path: "apparel",
+          level: 1,
+          product_count: 120,
+          children: [
+            {
+              name: "Topwear",
+              slug: "topwear",
+              path: "apparel/topwear",
+              level: 2,
+              product_count: 120,
+              children: [
+                { name: "T-shirts", slug: "tshirts", path: "apparel/topwear/tshirts", level: 3, product_count: 120, children: [] },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};

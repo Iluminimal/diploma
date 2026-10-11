@@ -33,7 +33,8 @@ export function WishlistButton({ product, variant = "card", className }: Props) 
   };
 
   const label = saved ? `Remove ${product.name} from your wishlist` : `Save ${product.name} to your wishlist`;
-  const icon = <Heart className={cn("size-[1.15rem]", saved && "fill-current")} />;
+  // `key` restarts the pop each time the heart fills.
+  const icon = <Heart key={String(saved)} className={cn("size-[1.15rem]", saved && "animate-pop fill-current")} />;
 
   if (variant === "button") {
     return (

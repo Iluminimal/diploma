@@ -7,16 +7,17 @@ import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
 import { CartLines } from "./cart-lines";
 import { useCart } from "./use-cart";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function MiniCartSkeleton() {
   return (
     <div className="space-y-4 px-4" aria-hidden>
       {[0, 1].map((n) => (
         <div key={n} className="flex gap-3">
-          <div className="bg-muted aspect-[3/4] w-20 animate-pulse rounded-xl" />
+          <Skeleton className="aspect-[3/4] w-20 rounded-xl" />
           <div className="flex-1 space-y-2 pt-1">
-            <div className="bg-muted h-3.5 w-4/5 animate-pulse rounded" />
-            <div className="bg-muted h-3 w-2/5 animate-pulse rounded" />
+            <Skeleton className="h-3.5 w-4/5 rounded" />
+            <Skeleton className="h-3 w-2/5 rounded" />
           </div>
         </div>
       ))}

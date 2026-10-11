@@ -10,6 +10,8 @@ import { isLightSwatch, swatchFor } from "./colors";
 import { toggleValue, type CatalogFilters, type MultiKey } from "./filters";
 import { formatPrice, type CatalogFilterOptions, type CategoryNode } from "./product";
 
+export type FilterGroup = "gender" | "color" | "price" | "season" | "usage" | "stock";
+
 type Props<T extends CatalogFilters> = {
   options: CatalogFilterOptions;
   value: T;
@@ -17,7 +19,7 @@ type Props<T extends CatalogFilters> = {
   /** The category tree is only useful where it can narrow a browse; search uses "Detected" instead. */
   showCategories?: boolean;
   /** Which groups to show (default: all). */
-  groups?: ReadonlyArray<"gender" | "color" | "price" | "season" | "usage" | "stock">;
+  groups?: ReadonlyArray<FilterGroup>;
   idPrefix?: string;
 };
 

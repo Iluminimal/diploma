@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures";
+import { pickCategory } from "./support/catalog";
 import { addToCart, placePaidOrder, productPhoto, saveToWishlist } from "./support/api";
 import { SCHEMES, VARIANTS, VIEWPORTS, expectNoViolations, scan, settled, sweep, type Variant } from "./support/axe";
 
@@ -21,6 +22,37 @@ test.describe("storefront", () => {
   test("listing, plain and filtered", async ({ page }) => {
     await sweep(page, "/products", { ready: heading(page) });
     await sweep(page, "/products?gender=Women&sort=price_asc", { ready: heading(page) });
+  });
+
+  test("department and category pages", async ({ page, api }) => {
+    const { department, sub } = await pickCategory(api);
+    await sweep(page, `/c/${department.slug}`, { ready: heading(page) });
+    await sweep(page, `/c/${department.slug}/${sub.path}`, { ready: heading(page) });
+  });
+
+  test("the open department menu and the photo-search dialog", async ({ page, api }) => {
+    const { department } = await pickCategory(api);
+    const found = [];
+    for (const variant of VARIANTS.filter((v) => v.viewport === "desktop")) {
+      await page.setViewportSize(VIEWPORTS[variant.viewport]);
+      await page.emulateMedia({ colorScheme: variant.scheme, reducedMotion: "reduce" });
+      await page.goto("/");
+      const trigger = page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: department.name, exact: true });
+      await expect(async () => {
+        await trigger.hover();
+        await expect(trigger).toHaveAttribute("aria-expanded", "true", { timeout: 500 });
+      }).toPass();
+      await expect(page.getByRole("region", { name: `${department.name} categories` })).toBeVisible();
+      await settled(page);
+      found.push(...(await scan(page, `menu/${variant.scheme}`)));
+
+      await page.mouse.move(700, 600);
+      await page.getByRole("search").getByRole("button", { name: "Search by photo" }).click();
+      await expect(page.getByRole("dialog", { name: "Search by photo" })).toBeVisible();
+      await settled(page);
+      found.push(...(await scan(page, `photo-dialog/${variant.scheme}`)));
+    }
+    expectNoViolations(found, "department menu and photo dialog");
   });
 
   test("an empty listing", async ({ page }) => {

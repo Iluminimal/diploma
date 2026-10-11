@@ -67,6 +67,10 @@ class ProductListQuery(FilterParams):
     model_config = ConfigDict(extra="forbid")
 
     q: Annotated[str | None, Field(min_length=1, max_length=200)] = None
+    # Shopper-facing navigation (GET /catalog/nav): a department slug such as "men" and a node
+    # path such as "apparel/topwear/tshirts". Both narrow the other filters further.
+    department: Annotated[str | None, Field(min_length=1, max_length=40)] = None
+    category: Annotated[str | None, Field(min_length=1, max_length=400)] = None
     # Defaults to "relevance" when `q` is given, otherwise "newest".
     sort: ProductSortKey | None = None
     page: Annotated[int, Field(ge=1, le=10_000)] = 1

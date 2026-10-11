@@ -1,36 +1,37 @@
 import Image from "next/image";
+import { Reveal } from "@/components/motion/reveal";
 import Link from "next/link";
 import { ProductRail } from "@/features/catalog/similar-products";
 import { listProducts } from "@/features/catalog/api";
-import { emptyFilters, toHref, type ListingQuery } from "@/features/catalog/filters";
+import { emptyFilters, type ListingQuery } from "@/features/catalog/filters";
+import { categoryHref } from "@/features/catalog/nav";
 import { cn } from "@/lib/utils";
 
 function query(patch: Partial<ListingQuery>): ListingQuery {
-  return { ...emptyFilters(), page: 1, ...patch };
+  return { ...emptyFilters(), page: 1, in_stock: true, ...patch };
 }
 
-const TILES: { label: string; patch: Partial<ListingQuery> }[] = [
-  { label: "Women", patch: { gender: ["Women"], master_category: ["Apparel"], in_stock: true } },
-  { label: "Men", patch: { gender: ["Men"], master_category: ["Apparel"], in_stock: true } },
-  { label: "Footwear", patch: { master_category: ["Footwear"], in_stock: true } },
-  { label: "Accessories", patch: { master_category: ["Accessories"], in_stock: true } },
+const TILES: { label: string; href: string; patch: Partial<ListingQuery> }[] = [
+  { label: "Women", href: categoryHref("women"), patch: { department: "women", category: "apparel" } },
+  { label: "Men", href: categoryHref("men"), patch: { department: "men", category: "apparel" } },
+  { label: "Kids", href: categoryHref("kids"), patch: { department: "kids", category: "apparel" } },
+  { label: "Accessories", href: "/products?master_category=Accessories", patch: { category: "accessories" } },
 ];
 
 /** One tile per department; the photo is simply the newest in-stock product in it. */
 export async function CategoryTiles() {
   const tiles = await Promise.all(
     TILES.map(async (tile) => {
-      const q = query(tile.patch);
-      const { items } = await listProducts(q, 1);
-      return { ...tile, q, product: items[0] };
+      const { items } = await listProducts(query(tile.patch), 1);
+      return { ...tile, product: items[0] };
     }),
   );
   return (
     <ul className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
       {tiles.map((tile, i) => (
-        <li key={tile.label}>
+        <Reveal as="li" key={tile.label} delay={i * 0.07} y={22}>
           <Link
-            href={toHref("/products", { ...tile.q, in_stock: false })}
+            href={tile.href}
             className="group focus-visible:ring-ring/60 bg-muted relative block aspect-[4/5] overflow-hidden rounded-3xl outline-none focus-visible:ring-3"
           >
             {tile.product && (
@@ -44,14 +45,14 @@ export async function CategoryTiles() {
                 fetchPriority={i < 2 ? "high" : undefined}
                 placeholder={tile.product.image.blur_data_url ? "blur" : "empty"}
                 blurDataURL={tile.product.image.blur_data_url ?? undefined}
-                className="size-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                className="size-full object-cover transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-105"
               />
             )}
             <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/55 to-transparent p-4 pt-12 text-lg font-medium text-white">
               {tile.label}
             </span>
           </Link>
-        </li>
+        </Reveal>
       ))}
     </ul>
   );

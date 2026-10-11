@@ -34,6 +34,8 @@ class SearchFilters:
     base_colours: tuple[str, ...] = ()
     seasons: tuple[str, ...] = ()
     usages: tuple[str, ...] = ()
+    # Leaf categories a navigation node covers; resolved by the catalog service.
+    category_ids: tuple[int, ...] = ()
     min_price_cents: int | None = None
     max_price_cents: int | None = None
     in_stock_only: bool = False
@@ -48,6 +50,7 @@ class SearchFilters:
             (Product.base_colour, self.base_colours),
             (Product.season, self.seasons),
             (Product.usage, self.usages),
+            (Product.category_id, self.category_ids),
         ):
             if values:
                 clauses.append(column.in_(values))

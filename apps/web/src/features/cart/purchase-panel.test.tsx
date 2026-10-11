@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuth } from "@/features/auth/auth-store";
@@ -102,5 +102,55 @@ describe("PurchasePanel", () => {
 
     await waitFor(() => expect(toastError).toHaveBeenCalledWith("Only 2 of Alma Women Blue Kurta can be added."));
     expect(useCartDrawer.getState().open).toBe(false);
+  });
+
+  describe("sticky bar", () => {
+    let report: (isIntersecting: boolean) => void = () => {};
+
+    beforeEach(() => {
+      vi.stubGlobal(
+        "IntersectionObserver",
+        class {
+          constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+            report = (isIntersecting) => callback([{ isIntersecting }]);
+          }
+          observe() {}
+          disconnect() {}
+        },
+      );
+    });
+
+    const main = () => screen.getAllByRole("button", { name: /^add to cart$/i });
+    const bar = () => screen.queryByRole("button", { name: "Add Alma Women Blue Kurta to cart" });
+
+    it("keeps Add to cart in reach once the main button has scrolled away", async () => {
+      renderPanel();
+      expect(main()).toHaveLength(1);
+      expect(bar()).not.toBeInTheDocument();
+
+      act(() => report(false));
+
+      expect(await screen.findByRole("button", { name: "Add Alma Women Blue Kurta to cart" })).toBeInTheDocument();
+      expect(main()).toHaveLength(1);
+
+      act(() => report(true));
+      await waitFor(() => expect(bar()).not.toBeInTheDocument());
+    });
+
+    it("asks for a size from the bar too", async () => {
+      renderPanel();
+      act(() => report(false));
+
+      await userEvent.click(await screen.findByRole("button", { name: "Add Alma Women Blue Kurta to cart" }));
+
+      expect(screen.getByRole("alert")).toHaveTextContent("Please select a size");
+    });
+
+    it("has no bar for a sold-out product", () => {
+      renderPanel(makeProduct({ in_stock: false }));
+      act(() => report(false));
+
+      expect(bar()).not.toBeInTheDocument();
+    });
   });
 });

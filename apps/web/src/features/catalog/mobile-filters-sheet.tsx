@@ -12,7 +12,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { FilterFields } from "./filter-fields";
+import { FilterFields, type FilterGroup } from "./filter-fields";
 import { activeFilterCount, type ListingQuery } from "./filters";
 import type { CatalogFilterOptions } from "./product";
 import { useListingNavigation } from "./use-listing-navigation";
@@ -22,10 +22,14 @@ export function MobileFiltersSheet({
   options,
   query,
   defaultOpen,
+  showCategories,
+  groups,
 }: {
   options: CatalogFilterOptions;
   query: ListingQuery;
   defaultOpen?: boolean;
+  showCategories?: boolean;
+  groups?: FilterGroup[];
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
   const { apply } = useListingNavigation(query);
@@ -44,7 +48,14 @@ export function MobileFiltersSheet({
           <SheetDescription className="sr-only">Narrow down the products shown.</SheetDescription>
         </SheetHeader>
         <div className="overflow-y-auto px-4 pb-4">
-          <FilterFields options={options} value={query} onChange={apply} idPrefix="sheet" />
+          <FilterFields
+            options={options}
+            value={query}
+            onChange={apply}
+            idPrefix="sheet"
+            showCategories={showCategories}
+            groups={groups}
+          />
         </div>
         <SheetFooter className="border-border border-t">
           <Button size="lg" className="h-11 w-full" onClick={() => setOpen(false)}>

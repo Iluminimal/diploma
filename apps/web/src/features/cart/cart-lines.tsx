@@ -1,7 +1,10 @@
 "use client";
 
+import { AnimatePresence, m } from "motion/react";
 import { Trash2 } from "lucide-react";
 import Link from "next/link";
+import { EASE_OUT_EXPO } from "@/components/motion/easing";
+import { MotionProvider } from "@/components/motion/motion-provider";
 import { Price } from "@/components/price";
 import { ProductImage } from "@/components/product-image";
 import { productPath, productSubtitle } from "@/features/catalog/product";
@@ -20,9 +23,13 @@ type Props = {
 export function CartLines({ cart, onNavigate, className }: Props) {
   return (
     <ul className={cn("divide-border divide-y", className)} aria-label="Items in your cart">
-      {cart.lines.map((line) => (
-        <CartLineItem key={line.id} line={line} onNavigate={onNavigate} />
-      ))}
+      <MotionProvider>
+        <AnimatePresence initial={false}>
+          {cart.lines.map((line) => (
+            <CartLineItem key={line.id} line={line} onNavigate={onNavigate} />
+          ))}
+        </AnimatePresence>
+      </MotionProvider>
     </ul>
   );
 }
@@ -34,7 +41,14 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
   const soldOut = line.issue === "out_of_stock";
 
   return (
-    <li className="flex gap-3 py-4 first:pt-0">
+    <m.li
+      // Lines slide closed when removed instead of snapping away.
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
+      className="flex gap-3 overflow-hidden py-4 first:pt-0"
+    >
       <Link href={productPath(product)} onClick={onNavigate} className="w-20 shrink-0 sm:w-24">
         <div className="bg-muted aspect-[3/4] overflow-hidden rounded-xl">
           <ProductImage product={product} sizes="96px" />
@@ -97,6 +111,6 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
           />
         </div>
       </div>
-    </li>
+    </m.li>
   );
 }

@@ -18,7 +18,7 @@ type Props = {
   /** Also take pastes while mounted (used where no other listener exists). */
   listenForPaste?: boolean;
   className?: string;
-  size?: "default" | "hero";
+  size?: "default" | "hero" | "compact";
 };
 
 /** True on phones and tablets, where the OS camera sheet (`capture`) beats an in-page video. */
@@ -70,8 +70,10 @@ export function ImageDropzone({ onPicked, listenForPaste = false, className, siz
         }}
         onDrop={onDrop}
         className={cn(
-          "border-border flex flex-col items-center justify-center gap-5 rounded-3xl border-2 border-dashed text-center transition-colors",
-          size === "hero" ? "px-6 py-12 sm:py-16" : "px-6 py-14 sm:py-20",
+          "border-border flex flex-col items-center justify-center rounded-3xl border-2 border-dashed text-center transition-colors",
+          size === "compact" ? "gap-4 rounded-2xl px-4 py-8" : "gap-5",
+          size === "hero" && "px-6 py-12 sm:py-16",
+          size === "default" && "px-6 py-14 sm:py-20",
           dragging ? "border-brand bg-brand/5" : "bg-muted/30",
         )}
       >
@@ -81,8 +83,8 @@ export function ImageDropzone({ onPicked, listenForPaste = false, className, siz
         <div className="space-y-1.5">
           <p className="text-base font-medium">{dragging ? "Drop to search" : "Drop a photo here"}</p>
           <p className="text-muted-foreground text-sm">
-            or paste one with <kbd className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-mono text-xs">⌘/Ctrl V</kbd>. JPEG,
-            PNG, WebP or iPhone HEIC.
+            or paste one with <kbd className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-mono text-xs">⌘/Ctrl V</kbd>
+            {size !== "compact" && ". JPEG, PNG, WebP or iPhone HEIC."}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">

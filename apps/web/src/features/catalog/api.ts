@@ -22,6 +22,9 @@ export const getCatalogFilters = cache(() =>
   unwrap(createApiClient(600).GET("/api/v1/catalog/filters")),
 );
 
+/** Departments with category trees and counts. Cached 10 min, like the API does. */
+export const getCatalogNav = cache(() => unwrap(createApiClient(600).GET("/api/v1/catalog/nav")));
+
 export const listProducts = cache((query: ListingQuery, pageSize = 24) =>
   unwrap(
     createApiClient(60).GET("/api/v1/products", {
@@ -29,6 +32,8 @@ export const listProducts = cache((query: ListingQuery, pageSize = 24) =>
         query: {
           ...toApiFilters(query),
           q: query.q,
+          department: query.department,
+          category: query.category,
           sort: query.sort,
           page: query.page,
           page_size: pageSize,

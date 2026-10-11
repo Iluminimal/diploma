@@ -1,4 +1,4 @@
-# Lookalike web
+# Angel web
 
 Next.js 16 (App Router) + React 19 + TypeScript (strict) + Tailwind v4 + shadcn/ui.
 See the [root README](../../README.md) for setup; from the repository root use `make web`.

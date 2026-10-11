@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AngelLogo } from "@/components/logo";
 import { MobileNav } from "@/components/mobile-nav";
 import { MegaMenu } from "@/components/mega-menu";
 import { SearchBar } from "@/components/search-bar";
@@ -15,8 +16,8 @@ export function SiteHeader() {
     >
       <div className="container-page flex h-14 items-center gap-2 md:h-16 md:gap-6">
         <MobileNav />
-        <Link href="/" className="text-lg font-semibold tracking-tight">
-          Lookalike
+        <Link href="/" className="focus-visible:ring-ring/60 rounded-md text-lg outline-none focus-visible:ring-3">
+          <AngelLogo />
         </Link>
         <MegaMenu />
         <SearchBar className="mx-auto hidden w-full max-w-md md:block" />

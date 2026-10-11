@@ -114,7 +114,7 @@ class OAuthService:
             await self._mailer.send(
                 Email(
                     to=user.email,
-                    subject="Welcome to Lookalike",
+                    subject="Welcome to Angel",
                     body=f"Hi {user.full_name}, your account is ready.",
                 )
             )

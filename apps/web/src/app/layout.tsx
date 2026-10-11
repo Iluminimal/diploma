@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: "Lookalike: shop by photo", template: "%s · Lookalike" },
+  title: { default: "Angel: shop by photo", template: "%s · Angel" },
   description: "Upload a photo of something you love and find clothing that looks like it.",
   openGraph: { siteName: SITE_NAME, type: "website", locale: "en_US" },
   twitter: { card: "summary_large_image" },

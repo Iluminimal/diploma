@@ -1,4 +1,4 @@
-# Lookalike
+# Angel
 
 Upload or capture a photo of clothing and get visually similar products, inside a complete,
 minimal online store. Image embeddings come from FashionCLIP, similarity search from

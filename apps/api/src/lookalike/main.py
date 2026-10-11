@@ -165,7 +165,7 @@ def create_app(
             log.info("shutdown")
 
     app = FastAPI(
-        title="Lookalike API",
+        title="Angel API",
         version="0.1.0",
         lifespan=lifespan,
         openapi_url=f"{settings.api_v1_prefix}/openapi.json",

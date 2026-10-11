@@ -62,7 +62,7 @@ class StripeGateway:
                     "currency": currency.lower(),
                     # Cards and wallets only: redirect-based methods would need a return page.
                     "automatic_payment_methods": {"enabled": True, "allow_redirects": "never"},
-                    "description": f"Lookalike order {order_number}",
+                    "description": f"Angel order {order_number}",
                     "metadata": {"order_number": order_number},
                 },
                 {"idempotency_key": idempotency_key},

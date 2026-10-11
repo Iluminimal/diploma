@@ -14,7 +14,7 @@ const description = "Upload a photo of something you love and find clothing that
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
-  openGraph: { title: "Lookalike: shop by photo", description, url: "/" },
+  openGraph: { title: "Angel: shop by photo", description, url: "/" },
 };
 
 // Rendered per request: the page reads the catalogue API, which isn't available at build time (CI, Docker).

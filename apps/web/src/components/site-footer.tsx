@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AngelLogo } from "@/components/logo";
 
 const SHOP = [
   { href: "/products?gender=Women", label: "Women" },
@@ -12,7 +13,9 @@ export function SiteFooter() {
     <footer className="border-border mt-16 border-t">
       <div className="container-page grid gap-10 py-12 sm:grid-cols-[1.5fr_1fr_1fr]">
         <div className="max-w-xs space-y-3">
-          <p className="text-lg font-semibold tracking-tight">Lookalike</p>
+          <p className="text-lg">
+            <AngelLogo />
+          </p>
           <p className="text-muted-foreground text-sm leading-relaxed">
             Found something you love? Upload a photo and we&apos;ll find the pieces that look like it.
           </p>
@@ -47,7 +50,7 @@ export function SiteFooter() {
       </div>
       <div className="border-border border-t">
         <p className="container-page text-muted-foreground py-6 text-xs">
-          © {new Date().getFullYear()} Lookalike. A diploma project; photos from the Kaggle Fashion Product
+          © {new Date().getFullYear()} Angel. A diploma project; photos from the Kaggle Fashion Product
           Images dataset.
         </p>
       </div>

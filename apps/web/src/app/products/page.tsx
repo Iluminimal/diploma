@@ -13,7 +13,7 @@ export async function generateMetadata({ searchParams }: PageProps<"/products">)
   const canonical = toHref("/products", { ...query, sort: undefined });
   return {
     title,
-    description: `Shop ${title.toLowerCase()} at Lookalike. Filter by colour, price and category.`,
+    description: `Shop ${title.toLowerCase()} at Angel. Filter by colour, price and category.`,
     alternates: { canonical },
     openGraph: { title, url: canonical },
     // Free-text search and deep pages add no value to a search index.

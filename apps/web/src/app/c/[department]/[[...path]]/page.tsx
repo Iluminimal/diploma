@@ -33,7 +33,7 @@ export async function generateMetadata({
   const count = (trail.nodes.at(-1) ?? trail.department).product_count.toLocaleString("en-US");
   return {
     title,
-    description: `Shop ${title.toLowerCase()} at Lookalike: ${count} pieces. Filter by colour, price and occasion.`,
+    description: `Shop ${title.toLowerCase()} at Angel: ${count} pieces. Filter by colour, price and occasion.`,
     alternates: { canonical },
     openGraph: { title, url: canonical },
     robots: query.q || query.page > 1 ? { index: false, follow: true } : undefined,

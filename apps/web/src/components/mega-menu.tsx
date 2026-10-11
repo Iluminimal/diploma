@@ -30,8 +30,9 @@ const PANEL_LINK =
  * - While it is open the bar turns solid, so bar and flyout read as one surface, and the page
  *   behind is dimmed (see `.mega-*` in globals.css). The links fade in one after another.
  * - Touch: the first tap on an entry opens its flyout, the second follows the link.
- * - Keyboard: ArrowDown on an entry opens its flyout and moves into it; Escape closes it and
- *   returns to the entry; focus leaving the menu closes it.
+ * - Keyboard: ArrowLeft / ArrowRight / Home / End move between the entries in the bar (and, while a
+ *   flyout is open, switch it along); ArrowDown on an entry opens its flyout and moves into it;
+ *   Escape closes it and returns to the entry; focus leaving the menu closes it.
  */
 export function MegaMenu() {
   const pathname = usePathname();
@@ -79,6 +80,21 @@ export function MegaMenu() {
       const slug = openSlug;
       setOpenSlug(null);
       event.currentTarget.querySelector<HTMLElement>(`[data-mega-trigger="${slug}"]`)?.focus();
+    } else if (
+      ["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key) &&
+      event.target instanceof HTMLElement &&
+      "megaTop" in event.target.dataset
+    ) {
+      const entries = [...event.currentTarget.querySelectorAll<HTMLElement>("[data-mega-top]")];
+      const at = entries.indexOf(event.target);
+      const to =
+        event.key === "Home" ? 0 : event.key === "End" ? entries.length - 1 : at + (event.key === "ArrowRight" ? 1 : -1);
+      const entry = entries[to];
+      if (!entry) return;
+      event.preventDefault();
+      entry.focus();
+      // With a flyout open, the one under the new entry replaces it (none for an entry without one).
+      if (openSlug) setOpenSlug(entry.dataset.megaTrigger && data ? entry.dataset.megaTrigger : null);
     } else if (event.key === "ArrowDown" && event.target instanceof HTMLElement && "megaTrigger" in event.target.dataset) {
       const slug = event.target.dataset.megaTrigger!;
       if (!data?.departments.some((d) => d.slug === slug)) return;
@@ -131,6 +147,7 @@ export function MegaMenu() {
               <Link
                 href={categoryHref(link.slug)}
                 data-mega-trigger={link.slug}
+                data-mega-top
                 aria-expanded={department ? active : undefined}
                 aria-controls={department ? `mega-${link.slug}` : undefined}
                 onClick={(event) => onTriggerClick(event, link.slug)}
@@ -142,7 +159,7 @@ export function MegaMenu() {
           );
         })}
         <li className="h-full" onPointerEnter={(event) => mouse(event) && schedule(null, open ? 120 : 0)}>
-          <Link href="/products?sort=newest" className={cn(TOP_LINK, "text-foreground/80 hover:text-foreground")}>
+          <Link href="/products?sort=newest" data-mega-top className={cn(TOP_LINK, "text-foreground/80 hover:text-foreground")}>
             New
           </Link>
         </li>

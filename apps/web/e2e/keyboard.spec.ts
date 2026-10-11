@@ -65,6 +65,55 @@ test("Escape closes the search panel and gives focus back to the magnifier", asy
   await expect(page.getByRole("button", { name: "Search", exact: true })).toBeFocused();
 });
 
+test("pressing / opens the search panel with the cursor in the field, and Escape closes it", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+
+  await page.keyboard.press("/");
+
+  const box = page.getByRole("combobox");
+  await expect(box).toBeFocused();
+  await expect(box).toHaveValue("");
+  await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Search" })).toBeHidden();
+});
+
+test("a slash typed in a form field is just a slash", async ({ page }) => {
+  await page.goto("/login");
+  const email = page.getByLabel("Email");
+  await email.focus();
+
+  await page.keyboard.type("a/b");
+
+  await expect(email).toHaveValue("a/b");
+  await expect(page.getByRole("dialog", { name: "Search" })).toHaveCount(0);
+});
+
+test("the arrow keys move along the navigation bar and switch an open flyout", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  const nav = page.getByRole("navigation", { name: "Main" });
+  const links = nav.getByRole("link");
+  await expect(nav.getByRole("link").first()).toHaveAttribute("aria-expanded", "false", { timeout: 15_000 });
+
+  await links.first().focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(links.nth(1)).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(links.last()).toBeFocused();
+  await page.keyboard.press("Home");
+  await page.keyboard.press("ArrowDown");
+  await expect(links.first()).toHaveAttribute("aria-expanded", "true");
+  await links.first().focus();
+
+  await page.keyboard.press("ArrowRight");
+
+  await expect(links.nth(1)).toBeFocused();
+  await expect(links.nth(1)).toHaveAttribute("aria-expanded", "true");
+  await expect(links.first()).toHaveAttribute("aria-expanded", "false");
+});
+
 test("the mini-cart keeps focus inside, closes with Escape and gives focus back", async ({ page, products }) => {
   const [product] = products;
   await page.goto(`/products/${product!.id}/${product!.slug}`);

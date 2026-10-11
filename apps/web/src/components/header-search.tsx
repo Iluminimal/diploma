@@ -4,7 +4,7 @@ import { Search, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
@@ -54,6 +54,33 @@ export function HeaderSearch() {
   const open = openedAt !== null && openedAt === pathname;
 
   const close = () => setOpenedAt(null);
+
+  // Escape closes the panel wherever focus is (the panel's own handler covers focus inside it).
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      setOpenedAt(null);
+      button.current?.focus();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open]);
+
+  // Press "/" anywhere to start searching, like on GitHub or apple.com. Not while typing in a field
+  // (a slash is a character there), not inside a dialog, and not with a modifier key held.
+  useEffect(() => {
+    function onKeyDown(event: globalThis.KeyboardEvent) {
+      if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || event.defaultPrevented || event.isComposing) return;
+      const target = event.target as HTMLElement | null;
+      if (target?.isContentEditable || target?.closest('input, textarea, select, [role="dialog"], [role="combobox"]')) return;
+      event.preventDefault();
+      setRequested(true);
+      setOpenedAt(pathname);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [pathname]);
   function onKeyDown(event: KeyboardEvent) {
     if (event.key === "Escape") {
       event.stopPropagation();
@@ -69,6 +96,8 @@ export function HeaderSearch() {
         variant="ghost"
         size="icon"
         aria-label="Search"
+        title="Search (press /)"
+        aria-keyshortcuts="/"
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls="search-panel"

@@ -61,12 +61,15 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
     closes the menu); the links fade in one after another (`--i` on `.mega-item`);
   * touch: the first tap on an entry opens its flyout, the second follows the link (a click with `detail > 0` after a
     non-mouse `pointerdown`; Enter on the keyboard is unaffected);
-  * keyboard: ArrowDown on an entry opens it and moves into it, Escape closes it and returns to the entry, focus leaving
-    the menu closes it. Content that is not shown is `visibility: hidden`, so only the open department is in the tab order
+  * keyboard: ArrowLeft / ArrowRight / Home / End move along the bar (and, with a flyout open, switch it along; an entry
+    without one closes it), ArrowDown opens an entry and moves into it, Escape closes it and returns to the entry, focus
+    leaving the menu closes it. Content that is not shown is `visibility: hidden`, so only the open department is in the tab order
     and the accessibility tree.
 * **Search** (`components/header-search.tsx`): the magnifier opens a full-width panel over the bar with a large field (the
   `overlay` variant of `SearchBar`), live suggestions, recent searches and quick links, and dims the page. Escape closes it and
-  returns focus to the magnifier. The panel is portalled to `<body>` because the header's backdrop blur would otherwise make
+  returns focus to the magnifier, wherever focus is. **Pressing `/` anywhere opens it** with the cursor in the field (not while
+  typing in an input, textarea, select or dialog, not with Ctrl / Cmd / Alt held, and the slash is not typed into the field);
+  the magnifier advertises it (`aria-keyshortcuts="/"`, tooltip "Search (press /)"). The panel is portalled to `<body>` because the header's backdrop blur would otherwise make
   it the containing block of anything `fixed` inside, and it loads on first click (so the header ships less JavaScript).
 * **Footer**: pale grey, 12px type, four quiet columns and one line of fine print. Account links there are `prefetch={false}`:
   prefetched while signed out they cache the redirect to /login, which then sends a customer back to the login page right after

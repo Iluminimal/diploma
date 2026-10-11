@@ -144,6 +144,56 @@ describe("MegaMenu", () => {
       expect(trigger("Men")).toHaveFocus();
     });
 
+    it("ArrowRight and ArrowLeft move along the bar, Home and End jump to its ends", async () => {
+      render(<MegaMenu />);
+      trigger("Women").focus();
+
+      await userEvent.keyboard("{ArrowRight}");
+      expect(trigger("Men")).toHaveFocus();
+      await userEvent.keyboard("{ArrowRight}{ArrowRight}");
+      expect(trigger("New")).toHaveFocus();
+      await userEvent.keyboard("{ArrowRight}");
+      expect(trigger("New")).toHaveFocus(); // the end: no wrapping
+      await userEvent.keyboard("{Home}");
+      expect(trigger("Women")).toHaveFocus();
+      await userEvent.keyboard("{End}");
+      expect(trigger("New")).toHaveFocus();
+      await userEvent.keyboard("{ArrowLeft}");
+      expect(trigger("Kids")).toHaveFocus();
+      // Moving along the bar does not open anything by itself.
+      expect(flyout()).toHaveAttribute("data-open", "false");
+    });
+
+    it("with a flyout open, the arrows switch it along and it closes on an entry without one", async () => {
+      render(<MegaMenu />);
+      trigger("Women").focus();
+      await userEvent.keyboard("{ArrowDown}");
+      await waitFor(() => expect(panel("Women").getByRole("link", { name: "Clothing" })).toHaveFocus());
+      trigger("Women").focus();
+
+      await userEvent.keyboard("{ArrowRight}");
+      expect(trigger("Men")).toHaveFocus();
+      expect(expanded("Men")).toBe("true");
+      expect(expanded("Women")).toBe("false");
+
+      await userEvent.keyboard("{End}");
+      expect(trigger("New")).toHaveFocus();
+      expect(flyout()).toHaveAttribute("data-open", "false");
+    });
+
+    it("leaves the arrows alone inside the flyout", async () => {
+      render(<MegaMenu />);
+      trigger("Men").focus();
+      await userEvent.keyboard("{ArrowDown}");
+      const first = panel("Men").getByRole("link", { name: "Clothing" });
+      await waitFor(() => expect(first).toHaveFocus());
+
+      await userEvent.keyboard("{ArrowRight}");
+
+      expect(first).toHaveFocus();
+      expect(expanded("Men")).toBe("true");
+    });
+
     it("closes when focus leaves the menu", async () => {
       render(<MegaMenu />);
       trigger("Men").focus();

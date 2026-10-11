@@ -103,7 +103,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
 
         <div className="flex flex-col gap-8 lg:sticky lg:top-24 lg:self-start">
           <header className="space-y-3">
-            <h1 className="text-2xl leading-tight font-semibold tracking-tight md:text-3xl">{product.name}</h1>
+            <h1 className="text-3xl leading-tight font-semibold tracking-tighter md:text-4xl">{product.name}</h1>
             <p className="flex items-center gap-4">
               <Price cents={product.price_cents} currency={product.currency} className="text-xl font-medium" />
               {product.in_stock ? (

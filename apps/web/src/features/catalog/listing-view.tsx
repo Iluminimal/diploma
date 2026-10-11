@@ -46,7 +46,7 @@ export function ListingView({
     <div className="container-page py-8 md:py-12">
       {above}
       <div className="mb-6 flex flex-col gap-1">
-        <h1 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl">{title}</h1>
+        <h1 className="text-4xl font-semibold tracking-tighter text-balance md:text-5xl">{title}</h1>
         <Suspense fallback={<Skeleton className="h-5 w-24" />}>
           <ResultCount query={query} />
         </Suspense>

@@ -10,11 +10,11 @@ const ITEMS = [
 
 export function TrustStrip() {
   return (
-    <section aria-label="Good to know" className="border-border border-t">
+    <section aria-label="Good to know" className="bg-secondary">
       <ul className="container-page grid gap-8 py-12 md:grid-cols-3 md:gap-10">
         {ITEMS.map(({ icon: Icon, title, text }) => (
           <li key={title} className="flex items-start gap-4">
-            <span className="bg-secondary grid size-11 shrink-0 place-items-center rounded-full">
+            <span className="bg-background grid size-11 shrink-0 place-items-center rounded-full">
               <Icon aria-hidden className="size-5" />
             </span>
             <div>

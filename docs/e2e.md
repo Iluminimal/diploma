@@ -1,7 +1,7 @@
 # End-to-end tests (Playwright)
 
 `apps/web/e2e`, run with `make e2e`. They drive a real browser (Chromium) against a running stack: API, web app, Postgres
-and Redis. 83 tests:
+and Redis. 84 tests:
 
 | File | Covers |
 | --- | --- |
@@ -16,7 +16,7 @@ and Redis. 83 tests:
 | `profile.spec.ts` | the profile page; rename shows in the header and survives a reload; change password (wrong current refused, old password stops working); a Google account sees "Connected" and adds a password; delete account (wrong password refused, then signed out for good); the account menu leads to the profile |
 | `auth-pages.spec.ts` | "Sign up with Google" wording, password strength and show/hide, the Google hint after a failed login, `?next=` kept between the two pages |
 | `a11y.spec.ts` | axe (WCAG 2.1 A/AA + best practices) on every kind of screen (including category pages, the open department menu, the photo dialog and the profile page with its dialogs), in light and dark, at 390 and 1440 px |
-| `keyboard.spec.ts` | skip link, visible focus, search combobox, dialog focus, category toggles, form errors, reduced motion |
+| `keyboard.spec.ts` | skip link, visible focus, the search panel (combobox, Escape returns focus to the magnifier), dialog focus, category toggles, form errors, reduced motion |
 
 ## Against your development stack
 
@@ -57,7 +57,7 @@ to run in prod. The failure artifacts (HTML report, traces, API and web logs) ar
 
 To run the same thing locally without touching your data, use a second database and Redis db, the fake model and other
 ports (`CORS_ORIGINS` must name the web origin). That is how the job was validated: 52/52, and 148/148 over four repeats of
-the functional specs (61/61 after the navigation pass, 83/83 after the home page and account pass).
+the functional specs (61/61 after the navigation pass, 83/83 after the home page and account pass, 84/84 after the Apple-style redesign).
 
 ## Writing specs
 

@@ -2,14 +2,14 @@
   "lighthouse": "13.5.0",
   "preset": "mobile, simulated slow 4G",
   "runs": 5,
-  "measured": "2026-10-11T16:02:51.698Z",
+  "measured": "2026-10-11T17:00:43.076Z",
   "pages": {
     "home": {
       "url": "/",
       "runs": [
-        64,
-        95,
-        95,
+        87,
+        92,
+        91,
         91,
         91
       ],
@@ -18,159 +18,159 @@
       "bestPractices": 96,
       "seo": 100,
       "fcp": 1509,
-      "lcp": 3491,
-      "tbt": 28,
+      "lcp": 3497,
+      "tbt": 31,
       "cls": 0,
       "si": 1509,
-      "transferKb": 428,
-      "jsKb": 212
+      "transferKb": 430,
+      "jsKb": 209
     },
     "listing": {
       "url": "/products",
       "runs": [
-        92,
+        93,
         90,
         90,
-        83,
-        90
-      ],
-      "performance": 90,
-      "accessibility": 100,
-      "bestPractices": 96,
-      "seo": 100,
-      "fcp": 1363,
-      "lcp": 3600,
-      "tbt": 41,
-      "cls": 0,
-      "si": 1363,
-      "transferKb": 422,
-      "jsKb": 209
-    },
-    "filtered": {
-      "url": "/products?gender=Women&sort=price_asc",
-      "runs": [
-        89,
         91,
-        92,
-        92,
-        91
+        92
       ],
       "performance": 91,
       "accessibility": 100,
       "bestPractices": 96,
       "seo": 100,
-      "fcp": 1361,
-      "lcp": 3500,
-      "tbt": 30,
+      "fcp": 1359,
+      "lcp": 3425,
+      "tbt": 31,
       "cls": 0,
-      "si": 1361,
-      "transferKb": 388,
-      "jsKb": 209
+      "si": 1359,
+      "transferKb": 416,
+      "jsKb": 204
+    },
+    "filtered": {
+      "url": "/products?gender=Women&sort=price_asc",
+      "runs": [
+        88,
+        93,
+        93,
+        91,
+        92
+      ],
+      "performance": 92,
+      "accessibility": 100,
+      "bestPractices": 96,
+      "seo": 100,
+      "fcp": 1359,
+      "lcp": 3358,
+      "tbt": 33,
+      "cls": 0,
+      "si": 1359,
+      "transferKb": 386,
+      "jsKb": 204
     },
     "category": {
       "url": "/c/men/apparel",
       "runs": [
         88,
-        92,
+        91,
         90,
-        89,
+        90,
         90
       ],
       "performance": 90,
       "accessibility": 100,
       "bestPractices": 96,
       "seo": 100,
-      "fcp": 1358,
-      "lcp": 3656,
-      "tbt": 34,
+      "fcp": 1359,
+      "lcp": 3580,
+      "tbt": 33,
       "cls": 0,
-      "si": 1358,
-      "transferKb": 432,
+      "si": 1359,
+      "transferKb": 434,
       "jsKb": 212
     },
     "product": {
       "url": "/products/41880/avirate-black-formal-dress-59994",
       "runs": [
+        98,
+        93,
         97,
-        97,
-        92,
-        97,
-        95
+        93,
+        93
       ],
-      "performance": 97,
+      "performance": 93,
       "accessibility": 100,
       "bestPractices": 96,
       "seo": 100,
-      "fcp": 1210,
-      "lcp": 2489,
-      "tbt": 21,
+      "fcp": 1209,
+      "lcp": 3205,
+      "tbt": 35,
       "cls": 0,
-      "si": 1210,
-      "transferKb": 360,
-      "jsKb": 224
+      "si": 1209,
+      "transferKb": 354,
+      "jsKb": 220
     },
     "search": {
       "url": "/search",
       "runs": [
         91,
-        91,
-        91,
-        91,
-        91
+        92,
+        92,
+        92,
+        92
       ],
-      "performance": 91,
+      "performance": 92,
       "accessibility": 100,
       "bestPractices": 96,
       "seo": 100,
       "fcp": 1062,
-      "lcp": 3466,
-      "tbt": 30,
+      "lcp": 3316,
+      "tbt": 37,
       "cls": 0,
       "si": 1062,
-      "transferKb": 389,
-      "jsKb": 298
+      "transferKb": 395,
+      "jsKb": 296
     },
     "cart": {
       "url": "/cart",
       "runs": [
-        90,
-        91,
-        91,
-        91,
-        91
+        95,
+        95,
+        95,
+        95,
+        95
       ],
-      "performance": 91,
+      "performance": 95,
       "accessibility": 100,
       "bestPractices": 96,
       "seo": 63,
-      "fcp": 1060,
-      "lcp": 3456,
-      "tbt": 51,
+      "fcp": 1057,
+      "lcp": 2952,
+      "tbt": 23,
       "cls": 0,
-      "si": 1060,
-      "transferKb": 318,
-      "jsKb": 251
+      "si": 1057,
+      "transferKb": 320,
+      "jsKb": 246
     },
     "login": {
       "url": "/login",
       "runs": [
-        94,
-        97,
-        99,
-        94,
-        94
+        95,
+        95,
+        95,
+        95,
+        95
       ],
-      "performance": 94,
+      "performance": 95,
       "accessibility": 100,
       "bestPractices": 96,
       "seo": 63,
-      "fcp": 1209,
-      "lcp": 3022,
-      "tbt": 30,
+      "fcp": 1207,
+      "lcp": 2954,
+      "tbt": 27,
       "cls": 0,
-      "si": 1209,
-      "transferKb": 320,
-      "jsKb": 250
+      "si": 1207,
+      "transferKb": 319,
+      "jsKb": 245
     }
   }
 }

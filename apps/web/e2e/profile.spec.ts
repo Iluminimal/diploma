@@ -20,7 +20,7 @@ test("the profile page shows who you are and how you sign in", async ({ shopperP
   await expect(page.getByLabel("Email")).toHaveValue(account.email);
   await expect(page.getByText(/Not connected/)).toBeVisible();
   await expect(page.getByRole("button", { name: /Change password/ })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Profile", exact: true })).toHaveAttribute("aria-current", "page");
+  await expect(page.getByRole("navigation", { name: "Account", exact: true }).getByRole("link", { name: "Profile" })).toHaveAttribute("aria-current", "page");
 });
 
 test("renaming shows up in the header and survives a reload", async ({ shopperPage: page }) => {

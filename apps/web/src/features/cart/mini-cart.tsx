@@ -52,7 +52,7 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
           <p className="font-medium">Your cart is empty</p>
           <p className="text-muted-foreground text-sm">Find something you love and it will wait for you here.</p>
         </div>
-        <Button asChild variant="outline" size="lg" className="h-10 rounded-xl px-5" onClick={onNavigate}>
+        <Button asChild variant="outline" size="lg" className="h-10 rounded-full px-5" onClick={onNavigate}>
           <Link href="/products">Continue shopping</Link>
         </Button>
       </div>
@@ -70,10 +70,10 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
           <Price cents={cart.subtotal_cents} currency={cart.currency} className="text-base font-semibold" />
         </div>
         <p className="text-muted-foreground text-xs">Shipping is calculated at checkout.</p>
-        <Button asChild size="lg" className="h-11 w-full rounded-xl text-sm" onClick={onNavigate}>
+        <Button asChild size="lg" className="h-11 w-full rounded-full text-sm" onClick={onNavigate}>
           <Link href="/checkout">Checkout</Link>
         </Button>
-        <Button asChild variant="outline" size="lg" className="h-11 w-full rounded-xl text-sm" onClick={onNavigate}>
+        <Button asChild variant="outline" size="lg" className="h-11 w-full rounded-full text-sm" onClick={onNavigate}>
           <Link href="/cart">View cart</Link>
         </Button>
       </div>

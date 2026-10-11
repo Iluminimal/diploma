@@ -1,5 +1,6 @@
 import { test, expect } from "./fixtures";
 import { pickCategory } from "./support/catalog";
+import { openSearch } from "./support/ui";
 import { addToCart, placePaidOrder, productPhoto, saveToWishlist } from "./support/api";
 import { SCHEMES, VARIANTS, VIEWPORTS, expectNoViolations, scan, settled, sweep, type Variant } from "./support/axe";
 
@@ -47,6 +48,7 @@ test.describe("storefront", () => {
       found.push(...(await scan(page, `menu/${variant.scheme}`)));
 
       await page.mouse.move(700, 600);
+      await openSearch(page);
       await page.getByRole("search").getByRole("button", { name: "Search by photo" }).click();
       await expect(page.getByRole("dialog", { name: "Search by photo" })).toBeVisible();
       await settled(page);
@@ -148,10 +150,13 @@ test.describe("storefront", () => {
       await page.setViewportSize(VIEWPORTS[variant.viewport]);
       await page.emulateMedia({ colorScheme: variant.scheme, reducedMotion: "reduce" });
       await page.goto("/");
-      await page.getByRole("combobox").first().fill("shirt");
+      const box = await openSearch(page);
+      await settled(page);
+      found.push(...(await scan(page, `${variant.viewport}/${variant.scheme}/quick-links`)));
+      await box.fill("shirt");
       await expect(page.getByRole("listbox")).toBeVisible();
       await settled(page);
-      found.push(...(await scan(page, `${variant.viewport}/${variant.scheme}`)));
+      found.push(...(await scan(page, `${variant.viewport}/${variant.scheme}/suggestions`)));
     }
     expectNoViolations(found, "the search suggestions");
   });

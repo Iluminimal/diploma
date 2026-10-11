@@ -175,7 +175,7 @@ export function EditProductView({ id }: { id: number }) {
               {photoError}
             </p>
           )}
-          <Button variant="outline" className="h-10 rounded-xl px-4" disabled={replace.isPending} onClick={() => void upload()}>
+          <Button variant="outline" className="h-10 rounded-full px-4" disabled={replace.isPending} onClick={() => void upload()}>
             {replace.isPending && <Loader2 aria-hidden className="animate-spin" />} Replace photo
           </Button>
         </div>

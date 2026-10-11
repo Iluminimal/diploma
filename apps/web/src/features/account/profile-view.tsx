@@ -107,7 +107,7 @@ function ProfileCard({ user }: { user: SessionUser }) {
             aria-describedby="profile-email-hint"
           />
         </Field>
-        <Button type="submit" disabled={!isDirty || rename.isPending} className="h-10 rounded-xl px-5">
+        <Button type="submit" disabled={!isDirty || rename.isPending} className="h-10 rounded-full px-5">
           {rename.isPending && <Loader2 className="animate-spin" />} Save changes
         </Button>
       </form>
@@ -148,7 +148,7 @@ function SignInMethods({ user }: { user: SessionUser }) {
           }
         />
         <Method name="Password" status={user.has_password ? "Set" : "Not set. You sign in with Google."}>
-          <Button variant="outline" className="h-10 rounded-xl px-4" onClick={() => setOpen(true)}>
+          <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setOpen(true)}>
             <KeyRound aria-hidden /> {user.has_password ? "Change password" : "Set a password"}
           </Button>
         </Method>
@@ -264,7 +264,7 @@ function PasswordDialog({
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={change.isPending} className="rounded-xl">
+            <Button type="submit" disabled={change.isPending} className="rounded-full">
               {change.isPending && <Loader2 className="animate-spin" />} {hasPassword ? "Change password" : "Set password"}
             </Button>
           </DialogFooter>
@@ -283,7 +283,7 @@ function DeleteAccount({ user }: { user: SessionUser }) {
       <p className="text-muted-foreground text-sm">
         Orders you have placed are kept for the shop&apos;s records, without your account attached. This can&apos;t be undone.
       </p>
-      <Button variant="outline" className="text-destructive h-10 rounded-xl px-4" onClick={() => setOpen(true)}>
+      <Button variant="outline" className="text-destructive h-10 rounded-full px-4" onClick={() => setOpen(true)}>
         <Trash2 aria-hidden /> Delete my account
       </Button>
       <DeleteDialog open={open} onOpenChange={setOpen} user={user} />
@@ -372,7 +372,7 @@ function DeleteDialog({
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Keep my account
           </Button>
-          <Button variant="destructive" disabled={!ready || remove.isPending} onClick={() => void confirm()} className="rounded-xl">
+          <Button variant="destructive" disabled={!ready || remove.isPending} onClick={() => void confirm()} className="rounded-full">
             {remove.isPending && <Loader2 className="animate-spin" />} Delete account
           </Button>
         </DialogFooter>

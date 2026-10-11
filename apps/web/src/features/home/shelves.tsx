@@ -38,10 +38,10 @@ export async function CategoryPills() {
           <li key={`${department}-${node.path}`} className="shrink-0">
             <Link
               href={categoryHref(department, node.path)}
-              className="bg-secondary hover:bg-foreground hover:text-background focus-visible:ring-ring/60 inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-medium outline-none transition-colors duration-200 focus-visible:ring-3"
+              className="group/pill bg-secondary hover:bg-foreground hover:text-background focus-visible:ring-ring/60 inline-flex h-11 items-center gap-2 rounded-full px-5 text-sm font-medium outline-none transition-colors duration-200 focus-visible:ring-3"
             >
               {node.name}
-              <span className="text-xs font-normal opacity-60">{departmentName}</span>
+              <span className="text-muted-foreground group-hover/pill:text-background/75 text-xs font-normal">{departmentName}</span>
             </Link>
           </li>
         ))}

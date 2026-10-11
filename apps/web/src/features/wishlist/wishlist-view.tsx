@@ -33,7 +33,7 @@ export function WishlistView() {
           <h2 className="text-lg font-medium">Nothing saved yet</h2>
           <p className="text-muted-foreground text-sm">Tap the heart on any product to keep it here.</p>
         </div>
-        <Button asChild size="lg" className="h-11 rounded-xl px-5">
+        <Button asChild size="lg" className="h-11 rounded-full px-5">
           <Link href="/products">Browse products</Link>
         </Button>
       </div>

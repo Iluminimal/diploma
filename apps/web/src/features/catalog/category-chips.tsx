@@ -13,11 +13,11 @@ export function CategoryChips({ label, items, className }: { label: string; item
           <li key={chip.href} className="shrink-0">
             <Link
               href={chip.href}
-              className="bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background focus-visible:ring-ring/60 inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm outline-none transition-colors duration-200 focus-visible:ring-3"
+              className="group/chip bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background focus-visible:ring-ring/60 inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm outline-none transition-colors duration-200 focus-visible:ring-3"
             >
               {chip.label}
               {chip.count !== undefined && (
-                <span className="text-xs tabular-nums opacity-60">{chip.count.toLocaleString("en-US")}</span>
+                <span className="text-muted-foreground group-hover/chip:text-background/75 text-xs tabular-nums">{chip.count.toLocaleString("en-US")}</span>
               )}
             </Link>
           </li>

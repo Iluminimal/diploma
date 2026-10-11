@@ -27,12 +27,14 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
         href={productPath(product)}
         className="focus-visible:ring-ring/60 block rounded-2xl outline-none focus-visible:ring-3"
       >
-        <div className="bg-muted relative aspect-3/4 overflow-hidden rounded-2xl">
+        {/* The catalogue photos have white backgrounds: multiplied onto the grey tile they melt into it,
+            the way Apple's product shots sit on their tiles. In dark mode the tile is white instead. */}
+        <div className="bg-secondary relative aspect-3/4 overflow-hidden rounded-3xl dark:bg-white">
           <ProductImage
             product={product}
             sizes={sizes}
             priority={priority}
-            className="transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+            className="mix-blend-multiply transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.04] dark:mix-blend-normal"
           />
           {!product.in_stock && (
             <span className="bg-background/90 text-foreground absolute right-2 bottom-2 rounded-full px-2.5 py-1 text-xs font-medium backdrop-blur">
@@ -40,10 +42,10 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
             </span>
           )}
         </div>
-        <div className="mt-3 space-y-0.5 px-0.5">
-          <Heading className="line-clamp-2 text-sm leading-snug font-medium">{product.name}</Heading>
+        <div className="mt-4 space-y-0.5 px-1">
+          <Heading className="line-clamp-2 text-sm leading-snug font-semibold tracking-tight">{product.name}</Heading>
           <p className="text-muted-foreground truncate text-xs">{productSubtitle(product)}</p>
-          <p className="pt-1 text-sm font-medium tabular-nums">
+          <p className="pt-1.5 text-sm tabular-nums">
             {formatPrice(product.price_cents, product.currency)}
           </p>
         </div>
@@ -57,7 +59,7 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
 export function ProductCardSkeleton() {
   return (
     <div aria-hidden>
-      <Skeleton className="aspect-3/4 rounded-2xl" />
+      <Skeleton className="aspect-3/4 rounded-3xl" />
       <div className="mt-3 space-y-2 px-0.5">
         <Skeleton className="h-3.5 w-4/5 rounded" />
         <Skeleton className="h-3 w-2/5 rounded" />

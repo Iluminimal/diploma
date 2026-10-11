@@ -44,7 +44,7 @@ export function WishlistButton({ product, variant = "card", className }: Props) 
         aria-pressed={saved}
         disabled={status === "unknown"}
         className={cn(
-          "border-input hover:bg-muted focus-visible:ring-ring/60 inline-flex h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-medium transition-colors outline-none focus-visible:ring-3 disabled:opacity-50",
+          "border-input hover:bg-muted focus-visible:ring-ring/60 inline-flex h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors outline-none focus-visible:ring-3 disabled:opacity-50",
           saved && "border-foreground",
           className,
         )}

@@ -35,7 +35,7 @@ export function AdminGate({ children }: { children: ReactNode }) {
           <h2 className="text-lg font-medium">You don&apos;t have access to this area</h2>
           <p className="text-muted-foreground text-sm">The admin area is for store administrators.</p>
         </div>
-        <Button asChild variant="outline" size="lg" className="h-11 rounded-xl px-5">
+        <Button asChild variant="outline" size="lg" className="h-11 rounded-full px-5">
           <Link href="/">Back to the store</Link>
         </Button>
       </div>

@@ -73,7 +73,7 @@ export function PurchasePanel({ product, sizes }: Props) {
         <Button
           type="button"
           size="lg"
-          className="h-11 flex-1 rounded-xl text-sm"
+          className="h-11 flex-1 rounded-full text-sm"
           disabled={!product.in_stock || add.isPending}
           onClick={addToCart}
         >
@@ -98,7 +98,7 @@ export function PurchasePanel({ product, sizes }: Props) {
         <Button
           type="button"
           size="lg"
-          className="h-11 rounded-xl px-6 text-sm"
+          className="h-11 rounded-full px-6 text-sm"
           disabled={add.isPending}
           // Not the same name as the main button: a screen reader meets both on this page.
           aria-label={`Add ${product.name} to cart`}

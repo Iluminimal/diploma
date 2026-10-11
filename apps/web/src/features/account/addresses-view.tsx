@@ -141,7 +141,7 @@ export function AddressesView() {
         <Button
           variant="outline"
           size="lg"
-          className="h-11 rounded-xl px-5"
+          className="h-11 rounded-full px-5"
           onClick={() => {
             setEditing(null);
             setAdding(true);

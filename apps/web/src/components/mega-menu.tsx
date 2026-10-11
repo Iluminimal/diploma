@@ -13,10 +13,10 @@ const CLOSE_DELAY_MS = 160;
 const SUBCATEGORIES_SHOWN = 8;
 
 const TOP_LINK =
-  "after:bg-foreground focus-visible:ring-ring/60 -mx-2 relative flex h-full items-center rounded-lg px-2 text-sm outline-none transition-colors duration-200 after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0 after:transition-transform after:duration-300 after:ease-out hover:after:scale-x-100 focus-visible:ring-3 focus-visible:ring-inset focus-visible:after:scale-x-100 aria-expanded:after:scale-x-100";
+  "focus-visible:ring-ring/60 flex h-full items-center rounded-md px-1.5 text-xs outline-none transition-colors duration-200 focus-visible:ring-3 focus-visible:ring-inset";
 
 const PANEL_LINK =
-  "hover:text-foreground focus-visible:ring-ring/60 -mx-2 block rounded-md px-2 py-1 text-sm outline-none transition-colors duration-150 focus-visible:ring-3";
+  "hover:text-brand focus-visible:ring-ring/60 -mx-2 block rounded-md px-2 py-1 text-[1.0625rem] leading-snug font-semibold tracking-tight outline-none transition-colors duration-150 focus-visible:ring-3";
 
 /**
  * Desktop department menu. The top-level entries are ordinary links (they work before any script
@@ -66,12 +66,12 @@ export function MegaMenu() {
   return (
     <nav
       aria-label="Main"
-      className="hidden self-stretch md:block"
+      className="hidden flex-1 self-stretch md:block"
       onPointerEnter={() => setWanted(true)}
       onFocus={() => setWanted(true)}
       onPointerLeave={(event) => event.pointerType === "mouse" && schedule(null, CLOSE_DELAY_MS)}
     >
-      <ul className="flex h-full items-center gap-7">
+      <ul className="flex h-full items-center justify-center gap-7">
         {DEPARTMENT_LINKS.map((link) => {
           const department = data?.departments.find((d) => d.slug === link.slug);
           const open = openSlug === link.slug;
@@ -93,7 +93,7 @@ export function MegaMenu() {
                 data-mega-trigger
                 aria-expanded={department ? open : undefined}
                 aria-controls={department ? panelId : undefined}
-                className={cn(TOP_LINK, open ? "text-foreground" : "text-muted-foreground hover:text-foreground")}
+                className={cn(TOP_LINK, open ? "text-foreground" : "text-foreground/80 hover:text-foreground")}
               >
                 {link.label}
               </Link>
@@ -102,9 +102,9 @@ export function MegaMenu() {
                 aria-label={`${link.label} categories`}
                 role="region"
                 data-open={open}
-                className="mega-panel bg-background border-border shadow-soft absolute inset-x-0 top-full border-b"
+                className="mega-panel bg-background absolute inset-x-0 top-full"
               >
-                <div className="container-page py-8">
+                <div className="container-page pt-6 pb-12">
                   {department ? <Panel department={department} /> : <PanelSkeleton />}
                 </div>
               </div>
@@ -112,7 +112,7 @@ export function MegaMenu() {
           );
         })}
         <li className="h-full">
-          <Link href="/products?sort=newest" className={cn(TOP_LINK, "text-muted-foreground hover:text-foreground")}>
+          <Link href="/products?sort=newest" className={cn(TOP_LINK, "text-foreground/80 hover:text-foreground")}>
             New
           </Link>
         </li>
@@ -131,13 +131,13 @@ function Panel({ department }: { department: NavDepartment }) {
             href={categoryHref(department.slug, group.path)}
             prefetch={false}
             data-mega-link
-            className="focus-visible:ring-ring/60 mb-3 inline-block rounded-md text-sm font-semibold outline-none focus-visible:ring-3"
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/60 mb-4 inline-block rounded-md text-xs font-medium outline-none transition-colors focus-visible:ring-3"
           >
             {group.name}
           </Link>
           <ul className="space-y-0.5">
             {group.children.slice(0, SUBCATEGORIES_SHOWN).map((sub) => (
-              <li key={sub.path} className="text-muted-foreground">
+              <li key={sub.path}>
                 <Link href={categoryHref(department.slug, sub.path)} prefetch={false} data-mega-link className={PANEL_LINK}>
                   {sub.name}
                 </Link>
@@ -149,7 +149,7 @@ function Panel({ department }: { department: NavDepartment }) {
                   href={categoryHref(department.slug, group.path)}
                   prefetch={false}
                   data-mega-link
-                  className={cn(PANEL_LINK, "text-foreground underline-offset-4 hover:underline")}
+                  className={cn(PANEL_LINK, "text-brand mt-1 text-sm font-normal hover:underline")}
                 >
                   View all {group.name.toLowerCase()}
                 </Link>
@@ -159,10 +159,10 @@ function Panel({ department }: { department: NavDepartment }) {
         </div>
       ))}
       <div>
-        <p className="mb-3 text-sm font-semibold">Popular</p>
+        <p className="text-muted-foreground mb-4 text-xs font-medium">Popular</p>
         <ul className="space-y-0.5">
           {popular.map((type) => (
-            <li key={type.path} className="text-muted-foreground">
+            <li key={type.path}>
               <Link href={categoryHref(department.slug, type.path)} prefetch={false} data-mega-link className={PANEL_LINK}>
                 {type.name}
               </Link>

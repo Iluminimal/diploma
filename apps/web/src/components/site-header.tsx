@@ -1,34 +1,33 @@
 import Link from "next/link";
 import { AngelLogo } from "@/components/logo";
-import { MobileNav } from "@/components/mobile-nav";
+import { HeaderSearch } from "@/components/header-search";
 import { MegaMenu } from "@/components/mega-menu";
-import { SearchBar } from "@/components/search-bar";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { MobileNav } from "@/components/mobile-nav";
 import { AccountMenu } from "@/features/auth/account-menu";
 import { CartButton } from "@/features/cart/cart-button";
 
+/**
+ * Apple's global bar: slim, translucent, the name on the left, small links spread across the
+ * middle, search / account / cart on the right. A hairline appears under it once the page scrolls.
+ */
 export function SiteHeader() {
   return (
     <header
       // Named so page transitions leave it in place (see globals.css).
       style={{ viewTransitionName: "site-header" }}
-      className="header-elevate bg-background/80 border-border sticky top-0 z-40 border-b backdrop-blur-lg"
+      className="header-elevate bg-background/80 sticky top-0 z-40 border-b border-transparent backdrop-blur-xl backdrop-saturate-150"
     >
-      <div className="container-page flex h-14 items-center gap-2 md:h-16 md:gap-6">
+      <div className="container-page flex h-12 items-center gap-1 md:h-11 md:gap-4">
         <MobileNav />
-        <Link href="/" className="focus-visible:ring-ring/60 rounded-md text-lg outline-none focus-visible:ring-3">
-          <AngelLogo />
+        <Link href="/" className="focus-visible:ring-ring/60 mr-auto rounded-md text-[1.0625rem] outline-none focus-visible:ring-3 md:mr-0">
+          <AngelLogo markClassName="size-[1.35rem]" />
         </Link>
         <MegaMenu />
-        <SearchBar className="mx-auto hidden w-full max-w-md md:block" />
-        <div className="ml-auto flex items-center gap-1 md:ml-0">
-          <ThemeToggle />
+        <div className="flex items-center md:ml-0">
+          <HeaderSearch />
           <AccountMenu />
           <CartButton />
         </div>
-      </div>
-      <div className="container-page pb-3 md:hidden">
-        <SearchBar />
       </div>
     </header>
   );

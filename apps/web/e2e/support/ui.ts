@@ -1,6 +1,15 @@
 import { expect, type Page } from "@playwright/test";
 import type { CatalogProduct } from "./api";
 
+/** Opens the header's search panel (the magnifier) and returns its field. */
+export async function openSearch(page: Page) {
+  await page.getByRole("button", { name: "Search", exact: true }).click();
+  const box = page.getByRole("combobox");
+  await expect(box).toBeVisible();
+  await expect(box).toBeFocused();
+  return box;
+}
+
 export const cartButton = (page: Page) => page.locator('button[aria-label^="Cart"]');
 
 export async function openProduct(page: Page, product: CatalogProduct) {

@@ -48,10 +48,10 @@ export function CartView() {
           <p className="text-muted-foreground text-sm">Browse the collection or search with a photo.</p>
         </div>
         <div className="flex flex-wrap justify-center gap-2">
-          <Button asChild size="lg" className="h-11 rounded-xl px-5">
+          <Button asChild size="lg" className="h-11 rounded-full px-5">
             <Link href="/products">Shop all</Link>
           </Button>
-          <Button asChild variant="outline" size="lg" className="h-11 rounded-xl px-5">
+          <Button asChild variant="outline" size="lg" className="h-11 rounded-full px-5">
             <Link href="/search">Search by photo</Link>
           </Button>
         </div>
@@ -88,7 +88,7 @@ export function CartView() {
             Some items need your attention before you can check out.
           </p>
         )}
-        <Button asChild size="lg" className="h-11 w-full rounded-xl text-sm" aria-disabled={cart.has_issues}>
+        <Button asChild size="lg" className="h-11 w-full rounded-full text-sm" aria-disabled={cart.has_issues}>
           <Link href="/checkout">
             Checkout <ArrowRight />
           </Link>

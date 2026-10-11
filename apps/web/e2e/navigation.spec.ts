@@ -1,5 +1,6 @@
 import { test, expect } from "./fixtures";
 import { pickCategory } from "./support/catalog";
+import { openSearch } from "./support/ui";
 import { productPhoto } from "./support/api";
 
 const mainNav = (page: import("@playwright/test").Page) => page.getByRole("navigation", { name: "Main" });
@@ -94,8 +95,8 @@ test("the camera button inside the search bar opens a photo search", async ({ pa
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
 
-  const search = page.getByRole("search");
-  await search.getByRole("button", { name: "Search by photo" }).click();
+  await openSearch(page);
+  await page.getByRole("search").getByRole("button", { name: "Search by photo" }).click();
   const dialog = page.getByRole("dialog", { name: "Search by photo" });
   await expect(dialog).toBeVisible();
   await dialog.locator('input[aria-label="Choose a photo"]').setInputFiles({
@@ -112,7 +113,7 @@ test("the search box suggests categories and remembers searches", async ({ page,
   const { sub } = await pickCategory(api);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  const box = page.getByRole("combobox").first();
+  const box = await openSearch(page);
 
   await box.fill(sub.name.slice(0, 4));
   await expect(page.getByRole("option").filter({ hasText: sub.name }).first()).toBeVisible();
@@ -121,6 +122,6 @@ test("the search box suggests categories and remembers searches", async ({ page,
   await box.press("Enter");
   await expect(page).toHaveURL(/q=blue%20shirt/);
   await page.goto("/");
-  await box.focus();
+  await openSearch(page);
   await expect(page.getByRole("option", { name: "blue shirt" })).toBeVisible();
 });

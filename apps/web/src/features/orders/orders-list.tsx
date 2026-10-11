@@ -52,7 +52,7 @@ export function OrdersList({ page }: { page: number }) {
           <h2 className="text-lg font-medium">No orders yet</h2>
           <p className="text-muted-foreground text-sm">When you place an order it will show up here.</p>
         </div>
-        <Button asChild size="lg" className="h-11 rounded-xl px-5">
+        <Button asChild size="lg" className="h-11 rounded-full px-5">
           <Link href="/products">Start shopping</Link>
         </Button>
       </div>

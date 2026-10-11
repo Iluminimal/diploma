@@ -176,7 +176,7 @@ export function ProductForm({ categories, product, submitLabel, onSubmit }: Prop
         </label>
       )}
       <div className="flex gap-2 sm:col-span-2">
-        <Button type="submit" size="lg" disabled={isSubmitting} className="h-11 rounded-xl px-5 text-sm">
+        <Button type="submit" size="lg" disabled={isSubmitting} className="h-11 rounded-full px-5 text-sm">
           {isSubmitting && <Loader2 aria-hidden className="animate-spin" />} {submitLabel}
         </Button>
       </div>

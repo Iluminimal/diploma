@@ -61,7 +61,7 @@ export function OrdersTable({ params }: { params: OrderListParams }) {
             aria-label="Order number or customer email"
             className="h-11 rounded-xl"
           />
-          <Button type="submit" variant="outline" className="h-11 rounded-xl px-4">
+          <Button type="submit" variant="outline" className="h-11 rounded-full px-4">
             <Search aria-hidden /> Search
           </Button>
         </form>

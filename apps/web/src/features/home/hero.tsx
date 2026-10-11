@@ -64,7 +64,7 @@ export async function Hero() {
                 className={`drift ${slot.size} ${slot.offset} ${slot.hide}`}
                 style={{ "--drift": slot.drift } as React.CSSProperties}
               >
-                <div className="bg-muted aspect-3/4 overflow-hidden rounded-3xl shadow-[0_30px_60px_-30px_oklch(0_0_0/0.35)]">
+                <div className="bg-secondary aspect-3/4 overflow-hidden rounded-3xl shadow-[0_30px_60px_-30px_oklch(0_0_0/0.35)] dark:bg-white">
                   <Image
                     src={product.image.thumb_800}
                     alt=""
@@ -74,7 +74,7 @@ export async function Hero() {
                     priority={i === 1 || i === 2}
                     placeholder={product.image.blur_data_url ? "blur" : "empty"}
                     blurDataURL={product.image.blur_data_url ?? undefined}
-                    className="size-full object-cover"
+                    className="size-full object-cover mix-blend-multiply dark:mix-blend-normal"
                   />
                 </div>
               </div>

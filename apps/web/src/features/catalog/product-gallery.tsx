@@ -24,7 +24,7 @@ export function ProductGallery({ product }: Props) {
           <button
             type="button"
             aria-label={`Enlarge photo of ${product.name}`}
-            className="bg-muted focus-visible:ring-ring/60 relative aspect-[3/4] flex-1 cursor-zoom-in overflow-hidden rounded-3xl outline-none focus-visible:ring-3"
+            className="bg-secondary focus-visible:ring-ring/60 relative aspect-[3/4] flex-1 cursor-zoom-in overflow-hidden rounded-3xl outline-none focus-visible:ring-3 dark:bg-white"
           >
             <Image
               src={current.thumb_800}
@@ -35,7 +35,7 @@ export function ProductGallery({ product }: Props) {
               priority
               placeholder={current.blur_data_url ? "blur" : "empty"}
               blurDataURL={current.blur_data_url ?? undefined}
-              className="size-full object-cover"
+              className="size-full object-cover mix-blend-multiply dark:mix-blend-normal"
             />
           </button>
         </DialogTrigger>

@@ -36,7 +36,7 @@ export function ConfirmationView({ number }: { number: string }) {
         <p role="alert" className="text-muted-foreground">
           {missing ? "It may belong to another account." : userMessage(error)}
         </p>
-        <Button asChild variant="outline" className="h-10 rounded-xl px-4">
+        <Button asChild variant="outline" className="h-10 rounded-full px-4">
           <Link href="/account/orders">Your orders</Link>
         </Button>
       </div>
@@ -76,10 +76,10 @@ export function ConfirmationView({ number }: { number: string }) {
       </header>
       <OrderDetail order={order} />
       <div className="flex flex-wrap gap-2">
-        <Button asChild size="lg" className="h-11 rounded-xl px-5">
+        <Button asChild size="lg" className="h-11 rounded-full px-5">
           <Link href="/products">Continue shopping</Link>
         </Button>
-        <Button asChild variant="outline" size="lg" className="h-11 rounded-xl px-5">
+        <Button asChild variant="outline" size="lg" className="h-11 rounded-full px-5">
           <Link href="/account/orders">View all orders</Link>
         </Button>
       </div>

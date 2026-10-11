@@ -77,7 +77,7 @@ export function ProductsTable({ params }: { params: ProductListParams }) {
             aria-label="Search by name or id"
             className="h-11 rounded-xl"
           />
-          <Button type="submit" variant="outline" className="h-11 rounded-xl px-4">
+          <Button type="submit" variant="outline" className="h-11 rounded-full px-4">
             <Search aria-hidden /> Search
           </Button>
         </form>
@@ -106,7 +106,7 @@ export function ProductsTable({ params }: { params: ProductListParams }) {
               </option>
             ))}
           </select>
-          <Button asChild size="lg" className="h-11 rounded-xl px-4">
+          <Button asChild size="lg" className="h-11 rounded-full px-4">
             <Link href="/admin/products/new">
               <Plus aria-hidden /> New product
             </Link>

@@ -125,11 +125,11 @@ export function AddressForm({ initial, submitLabel = "Save address", askDefault 
         </label>
       )}
       <div className={cn("flex gap-2 sm:col-span-2")}>
-        <Button type="submit" size="lg" disabled={isSubmitting} className="h-11 rounded-xl px-5 text-sm">
+        <Button type="submit" size="lg" disabled={isSubmitting} className="h-11 rounded-full px-5 text-sm">
           {isSubmitting && <Loader2 className="animate-spin" />} {submitLabel}
         </Button>
         {onCancel && (
-          <Button type="button" variant="outline" size="lg" className="h-11 rounded-xl px-5 text-sm" onClick={onCancel}>
+          <Button type="button" variant="outline" size="lg" className="h-11 rounded-full px-5 text-sm" onClick={onCancel}>
             Cancel
           </Button>
         )}

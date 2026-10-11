@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures";
+import { openSearch } from "./support/ui";
 
 /**
  * What a keyboard or screen-reader user needs and axe cannot judge: that focus goes where it
@@ -40,19 +41,28 @@ test("every stop in the header and the first screen of a page shows where focus 
 
 test("the search box works from the keyboard", async ({ page }) => {
   await page.goto("/");
-  const box = page.getByRole("combobox").first();
+  const box = await openSearch(page);
   await box.fill("shirt");
   await expect(page.getByRole("listbox")).toBeVisible();
   await expect(box).toHaveAttribute("aria-expanded", "true");
 
   await page.keyboard.press("ArrowDown");
   await expect(box).toHaveAttribute("aria-activedescendant", /.+/);
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/\/(products\?.*q=shirt|c\/|products\/)/);
+});
+
+test("Escape closes the search panel and gives focus back to the magnifier", async ({ page }) => {
+  await page.goto("/");
+  await openSearch(page);
+  await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+
   await page.keyboard.press("Escape");
 
-  await expect(page.getByRole("listbox")).toBeHidden();
-  await expect(box).toBeFocused();
-  await box.press("Enter");
-  await expect(page).toHaveURL(/\/products\?.*q=shirt/);
+  await expect(page.getByRole("dialog", { name: "Search" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Search", exact: true })).toBeFocused();
 });
 
 test("the mini-cart keeps focus inside, closes with Escape and gives focus back", async ({ page, products }) => {

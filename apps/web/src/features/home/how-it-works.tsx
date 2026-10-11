@@ -34,7 +34,7 @@ export async function HowItWorks() {
   const { photo, matches } = data;
   const chips = [photo.article_type, photo.base_colour, photo.gender].filter((c): c is string => Boolean(c) && c !== "NA");
   return (
-    <section aria-labelledby="how-heading" className="bg-muted/40">
+    <section aria-labelledby="how-heading" className="bg-secondary">
       <div className="story-track">
         <div className="story-stage container-page py-16 md:py-0">
           <header className="mb-10 max-w-2xl md:mb-8">

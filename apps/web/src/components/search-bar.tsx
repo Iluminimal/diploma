@@ -5,7 +5,7 @@ import { Camera, Clock, LayoutGrid, Search } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useMemo, useRef, useState, type ClipboardEvent, type DragEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ClipboardEvent, type DragEvent, type ReactNode } from "react";
 import { categoryHref, matchCategories } from "@/features/catalog/nav";
 import { readRecentSearches, rememberSearch } from "@/features/catalog/recent-searches";
 import { formatPrice, productPath } from "@/features/catalog/product";
@@ -38,13 +38,25 @@ type Option =
 
 const searchHref = (q: string) => `/products?q=${encodeURIComponent(q)}`;
 
-export function SearchBar({ className }: { className?: string }) {
+type Props = {
+  className?: string;
+  /** `bar`: a compact field with a dropdown. `overlay`: the large field inside the header's search panel, results inline. */
+  variant?: "bar" | "overlay";
+  /** Called after the person chose where to go (the overlay closes itself). */
+  onNavigate?: () => void;
+  /** Shown under the field in the overlay while nothing has been typed. */
+  quickLinks?: ReactNode;
+};
+
+export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }: Props) {
+  const overlay = variant === "overlay";
   const router = useRouter();
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const photoButton = useRef<HTMLButtonElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(overlay);
   const [active, setActive] = useState(-1);
   const [recent, setRecent] = useState<string[]>([]);
   const [photoRequested, setPhotoRequested] = useState(false);
@@ -97,6 +109,11 @@ export function SearchBar({ className }: { className?: string }) {
   const hasProducts = options.some((o) => o.type === "product");
 
   useEffect(() => {
+    // The overlay is opened to type in it.
+    if (overlay) inputRef.current?.focus();
+  }, [overlay]);
+
+  useEffect(() => {
     function onPointerDown(event: PointerEvent) {
       if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
     }
@@ -110,6 +127,7 @@ export function SearchBar({ className }: { className?: string }) {
     setOpen(false);
     setRecent(rememberSearch(q));
     router.push(searchHref(q));
+    onNavigate?.();
   }
 
   function go(index: number) {
@@ -118,12 +136,14 @@ export function SearchBar({ className }: { className?: string }) {
     setOpen(false);
     if (option.type === "recent") setRecent(rememberSearch(option.label));
     router.push(option.href);
+    onNavigate?.();
   }
 
   async function searchWithPhoto(file: File | null) {
     if (file && (await pick(file))) {
       setOpen(false);
       router.push("/search");
+      onNavigate?.();
     }
   }
 
@@ -154,6 +174,7 @@ export function SearchBar({ className }: { className?: string }) {
     <div ref={rootRef} className={cn("relative", className)}>
       <form
         role="search"
+        className="relative"
         onSubmit={(e) => {
           e.preventDefault();
           if (active >= 0) go(active);
@@ -173,9 +194,13 @@ export function SearchBar({ className }: { className?: string }) {
         </label>
         <Search
           aria-hidden
-          className="text-muted-foreground pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2"
+          className={cn(
+            "text-muted-foreground pointer-events-none absolute top-1/2 -translate-y-1/2",
+            overlay ? "left-4 size-5" : "left-3.5 size-4",
+          )}
         />
         <input
+          ref={inputRef}
           id={`${listId}-input`}
           type="search"
           role="combobox"
@@ -214,7 +239,10 @@ export function SearchBar({ className }: { className?: string }) {
             }
           }}
           className={cn(
-            "bg-muted/70 placeholder:text-muted-foreground focus-visible:ring-ring/50 focus-visible:bg-background border-border h-10 w-full rounded-full border pr-12 pl-10 text-sm outline-none transition-[background-color,box-shadow,border-color] duration-200 focus-visible:ring-3",
+            "placeholder:text-muted-foreground w-full border outline-none transition-[background-color,box-shadow,border-color] duration-200 focus-visible:ring-3",
+            overlay
+              ? "bg-secondary focus-visible:bg-background focus-visible:ring-ring/40 h-14 rounded-2xl border-transparent pr-14 pl-12 text-lg tracking-tight"
+              : "bg-muted/70 focus-visible:ring-ring/50 focus-visible:bg-background border-border h-10 rounded-full pr-12 pl-10 text-sm",
             dragging && "border-brand bg-brand/5 ring-brand/30 ring-3",
           )}
         />
@@ -225,9 +253,12 @@ export function SearchBar({ className }: { className?: string }) {
           aria-haspopup="dialog"
           title="Search by photo"
           onClick={openPhotoSearch}
-          className="text-muted-foreground hover:text-foreground hover:bg-foreground/8 focus-visible:ring-ring/60 absolute top-1/2 right-1.5 grid size-8 -translate-y-1/2 place-items-center rounded-full outline-none transition-colors duration-200 focus-visible:ring-3"
+          className={cn(
+            "text-muted-foreground hover:text-foreground hover:bg-foreground/8 focus-visible:ring-ring/60 absolute top-1/2 grid -translate-y-1/2 place-items-center rounded-full outline-none transition-colors duration-200 focus-visible:ring-3",
+            overlay ? "right-2.5 size-10" : "right-1.5 size-8",
+          )}
         >
-          <Camera aria-hidden className="size-4" />
+          <Camera aria-hidden className={overlay ? "size-5" : "size-4"} />
         </button>
       </form>
 
@@ -246,7 +277,12 @@ export function SearchBar({ className }: { className?: string }) {
           id={listId}
           role="listbox"
           aria-label="Suggestions"
-          className="bg-popover border-border shadow-soft animate-in fade-in-0 slide-in-from-top-1 absolute top-full right-0 left-0 z-50 mt-2 overflow-hidden rounded-2xl border p-1.5 duration-200"
+          className={cn(
+            "overflow-hidden",
+            overlay
+              ? "mt-4"
+              : "bg-popover border-border shadow-soft animate-in fade-in-0 slide-in-from-top-1 absolute top-full right-0 left-0 z-50 mt-2 rounded-2xl border p-1.5 duration-200",
+          )}
         >
           {options.map((option, i) => {
             const heading = options[i - 1]?.type !== option.type ? HEADINGS[option.type] : null;
@@ -292,6 +328,7 @@ export function SearchBar({ className }: { className?: string }) {
           )}
         </ul>
       )}
+      {overlay && typed.length === 0 && quickLinks}
     </div>
   );
 }

@@ -121,7 +121,7 @@ export function RegisterForm({ next }: { next: string }) {
           type="submit"
           size="lg"
           disabled={isSubmitting}
-          className="h-11 w-full rounded-xl text-sm"
+          className="h-11 w-full rounded-full text-sm"
         >
           {isSubmitting && <Loader2 className="animate-spin" />} Create account
         </Button>

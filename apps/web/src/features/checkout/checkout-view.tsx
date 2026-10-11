@@ -129,7 +129,7 @@ export function CheckoutView() {
     return (
       <div className="space-y-4 py-10 text-center">
         <p className="text-lg font-medium">Your cart is empty</p>
-        <Button asChild size="lg" className="h-11 rounded-xl px-5">
+        <Button asChild size="lg" className="h-11 rounded-full px-5">
           <Link href="/products">Continue shopping</Link>
         </Button>
       </div>
@@ -176,7 +176,7 @@ export function CheckoutView() {
               />
             </div>
           ) : (
-            <Button type="button" variant="outline" className="h-10 rounded-xl px-4" onClick={() => setAddingAddress(true)}>
+            <Button type="button" variant="outline" className="h-10 rounded-full px-4" onClick={() => setAddingAddress(true)}>
               Add a new address
             </Button>
           )}
@@ -271,7 +271,7 @@ export function CheckoutView() {
             )}
           </p>
         )}
-        <Button type="submit" form="checkout-form" size="lg" disabled={!canPay} className="h-12 w-full rounded-xl text-sm">
+        <Button type="submit" form="checkout-form" size="lg" disabled={!canPay} className="h-12 w-full rounded-full text-sm">
           {pay.isPending ? <Loader2 className="animate-spin" /> : <Lock />}
           Pay now · <Price cents={total} currency={cart.currency} />
         </Button>

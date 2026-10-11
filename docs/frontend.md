@@ -37,6 +37,30 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
   the catalogue has no size data. The API validates against the same table (`apps/api/.../services/sizes.py`); keep the
   two in step.
 
+## Design language (Apple-style)
+
+* **Colour** (`:root` and `.dark` in `globals.css`): white and `#f5f5f7` bands, ink `#1d1d1f`, secondary text `#6e6e73`,
+  hairlines `#d2d2d7`; dark mode is true black with `#1d1d1f` surfaces. One accent: Apple blue `#0071e3` for the primary
+  button, focus ring and links (`#0066cc` / `#2997ff` as `--brand` for text). Contrast is checked by the axe sweeps: never dim
+  text with `opacity-*` on a grey surface, use `text-muted-foreground`.
+* **Buttons** (`components/ui/button.tsx`) are pills; the main action is the blue one, the rest are outlined or quiet.
+* **Product tiles** are `#f5f5f7` rounded squares. The catalogue photos have white backgrounds, so they are drawn with
+  `mix-blend-multiply` and melt into the tile (in dark mode the tile is white and the photo is drawn normally). Do the same for
+  any new product picture.
+* **Header** (`components/site-header.tsx`): a 44px translucent bar (backdrop blur and saturation) with the logo on the left,
+  small centred department links, and search, account and cart on the right. A hairline fades in under it as the page scrolls
+  (a scroll-driven animation). The theme toggle lives in the footer.
+* **Department menu** (`components/mega-menu.tsx`): a full-width flyout under the bar with large semibold links; the page
+  behind it is dimmed and blurred by the panel's own `::before`, which lets pointer events through so moving down onto the
+  page closes it.
+* **Search** (`components/header-search.tsx`): the magnifier opens a full-width panel over the bar with a large field (the
+  `overlay` variant of `SearchBar`), live suggestions, recent searches and quick links, and dims the page. Escape closes it and
+  returns focus to the magnifier. The panel is portalled to `<body>` because the header's backdrop blur would otherwise make
+  it the containing block of anything `fixed` inside, and it loads on first click (so the header ships less JavaScript).
+* **Footer**: pale grey, 12px type, four quiet columns and one line of fine print. Account links there are `prefetch={false}`:
+  prefetched while signed out they cache the redirect to /login, which then sends a customer back to the login page right after
+  they sign in.
+
 ## The home page
 
 Apple-style storytelling on top, Amazon-style shelves below. (There is no announcement bar above the header.) Nothing on it is invented: no discounts, ratings or

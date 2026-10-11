@@ -48,12 +48,14 @@ function Card({ card, product, priority }: { card: (typeof CARDS)[number]; produ
 export async function DepartmentShowcase() {
   const products = await Promise.all(CARDS.map(async (card) => (await newest({ department: card.slug, category: "apparel" }, 1))[0]));
   return (
-    <section aria-label="Departments" className="container-page defer-render py-16 md:py-24">
-      <SectionHeading title="Find your department." />
-      <div className="grid gap-4 md:grid-cols-3 md:gap-6">
-        {CARDS.map((card, i) => (
-          <Card key={card.slug} card={card} product={products[i]} priority={false} />
-        ))}
+    <section aria-label="Departments" className="bg-secondary defer-render">
+      <div className="container-page py-16 md:py-24">
+        <SectionHeading title="Find your department." />
+        <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+          {CARDS.map((card, i) => (
+            <Card key={card.slug} card={card} product={products[i]} priority={false} />
+          ))}
+        </div>
       </div>
     </section>
   );

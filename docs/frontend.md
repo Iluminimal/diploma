@@ -39,12 +39,11 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 
 ## The home page
 
-Apple-style storytelling on top, Amazon-style shelves below. Nothing on it is invented: no discounts, ratings or
+Apple-style storytelling on top, Amazon-style shelves below. (There is no announcement bar above the header.) Nothing on it is invented: no discounts, ratings or
 "best sellers" (the dataset has none); every product, count and sentence is real.
 
 | Section | What it is |
 | --- | --- |
-| Promo strip (in the layout, every page) | one thin line: the real free-shipping threshold (`features/home/store-promises.ts`, mirrors the API's default) and a link to photo search |
 | Hero | huge headline, "Search with a photo" (opens the photo picker) and Shop women / men; below it five real photos (newest in stock per department) that drift at different speeds as you scroll (`.drift`). The headline is plain text, never hidden: it is what the page is measured on |
 | How it works | a pinned story. A 340vh track with a sticky full-screen stage; the track's scroll position (a named view timeline, `.story-*` in `globals.css`) plays the three steps: the photo appears, a scan line sweeps it and what was detected fades in, then its real nearest neighbours (`getSimilarProducts`) rise in. Phones, browsers without scroll-driven animation and reduced motion get the three captions and the finished result stacked |
 | Departments | three large cards (Women / Men / Kids) that grow into place (`.zoom-in`) |
@@ -235,7 +234,7 @@ of effect:
 listing 90, filtered listing 91, category page 90, product 97, search 91, cart 91, sign in 94. The margins on home and
 listing are thin (single runs range from 83 to 95). First-load FCP rose by one or two round trips (150 ms each) on most pages:
 the global stylesheet is now 17 KB gzipped and the login HTML 15 KB, both above TCP's first flight of about 14.6 KB, so each
-needs another round trip on the simulated 4G link; the promo strip alone pushed the login HTML over that line. Next time the
+needs another round trip on the simulated 4G link; a single extra line of markup in the layout can push the login HTML over that line. Next time the
 score drops, shrink the global CSS (move route-specific rules such as the home page's `.story-*` into a route-level CSS file)
 before anything else.
 

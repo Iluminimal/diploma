@@ -5,7 +5,6 @@ import { catalogNav, makeProduct } from "@/test/fixtures";
 import { renderWithQuery } from "@/test/render";
 import { Hero } from "./hero";
 import { HowItWorks } from "./how-it-works";
-import { PromoStrip } from "./promo-strip";
 import { RecentlyViewed } from "./recently-viewed";
 import { CategoryPills } from "./shelves";
 import { TrustStrip } from "./trust-strip";
@@ -28,15 +27,6 @@ beforeEach(() => {
   getSimilarProducts.mockReset();
   getCatalogNav.mockReset();
   window.localStorage.clear();
-});
-
-describe("PromoStrip", () => {
-  it("states the real shipping offer and points at photo search", () => {
-    render(<PromoStrip />);
-
-    expect(screen.getByText(/Free standard shipping on orders over \$100/)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Search any look with a photo" })).toHaveAttribute("href", "/search");
-  });
 });
 
 describe("Hero", () => {

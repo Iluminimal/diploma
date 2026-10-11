@@ -4,7 +4,6 @@ test("the first screen is a headline with three ways in", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { level: 1, name: "Shop by photo." })).toBeVisible();
-  await expect(page.getByText(/Free standard shipping on orders over \$100/)).toBeVisible();
   await page.getByRole("link", { name: "Shop women", exact: true }).click();
   await expect(page).toHaveURL(/\/c\/women$/);
 });

@@ -16,7 +16,7 @@ from angel.core.errors import (
     ProblemError,
 )
 from angel.core.mail import Mailer
-from angel.core.rate_limit import RateLimiter
+from angel.core.rate_limit import RateLimiter, client_address
 from angel.core.security import decode_access_token, new_opaque_token
 from angel.core.sms import SmsSender
 from angel.ml.classifier import GarmentLocalizer, LazyCategoryClassifier
@@ -28,7 +28,7 @@ from angel.repositories.accounts.users import UserRepository
 from angel.repositories.system.health import HealthRepository
 from angel.services.accounts.account import AccountService
 from angel.services.accounts.addresses import AddressService
-from angel.services.accounts.auth import AuthService
+from angel.services.accounts.auth import AuthService, ClientInfo
 from angel.services.accounts.oauth import OAuthService
 from angel.services.accounts.otp import OtpService
 from angel.services.accounts.otp_login import OtpLoginService
@@ -295,7 +295,11 @@ def get_auth_service(
     mailer: Annotated[Mailer, Depends(get_mailer)],
 ) -> AuthService:
     limiter = RateLimiter(redis, settings.rate_limit_prefix, settings.redis_op_timeout_seconds)
-    return AuthService(session, settings, request.app.state.jwt_secret, limiter, mailer)
+    client = ClientInfo(
+        user_agent=(request.headers.get("user-agent") or "")[:300] or None,
+        ip=client_address(request, trust_proxy_headers=settings.trust_proxy_headers)[:45],
+    )
+    return AuthService(session, settings, request.app.state.jwt_secret, limiter, mailer, client)
 
 
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]

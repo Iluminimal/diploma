@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Cookie, Depends, Query, Response, status
@@ -29,6 +30,7 @@ from angel.core.rate_limit import rate_limit
 from angel.schemas.accounts.auth import (
     ChangePasswordRequest,
     DeleteAccountRequest,
+    DeviceSession,
     EmailChangeRequest,
     EmailConfirmRequest,
     ForgotPasswordRequest,
@@ -333,6 +335,46 @@ async def remove_email(
     body: RemoveContactRequest | None = None,
 ) -> UserOut:
     return (await service.remove_email(user_id, body.current_password if body else None)).out()
+
+
+@router.get("/sessions", summary="The devices signed in to this account", responses=_UNAUTHORIZED)
+async def list_sessions(
+    user_id: CurrentUserDep, service: AccountServiceDep, refresh_token: RefreshCookie = None
+) -> list[DeviceSession]:
+    return await service.sessions(user_id, refresh_token)
+
+
+@router.post(
+    "/sessions/revoke-others",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Sign out everywhere except this browser",
+    responses=_UNAUTHORIZED,
+)
+async def revoke_other_sessions(
+    user_id: CurrentUserDep, service: AccountServiceDep, refresh_token: RefreshCookie = None
+) -> None:
+    await service.revoke_other_sessions(user_id, refresh_token)
+
+
+@router.delete(
+    "/sessions/{session_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Sign one device out",
+    responses={
+        **_UNAUTHORIZED,
+        404: {"model": ProblemDetail, "description": "That login is already over"},
+    },
+)
+async def revoke_session(
+    session_id: uuid.UUID,
+    response: Response,
+    user_id: CurrentUserDep,
+    service: AccountServiceDep,
+    settings: SettingsDep,
+    refresh_token: RefreshCookie = None,
+) -> None:
+    if await service.revoke_session(user_id, session_id, refresh_token):
+        clear_session_cookies(response, settings)
 
 
 @router.put(

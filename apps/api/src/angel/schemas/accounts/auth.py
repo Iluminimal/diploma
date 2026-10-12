@@ -1,3 +1,5 @@
+import uuid
+from datetime import datetime
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
@@ -183,3 +185,15 @@ class RemoveContactRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     current_password: CurrentPassword = None
+
+
+class DeviceSession(BaseModel):
+    """One open login of the account, as the "your devices" list shows it."""
+
+    id: uuid.UUID
+    device: str
+    ip: str | None
+    created_at: datetime
+    last_used_at: datetime
+    # The login this request belongs to.
+    current: bool

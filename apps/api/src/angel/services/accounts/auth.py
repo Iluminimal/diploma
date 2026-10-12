@@ -43,6 +43,14 @@ _LOGIN_FAILURES = "login-fail"
 
 
 @dataclass(frozen=True)
+class ClientInfo:
+    """What the "your devices" list shows about a login. Taken from the request that created it."""
+
+    user_agent: str | None = None
+    ip: str | None = None
+
+
+@dataclass(frozen=True)
 class UserView:
     """A user with the sign-in providers linked to them: what the API shows of an account."""
 
@@ -100,7 +108,9 @@ class AuthService:
         jwt_secret: str,
         limiter: RateLimiter,
         mailer: Mailer,
+        client: ClientInfo | None = None,
     ) -> None:
+        self._client = client or ClientInfo()
         self._session = session
         self._settings = settings
         self._secret = jwt_secret
@@ -250,11 +260,15 @@ class AuthService:
     async def _issue(self, user: User, *, family_id: uuid.UUID) -> IssuedSession:
         refresh_token = new_opaque_token()
         max_age = int(timedelta(days=self._settings.refresh_token_ttl_days).total_seconds())
+        now = datetime.now(UTC)
         await self._tokens.add(
             user_id=user.id,
             family_id=family_id,
             token_hash=hash_token(refresh_token),
-            expires_at=datetime.now(UTC) + timedelta(seconds=max_age),
+            expires_at=now + timedelta(seconds=max_age),
+            user_agent=self._client.user_agent,
+            ip=self._client.ip,
+            last_used_at=now,
         )
         access = create_access_token(user.id, self._secret, self._settings.access_token_ttl_seconds)
         view = UserView(user, await self._users.providers(user.id))

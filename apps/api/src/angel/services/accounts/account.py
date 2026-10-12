@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 from datetime import UTC, datetime
 from http import HTTPStatus
 
@@ -17,11 +18,16 @@ from angel.core.errors import (
     ProblemError,
 )
 from angel.core.logging import get_logger
-from angel.core.security import hash_password, verify_password
+from angel.core.security import hash_password, hash_token, verify_password
 from angel.models import Address, Cart, OAuthIdentity, User, WishlistItem
 from angel.repositories.accounts.users import RefreshTokenRepository, UserRepository
-from angel.schemas.accounts.auth import ChangePasswordRequest, DeleteAccountRequest
+from angel.schemas.accounts.auth import (
+    ChangePasswordRequest,
+    DeleteAccountRequest,
+    DeviceSession,
+)
 from angel.services.accounts.auth import AuthService, IssuedSession, UserView
+from angel.services.accounts.devices import describe_device
 from angel.services.accounts.otp import (
     OtpService,
     normalize_email,
@@ -115,6 +121,56 @@ class AccountService:
             self._session.add(user)
         await self._auth.clear_failures(request.confirm)
         log.info("account_deleted", user_id=user_id)
+
+    # --- devices: the logins that are open ------------------------------------------------
+
+    async def sessions(self, user_id: int, refresh_token: str | None) -> list[DeviceSession]:
+        now = datetime.now(UTC)
+        async with self._session.begin():
+            current = await self._current_family(user_id, refresh_token)
+            rows = await self._tokens.active_sessions(user_id, now)
+        return [
+            DeviceSession(
+                id=token.family_id,
+                device=describe_device(token.user_agent),
+                ip=token.ip,
+                created_at=began,
+                last_used_at=token.last_used_at or token.created_at,
+                current=token.family_id == current,
+            )
+            for token, began in rows
+        ]
+
+    async def revoke_session(
+        self, user_id: int, family_id: uuid.UUID, refresh_token: str | None
+    ) -> bool:
+        """Ends one login. True when it is the login of the browser that asked."""
+        async with self._session.begin():
+            current = await self._current_family(user_id, refresh_token)
+            ended = await self._tokens.revoke_family_of_user(user_id, family_id, datetime.now(UTC))
+        if not ended:
+            raise ProblemError(HTTPStatus.NOT_FOUND, "Session not found", "That login is over.")
+        return family_id == current
+
+    async def revoke_other_sessions(self, user_id: int, refresh_token: str | None) -> None:
+        """ "Sign out everywhere else": every login but the one this browser holds."""
+        async with self._session.begin():
+            current = await self._current_family(user_id, refresh_token)
+            if current is None:
+                raise ProblemError(
+                    HTTPStatus.UNAUTHORIZED,
+                    "Not signed in",
+                    "Please sign in again.",
+                    type_=UNAUTHENTICATED_TYPE,
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            await self._tokens.revoke_others(user_id, current, datetime.now(UTC))
+
+    async def _current_family(self, user_id: int, refresh_token: str | None) -> uuid.UUID | None:
+        if not refresh_token:
+            return None
+        row = await self._tokens.get_by_hash(hash_token(refresh_token))
+        return row.family_id if row is not None and row.user_id == user_id else None
 
     # --- phone number and email: add, change, confirm, remove -----------------------------
 

@@ -20,6 +20,7 @@ from angel.core.deps import (
     CurrentUserDep,
     OAuthServiceDep,
     OtpLoginServiceDep,
+    PasswordResetServiceDep,
     SettingsDep,
     no_store,
 )
@@ -28,14 +29,22 @@ from angel.core.rate_limit import rate_limit
 from angel.schemas.accounts.auth import (
     ChangePasswordRequest,
     DeleteAccountRequest,
+    EmailChangeRequest,
+    EmailConfirmRequest,
+    ForgotPasswordRequest,
     LoginRequest,
     OtpRequest,
     OtpVerifyRequest,
+    PhoneChangeRequest,
+    PhoneConfirmRequest,
     ProvidersOut,
     RegisterRequest,
+    RemoveContactRequest,
+    ResetPasswordRequest,
     SessionOut,
     UpdateProfileRequest,
     UserOut,
+    VerifyCodeRequest,
 )
 from angel.schemas.problem import ProblemDetail
 from angel.services.accounts.auth import IssuedSession
@@ -176,6 +185,154 @@ async def update_me(
     body: UpdateProfileRequest, user_id: CurrentUserDep, service: AccountServiceDep
 ) -> UserOut:
     return (await service.update_name(user_id, body.full_name)).out()
+
+
+_CODE_ERRORS: dict[int | str, dict[str, Any]] = {
+    400: {"model": ProblemDetail, "description": "Wrong or expired code"},
+    429: {"model": ProblemDetail, "description": "Too many wrong codes, or a code was just sent"},
+}
+
+
+@router.post(
+    "/password/forgot",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Send a password-reset code to the phone number or email on an account",
+    description="Always answers 202, whether or not an account exists.",
+    dependencies=[Depends(rate_limit("otp_send"))],
+)
+async def forgot_password(body: ForgotPasswordRequest, service: PasswordResetServiceDep) -> None:
+    await service.forgot(body.destination)
+
+
+@router.post(
+    "/password/reset",
+    summary="Choose a new password with the code; signs in and ends every other login",
+    dependencies=[Depends(rate_limit("otp_verify"))],
+    responses=_CODE_ERRORS,
+)
+async def reset_password(
+    body: ResetPasswordRequest,
+    response: Response,
+    service: PasswordResetServiceDep,
+    settings: SettingsDep,
+) -> SessionOut:
+    issued = await service.reset(body.destination, body.code, body.new_password)
+    return _respond(issued, response, settings)
+
+
+@router.post(
+    "/email/verify/request",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Send a code to the account's email to confirm it",
+    dependencies=[Depends(rate_limit("otp_send"))],
+    responses=_UNAUTHORIZED,
+)
+async def request_email_verification(user_id: CurrentUserDep, service: AccountServiceDep) -> None:
+    await service.request_email_verification(user_id)
+
+
+@router.post(
+    "/email/verify/confirm",
+    summary="Confirm the account's email with the code",
+    dependencies=[Depends(rate_limit("otp_verify"))],
+    responses={**_UNAUTHORIZED, **_CODE_ERRORS},
+)
+async def confirm_email_verification(
+    body: VerifyCodeRequest, user_id: CurrentUserDep, service: AccountServiceDep
+) -> UserOut:
+    return (await service.confirm_email_verification(user_id, body.code)).out()
+
+
+@router.post(
+    "/phone/request",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Add or replace the phone number: send a code to the new number",
+    dependencies=[Depends(rate_limit("otp_send"))],
+    responses={
+        **_UNAUTHORIZED,
+        403: {"model": ProblemDetail, "description": "The current password is wrong"},
+        409: {"model": ProblemDetail, "description": "Another account uses this number"},
+    },
+)
+async def request_phone(
+    body: PhoneChangeRequest, user_id: CurrentUserDep, service: AccountServiceDep
+) -> None:
+    await service.request_phone(user_id, body.phone, body.current_password)
+
+
+@router.post(
+    "/phone/confirm",
+    summary="Save the new phone number once the code is right",
+    dependencies=[Depends(rate_limit("otp_verify"))],
+    responses={**_UNAUTHORIZED, **_CODE_ERRORS},
+)
+async def confirm_phone(
+    body: PhoneConfirmRequest, user_id: CurrentUserDep, service: AccountServiceDep
+) -> UserOut:
+    return (await service.confirm_phone(user_id, body.phone, body.code)).out()
+
+
+@router.delete(
+    "/phone",
+    summary="Remove the phone number (the account must keep an email)",
+    responses={
+        **_UNAUTHORIZED,
+        403: {"model": ProblemDetail, "description": "The current password is wrong"},
+        409: {"model": ProblemDetail, "description": "It is the only way to sign in"},
+    },
+)
+async def remove_phone(
+    user_id: CurrentUserDep,
+    service: AccountServiceDep,
+    body: RemoveContactRequest | None = None,
+) -> UserOut:
+    return (await service.remove_phone(user_id, body.current_password if body else None)).out()
+
+
+@router.post(
+    "/email/request",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Add or replace the email: send a code to the new address",
+    dependencies=[Depends(rate_limit("otp_send"))],
+    responses={
+        **_UNAUTHORIZED,
+        403: {"model": ProblemDetail, "description": "The current password is wrong"},
+        409: {"model": ProblemDetail, "description": "Another account uses this address"},
+    },
+)
+async def request_email(
+    body: EmailChangeRequest, user_id: CurrentUserDep, service: AccountServiceDep
+) -> None:
+    await service.request_email(user_id, body.email, body.current_password)
+
+
+@router.post(
+    "/email/confirm",
+    summary="Save the new email once the code is right",
+    dependencies=[Depends(rate_limit("otp_verify"))],
+    responses={**_UNAUTHORIZED, **_CODE_ERRORS},
+)
+async def confirm_email(
+    body: EmailConfirmRequest, user_id: CurrentUserDep, service: AccountServiceDep
+) -> UserOut:
+    return (await service.confirm_email(user_id, body.email, body.code)).out()
+
+
+@router.delete(
+    "/email",
+    summary="Remove the email (the account must keep a phone number)",
+    responses={
+        **_UNAUTHORIZED,
+        403: {"model": ProblemDetail, "description": "The current password is wrong"},
+        409: {"model": ProblemDetail, "description": "It is the only way to sign in"},
+    },
+)
+async def remove_email(
+    user_id: CurrentUserDep,
+    service: AccountServiceDep,
+    body: RemoveContactRequest | None = None,
+) -> UserOut:
+    return (await service.remove_email(user_id, body.current_password if body else None)).out()
 
 
 @router.put(

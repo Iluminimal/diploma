@@ -119,3 +119,67 @@ class OtpVerifyRequest(BaseModel):
 
     destination: Destination
     code: OtpCode
+
+
+CurrentPassword = Annotated[str, Field(min_length=1, max_length=128)] | None
+
+
+class ForgotPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    destination: Destination
+
+
+class ResetPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    destination: Destination
+    code: OtpCode
+    new_password: Password
+
+
+class VerifyCodeRequest(BaseModel):
+    """The code that confirms an address or number the signed-in person already holds."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    code: OtpCode
+
+
+class PhoneChangeRequest(BaseModel):
+    """Add a phone number or replace the current one: a code is sent to the new number."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    phone: Annotated[str, Field(min_length=3, max_length=40)]
+    # Required when the account has a password.
+    current_password: CurrentPassword = None
+
+
+class PhoneConfirmRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    phone: Annotated[str, Field(min_length=3, max_length=40)]
+    code: OtpCode
+
+
+class EmailChangeRequest(BaseModel):
+    """Add an email address or replace the current one: a code is sent to the new address."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    email: Annotated[str, Field(min_length=3, max_length=320)]
+    current_password: CurrentPassword = None
+
+
+class EmailConfirmRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: Annotated[str, Field(min_length=3, max_length=320)]
+    code: OtpCode
+
+
+class RemoveContactRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    current_password: CurrentPassword = None

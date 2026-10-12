@@ -32,6 +32,7 @@ from angel.services.accounts.auth import AuthService
 from angel.services.accounts.oauth import OAuthService
 from angel.services.accounts.otp import OtpService
 from angel.services.accounts.otp_login import OtpLoginService
+from angel.services.accounts.password_reset import PasswordResetService
 from angel.services.admin.dashboard import AdminDashboardService
 from angel.services.admin.orders import AdminOrderService
 from angel.services.admin.products import AdminProductService
@@ -331,8 +332,19 @@ def get_otp_login_service(
 OtpLoginServiceDep = Annotated[OtpLoginService, Depends(get_otp_login_service)]
 
 
-def get_account_service(session: SessionDep, auth: AuthServiceDep) -> AccountService:
-    return AccountService(session, auth)
+def get_password_reset_service(
+    settings: SettingsDep, session: SessionDep, otp: OtpServiceDep, auth: AuthServiceDep
+) -> PasswordResetService:
+    return PasswordResetService(session, settings, otp, auth)
+
+
+PasswordResetServiceDep = Annotated[PasswordResetService, Depends(get_password_reset_service)]
+
+
+def get_account_service(
+    session: SessionDep, auth: AuthServiceDep, otp: OtpServiceDep, settings: SettingsDep
+) -> AccountService:
+    return AccountService(session, auth, otp, settings)
 
 
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]

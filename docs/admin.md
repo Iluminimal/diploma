@@ -13,7 +13,7 @@ there is no sign-up form to attack:
 make create-admin EMAIL=you@example.com             # asks for a password (twice, not echoed)
 make create-admin EMAIL=you@example.com ARGS=--keep-password   # promote an existing account, keep its password
 ADMIN_PASSWORD=... make create-admin EMAIL=...      # non-interactive (CI); never pass a password as an argument
-cd apps/api && uv run python -m angel.cli revoke-admin --email you@example.com
+cd apps/api && uv run python -m angel.cli.admin revoke-admin --email you@example.com
 ```
 
 An administrator who signs in (password form, register form or Google) and did not ask for a particular page lands on
@@ -156,7 +156,7 @@ load, so reviews themselves are current.
 
 `make seed-demo` fills a development database so the dashboard has something to show: about 25 customers
 (`demo-<name>@example.com`, all with the password `DemoPass12345`) and 75 to 80 orders over 45 days in **every state**, with
-addresses, payments, tracking numbers, history events, stock decrements and reviews (`src/angel/demo.py`; the newest few
+addresses, payments, tracking numbers, history events, stock decrements and reviews (`src/angel/cli/seed_demo.py`; the newest few
 orders are fixed: one awaiting payment, two just paid). It is deterministic for a `--seed`, **refuses `APP_ENV=prod`**, does
 nothing if the demo customers already exist, and `make seed-demo-clean` removes exactly what it made, gives the stock back and
 recomputes the affected ratings. Options: `make seed-demo ARGS="--customers 40 --orders 120 --days 60 --seed 7"`. Refunding a

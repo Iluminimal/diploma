@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from angel.core.config import get_settings
 from angel.db.engine import create_engine
-from angel.evaluation import exact_top_k, sample_products
+from angel.ml.evaluation import exact_top_k, sample_products
 from angel.ml.fashion_clip import FashionClipEmbedder, select_device
 from angel.ml.preprocess import load_image
 from angel.repositories.catalog.products import DEFAULT_EF_SEARCH, ProductRepository

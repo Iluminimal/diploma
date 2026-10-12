@@ -25,14 +25,14 @@ from redis.asyncio import Redis
 
 from angel.core.config import Settings, get_settings
 from angel.db.engine import create_engine
-from angel.evaluation import (
+from angel.main import create_app
+from angel.ml.evaluation import (
     format_percentiles,
     make_upload,
     ms_since,
     percentiles,
     sample_products,
 )
-from angel.main import create_app
 
 TARGET_IMAGE_P95_MS = 400.0
 TARGET_SIMILAR_P95_MS = 50.0

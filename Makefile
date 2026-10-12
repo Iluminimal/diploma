@@ -40,7 +40,7 @@ api: ## Run the FastAPI server natively on :8000 (auto-reload)
 
 create-admin: ## Create or promote an administrator: make create-admin EMAIL=you@example.com
 	@test -n "$(EMAIL)" || { echo "usage: make create-admin EMAIL=you@example.com"; exit 2; }
-	$(API) uv run python -m angel.cli create-admin --email "$(EMAIL)" $(ARGS)
+	$(API) uv run python -m angel.cli.admin create-admin --email "$(EMAIL)" $(ARGS)
 
 ingest: ## Ingest the dataset (needs `make infra migrate`); e.g. make ingest ARGS="--limit 500"
 	$(API) uv run python ../../scripts/ingest.py $(ARGS)
@@ -101,4 +101,4 @@ latency: ## End-to-end API latency report on the real catalogue; e.g. make laten
 	$(API) uv run python ../../scripts/measure_api_latency.py --device $(or $(DEVICE),cpu)
 
 openapi: ## Write the API's OpenAPI schema to docs/openapi.json
-	$(API) uv run python -m angel.openapi ../../docs/openapi.json
+	$(API) uv run python -m angel.cli.openapi ../../docs/openapi.json

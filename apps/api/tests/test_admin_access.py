@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from angel.cli import PASSWORD_ENV, _run, build_parser
+from angel.cli.admin import PASSWORD_ENV, _run, build_parser
 from angel.core.config import get_settings
 from angel.core.deps import AdminDep
 from angel.core.security import verify_password

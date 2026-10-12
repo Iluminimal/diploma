@@ -13,5 +13,5 @@ def main(output: str) -> None:
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        sys.exit("usage: python -m angel.openapi <output.json>")
+        sys.exit("usage: python -m angel.cli.openapi <output.json>")
     main(sys.argv[1])

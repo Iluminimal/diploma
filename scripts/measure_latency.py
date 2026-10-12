@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
 from angel.core.config import get_settings
 from angel.db.engine import create_engine
-from angel.evaluation import (
+from angel.ml.evaluation import (
     exact_top_k,
     format_percentiles,
     make_upload,

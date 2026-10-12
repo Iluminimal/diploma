@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
+import { HEADER_CELL } from "@/components/layout/header-cell";
 import { cn } from "@/lib/utils";
 
 // The menu panel (with the categories it fetches) is loaded the first time the button is pressed.
@@ -46,7 +47,7 @@ export function MobileNav() {
           setRequested(true);
           setOpenedAt(open ? null : pathname);
         }}
-        className="focus-visible:ring-ring/60 hover:bg-muted/60 grid size-11 place-items-center rounded-full outline-none transition-colors focus-visible:ring-3 md:hidden"
+        className={cn(HEADER_CELL, "md:hidden")}
       >
         <MenuIcon open={open} />
       </button>

@@ -2,7 +2,7 @@
 
 import { LayoutDashboard, LogOut } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { HEADER_CELL } from "@/components/layout/header-cell";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import {
   DropdownMenu,
@@ -23,9 +23,9 @@ export function AccountDropdown({ user, defaultOpen }: { user: SessionUser; defa
   return (
     <DropdownMenu defaultOpen={defaultOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={`Account: ${user.full_name}`}>
-          <UserAvatar user={user} size={28} />
-        </Button>
+        <button type="button" className={HEADER_CELL} aria-label={`Account: ${user.full_name}`}>
+          <UserAvatar user={user} size={24} />
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex items-center gap-3">

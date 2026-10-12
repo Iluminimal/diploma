@@ -1,13 +1,14 @@
 "use client";
 
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
+import { cn } from "@/lib/utils";
+import { HEADER_CELL, SearchGlyph } from "@/components/layout/header-cell";
 import { AngelLogo } from "@/components/layout/logo";
-import { Button } from "@/components/ui/button";
 import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
 import { useSearchPanel } from "./search-ui-store";
 
@@ -102,10 +103,10 @@ export function HeaderSearch() {
 
   return (
     <>
-      <Button
+      <button
         ref={button}
-        variant="ghost"
-        size="icon"
+        type="button"
+        className={HEADER_CELL}
         aria-label="Search"
         title="Search (press /)"
         aria-keyshortcuts="/"
@@ -117,8 +118,8 @@ export function HeaderSearch() {
           setOpenedAt(open ? null : pathname);
         }}
       >
-        <Search />
-      </Button>
+        <SearchGlyph />
+      </button>
       {requested &&
         createPortal(
           <>
@@ -140,17 +141,17 @@ export function HeaderSearch() {
                   <Link href="/" onClick={close} className="focus-visible:ring-ring/60 rounded-md text-[1.0625rem] outline-none focus-visible:ring-3">
                     <AngelLogo showName={false} markClassName="size-7" />
                   </Link>
-                  <Button variant="ghost" size="icon-lg" aria-label="Close search" onClick={close}>
-                    <X />
-                  </Button>
+                  <button type="button" className={HEADER_CELL} aria-label="Close search" onClick={close}>
+                    <X className="size-[18px]" strokeWidth={1.25} />
+                  </button>
                 </div>
                 <div className="flex items-start gap-3 pt-1 md:pt-4">
                   <div className="mx-auto w-full max-w-2xl flex-1 md:pl-12">
                     <SearchBar variant="overlay" onNavigate={close} quickLinks={<QuickLinks onNavigate={close} />} />
                   </div>
-                  <Button variant="ghost" size="icon-lg" className="hidden md:inline-flex" aria-label="Close search" onClick={close}>
-                    <X />
-                  </Button>
+                  <button type="button" className={cn(HEADER_CELL, "hidden md:grid")} aria-label="Close search" onClick={close}>
+                    <X className="size-[18px]" strokeWidth={1.25} />
+                  </button>
                 </div>
               </div>
             </div>

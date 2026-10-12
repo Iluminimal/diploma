@@ -40,6 +40,7 @@ from lookalike.services.oauth import OAuthService
 from lookalike.services.order_fulfillment import OrderFulfillmentService
 from lookalike.services.orders import OrderService
 from lookalike.services.payments import PaymentSettlement
+from lookalike.services.reviews import ReviewService
 from lookalike.services.search import SearchService
 from lookalike.services.webhooks import WebhookService
 from lookalike.services.wishlist import WishlistService
@@ -164,6 +165,14 @@ def get_admin_order_service(session: SessionDep, storage: StorageDep) -> AdminOr
 
 
 AdminOrderServiceDep = Annotated[AdminOrderService, Depends(get_admin_order_service)]
+
+
+def get_review_service(request: Request, session: SessionDep, storage: StorageDep) -> ReviewService:
+    cache: SearchCache = request.app.state.search_cache
+    return ReviewService(session, storage, cache)
+
+
+ReviewServiceDep = Annotated[ReviewService, Depends(get_review_service)]
 
 
 def get_catalog_service(

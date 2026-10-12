@@ -31,6 +31,9 @@ class ProductOut(BaseModel):
     currency: str
     in_stock: bool
     image: ProductImage
+    # From the published reviews; no average until there is one.
+    rating_average: float | None
+    rating_count: int
 
 
 class FilterParams(BaseModel):

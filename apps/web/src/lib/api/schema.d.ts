@@ -360,6 +360,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every review, newest first, with counts per status */
+        get: operations["list_reviews_api_v1_admin_reviews_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/{review_id}/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Take a review off the product page and out of the average */
+        post: operations["hide_review_api_v1_admin_reviews__review_id__hide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/reviews/{review_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Put a hidden review back */
+        post: operations["publish_review_api_v1_admin_reviews__review_id__publish_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/stats": {
         parameters: {
             query?: never;
@@ -770,6 +821,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/products/{product_id}/reviews": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Published reviews with the average, and what the signed-in visitor can do */
+        get: operations["list_reviews_api_v1_products__product_id__reviews_get"];
+        put?: never;
+        /** Review a product you bought */
+        post: operations["create_review_api_v1_products__product_id__reviews_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/products/{product_id}/similar": {
         parameters: {
             query?: never;
@@ -785,6 +854,24 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/reviews/{review_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete your review */
+        delete: operations["delete_review_api_v1_reviews__review_id__delete"];
+        options?: never;
+        head?: never;
+        /** Change your review */
+        patch: operations["update_review_api_v1_reviews__review_id__patch"];
         trace?: never;
     };
     "/api/v1/search/hybrid": {
@@ -1388,6 +1475,66 @@ export interface components {
             usage?: string | null;
             /** Year */
             year?: number | null;
+        };
+        /** AdminReviewOut */
+        AdminReviewOut: {
+            /** Author */
+            author: string;
+            /** Author Email */
+            author_email: string;
+            /** Body */
+            body: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            product: components["schemas"]["AdminReviewProduct"];
+            /** Rating */
+            rating: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "published" | "hidden";
+            /** Title */
+            title: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** User Id */
+            user_id: number;
+        };
+        /** AdminReviewPage */
+        AdminReviewPage: {
+            /** Items */
+            items: components["schemas"]["AdminReviewOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Pages */
+            pages: number;
+            /** Status Counts */
+            status_counts: {
+                [key: string]: number;
+            };
+            /** Total */
+            total: number;
+        };
+        /** AdminReviewProduct */
+        AdminReviewProduct: {
+            /** Id */
+            id: number;
+            image: components["schemas"]["ProductImage"];
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
         };
         /**
          * AdminStats
@@ -2044,6 +2191,10 @@ export interface components {
             name: string;
             /** Price Cents */
             price_cents: number;
+            /** Rating Average */
+            rating_average: number | null;
+            /** Rating Count */
+            rating_count: number;
             /** Season */
             season: string | null;
             /** Slug */
@@ -2075,6 +2226,21 @@ export interface components {
         ProvidersOut: {
             /** Google */
             google: boolean;
+        };
+        /** RatingSummary */
+        RatingSummary: {
+            /**
+             * Average
+             * @description None until there is a published review
+             */
+            average: number | null;
+            /** Count */
+            count: number;
+            /**
+             * Distribution
+             * @description Published reviews with 1, 2, 3, 4 and 5 stars
+             */
+            distribution: number[];
         };
         /** ReadinessResponse */
         ReadinessResponse: {
@@ -2110,6 +2276,92 @@ export interface components {
             full_name: string;
             /** Password */
             password: string;
+        };
+        /** ReviewCreate */
+        ReviewCreate: {
+            /** Body */
+            body?: string | null;
+            /**
+             * Rating
+             * @description Stars, 1 to 5
+             */
+            rating: number;
+            /** Title */
+            title?: string | null;
+        };
+        /** ReviewOut */
+        ReviewOut: {
+            /** Author */
+            author: string;
+            /** Body */
+            body: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: number;
+            /** Rating */
+            rating: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "published" | "hidden";
+            /** Title */
+            title: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ReviewPage */
+        ReviewPage: {
+            /** Items */
+            items: components["schemas"]["ReviewOut"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Pages */
+            pages: number;
+            summary: components["schemas"]["RatingSummary"];
+            /** Total */
+            total: number;
+            /** @description Only when a signed-in visitor asks */
+            viewer: components["schemas"]["ReviewViewer"] | null;
+        };
+        /**
+         * ReviewUpdate
+         * @description Only the fields sent change; `null` clears the title or the text.
+         */
+        ReviewUpdate: {
+            /** Body */
+            body?: string | null;
+            /** Rating */
+            rating?: number | null;
+            /** Title */
+            title?: string | null;
+        };
+        /**
+         * ReviewViewer
+         * @description What the signed-in visitor can do on this product.
+         */
+        ReviewViewer: {
+            /**
+             * Can Review
+             * @description Bought it and has not reviewed it yet
+             */
+            can_review: boolean;
+            /**
+             * Purchased
+             * @description Has a paid order containing the product
+             */
+            purchased: boolean;
+            /** @description Their own review, even one that is hidden */
+            review: components["schemas"]["ReviewOut"] | null;
         };
         /** SearchHit */
         SearchHit: {
@@ -3910,6 +4162,203 @@ export interface operations {
             };
         };
     };
+    list_reviews_api_v1_admin_reviews_get: {
+        parameters: {
+            query?: {
+                /** @description Text, product or email */
+                q?: string | null;
+                status?: "all" | "published" | "hidden";
+                rating?: number | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminReviewPage"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    hide_review_api_v1_admin_reviews__review_id__hide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminReviewOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such review */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    publish_review_api_v1_admin_reviews__review_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminReviewOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such review */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     stats_api_v1_admin_stats_get: {
         parameters: {
             query?: {
@@ -4961,6 +5410,112 @@ export interface operations {
             };
         };
     };
+    list_reviews_api_v1_products__product_id__reviews_get: {
+        parameters: {
+            query?: {
+                sort?: "newest" | "highest" | "lowest";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewPage"];
+                };
+            };
+            /** @description Unknown or inactive product */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_review_api_v1_products__product_id__reviews_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewOut"];
+                };
+            };
+            /** @description You have not bought it */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Unknown or inactive product */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description You already reviewed it */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     similar_products_api_v1_products__product_id__similar_get: {
         parameters: {
             query?: {
@@ -4995,6 +5550,88 @@ export interface operations {
                 };
             };
             /** @description Unknown or inactive product */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_review_api_v1_reviews__review_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not one of your reviews */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_review_api_v1_reviews__review_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                review_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReviewOut"];
+                };
+            };
+            /** @description Not one of your reviews */
             404: {
                 headers: {
                     [name: string]: unknown;

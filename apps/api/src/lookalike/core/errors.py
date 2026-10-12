@@ -36,6 +36,9 @@ WISHLIST_FULL_TYPE = f"{_PREFIX}wishlist-full"
 INVALID_CATEGORY_TYPE = f"{_PREFIX}invalid-category"
 CATEGORY_NOT_FOUND_TYPE = f"{_PREFIX}category-not-found"
 INVALID_TRANSITION_TYPE = f"{_PREFIX}invalid-order-transition"
+REVIEW_NOT_FOUND_TYPE = f"{_PREFIX}review-not-found"
+REVIEW_NOT_ALLOWED_TYPE = f"{_PREFIX}review-not-allowed"
+REVIEW_EXISTS_TYPE = f"{_PREFIX}review-exists"
 
 log = get_logger(__name__)
 

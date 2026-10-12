@@ -1,11 +1,18 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Path, Query
+from fastapi import APIRouter, Depends, Path, Query, Response
 
-from lookalike.core.deps import CatalogServiceDep, SearchServiceDep
+from lookalike.core.deps import (
+    CatalogServiceDep,
+    CurrentUserDep,
+    OptionalUserDep,
+    ReviewServiceDep,
+    SearchServiceDep,
+)
 from lookalike.core.rate_limit import rate_limit
 from lookalike.schemas.problem import ProblemDetail
 from lookalike.schemas.product import ProductListQuery, ProductOut, ProductPage
+from lookalike.schemas.review import ReviewCreate, ReviewListQuery, ReviewOut, ReviewPage
 from lookalike.schemas.search import SearchResponse, SimilarQuery
 from lookalike.services.mappers import to_search_filters
 
@@ -39,3 +46,41 @@ async def similar_products(
     product_id: ProductId, query: Annotated[SimilarQuery, Query()], service: SearchServiceDep
 ) -> SearchResponse:
     return await service.similar_products(product_id, to_search_filters(query), query.limit)
+
+
+@router.get(
+    "/{product_id}/reviews",
+    summary="Published reviews with the average, and what the signed-in visitor can do",
+    responses=_NOT_FOUND,
+)
+async def list_reviews(
+    product_id: ProductId,
+    query: Annotated[ReviewListQuery, Query()],
+    user_id: OptionalUserDep,
+    service: ReviewServiceDep,
+    response: Response,
+) -> ReviewPage:
+    if user_id is not None:
+        # The viewer's own review is in it.
+        response.headers["Cache-Control"] = "no-store"
+    return await service.list(product_id, query, user_id)
+
+
+@router.post(
+    "/{product_id}/reviews",
+    status_code=201,
+    summary="Review a product you bought",
+    dependencies=[Depends(rate_limit("review"))],
+    responses={
+        **_NOT_FOUND,
+        403: {"model": ProblemDetail, "description": "You have not bought it"},
+        409: {"model": ProblemDetail, "description": "You already reviewed it"},
+    },
+)
+async def create_review(
+    product_id: ProductId,
+    body: ReviewCreate,
+    user_id: CurrentUserDep,
+    service: ReviewServiceDep,
+) -> ReviewOut:
+    return await service.create(user_id, product_id, body)

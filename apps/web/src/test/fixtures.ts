@@ -18,6 +18,8 @@ export function makeProduct(overrides: Partial<Product> = {}): Product {
     price_cents: 3499,
     currency: "USD",
     in_stock: true,
+    rating_average: null,
+    rating_count: 0,
     image: {
       thumb_400: "http://localhost:8000/media/products/060/60000_400.webp",
       thumb_800: "http://localhost:8000/media/products/060/60000_800.webp",

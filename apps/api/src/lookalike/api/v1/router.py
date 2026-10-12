@@ -9,6 +9,7 @@ from lookalike.api.v1 import (
     checkout,
     orders,
     products,
+    reviews,
     search,
     webhooks,
     wishlist,
@@ -17,6 +18,7 @@ from lookalike.api.v1 import (
 router = APIRouter()
 router.include_router(search.router)
 router.include_router(products.router)
+router.include_router(reviews.router)
 router.include_router(catalog.router)
 router.include_router(auth.router)
 router.include_router(cart.router)

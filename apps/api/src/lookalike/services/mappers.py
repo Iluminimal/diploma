@@ -41,6 +41,8 @@ def to_product_out(product: Product, storage: Storage) -> ProductOut:
         currency=product.currency,
         in_stock=product.stock_quantity > 0,
         image=product_image(product.image_key, product.blur_data_url, storage),
+        rating_average=float(product.rating_average) if product.rating_count else None,
+        rating_count=product.rating_count,
     )
 
 

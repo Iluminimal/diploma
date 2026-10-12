@@ -81,6 +81,7 @@ class Settings(BaseSettings):
     rate_limit_refresh: str = "60/60"
     rate_limit_admin: str = "120/60"
     rate_limit_oauth: str = "30/300"
+    rate_limit_review: str = "20/3600"
 
     # --- sign in with Google --------------------------------------------------------------
     # `google`: the real flow (needs the client id and secret). `fake`: an in-process stand-in

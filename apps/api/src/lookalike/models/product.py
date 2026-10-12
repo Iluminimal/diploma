@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     BigInteger,
@@ -8,6 +10,7 @@ from sqlalchemy import (
     Identity,
     Index,
     Integer,
+    Numeric,
     SmallInteger,
     String,
     Text,
@@ -29,6 +32,7 @@ class Product(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("price_cents >= 0", name="price_non_negative"),
         CheckConstraint("stock_quantity >= 0", name="stock_non_negative"),
+        CheckConstraint("rating_count >= 0", name="rating_count_non_negative"),
         CheckConstraint("char_length(currency) = 3", name="currency_iso_length"),
         Index("ix_products_gender", "gender"),
         Index("ix_products_base_colour", "base_colour"),
@@ -70,6 +74,9 @@ class Product(TimestampMixin, Base):
     currency: Mapped[str] = mapped_column(String(3), server_default="USD")
     stock_quantity: Mapped[int] = mapped_column(Integer, server_default="0")
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
+    # Kept in step with the published reviews, in the same transaction that changes them.
+    rating_average: Mapped[Decimal] = mapped_column(Numeric(3, 2), server_default="0")
+    rating_count: Mapped[int] = mapped_column(Integer, server_default="0")
 
     # Storage key prefix: thumbnails live at `{image_key}_{400|800}.webp`.
     image_key: Mapped[str] = mapped_column(String(200))

@@ -352,7 +352,7 @@
   line-height: 1.17648;
   letter-spacing: -0.022em;
   &::after {
-    content: "\203A";
+    content: "\203A" / "";
     display: inline-block;
     margin-inline-start: 0.35em;
     transition: transform 200ms var(--ease-out-expo);

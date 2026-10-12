@@ -11,7 +11,7 @@ const buttonVariants = cva(
         default: "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active",
         // Apple's "Learn more": a blue outline that fills on hover.
         bordered:
-          "border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground active:bg-primary-active dark:border-brand dark:text-brand dark:hover:bg-primary dark:hover:text-primary-foreground",
+          "border-brand bg-transparent text-brand hover:border-primary hover:bg-primary hover:text-primary-foreground active:bg-primary-active",
         outline:
           "border-border bg-background text-foreground hover:bg-secondary aria-expanded:bg-secondary dark:border-input dark:hover:bg-secondary",
         secondary:

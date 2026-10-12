@@ -17,7 +17,7 @@
         translate: 0 var(--drift, -60px);
       }
     }
-    /* Cards grow into place as they enter the screen. */
+    /* Cards grow into place as they enter the screen (scale only: text on a half-transparent tile fails contrast checks). */
     .zoom-in {
       animation: zoom-in linear both;
       animation-timeline: view();
@@ -25,8 +25,7 @@
     }
     @keyframes zoom-in {
       from {
-        scale: 0.92;
-        opacity: 0.35;
+        scale: 0.94;
       }
     }
   }

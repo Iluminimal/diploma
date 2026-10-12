@@ -226,6 +226,18 @@ Every page is being restyled after apple.com, one step at a time (each step is a
 * **Shared pieces** (step 9): dialogs and sheets have 28px corners, a blurred 35% scrim, 24px padding and `type-heading` titles (the
   footer band is gone, buttons just sit right-aligned); the account dropdown has 12px corners; toasts 18px; the 404 and error page
   uses `type-display` with grey pill links; skeleton and empty states follow the tile shapes.
+* **Verification** (step 11): the whole Playwright suite passes against a production build, apart from the Google sign-in specs
+  when the stack runs on other ports (the Google callback is configured for :3000); the axe checks caught the blue outline
+  button's contrast on grey (fixed by using `--brand` #0066cc for its text and border) and the department tiles' text fading
+  in at half opacity (the scroll-in effect is now scale only). Lighthouse (mobile, 5 runs, `docs/perf/lighthouse.json`): home **91**,
+  listing 92, filtered 93, category 92, product 93, search 93, cart 96, login 94; accessibility 100 everywhere; first-load JS is
+  217 KB on home. The system font removed the web font download. Screenshots in `docs/screenshots` were refreshed for the home,
+  listing (light and dark), product, drawer, Bag, sign-in and the phone menu; the others are from earlier phases.
+
+**Lessons**: an accessible name includes CSS generated content, so a decorative chevron in `::after` must be
+`content: "\203A" / ""` (alt text empty) or `link-more` links get a "›" in their name; text on a tile must never sit under a
+partly transparent animation (axe reads the blended colour); production e2e on another port needs `CORS_ORIGINS`,
+`NEXT_PUBLIC_API_URL` and `API_INTERNAL_URL` set at **build** time (rewrites are baked in).
 
 ## Accounts, cart and checkout
 

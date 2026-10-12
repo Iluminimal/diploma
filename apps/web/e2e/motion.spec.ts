@@ -99,58 +99,60 @@ test("a page that does not exist helps you back into the shop", async ({ page })
 });
 
 test.describe("on a phone", () => {
-  test.use({ viewport: { width: 390, height: 800 } });
+  test.use({ viewport: { width: 390, height: 844 } });
 
-  test("each function is in one place: logo and menu on top, five icons below", async ({ page }) => {
+  test("the header is apple.com's: logo, search, bag and the menu button, with nothing along the bottom", async ({ page }) => {
     await page.goto("/");
-    const bar = page.getByRole("navigation", { name: "Quick navigation" });
-    await expect(bar).toBeVisible();
+    const bar = page.getByRole("banner");
 
-    // The top bar carries only the logo and the menu: no search, cart or account up there.
-    const top = page.getByRole("banner");
-    await expect(top.getByRole("button", { name: "Open menu" })).toBeVisible();
-    for (const name of ["Search", /^Cart/, /^Account/, "Sign in"]) {
-      await expect(top.getByRole("button", { name })).toBeHidden();
-      await expect(top.getByRole("link", { name })).toBeHidden();
-    }
-
-    // The bottom bar has the five, icons only.
-    await expect(bar.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
+    await expect(bar.getByRole("link", { name: "Angel" })).toBeVisible();
     await expect(bar.getByRole("button", { name: "Search", exact: true })).toBeVisible();
-    await expect(bar.getByRole("button", { name: "Search with a photo" })).toBeVisible();
     await expect(bar.getByRole("button", { name: /^Cart/ })).toBeVisible();
-    await expect(bar.getByRole("link", { name: "Sign in" })).toBeVisible();
-    expect((await bar.innerText()).trim()).toBe("");
+    await expect(bar.getByRole("button", { name: "Open menu" })).toBeVisible();
+    // The account is in the menu on a phone, not in the bar.
+    await expect(bar.getByRole("button", { name: /^Account/ })).toBeHidden();
+    await expect(bar.getByRole("link", { name: "Sign in" })).toBeHidden();
+    await expect(page.getByRole("navigation", { name: "Quick navigation" })).toHaveCount(0);
   });
 
-  test("the bar's Search opens the search panel, its camera the photo picker, its bag the cart", async ({ page }) => {
+  test("the menu button becomes an X and opens a full page, which closes again", async ({ page }) => {
     await page.goto("/");
-    const bar = page.getByRole("navigation", { name: "Quick navigation" });
+    const open = page.getByRole("button", { name: "Open menu" });
 
-    await bar.getByRole("button", { name: "Search", exact: true }).click();
+    await open.click();
+    const close = page.getByRole("button", { name: "Close menu" });
+    await expect(close).toHaveAttribute("aria-expanded", "true");
+    const menu = page.getByRole("dialog", { name: "Menu" });
+    await expect(menu).toBeVisible();
+    const box = await menu.boundingBox();
+    expect(box!.width).toBeGreaterThanOrEqual(389);
+    expect(box!.y + box!.height).toBeGreaterThanOrEqual(843); // down to the bottom of the screen
+    await expect(menu.getByRole("link", { name: "Sign in" })).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeFocused();
+  });
+
+  test("the menu's search field opens the search, and its links lead on", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.getByRole("dialog", { name: "Menu" }).getByRole("button", { name: "Search" }).click();
     await expect(page.getByRole("combobox")).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("combobox")).toBeHidden();
 
-    await bar.getByRole("button", { name: "Search with a photo" }).click();
-    await expect(page.getByRole("dialog", { name: "Search by photo" })).toBeVisible();
-    await page.keyboard.press("Escape");
-
-    await bar.getByRole("button", { name: /^Cart/ }).click();
-    await expect(page.getByRole("dialog", { name: "Your cart" })).toBeVisible();
+    await page.getByRole("button", { name: "Open menu" }).click();
+    await page.getByRole("dialog", { name: "Menu" }).getByRole("link", { name: "New" }).click();
+    await expect(page).toHaveURL(/\/products\?sort=newest/);
+    await expect(page.getByRole("dialog", { name: "Menu" })).toBeHidden();
   });
 
-  test("on a product page the bar is there, with the Add-to-cart bar above it", async ({ page, products }, testInfo) => {
-    await openProduct(page, pickProduct(products, testInfo.workerIndex));
-    // Scroll past the main button so the sticky Add-to-cart bar slides up.
-    await page.getByRole("heading", { name: "Customer reviews" }).scrollIntoViewIfNeeded();
+  test("the bag opens the cart", async ({ page }) => {
+    await page.goto("/");
 
-    const bar = page.getByRole("navigation", { name: "Quick navigation" });
-    await expect(bar).toBeVisible();
-    const add = page.getByRole("button", { name: /^Add .* to cart$/ });
-    await expect(add).toBeVisible();
-    const [barBox, addBox] = [await bar.boundingBox(), await add.boundingBox()];
-    expect(addBox!.y + addBox!.height).toBeLessThanOrEqual(barBox!.y + 1);
+    await page.getByRole("banner").getByRole("button", { name: /^Cart/ }).click();
+
+    await expect(page.getByRole("dialog", { name: "Your cart" })).toBeVisible();
   });
 
   test("a signed-in customer finds Saved and Sign out on the account page", async ({ shopperPage: page }) => {
@@ -160,18 +162,7 @@ test.describe("on a phone", () => {
     await expect(page.getByRole("navigation", { name: "Account", exact: true }).getByRole("link", { name: "Wishlist" })).toBeVisible();
     await page.getByRole("button", { name: "Sign out" }).click();
     await expect(page).toHaveURL("/");
-    await expect(page.getByRole("navigation", { name: "Quick navigation" }).getByRole("link", { name: "Sign in" })).toBeVisible();
-  });
-
-  test("the header slides away while scrolling down and returns scrolling up", async ({ page }) => {
-    await page.goto("/products");
-    await page.waitForSelector("main");
-    const state = () => page.evaluate(() => document.documentElement.dataset.header);
-
-    await page.mouse.wheel(0, 900);
-    await expect.poll(state).toBe("hidden");
-    await page.mouse.wheel(0, -300);
-    await expect.poll(state).toBe("shown");
+    await expect(page.getByRole("button", { name: "Open menu" })).toBeVisible();
   });
 });
 

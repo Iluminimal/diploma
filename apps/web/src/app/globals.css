@@ -493,28 +493,37 @@
 }
 
 /*
- * Phones: the header slides up out of the way while scrolling down and comes back on scrolling up
- * (components/layout/scroll-hide.tsx sets data-header on <html>). Sticky bars under the header
- * follow it through --header-offset. Keyboard focus inside the header keeps it in place.
+ * The phone menu (components/layout/mobile-nav-menu.tsx): a page that opens under the header. It is
+ * visible at once when opening and hidden only after it has faded, so focus can move into it in
+ * the same frame; the lines of the menu rise in one after another. While it is open the header
+ * turns solid, so bar and page read as one surface.
  */
-:root {
-  --header-offset: 3rem;
+.menu-panel {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 300ms ease-out,
+    visibility 0s linear 300ms;
 }
-@media (max-width: 47.99rem) and (prefers-reduced-motion: no-preference) {
-  .header-elevate {
-    transition:
-      transform 350ms var(--ease-out-expo),
-      background-color 300ms;
+.menu-panel[data-open="true"] {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity 300ms ease-out,
+    visibility 0s;
+}
+.menu-panel[data-open="true"] .menu-row {
+  animation: menu-row 600ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 45ms + 60ms);
+}
+@keyframes menu-row {
+  from {
+    opacity: 0;
+    translate: 0 -10px;
   }
-  html[data-header="hidden"] {
-    --header-offset: 0px;
-  }
-  html[data-header="hidden"] .header-elevate:not(:focus-within) {
-    transform: translateY(-100%);
-  }
-  .sticky-under-header {
-    transition: top 350ms var(--ease-out-expo);
-  }
+}
+html:has(#mobile-menu[data-open="true"]) .header-elevate {
+  background-color: var(--background);
 }
 
 /*

@@ -1,11 +1,12 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Menu } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ACCOUNT_LINKS } from "@/features/auth/account-links";
+import { useAuth } from "@/features/auth/auth-store";
 import {
   DEPARTMENT_LINKS,
   categoryHref,
@@ -14,6 +15,7 @@ import {
 } from "@/features/catalog/nav";
 import { useCatalogNav } from "@/features/catalog/use-catalog-nav";
 import { cn } from "@/lib/utils";
+import { useSearchPanel } from "./search-ui-store";
 
 /** One step of the drill-down: where "Shop all" goes and what lies below it. */
 type Step = { name: string; href: string; children: Step[] };
@@ -37,92 +39,165 @@ function departments(nav: CatalogNav | undefined): Step[] {
   });
 }
 
-const ITEM = "border-border flex w-full items-center justify-between border-b py-3.5 text-left text-base";
+const row = (i: number) => ({ "--i": i }) as CSSProperties;
 
 /**
- * The slide-out menu on phones: departments drill down level by level (Men > Clothing > Topwear),
- * each step sliding in from the side. Loaded on first tap (see `MobileNav`): it needs the dialog
- * library.
+ * The page that opens under the phone header when the menu button is pressed, as on apple.com: a
+ * search field, then the shop in large type, each line fading in after the one above. Departments
+ * drill down level by level (Men > Clothing > Topwear). It covers the page below the bar (the bar
+ * itself stays, its button now an X), the page behind it cannot scroll or be reached, and Escape
+ * closes it and returns focus to the button. Portalled to <body> because the header's backdrop
+ * blur would otherwise be the containing block of anything `fixed` inside it.
  */
-export function MobileNavMenu({ defaultOpen }: { defaultOpen?: boolean }) {
-  const [open, setOpen] = useState(defaultOpen ?? false);
+export function MobileMenuPanel({
+  open,
+  onClose,
+  trigger,
+}: {
+  open: boolean;
+  onClose: () => void;
+  trigger: RefObject<HTMLButtonElement | null>;
+}) {
+  const panel = useRef<HTMLDivElement>(null);
   const [stack, setStack] = useState<Step[]>([]);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
+  const signedIn = useAuth((state) => state.status === "signedIn");
+  const requestSearch = useSearchPanel((state) => state.request);
   const { data, isPending } = useCatalogNav(open);
+
+  // Closed: the next opening starts at the top.
+  if (!open && stack.length > 0) setStack([]);
+
+  useEffect(() => {
+    if (!open) return;
+    // The page behind is out of reach (no scrolling, no tabbing into it) while the menu is open.
+    const behind = document.querySelectorAll("#main, footer");
+    behind.forEach((element) => element.setAttribute("inert", ""));
+    const root = document.documentElement;
+    const overflow = root.style.overflow;
+    root.style.overflow = "hidden";
+    panel.current?.querySelector<HTMLElement>("button, a")?.focus({ preventScroll: true });
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      onClose();
+      trigger.current?.focus();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      behind.forEach((element) => element.removeAttribute("inert"));
+      root.style.overflow = overflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose, trigger]);
 
   const root: Step = { name: "Menu", href: "/", children: departments(data) };
   const current = stack.at(-1) ?? root;
-  const close = () => {
-    setOpen(false);
-    setStack([]);
-  };
+  const top = stack.length === 0;
+  const big = top ? "text-[1.75rem] leading-tight font-semibold tracking-tight" : "text-xl font-semibold tracking-tight";
 
-  return (
-    <Sheet open={open} onOpenChange={(next) => (next ? setOpen(true) : close())}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
-          <Menu />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-80 overflow-hidden">
-        <SheetHeader className="flex-row items-center gap-1">
-          {stack.length > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={`Back to ${stack.length > 1 ? stack[stack.length - 2]!.name : "menu"}`}
-              onClick={() => {
-                setDirection("back");
-                setStack(stack.slice(0, -1));
-              }}
-            >
-              <ChevronLeft />
-            </Button>
-          )}
-          <SheetTitle>{current.name}</SheetTitle>
-        </SheetHeader>
+  return createPortal(
+    <div
+      id="mobile-menu"
+      ref={panel}
+      role="dialog"
+      aria-label="Menu"
+      data-open={open}
+      inert={!open}
+      className="menu-panel bg-background fixed inset-x-0 top-12 bottom-0 z-30 overflow-y-auto overscroll-contain md:hidden"
+    >
+      <div className="container-page pt-4 pb-16">
+        {top ? (
+          <button
+            type="button"
+            onClick={() => {
+              onClose();
+              requestSearch();
+            }}
+            className="menu-row bg-secondary text-muted-foreground focus-visible:ring-ring/60 mb-6 flex h-11 w-full items-center gap-2.5 rounded-xl px-3.5 text-left text-base outline-none focus-visible:ring-3"
+            style={row(0)}
+          >
+            <Search aria-hidden className="size-4" /> Search
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setDirection("back");
+              setStack(stack.slice(0, -1));
+            }}
+            aria-label={`Back to ${stack.length > 1 ? stack[stack.length - 2]!.name : "menu"}`}
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/60 -ml-1 mb-3 inline-flex items-center gap-1 rounded-md py-1 pr-2 text-sm outline-none focus-visible:ring-3"
+          >
+            <ChevronLeft aria-hidden className="size-4" /> {stack.length > 1 ? stack[stack.length - 2]!.name : "Menu"}
+          </button>
+        )}
+
         <nav
           key={stack.length}
-          aria-label={stack.length === 0 ? "Main" : current.name}
+          aria-label={top ? "Main" : current.name}
           className={cn(
-            "animate-in fade-in-0 flex flex-1 flex-col overflow-y-auto px-4 duration-300",
-            direction === "forward" ? "slide-in-from-right-8" : "slide-in-from-left-8",
+            "animate-in fade-in-0 flex flex-col duration-300",
+            direction === "forward" ? "slide-in-from-right-6" : "slide-in-from-left-6",
           )}
         >
-          {stack.length > 0 && (
-            <Link href={current.href} onClick={close} className={cn(ITEM, "font-semibold")}>
+          {!top && <h2 className="mb-2 text-3xl font-semibold tracking-tight">{current.name}</h2>}
+          {!top && (
+            <Link href={current.href} onClick={onClose} className={cn(big, "menu-row py-2")} style={row(1)}>
               Shop all {current.name}
             </Link>
           )}
-          {stack.length > 0 && current.children.length === 0 && isPending && <MenuSkeleton />}
-          {current.children.map((step) =>
+          {!top && current.children.length === 0 && isPending && <MenuSkeleton />}
+          {current.children.map((step, i) =>
             step.children.length > 0 ? (
               <button
                 key={step.href}
                 type="button"
-                className={ITEM}
+                className={cn(big, "menu-row flex w-full items-center justify-between py-2 text-left")}
+                style={row(i + 1)}
                 onClick={() => {
                   setDirection("forward");
                   setStack([...stack, step]);
                 }}
               >
-                <span className={cn(stack.length === 0 && "font-medium")}>{step.name}</span>
-                <ChevronRight className="text-muted-foreground size-4" aria-hidden />
+                {step.name}
+                <ChevronRight aria-hidden className="text-muted-foreground size-5" />
               </button>
             ) : (
-              <Link key={step.href} href={step.href} onClick={close} className={cn(ITEM, stack.length === 0 && "font-medium")}>
+              <Link key={step.href} href={step.href} onClick={onClose} className={cn(big, "menu-row py-2")} style={row(i + 1)}>
                 {step.name}
               </Link>
             ),
           )}
-          {stack.length === 0 && (
-            <Link href="/products?sort=newest" onClick={close} className={cn(ITEM, "font-medium")}>
+          {top && (
+            <Link
+              href="/products?sort=newest"
+              onClick={onClose}
+              className={cn(big, "menu-row py-2")}
+              style={row(current.children.length + 1)}
+            >
               New
             </Link>
           )}
         </nav>
-      </SheetContent>
-    </Sheet>
+
+        {top && (
+          <nav aria-label="Your account" className="menu-row mt-8 flex flex-col gap-2.5" style={row(current.children.length + 3)}>
+            {signedIn ? (
+              ACCOUNT_LINKS.map((link) => (
+                <Link key={link.href} href={link.href} onClick={onClose} prefetch={false} className="text-muted-foreground hover:text-foreground w-fit text-sm">
+                  {link.label}
+                </Link>
+              ))
+            ) : (
+              <Link href="/login" onClick={onClose} prefetch={false} className="text-muted-foreground hover:text-foreground w-fit text-sm">
+                Sign in
+              </Link>
+            )}
+          </nav>
+        )}
+      </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -130,7 +205,7 @@ function MenuSkeleton() {
   return (
     <div className="space-y-4 py-4" aria-hidden>
       {[0, 1, 2, 3, 4].map((i) => (
-        <Skeleton key={i} className="h-5 w-40" />
+        <Skeleton key={i} className="h-6 w-44" />
       ))}
     </div>
   );

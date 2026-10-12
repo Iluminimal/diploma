@@ -2,12 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import dynamic from "next/dynamic";
-import { showsTabBar } from "./tab-bar-rules";
-
-// The phone tab bar is not part of the first paint: its code arrives right after the page is
-// interactive (the space for it is reserved below, so nothing moves when it appears).
-const MobileTabBar = dynamic(() => import("./mobile-tab-bar").then((m) => m.MobileTabBar), { ssr: false });
 
 /**
  * The storefront's header, main area and footer around every page except the admin area, which
@@ -33,9 +27,6 @@ export function ShopChrome({
         {children}
       </main>
       {footer}
-      <MobileTabBar />
-      {/* Room under the footer so the bar never covers its last line. */}
-      {showsTabBar(pathname) && <div aria-hidden className="h-[calc(3.0625rem+env(safe-area-inset-bottom))] md:hidden" />}
     </>
   );
 }

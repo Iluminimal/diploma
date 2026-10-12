@@ -24,7 +24,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <AuthBootstrap />
         {children}
-        <Toaster position="bottom-center" mobileOffset={{ bottom: "calc(3.75rem + env(safe-area-inset-bottom))" }} />
+        <Toaster position="bottom-center" />
       </QueryClientProvider>
     </ThemeProvider>
   );

@@ -16,12 +16,14 @@ PostgreSQL + pgvector.
 ## Repository layout
 
 ```
-apps/web     Next.js 16 (App Router, React 19, Tailwind v4, shadcn/ui, TanStack Query)
-apps/api     FastAPI (Python 3.12, SQLAlchemy 2 async, Alembic, uv)
-infra/       docker-compose for development infrastructure (Postgres + pgvector, Redis)
-docs/        Product & technical spec
-scripts/     CLI entry points: ingest, recall check, latency and ML benchmarks
+apps/api       FastAPI backend (Python package `angel`): api -> services -> repositories -> models, by domain
+apps/web       Next.js 16 storefront and admin (App Router, React 19, Tailwind v4, shadcn/ui, TanStack Query)
+scripts/       command-line entry points: ingest the dataset, seed demo data, benchmarks
+infra/         docker compose for development infrastructure (Postgres + pgvector, Redis)
+docs/          documentation (start with docs/architecture.md)
 ```
+
+The map in more detail, and where to add a new endpoint, table or page, is in [`docs/architecture.md`](docs/architecture.md).
 
 ## Prerequisites
 

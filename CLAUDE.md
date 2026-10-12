@@ -1,7 +1,7 @@
 # Angel: image-based similar clothing recommendation + e-commerce
 
 Monorepo: `apps/web` (Next.js, ALREADY CREATED with create-next-app 16: React Compiler on,
-Tailwind, src dir, App Router. Do not recreate it), `apps/api` (FastAPI, to be created),
+Tailwind, src dir, App Router. Do not recreate it), `apps/api` (FastAPI, Python package `angel`),
 `scripts/`, `docs/`, `infra/`.
 Full requirements live in `@docs/SPEC.md`. Read the relevant sections before each phase.
 
@@ -14,6 +14,8 @@ Full requirements live in `@docs/SPEC.md`. Read the relevant sections before eac
 
 ## Architecture rules
 - Backend layers: routes -> services -> repositories -> models. No business logic in routes.
+  Each layer is grouped by the same domains (accounts, catalog, commerce, reviews, admin, system):
+  see `docs/architecture.md`. Tests mirror the domains.
 - Pydantic schemas separate from ORM models. ML behind an interface (`ml/`), model loaded
   once in lifespan, inference run in a threadpool.
 - Frontend: feature-based folders, Server Components by default, typed API client

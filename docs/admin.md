@@ -62,7 +62,7 @@ pending ──paid──▶ paid ──ship──▶ shipped ──deliver──
 cancelled          refunded      refunded               refunded
 ```
 
-One state machine, `services/order_fulfillment.py`. Each action takes the order's row lock, checks the current state, writes
+One state machine, `services/commerce/order_fulfillment.py`. Each action takes the order's row lock, checks the current state, writes
 an event in the same transaction and then emails the customer. Anything else is a **409**
 (`urn:angel:problem:invalid-order-transition`), so two administrators clicking at once get one result and one error.
 
@@ -129,7 +129,7 @@ transaction) and stays with its author, who is told it is hidden. The rules for 
 | `PUT /admin/products/{id}/image` | Replaces the photo and recomputes the embedding. |
 | `POST /admin/products/{id}/deactivate`, `/activate` | Withdraw or restore. |
 
-**Creating from a photo** (`services/admin_products.py`) reuses what search and ingestion already trust:
+**Creating from a photo** (`services/admin/products.py`) reuses what search and ingestion already trust:
 
 1. `read_image_upload`: declared type (JPEG, PNG, WebP), size limit (8 MB, enforced while the body streams in, also for
    the admin endpoints), then the hardened `load_image` (format from the bytes, pixel limit, EXIF stripped, orientation

@@ -34,7 +34,7 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
   `next.config.ts`), so photos reuse the page's connection instead of opening one to a second origin. Pass `sizes` for
   every grid.
 * **Sizes** (`catalog/sizes.ts`) come from the category (clothing, shoes, kids, belts; none for watches, bags, ...) because
-  the catalogue has no size data. The API validates against the same table (`apps/api/.../services/sizes.py`); keep the
+  the catalogue has no size data. The API validates against the same table (`apps/api/src/angel/services/catalog/sizes.py`); keep the
   two in step.
 
 ## Design language (Apple-style)
@@ -99,7 +99,7 @@ Apple-style storytelling on top, Amazon-style shelves below. (There is no announ
 
 ## Navigation, categories and motion
 
-**Categories.** `GET /catalog/nav` (`services/taxonomy.py`) turns the dataset's master > sub > article type tree into what
+**Categories.** `GET /catalog/nav` (`services/catalog/taxonomy.py`) turns the dataset's master > sub > article type tree into what
 shoppers expect: three departments (Women = Women + Unisex, Men = Men + Unisex, Kids = Boys + Girls) with counts per node.
 The 11 article-type names that sit under two parents in the data (a "Tshirts" under Belts, "Dresses" under Topwear) are
 merged into the parent with the most products, so every name has one place and nothing is counted twice. `GET /products`

@@ -30,9 +30,9 @@ import { useChangePassword, useDeleteAccount, useUpdateName } from "./use-profil
 
 function Card({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <section className="border-border space-y-5 rounded-3xl border p-5 sm:p-7">
+    <section className="tile space-y-5 p-6 sm:p-8">
       <header className="space-y-1">
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        <h2 className="type-heading">{title}</h2>
         {description && <p className="text-muted-foreground text-sm">{description}</p>}
       </header>
       {children}
@@ -42,7 +42,7 @@ function Card({ title, description, children }: { title: string; description?: s
 
 export function ProfileView() {
   const user = useAuth((state) => state.user);
-  if (!user) return <Skeleton aria-busy aria-label="Loading your profile" className="h-96 rounded-3xl" />;
+  if (!user) return <Skeleton aria-busy aria-label="Loading your profile" className="h-96 rounded-[var(--radius-tile)]" />;
   return (
     <div className="mx-auto grid max-w-2xl gap-6">
       <ProfileCard user={user} />
@@ -97,7 +97,7 @@ function ProfileCard({ user }: { user: SessionUser }) {
             {...register("full_name")}
           />
         </Field>
-        <Button type="submit" disabled={!isDirty || rename.isPending} className="h-10 rounded-full px-5">
+        <Button type="submit" disabled={!isDirty || rename.isPending}>
           {rename.isPending && <Loader2 className="animate-spin" />} Save changes
         </Button>
       </form>
@@ -153,11 +153,11 @@ function SignInMethods({ user }: { user: SessionUser }) {
           }
         >
           <div className="flex gap-2">
-            <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setContact("phone")}>
+            <Button variant="bordered" onClick={() => setContact("phone")}>
               <Phone aria-hidden /> {user.phone ? "Change phone" : "Add a phone"}
             </Button>
             {canRemovePhone && (
-              <Button variant="ghost" className="h-10 rounded-full px-4" onClick={() => setRemoving("phone")}>
+              <Button variant="ghost" onClick={() => setRemoving("phone")}>
                 Remove phone
               </Button>
             )}
@@ -177,15 +177,15 @@ function SignInMethods({ user }: { user: SessionUser }) {
         >
           <div className="flex flex-wrap gap-2">
             {user.email && !user.email_verified && (
-              <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setContact("verify-email")}>
+              <Button variant="bordered" onClick={() => setContact("verify-email")}>
                 Verify email
               </Button>
             )}
-            <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setContact("email")}>
+            <Button variant="bordered" onClick={() => setContact("email")}>
               <Mail aria-hidden /> {user.email ? "Change email" : "Add an email"}
             </Button>
             {canRemoveEmail && (
-              <Button variant="ghost" className="h-10 rounded-full px-4" onClick={() => setRemoving("email")}>
+              <Button variant="ghost" onClick={() => setRemoving("email")}>
                 Remove email
               </Button>
             )}
@@ -208,7 +208,7 @@ function SignInMethods({ user }: { user: SessionUser }) {
             name="Password"
             status={user.has_password ? "Set" : google ? "Not set. You sign in with Google." : "Not set. You sign in with a code."}
           >
-            <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setOpen(true)}>
+            <Button variant="bordered" onClick={() => setOpen(true)}>
               <KeyRound aria-hidden /> {user.has_password ? "Change password" : "Set a password"}
             </Button>
           </Method>

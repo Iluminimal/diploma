@@ -89,7 +89,7 @@ export function ForgotPasswordForm() {
             {problem}
           </p>
         )}
-        <Button type="submit" size="lg" disabled={busy} className="h-11 w-full rounded-full text-sm">
+        <Button type="submit" size="lg" disabled={busy} className="w-full">
           {busy && <Loader2 className="animate-spin" />} Change password
         </Button>
         <div className="text-muted-foreground flex items-center justify-between text-sm">
@@ -122,7 +122,7 @@ export function ForgotPasswordForm() {
             {...fieldAria("forgot-destination", problem ?? undefined)}
           />
         </Field>
-        <Button type="submit" size="lg" disabled={busy} className="h-11 w-full rounded-full text-sm">
+        <Button type="submit" size="lg" disabled={busy} className="w-full">
           {busy && <Loader2 className="animate-spin" />} Send code
         </Button>
       </form>

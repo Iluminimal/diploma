@@ -66,7 +66,7 @@ export function OrdersList({ page }: { page: number }) {
           <li key={order.number}>
             <Link
               href={`/account/orders/${order.number}`}
-              className="border-border hover:border-foreground/40 focus-visible:ring-ring/60 flex flex-wrap items-center gap-x-6 gap-y-3 rounded-2xl border p-4 transition-colors outline-none focus-visible:ring-3 sm:p-5"
+              className="tile hover:bg-muted focus-visible:ring-ring/60 flex flex-wrap items-center gap-x-6 gap-y-3 p-5 transition-colors outline-none focus-visible:ring-3 sm:p-6"
             >
               <div className="flex -space-x-3" aria-hidden>
                 {order.images.map((image, i) => (

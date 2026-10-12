@@ -59,7 +59,7 @@ export function AddressesView() {
 
       <ul className="space-y-3" aria-label="Saved addresses">
         {addresses.map((address) => (
-          <li key={address.id} className="border-border rounded-2xl border p-4 sm:p-5">
+          <li key={address.id} className="tile p-5 sm:p-6">
             {editing === address.id ? (
               <AddressForm
                 initial={address}
@@ -123,7 +123,7 @@ export function AddressesView() {
       </ul>
 
       {adding || addresses.length === 0 ? (
-        <section aria-labelledby="new-address" className="border-border space-y-4 rounded-2xl border p-4 sm:p-5">
+        <section aria-labelledby="new-address" className="tile space-y-4 p-5 sm:p-6">
           <h2 id="new-address" className="font-semibold">
             New address
           </h2>

@@ -18,9 +18,9 @@ export function DevicesCard() {
   const others = list.filter((session) => !session.current).length;
 
   return (
-    <section className="border-border space-y-5 rounded-3xl border p-5 sm:p-7">
+    <section className="tile space-y-5 p-6 sm:p-8">
       <header className="space-y-1">
-        <h2 className="text-lg font-semibold tracking-tight">Your devices</h2>
+        <h2 className="type-heading">Your devices</h2>
         <p className="text-muted-foreground text-sm">Where you&apos;re signed in. Sign out any you don&apos;t recognise.</p>
       </header>
       {sessions.isPending ? (

@@ -219,6 +219,10 @@ Every page is being restyled after apple.com, one step at a time (each step is a
   17px names and prices, and a grey `tile` summary with one full-width blue Checkout pill; the drawer's buttons are a blue Checkout and a
   blue-outline View Bag. Checkout keeps its stepper with 24px headings, choice cards outlined 1px (blue 2px when chosen), a grey order
   summary tile and a 48px Pay now pill; the confirmation title is `type-display` over a grey "What happens next" tile.
+* **Account and sign-in** (step 8): the sign-in, sign-up and forgot-password pages are one centred 26rem column under a `type-title`
+  heading, like the Apple Account page (the dark side panel and its product fetch are gone); the account pages' cards, address
+  cards, order rows and the empty and error states are grey `tile`s instead of outlined boxes; small outlined buttons became the blue
+  `bordered` variant.
 
 ## Accounts, cart and checkout
 

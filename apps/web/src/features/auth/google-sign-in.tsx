@@ -38,7 +38,7 @@ export async function GoogleSignIn({ next, mode = "signin" }: { next: string; mo
   if (!google) return null;
   return (
     <div className="space-y-5">
-      <Button asChild variant="outline" size="lg" className="h-11 w-full rounded-full text-sm">
+      <Button asChild variant="outline" size="lg" className="w-full">
         {/* A navigation to the API, not a page of this app: <Link> would try to prefetch and route it. */}
         <a href={googleStartHref(next)}>
           <GoogleMark />

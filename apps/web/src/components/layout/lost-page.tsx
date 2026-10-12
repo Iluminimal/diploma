@@ -29,7 +29,7 @@ export function LostPage({
         {mark}
       </p>
       <div className="animate-in fade-in slide-in-from-bottom-3 space-y-2 duration-700">
-        <h1 className="text-3xl font-semibold tracking-tight text-balance">{title}</h1>
+        <h1 className="type-display text-balance">{title}</h1>
         <p className="text-muted-foreground mx-auto max-w-md text-sm text-balance">{children}</p>
       </div>
       <form

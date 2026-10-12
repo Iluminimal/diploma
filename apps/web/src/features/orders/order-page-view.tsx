@@ -25,7 +25,7 @@ export function OrderPageView({ number }: { number: string }) {
       <Link href="/account/orders" className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm">
         <ArrowLeft className="size-4" /> All orders
       </Link>
-      <h2 className="text-xl font-semibold tracking-tight">Order {number}</h2>
+      <h2 className="type-title">Order {number}</h2>
       {error ? (
         <p role="alert" className="text-muted-foreground">
           {error instanceof ApiError && error.isNotFound ? "We couldn't find that order on your account." : userMessage(error)}

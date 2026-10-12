@@ -123,7 +123,7 @@ export function CodeSignIn({
             {...fieldAria("code-name", problem ?? undefined)}
           />
         </Field>
-        <Button type="submit" size="lg" disabled={rename.isPending} className="h-11 w-full rounded-full text-sm">
+        <Button type="submit" size="lg" disabled={rename.isPending} className="w-full">
           {rename.isPending && <Loader2 className="animate-spin" />} Continue
         </Button>
         <button type="button" onClick={finish} className="text-muted-foreground mx-auto block text-sm underline underline-offset-4">
@@ -160,7 +160,7 @@ export function CodeSignIn({
           size="lg"
           disabled={busy || code.length < 6}
           onClick={() => verify(code)}
-          className="h-11 w-full rounded-full text-sm"
+          className="w-full"
         >
           {busy && <Loader2 className="animate-spin" />} Continue
         </Button>
@@ -213,7 +213,7 @@ export function CodeSignIn({
           />
         </Field>
       )}
-      <Button type="submit" size="lg" disabled={busy} className="h-11 w-full rounded-full text-sm">
+      <Button type="submit" size="lg" disabled={busy} className="w-full">
         {busy && <Loader2 className="animate-spin" />} Send code
       </Button>
     </form>

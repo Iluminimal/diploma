@@ -86,10 +86,10 @@ function ReviewItem({ review, mine, productId }: { review: Review; mine: boolean
       )}
       {mine && (
         <div className="flex gap-2 pt-1">
-          <Button variant="outline" className="h-9 rounded-full px-3" onClick={() => setEditing(true)}>
+          <Button variant="bordered" onClick={() => setEditing(true)}>
             <Pencil aria-hidden /> Edit
           </Button>
-          <Button variant="outline" className="h-9 rounded-full px-3" onClick={() => setDeleting(true)}>
+          <Button variant="bordered" onClick={() => setDeleting(true)}>
             <Trash2 aria-hidden /> Delete
           </Button>
         </div>
@@ -241,13 +241,13 @@ export function ProductReviews({ productId, initial }: { productId: number; init
                 </ul>
                 {data.pages > 1 && (
                   <nav aria-label="Reviews pages" className="flex items-center justify-between text-sm">
-                    <Button variant="outline" className="h-9 rounded-full px-4" disabled={pageNumber <= 1} onClick={() => setPageNumber(pageNumber - 1)}>
+                    <Button variant="bordered" disabled={pageNumber <= 1} onClick={() => setPageNumber(pageNumber - 1)}>
                       Previous
                     </Button>
                     <span className="text-muted-foreground">
                       Page {data.page} of {data.pages}
                     </span>
-                    <Button variant="outline" className="h-9 rounded-full px-4" disabled={pageNumber >= data.pages} onClick={() => setPageNumber(pageNumber + 1)}>
+                    <Button variant="bordered" disabled={pageNumber >= data.pages} onClick={() => setPageNumber(pageNumber + 1)}>
                       Next
                     </Button>
                   </nav>

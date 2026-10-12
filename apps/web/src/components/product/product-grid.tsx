@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Reveal } from "@/components/motion/reveal";
-import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
+import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
 import type { Product } from "@/features/catalog/product";
 import { cn } from "@/lib/utils";
 

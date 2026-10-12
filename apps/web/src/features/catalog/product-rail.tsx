@@ -1,5 +1,5 @@
-import { ProductCard, ProductCardSkeleton } from "@/components/product-card";
-import { RailItem, ScrollRail } from "@/components/scroll-rail";
+import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
+import { RailItem, ScrollRail } from "@/components/product/scroll-rail";
 import type { Product } from "./product";
 
 const RAIL_SIZES = "(min-width: 1024px) 240px, (min-width: 640px) 208px, 44vw";

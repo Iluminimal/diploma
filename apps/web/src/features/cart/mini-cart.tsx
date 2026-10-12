@@ -2,7 +2,7 @@
 
 import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
 import { CartLines } from "./cart-lines";

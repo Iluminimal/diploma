@@ -3,8 +3,8 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ImageUp, RefreshCw, SearchX, Trash2 } from "lucide-react";
 import { useCallback, type DragEvent } from "react";
-import { ProductCard } from "@/components/product-card";
-import { ProductGridSkeleton } from "@/components/product-grid";
+import { ProductCard } from "@/components/product/product-card";
+import { ProductGridSkeleton } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
 import type { CatalogFilterOptions } from "@/features/catalog/product";
 import { userMessage } from "@/lib/api/errors";

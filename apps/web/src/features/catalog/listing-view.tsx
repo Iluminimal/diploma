@@ -2,7 +2,7 @@ import { Camera, SearchX } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Suspense } from "react";
-import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
+import { ProductGrid, ProductGridSkeleton } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ActiveFilters } from "./active-filters";

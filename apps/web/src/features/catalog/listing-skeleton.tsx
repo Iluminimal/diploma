@@ -1,4 +1,4 @@
-import { ProductGridSkeleton } from "@/components/product-grid";
+import { ProductGridSkeleton } from "@/components/product/product-grid";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /** The shape of a listing, shown at once while a category page is being prepared. */

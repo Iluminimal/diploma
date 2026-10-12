@@ -3,7 +3,7 @@
 import { CreditCard, Info } from "lucide-react";
 import type { FieldErrors, UseFormRegister } from "react-hook-form";
 import { z } from "zod";
-import { Field, fieldAria } from "@/components/form-field";
+import { Field, fieldAria } from "@/components/forms/form-field";
 import { Input } from "@/components/ui/input";
 
 export const cardSchema = z.object({

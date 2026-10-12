@@ -2,7 +2,7 @@
 
 import { Loader2, ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { SizeSelector } from "@/features/catalog/size-selector";

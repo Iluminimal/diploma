@@ -6,8 +6,8 @@ import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Field, fieldAria } from "@/components/form-field";
-import { Price } from "@/components/price";
+import { Field, fieldAria } from "@/components/forms/form-field";
+import { Price } from "@/components/product/price";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

@@ -4,8 +4,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { selectClass } from "@/components/form-field";
-import { RatingStars } from "@/components/rating-stars";
+import { selectClass } from "@/components/forms/form-field";
+import { RatingStars } from "@/components/product/rating-stars";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

@@ -7,8 +7,8 @@ import { useState, type ReactNode } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
-import { Field, fieldAria } from "@/components/form-field";
-import { PasswordInput } from "@/components/password-input";
+import { Field, fieldAria } from "@/components/forms/form-field";
+import { PasswordInput } from "@/components/forms/password-input";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserAvatar } from "@/components/user-avatar";
+import { UserAvatar } from "@/components/layout/user-avatar";
 import { useAuth, type SessionUser } from "@/features/auth/auth-store";
 import { PasswordStrengthMeter } from "@/features/auth/password-strength-meter";
 import { ApiError, userMessage } from "@/lib/api/errors";

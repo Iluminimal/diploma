@@ -1,8 +1,8 @@
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AngelLogo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AngelLogo } from "@/components/layout/logo";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { AccountMenu } from "@/features/auth/account-menu";
 import { AdminNav } from "./admin-nav";
 

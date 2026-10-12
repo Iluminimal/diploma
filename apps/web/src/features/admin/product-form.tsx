@@ -5,7 +5,7 @@ import { ImagePlus, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { useForm } from "react-hook-form";
-import { Field, fieldAria, selectClass } from "@/components/form-field";
+import { Field, fieldAria, selectClass } from "@/components/forms/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { AdminCategory, AdminProduct } from "./admin-api";

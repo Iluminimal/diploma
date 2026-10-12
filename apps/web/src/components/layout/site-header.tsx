@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { AngelLogo } from "@/components/logo";
-import { HeaderSearch } from "@/components/header-search";
-import { MegaMenu } from "@/components/mega-menu";
-import { MobileNav } from "@/components/mobile-nav";
+import { AngelLogo } from "@/components/layout/logo";
+import { HeaderSearch } from "@/components/layout/header-search";
+import { MegaMenu } from "@/components/layout/mega-menu";
+import { MobileNav } from "@/components/layout/mobile-nav";
 import { AccountMenu } from "@/features/auth/account-menu";
 import { CartButton } from "@/features/cart/cart-button";
 

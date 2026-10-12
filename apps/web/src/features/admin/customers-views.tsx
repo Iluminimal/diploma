@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { selectClass } from "@/components/form-field";
-import { Price } from "@/components/price";
+import { selectClass } from "@/components/forms/form-field";
+import { Price } from "@/components/product/price";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { UserAvatar } from "@/components/user-avatar";
+import { UserAvatar } from "@/components/layout/user-avatar";
 import { StatusBadge } from "@/features/orders/status-badge";
 import { ApiError, userMessage } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";

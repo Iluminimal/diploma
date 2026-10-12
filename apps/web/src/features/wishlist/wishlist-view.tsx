@@ -2,7 +2,7 @@
 
 import { Heart } from "lucide-react";
 import Link from "next/link";
-import { ProductGrid, ProductGridSkeleton } from "@/components/product-grid";
+import { ProductGrid, ProductGridSkeleton } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
 import { useWishlist } from "./use-wishlist";

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 import { formatAddress } from "@/features/account/address-form";
 import { productPath } from "@/features/catalog/product";
 import { StatusBadge } from "./status-badge";

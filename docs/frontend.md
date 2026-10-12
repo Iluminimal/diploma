@@ -47,10 +47,10 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 * **Product tiles** are `#f5f5f7` rounded squares. The catalogue photos have white backgrounds, so they are drawn with
   `mix-blend-multiply` and melt into the tile (in dark mode the tile is white and the photo is drawn normally). Do the same for
   any new product picture.
-* **Header** (`components/site-header.tsx`): a 44px translucent bar (backdrop blur and saturation) with the logo on the left,
+* **Header** (`components/layout/site-header.tsx`): a 44px translucent bar (backdrop blur and saturation) with the logo on the left,
   small centred department links, and search, account and cart on the right. A hairline fades in under it as the page scrolls
   (a scroll-driven animation). The theme toggle lives in the footer.
-* **Department menu** (`components/mega-menu.tsx`) follows apple.com's global nav:
+* **Department menu** (`components/layout/mega-menu.tsx`) follows apple.com's global nav:
   * the entries in the bar are real links (they work before any script or data arrive);
   * hovering one opens **one shared flyout** after a short delay (120 ms); moving to another entry swaps the content at
     once (a crossfade) while the flyout's height animates to fit it (a `ResizeObserver` on the active content);
@@ -65,7 +65,7 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
     without one closes it), ArrowDown opens an entry and moves into it, Escape closes it and returns to the entry, focus
     leaving the menu closes it. Content that is not shown is `visibility: hidden`, so only the open department is in the tab order
     and the accessibility tree.
-* **Search** (`components/header-search.tsx`): the magnifier opens a full-width panel over the bar with a large field (the
+* **Search** (`components/layout/header-search.tsx`): the magnifier opens a full-width panel over the bar with a large field (the
   `overlay` variant of `SearchBar`), live suggestions, recent searches and quick links, and dims the page. Escape closes it and
   returns focus to the magnifier, wherever focus is. **Pressing `/` anywhere opens it** with the cursor in the field (not while
   typing in an input, textarea, select or dialog, not with Ctrl / Cmd / Alt held, and the slash is not typed into the field);
@@ -106,15 +106,15 @@ merged into the parent with the most products, so every name has one place and n
 takes `department` and `category` (a node `path`); unknown values are a 404 problem. Display names ("Tshirts" -> "T-shirts",
 "Apparel" -> "Clothing") are a small table in the taxonomy module.
 
-* **Desktop menu** (`components/mega-menu.tsx`): the department names are ordinary links (they work before any script or
+* **Desktop menu** (`components/layout/mega-menu.tsx`): the department names are ordinary links (they work before any script or
   data arrive); a panel with the category tree opens on hover or keyboard focus (ArrowDown enters it, Escape returns to the
   link). The tree is fetched in the browser (`useCatalogNav`, shared TanStack Query cache) rather than by the layout, so
   pages that are static stay static and a slow API cannot take the header down.
-* **Phones** (`components/mobile-nav-menu.tsx`): a drawer that drills down level by level, each step sliding in.
+* **Phones** (`components/layout/mobile-nav-menu.tsx`): a drawer that drills down level by level, each step sliding in.
 * **Category pages** (`app/c/...`): the segment layout validates the URL against the nav *before* streaming, so a dead
   category answers 404 (a `notFound()` inside a page behind `loading.tsx` would already be a 200). Do not put a
   `loading.tsx` on `/products/[id]`: the page's 308 canonical redirect and 404 need the status line to be unsent.
-* **Search bar** (`components/search-bar.tsx`): the camera button sits inside the field and opens the photo picker
+* **Search bar** (`components/layout/search-bar.tsx`): the camera button sits inside the field and opens the photo picker
   (`features/search/photo-search-dialog.tsx`, which reuses the whole `ImageDropzone` pipeline: upload, drop, paste, camera,
   HEIC). A photo can also be dropped on the bar or pasted into it. Suggestions are grouped: recent searches (localStorage,
   last five, never required) when empty; matching categories (with counts) above products when typing.

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Fragment, Suspense } from "react";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,7 +23,7 @@ import { PurchasePanel } from "@/features/cart/purchase-panel";
 import { RailSkeleton } from "@/features/catalog/product-rail";
 import { SimilarProducts } from "@/features/catalog/similar-products";
 import { ProductReviews } from "@/features/reviews/product-reviews";
-import { RatingStars } from "@/components/rating-stars";
+import { RatingStars } from "@/components/product/rating-stars";
 import { Camera, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 

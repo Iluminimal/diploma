@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ShopChrome } from "@/components/shop-chrome";
-import { SiteFooter } from "@/components/site-footer";
-import { SiteHeader } from "@/components/site-header";
+import { ShopChrome } from "@/components/layout/shop-chrome";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SiteHeader } from "@/components/layout/site-header";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { Providers } from "./providers";
 import "./globals.css";

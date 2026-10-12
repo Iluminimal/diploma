@@ -3,7 +3,7 @@
 import { SlidersHorizontal } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState, useSyncExternalStore } from "react";
-import { selectClass } from "@/components/form-field";
+import { selectClass } from "@/components/forms/form-field";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { FilterGroup } from "./filter-fields";

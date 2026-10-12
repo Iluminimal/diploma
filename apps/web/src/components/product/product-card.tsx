@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ProductImage } from "@/components/product-image";
-import { RatingStars } from "@/components/rating-stars";
+import { ProductImage } from "@/components/product/product-image";
+import { RatingStars } from "@/components/product/rating-stars";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
 import { formatPrice, productPath, productSubtitle, type Product } from "@/features/catalog/product";
 import { cn } from "@/lib/utils";

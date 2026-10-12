@@ -6,8 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
-import { selectClass } from "@/components/form-field";
-import { Price } from "@/components/price";
+import { selectClass } from "@/components/forms/form-field";
+import { Price } from "@/components/product/price";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {

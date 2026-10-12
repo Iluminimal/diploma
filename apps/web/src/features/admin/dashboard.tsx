@@ -11,7 +11,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/features/orders/status-badge";

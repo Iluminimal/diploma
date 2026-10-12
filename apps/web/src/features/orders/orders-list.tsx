@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { Price } from "@/components/price";
+import { Price } from "@/components/product/price";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-store";
 import { userMessage } from "@/lib/api/errors";

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { AngelLogo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { AngelLogo } from "@/components/layout/logo";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { categoryHref } from "@/features/catalog/nav";
 
 const COLUMNS = [

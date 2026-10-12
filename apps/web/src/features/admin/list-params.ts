@@ -1,9 +1,17 @@
 import {
+  CUSTOMER_SORTS,
+  CUSTOMER_STATUSES,
+  DEFAULT_PERIOD,
   ORDER_STATUSES,
   PRODUCT_SORTS,
   PRODUCT_STATUSES,
+  REVIEW_STATUSES,
+  STATS_PERIODS,
+  STOCK_FILTERS,
+  type CustomerListParams,
   type OrderListParams,
   type ProductListParams,
+  type ReviewListParams,
 } from "./admin-api";
 
 type Raw = Record<string, string | string[] | undefined>;
@@ -26,6 +34,7 @@ export function parseProductParams(raw: Raw): ProductListParams {
   return {
     q: text(first(raw.q)),
     status: oneOf(PRODUCT_STATUSES, first(raw.status), "all"),
+    stock: oneOf(STOCK_FILTERS, first(raw.stock), "all"),
     sort: oneOf(PRODUCT_SORTS, first(raw.sort), "newest"),
     page: pageNumber(first(raw.page)),
   };
@@ -37,6 +46,42 @@ export function parseOrderParams(raw: Raw): OrderListParams {
     status: oneOf(ORDER_STATUSES, first(raw.status), "all"),
     page: pageNumber(first(raw.page)),
   };
+}
+
+export function parseCustomerParams(raw: Raw): CustomerListParams {
+  return {
+    q: text(first(raw.q)),
+    status: oneOf(CUSTOMER_STATUSES, first(raw.status), "all"),
+    sort: oneOf(CUSTOMER_SORTS, first(raw.sort), "newest"),
+    page: pageNumber(first(raw.page)),
+  };
+}
+
+export function parseReviewParams(raw: Raw): ReviewListParams {
+  const rating = Number(first(raw.rating));
+  return {
+    q: text(first(raw.q)),
+    status: oneOf(REVIEW_STATUSES, first(raw.status), "all"),
+    rating: Number.isInteger(rating) && rating >= 1 && rating <= 5 ? rating : 0,
+    page: pageNumber(first(raw.page)),
+  };
+}
+
+/** The inventory is the product list, kept to what is on sale and sorted by what is running out. */
+export function parseInventoryParams(raw: Raw): ProductListParams {
+  return {
+    q: text(first(raw.q)),
+    status: "active",
+    stock: oneOf(STOCK_FILTERS, first(raw.stock), "all"),
+    sort: "stock_asc",
+    page: pageNumber(first(raw.page)),
+  };
+}
+
+/** The dashboard's period in days; anything unexpected falls back to the default. */
+export function parsePeriod(raw: Raw): number {
+  const days = Number(first(raw.days));
+  return STATS_PERIODS.find((period) => period === days) ?? DEFAULT_PERIOD;
 }
 
 /** Query string for a list view; defaults are left out to keep URLs short. */

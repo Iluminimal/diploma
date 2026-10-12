@@ -6,18 +6,34 @@ import { useAuth } from "@/features/auth/auth-store";
 import { userMessage } from "@/lib/api/errors";
 import { queryKeys } from "@/lib/query-keys";
 import {
+  addAdminOrderNote,
+  cancelAdminOrder,
   createAdminProduct,
+  deliverAdminOrder,
   fetchAdminCategories,
+  fetchAdminCustomer,
+  fetchAdminCustomers,
   fetchAdminOrder,
   fetchAdminOrders,
   fetchAdminProduct,
   fetchAdminProducts,
+  fetchAdminReviews,
+  fetchAdminStats,
+  refundAdminOrder,
   replaceAdminProductImage,
+  setAdminCustomerActive,
   setAdminProductActive,
+  setAdminProductStock,
+  setAdminReviewPublished,
+  shipAdminOrder,
   updateAdminProduct,
   type AdminProductChanges,
+  type CustomerListParams,
   type OrderListParams,
   type ProductListParams,
+  type RefundDetails,
+  type ReviewListParams,
+  type ShipDetails,
 } from "./admin-api";
 
 /** Queries wait for a confirmed administrator, so a customer never even sends the request. */
@@ -101,3 +117,75 @@ export const useReplaceProductImage = () =>
 
 export const useSetProductActive = () =>
   useProductMutation(({ id, active }: { id: number; active: boolean }) => setAdminProductActive(id, active));
+
+export function useAdminStats(days: number) {
+  const enabled = useIsAdmin();
+  return useQuery({
+    queryKey: queryKeys.admin.stats(days),
+    queryFn: () => fetchAdminStats(days),
+    enabled,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useAdminCustomers(params: CustomerListParams) {
+  const enabled = useIsAdmin();
+  return useQuery({
+    queryKey: [...queryKeys.admin.customers, params],
+    queryFn: () => fetchAdminCustomers(params),
+    enabled,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useAdminCustomer(id: number) {
+  const enabled = useIsAdmin();
+  return useQuery({ queryKey: queryKeys.admin.customer(id), queryFn: () => fetchAdminCustomer(id), enabled });
+}
+
+export function useAdminReviews(params: ReviewListParams) {
+  const enabled = useIsAdmin();
+  return useQuery({
+    queryKey: [...queryKeys.admin.reviews, params],
+    queryFn: () => fetchAdminReviews(params),
+    enabled,
+    placeholderData: (previous) => previous,
+  });
+}
+
+/**
+ * An action that changes the shop (ship an order, hide a review, ...). A change can show up in
+ * the dashboard, the lists and the customer's own pages, so everything admin-side is refetched,
+ * and the failure is reported here with a toast so callers only handle success.
+ */
+function useShopMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onError: (error) => toast.error(userMessage(error)),
+    onSettled: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.admin.all }),
+        queryClient.invalidateQueries({ queryKey: ["order"] }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.orders }),
+      ]),
+  });
+}
+
+type OrderAction<V> = V & { number: string };
+
+export const useShipOrder = () =>
+  useShopMutation(({ number, ...details }: OrderAction<ShipDetails>) => shipAdminOrder(number, details));
+export const useDeliverOrder = () => useShopMutation((number: string) => deliverAdminOrder(number));
+export const useCancelOrder = () =>
+  useShopMutation(({ number, reason }: { number: string; reason: string }) => cancelAdminOrder(number, reason));
+export const useRefundOrder = () =>
+  useShopMutation(({ number, ...details }: OrderAction<RefundDetails>) => refundAdminOrder(number, details));
+export const useAddOrderNote = () =>
+  useShopMutation(({ number, text }: { number: string; text: string }) => addAdminOrderNote(number, text));
+export const useSetStock = () =>
+  useShopMutation(({ id, quantity }: { id: number; quantity: number }) => setAdminProductStock(id, quantity));
+export const useSetCustomerActive = () =>
+  useShopMutation(({ id, active }: { id: number; active: boolean }) => setAdminCustomerActive(id, active));
+export const useSetReviewPublished = () =>
+  useShopMutation(({ id, published }: { id: number; published: boolean }) => setAdminReviewPublished(id, published));

@@ -15,7 +15,7 @@ vi.mock("next/navigation", () => ({
 }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }) }));
 
-const params: ProductListParams = { q: "", status: "all", sort: "newest", page: 1 };
+const params: ProductListParams = { q: "", status: "all", stock: "all", sort: "newest", page: 1 };
 const onSale = makeAdminProduct({ id: 7, name: "Linen camp shirt", price_cents: 4999 });
 const withdrawn = makeAdminProduct({ id: 8, name: "Wool coat", is_active: false, stock_quantity: 0 });
 const page = (items = [onSale, withdrawn]) => ({
@@ -53,7 +53,7 @@ describe("ProductsTable", () => {
 
   it("asks the API for the filters in the URL", async () => {
     const api = stubApi({ "GET /api/v1/admin/products": { body: page([]) } });
-    renderWithQuery(<ProductsTable params={{ q: "shirt", status: "inactive", sort: "price_asc", page: 3 }} />);
+    renderWithQuery(<ProductsTable params={{ q: "shirt", status: "inactive", stock: "all", sort: "price_asc", page: 3 }} />);
 
     await screen.findByText("No products found");
     const search = new URLSearchParams(api.calls[0]!.search);

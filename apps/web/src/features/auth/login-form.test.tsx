@@ -53,6 +53,28 @@ describe("LoginForm", () => {
     expect(useAuth.getState()).toMatchObject({ status: "signedIn", accessToken: "t1" });
   });
 
+  it("takes an administrator to the admin area unless they asked for another page", async () => {
+    const admin = { ...session, user: { ...session.user, role: "admin" as const } };
+    stubApi({
+      "POST /api/v1/auth/login": json(admin),
+      "GET /api/v1/cart": json({ lines: [], item_count: 0, subtotal_cents: 0, currency: "USD", has_issues: false }),
+    });
+    renderWithQuery(<LoginForm next="/" />);
+
+    await userEvent.type(screen.getByLabelText("Email"), "ada@example.com");
+    await userEvent.type(screen.getByLabelText("Password"), "correct horse battery");
+    await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    await waitFor(() => expect(replace).toHaveBeenCalledWith("/admin"));
+  });
+
+  it("keeps the page an administrator was headed to", () => {
+    useAuth.setState({ status: "signedIn", accessToken: "t", user: { ...session.user, role: "admin" } });
+    renderWithQuery(<LoginForm next="/account/orders" />);
+
+    expect(replace).toHaveBeenCalledWith("/account/orders");
+  });
+
   it("shows a friendly message for wrong credentials and stays on the page", async () => {
     stubApi({
       "POST /api/v1/auth/login": problem(401, "Invalid email or password", {

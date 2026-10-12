@@ -13,6 +13,10 @@ export const queryKeys = {
     categories: ["admin", "categories"] as const,
     orders: ["admin", "orders"] as const,
     order: (number: string) => ["admin", "order", number] as const,
+    stats: (days: number) => ["admin", "stats", days] as const,
+    customers: ["admin", "customers"] as const,
+    customer: (id: number) => ["admin", "customer", id] as const,
+    reviews: ["admin", "reviews"] as const,
   },
 };
 

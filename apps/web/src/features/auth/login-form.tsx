@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { ApiError, userMessage } from "@/lib/api/errors";
 import { useAuthActions } from "./use-auth-actions";
+import { useAuth } from "./auth-store";
+import { landingPath } from "./landing";
 import { useRedirectWhenSignedIn } from "./use-redirect-when-signed-in";
 
 const schema = z.object({
@@ -36,7 +38,7 @@ export function LoginForm({ next }: { next: string }) {
     setFormError(null);
     try {
       await signIn(values);
-      router.replace(next);
+      router.replace(landingPath(next, useAuth.getState().user?.role));
       router.refresh();
     } catch (error) {
       setFormError(

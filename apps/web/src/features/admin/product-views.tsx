@@ -40,7 +40,7 @@ export function NewProductView() {
   return (
     <div className="max-w-3xl space-y-6">
       <BackLink />
-      <h2 className="text-xl font-semibold tracking-tight">New product</h2>
+      <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">New product</h1>
       {error ? (
         <div className="space-y-3">
           <p role="alert" className="text-destructive">
@@ -119,7 +119,7 @@ export function EditProductView({ id }: { id: number }) {
       <BackLink />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
-          <h2 className="text-xl font-semibold tracking-tight">{product.name}</h2>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">{product.name}</h1>
           <p className="text-muted-foreground text-xs">
             #{product.id} · {product.slug}
             {product.source_id !== null && " · imported from the dataset"}

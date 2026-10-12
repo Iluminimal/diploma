@@ -61,7 +61,7 @@ export function AccountDropdown({ user, defaultOpen }: { user: SessionUser; defa
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/admin/products">
+              <Link href="/admin">
                 <LayoutDashboard /> Admin
               </Link>
             </DropdownMenuItem>

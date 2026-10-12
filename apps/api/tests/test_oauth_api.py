@@ -3,8 +3,9 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from httpx import AsyncClient, Response
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tests.commerce import PASSWORD, another_client, register, unique_email
+from tests.commerce import PASSWORD, another_client, register, set_role, unique_email
 from tests.conftest import Api, ApiFactory
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
@@ -199,6 +200,23 @@ async def test_the_person_lands_where_they_came_from_and_never_on_another_site(
         response = await sign_in(api.client, unique_email(), **params)
 
         assert response.headers["location"] == f"{WEB}{expected}"
+
+
+async def test_an_administrator_lands_in_the_admin_area_unless_they_asked_for_a_page(
+    api_factory: ApiFactory, db_engine: AsyncEngine
+) -> None:
+    async with api_factory(seed_count=0, oauth_mode="fake") as api:
+        email = unique_email()
+        customer = await sign_in(api.client, email)
+        user_id = await scalar(api, "SELECT id FROM users WHERE email = :e", e=email)
+        await set_role(db_engine, int(str(user_id)), "admin")
+
+        by_default = await sign_in(api.client, email)
+        asked_for_orders = await sign_in(api.client, email, next="/account/orders")
+
+        assert customer.headers["location"] == f"{WEB}/"
+        assert by_default.headers["location"] == f"{WEB}/admin"
+        assert asked_for_orders.headers["location"] == f"{WEB}/account/orders"
 
 
 async def test_pressing_cancel_at_google_ends_on_the_login_page(api_factory: ApiFactory) -> None:

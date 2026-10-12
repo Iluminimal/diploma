@@ -15,6 +15,8 @@ import { PasswordInput } from "@/components/password-input";
 import { PasswordStrengthMeter } from "./password-strength-meter";
 import { ApiError, userMessage } from "@/lib/api/errors";
 import { useAuthActions } from "./use-auth-actions";
+import { useAuth } from "./auth-store";
+import { landingPath } from "./landing";
 import { useRedirectWhenSignedIn } from "./use-redirect-when-signed-in";
 
 const schema = z.object({
@@ -50,7 +52,7 @@ export function RegisterForm({ next }: { next: string }) {
     try {
       await createAccount(values);
       toast.success("Welcome! Your account is ready.");
-      router.replace(next);
+      router.replace(landingPath(next, useAuth.getState().user?.role));
       router.refresh();
     } catch (error) {
       if (error instanceof ApiError && error.is("emailTaken")) {

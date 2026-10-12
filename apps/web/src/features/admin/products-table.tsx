@@ -33,10 +33,11 @@ import { cn } from "@/lib/utils";
 import type { AdminProduct, ProductListParams } from "./admin-api";
 import { toQuery } from "./list-params";
 import { ListPagination } from "./list-pagination";
+import { AdminPageHeader } from "./page-header";
 import { useAdminProducts, useSetProductActive } from "./use-admin";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const DEFAULTS = { q: "", status: "all", sort: "newest", page: 1 };
+const DEFAULTS = { q: "", status: "all", stock: "all", sort: "newest", page: 1 };
 const SORT_LABELS: Record<ProductListParams["sort"], string> = {
   newest: "Newest first",
   price_asc: "Price: low to high",
@@ -65,7 +66,19 @@ export function ProductsTable({ params }: { params: ProductListParams }) {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
+      <AdminPageHeader
+        title="Products"
+        description="The catalogue: what is on sale, at what price."
+        actions={
+          <Button asChild size="lg" className="h-11 rounded-full px-4">
+            <Link href="/admin/products/new">
+              <Plus aria-hidden /> New product
+            </Link>
+          </Button>
+        }
+      />
+      <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <form onSubmit={search} role="search" aria-label="Search products" className="flex flex-1 gap-2 sm:max-w-md">
           <Input
@@ -106,11 +119,6 @@ export function ProductsTable({ params }: { params: ProductListParams }) {
               </option>
             ))}
           </select>
-          <Button asChild size="lg" className="h-11 rounded-full px-4">
-            <Link href="/admin/products/new">
-              <Plus aria-hidden /> New product
-            </Link>
-          </Button>
         </div>
       </div>
 
@@ -258,6 +266,7 @@ export function ProductsTable({ params }: { params: ProductListParams }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 }

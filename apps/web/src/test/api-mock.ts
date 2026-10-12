@@ -18,6 +18,9 @@ export const json = (body: unknown, status = 200) =>
     headers: { "content-type": status >= 400 ? "application/problem+json" : "application/json" },
   });
 
+/** A handler that answers every call with a fresh response (a `Response` can only be read once, and a refetch is a second call). */
+export const respond = (body: unknown, status = 200) => () => json(body, status);
+
 export function problem(status: number, title: string, extra: Record<string, unknown> = {}) {
   return json({ title, status, ...extra }, status);
 }

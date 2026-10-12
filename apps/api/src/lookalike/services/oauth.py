@@ -118,7 +118,9 @@ class OAuthService:
                     body=f"Hi {user.full_name}, your account is ready.",
                 )
             )
-        return SignInResult(issued, flow.next_path)
+        # An administrator who did not ask for a particular page lands in the admin area.
+        next_path = "/admin" if user.is_admin and flow.next_path == "/" else flow.next_path
+        return SignInResult(issued, next_path)
 
     async def _link_or_create(
         self, email: str, subject: str, name: str | None

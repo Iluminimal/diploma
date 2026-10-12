@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuth } from "@/features/auth/auth-store";
@@ -54,14 +54,36 @@ describe("OrdersTable", () => {
     expect(second).toHaveTextContent("Awaiting payment");
   });
 
-  it("filters by status through the URL", async () => {
-    stubApi({ "GET /api/v1/admin/orders": { body: { items: [summary], total: 1, page: 1, page_size: 25, pages: 1 } } });
-    renderWithQuery(<OrdersTable params={{ q: "", status: "all", page: 1 }} />);
+  it("has a tab for each status, with how many orders are in it", async () => {
+    stubApi({
+      "GET /api/v1/admin/orders": {
+        body: {
+          items: [summary],
+          total: 1,
+          page: 1,
+          page_size: 25,
+          pages: 1,
+          status_counts: { paid: 3, shipped: 2, pending: 1 },
+        },
+      },
+    });
+    renderWithQuery(<OrdersTable params={{ q: "", status: "paid", page: 1 }} />);
     await screen.findByRole("table");
 
-    await userEvent.selectOptions(screen.getByLabelText("Status"), "cancelled");
+    const tabs = within(screen.getByRole("navigation", { name: "Order status" }));
+    expect(tabs.getByRole("link", { name: "All 6" })).toHaveAttribute("href", "/admin/orders");
+    expect(tabs.getByRole("link", { name: "To ship 3" })).toHaveAttribute("aria-current", "page");
+    expect(tabs.getByRole("link", { name: "To ship 3" })).toHaveAttribute("href", "/admin/orders?status=paid");
+    expect(tabs.getByRole("link", { name: "Shipped 2" })).toHaveAttribute("href", "/admin/orders?status=shipped");
+    expect(tabs.getByRole("link", { name: "Refunded 0" })).toBeInTheDocument();
+  });
 
-    expect(replace).toHaveBeenCalledWith("/admin/orders?status=cancelled");
+  it("keeps the search when switching tabs", async () => {
+    stubApi({ "GET /api/v1/admin/orders": { body: { items: [summary], total: 1, page: 3, page_size: 25, pages: 3, status_counts: {} } } });
+    renderWithQuery(<OrdersTable params={{ q: "ada", status: "all", page: 3 }} />);
+    await screen.findByRole("table");
+
+    expect(screen.getByRole("link", { name: /^Delivered/ })).toHaveAttribute("href", "/admin/orders?q=ada&status=delivered");
   });
 
   it("has an empty state", async () => {
@@ -82,6 +104,61 @@ describe("AdminOrderView", () => {
     expect(screen.getByText("succeeded via offline")).toBeInTheDocument();
     expect(screen.getByText("pi_offline_123")).toBeInTheDocument();
     expect(screen.getByText("Alma Women Blue Kurta")).toBeInTheDocument();
+  });
+
+  it("shows where the order is on its way, and offers what can be done next", async () => {
+    stubApi({ "GET /api/v1/admin/orders/LK-ABCD2345": { body: makeAdminOrder({ status: "paid" }) } });
+    renderWithQuery(<AdminOrderView number="LK-ABCD2345" />);
+
+    await screen.findByRole("heading", { name: "Order LK-ABCD2345" });
+    expect(await screen.findByRole("list", { name: "Order progress" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mark as shipped" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Refund" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "All orders" })).toHaveAttribute("href", "/admin/orders");
+  });
+
+  it("shows the tracking of a shipment and the history, including internal notes", async () => {
+    stubApi({
+      "GET /api/v1/admin/orders/LK-ABCD2345": {
+        body: makeAdminOrder({
+          status: "shipped",
+          shipped_at: "2026-10-09T09:00:00Z",
+          carrier: "DHL",
+          tracking_number: "JD0146",
+          events: [
+            { type: "placed", at: "2026-10-08T10:00:00Z", data: {} },
+            { type: "shipped", at: "2026-10-09T09:00:00Z", data: { carrier: "DHL", tracking_number: "JD0146", actor: "admin@example.com" } },
+            { type: "note", at: "2026-10-09T10:00:00Z", data: { text: "Gift box please", actor: "admin@example.com" } },
+          ],
+        }),
+      },
+    });
+    renderWithQuery(<AdminOrderView number="LK-ABCD2345" />);
+
+    const shipment = within(await screen.findByRole("region", { name: "Shipment" }));
+    expect(shipment.getByText("DHL")).toBeInTheDocument();
+    expect(shipment.getByText("JD0146")).toBeInTheDocument();
+    const history = within(screen.getByRole("region", { name: "History" }));
+    expect(history.getByText("Gift box please")).toBeInTheDocument();
+    expect(history.getByText("Order placed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mark as delivered" })).toBeInTheDocument();
+  });
+
+  it("adds a note to the history", async () => {
+    const api = stubApi({
+      "GET /api/v1/admin/orders/LK-ABCD2345": { body: makeAdminOrder() },
+      "POST /api/v1/admin/orders/LK-ABCD2345/notes": { body: makeAdminOrder() },
+    });
+    renderWithQuery(<AdminOrderView number="LK-ABCD2345" />);
+
+    const add = await screen.findByRole("button", { name: "Add note" });
+    expect(add).toBeDisabled();
+    await userEvent.type(screen.getByLabelText("Add a note"), "  Call before delivery ");
+    await userEvent.click(add);
+
+    await waitFor(() => expect(api.calls.some((c) => c.method === "POST")).toBe(true));
+    expect(api.calls.find((c) => c.method === "POST")?.body).toEqual({ text: "Call before delivery" });
+    await waitFor(() => expect(screen.getByLabelText("Add a note")).toHaveValue(""));
   });
 
   it("explains a cancelled order", async () => {

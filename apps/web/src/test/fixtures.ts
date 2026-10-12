@@ -1,4 +1,12 @@
-import type { AdminCategory, AdminOrder, AdminProduct } from "@/features/admin/admin-api";
+import type {
+  AdminCategory,
+  AdminCustomer,
+  AdminCustomerDetail,
+  AdminOrder,
+  AdminProduct,
+  AdminReview,
+  AdminStats,
+} from "@/features/admin/admin-api";
 import type { CatalogNav } from "@/features/catalog/nav";
 import type { CatalogFilterOptions, Product, SearchResponse } from "@/features/catalog/product";
 
@@ -266,3 +274,113 @@ export const catalogNav: CatalogNav = {
     },
   ],
 };
+
+const image = {
+  thumb_400: "http://localhost:8000/media/products/060/60000_400.webp",
+  thumb_800: "http://localhost:8000/media/products/060/60000_800.webp",
+  blur_data_url: null,
+};
+
+export function makeStats(overrides: Partial<AdminStats> = {}): AdminStats {
+  return {
+    days: 7,
+    currency: "USD",
+    revenue_cents: { current: 150000, previous: 100000 },
+    orders: { current: 12, previous: 12 },
+    units: { current: 20, previous: 15 },
+    new_customers: { current: 0, previous: 4 },
+    average_order_cents: { current: 12500, previous: 8333 },
+    series: Array.from({ length: 7 }, (_, i) => ({
+      date: `2026-10-0${i + 1}`,
+      revenue_cents: i === 3 ? 60000 : i * 5000,
+      orders: i === 3 ? 4 : i,
+    })),
+    status_counts: { paid: 3, pending: 2, shipped: 4, delivered: 20 },
+    to_ship: 3,
+    awaiting_payment: 2,
+    low_stock_threshold: 5,
+    low_stock: [{ id: 7, name: "Slim Fit Chinos", slug: "slim-fit-chinos-7", stock_quantity: 2, image }],
+    low_stock_total: 1,
+    out_of_stock_total: 4,
+    top_products: [
+      { product_id: 41885, name: "Alma Women Blue Kurta", slug: "alma-women-blue-kurta-60000", image, units: 9, revenue_cents: 31491 },
+    ],
+    recent_orders: [
+      {
+        number: "LK-ABCD2345",
+        status: "paid",
+        created_at: "2026-10-08T10:00:00Z",
+        currency: "USD",
+        total_cents: 7497,
+        item_count: 2,
+        customer_email: "ada@example.com",
+        customer_name: "Ada Lovelace",
+        payment_status: "succeeded",
+      },
+    ],
+    ...overrides,
+  };
+}
+
+export function makeAdminCustomer(overrides: Partial<AdminCustomer> = {}): AdminCustomer {
+  return {
+    id: 3,
+    email: "ada@example.com",
+    full_name: "Ada Lovelace",
+    avatar_url: null,
+    is_active: true,
+    created_at: "2026-08-01T09:00:00Z",
+    orders_count: 4,
+    total_spent_cents: 18250,
+    last_order_at: "2026-10-05T12:00:00Z",
+    ...overrides,
+  };
+}
+
+export function makeAdminCustomerDetail(overrides: Partial<AdminCustomerDetail> = {}): AdminCustomerDetail {
+  return {
+    ...makeAdminCustomer(),
+    providers: [],
+    has_password: true,
+    recent_orders: [
+      {
+        number: "LK-ABCD2345",
+        status: "delivered",
+        created_at: "2026-10-05T12:00:00Z",
+        currency: "USD",
+        total_cents: 7497,
+        item_count: 2,
+        customer_email: "ada@example.com",
+        customer_name: "Ada Lovelace",
+        payment_status: "succeeded",
+      },
+    ],
+    ...overrides,
+  };
+}
+
+export function makeAdminReview(overrides: Partial<AdminReview> = {}): AdminReview {
+  return {
+    id: 11,
+    rating: 4,
+    title: "Nice fit",
+    body: "Runs a little large.",
+    author: "Ada L.",
+    status: "published",
+    created_at: "2026-10-07T08:00:00Z",
+    updated_at: "2026-10-07T08:00:00Z",
+    user_id: 3,
+    author_email: "ada@example.com",
+    product: {
+      id: 41885,
+      name: "Alma Women Blue Kurta",
+      slug: "alma-women-blue-kurta-60000",
+      image: {
+        thumb_400: "http://localhost:8000/media/products/060/60000_400.webp",
+        thumb_800: "http://localhost:8000/media/products/060/60000_800.webp",
+        blur_data_url: null,
+      },
+    },
+    ...overrides,
+  };
+}

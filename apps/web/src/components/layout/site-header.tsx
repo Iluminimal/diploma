@@ -18,7 +18,7 @@ export function SiteHeader() {
       style={{ viewTransitionName: "site-header" }}
       className="header-elevate bg-background/80 has-[.mega-flyout[data-open=true]]:bg-background sticky top-0 z-40 border-b border-transparent backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300"
     >
-      <div className="container-page flex h-12 items-center gap-1 md:h-11 md:gap-4">
+      <div className="container-nav flex h-12 items-center gap-1 md:h-11 md:gap-4">
         <Link href="/" className="focus-visible:ring-ring/60 mr-auto rounded-md text-[1.0625rem] outline-none focus-visible:ring-3 md:mr-0">
           <AngelLogo showName={false} markClassName="size-7" />
         </Link>

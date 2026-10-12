@@ -115,8 +115,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* The system fonts: SF Pro on Apple devices (the optical size follows the text size), nothing to download. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading: var(--font-sans);
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
@@ -125,6 +126,9 @@
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
+  --color-field: var(--field);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
@@ -170,7 +174,11 @@
   --border: #d2d2d7;
   --input: #d2d2d7;
   --ring: #0071e3;
+  --field: #86868b;
+  --primary-hover: #0077ed;
+  --primary-active: #006edb;
   --radius: 0.75rem;
+  --radius-tile: 1.125rem;
 }
 
 .dark {
@@ -196,6 +204,9 @@
   --border: #424245;
   --input: #424245;
   --ring: #2997ff;
+  --field: #6e6e73;
+  --primary-hover: #147ce5;
+  --primary-active: #0066cc;
 }
 
 @layer base {
@@ -206,7 +217,9 @@
     @apply bg-background text-foreground;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    letter-spacing: -0.011em;
+    font-size: 1.0625rem;
+    line-height: 1.47059;
+    letter-spacing: -0.022em;
   }
   h1,
   h2,
@@ -234,6 +247,133 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+/*
+ * Apple's type scale (sizes, line heights and tracking read from apple.com), one utility per step so pages
+ * do not repeat strings. Sizes step down at 1068px and 734px as apple.com's do. Pair with a weight
+ * (the headlines are 600, body copy 400).
+ */
+@utility type-hero {
+  font-size: 2.5rem;
+  line-height: 1.1;
+  letter-spacing: -0.009em;
+  font-weight: 600;
+  @media (min-width: 734px) {
+    font-size: 3.5rem;
+    line-height: 1.07143;
+    letter-spacing: -0.005em;
+  }
+  @media (min-width: 1068px) {
+    font-size: 5rem;
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+  }
+}
+@utility type-display {
+  font-size: 2rem;
+  line-height: 1.125;
+  letter-spacing: 0.004em;
+  font-weight: 600;
+  @media (min-width: 734px) {
+    font-size: 2.5rem;
+    line-height: 1.1;
+    letter-spacing: 0;
+  }
+  @media (min-width: 1068px) {
+    font-size: 3rem;
+    line-height: 1.08349;
+    letter-spacing: -0.003em;
+  }
+}
+@utility type-title {
+  font-size: 1.75rem;
+  line-height: 1.14286;
+  letter-spacing: 0.007em;
+  font-weight: 600;
+  @media (min-width: 1068px) {
+    font-size: 2rem;
+    line-height: 1.125;
+    letter-spacing: 0.004em;
+  }
+}
+@utility type-heading {
+  font-size: 1.3125rem;
+  line-height: 1.19048;
+  letter-spacing: 0.011em;
+  font-weight: 600;
+  @media (min-width: 1068px) {
+    font-size: 1.5rem;
+    line-height: 1.16667;
+    letter-spacing: 0.009em;
+  }
+}
+@utility type-intro {
+  font-size: 1.1875rem;
+  line-height: 1.42105;
+  letter-spacing: 0.012em;
+  @media (min-width: 1068px) {
+    font-size: 1.3125rem;
+    line-height: 1.381;
+    letter-spacing: 0.011em;
+  }
+}
+@utility type-body {
+  font-size: 1.0625rem;
+  line-height: 1.47059;
+  letter-spacing: -0.022em;
+}
+@utility type-caption {
+  font-size: 0.875rem;
+  line-height: 1.42857;
+  letter-spacing: -0.016em;
+}
+@utility type-fine {
+  font-size: 0.75rem;
+  line-height: 1.33337;
+  letter-spacing: -0.01em;
+}
+
+/* Apple's grey tile: promo cards, product cards, option boxes. 18px corners on a phone, 28px from 734px. */
+@utility tile {
+  background-color: var(--secondary);
+  border-radius: var(--radius-tile);
+  overflow: hidden;
+  @media (min-width: 734px) {
+    border-radius: 1.75rem;
+  }
+}
+
+/* The blue text link with a chevron ("Learn more >", "Shop >"). */
+@utility link-more {
+  color: var(--brand);
+  font-size: 1.0625rem;
+  line-height: 1.17648;
+  letter-spacing: -0.022em;
+  &::after {
+    content: "\203A";
+    display: inline-block;
+    margin-inline-start: 0.35em;
+    transition: transform 200ms var(--ease-out-expo);
+  }
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  &:hover::after {
+    transform: translateX(2px);
+  }
+}
+
+/* The global bar's inner width on apple.com: 1024px, 22px of padding. */
+@utility container-nav {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1024px;
+  padding-inline: 1rem;
+  @media (min-width: 734px) {
+    padding-inline: 22px;
   }
 }
 

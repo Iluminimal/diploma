@@ -184,6 +184,21 @@ paint is 0.3 s; the cause was not found by removing the tab bar or the per-card 
 home-only CSS out of the global file, so the margin is recorded rather than hidden. `make lighthouse` exits non-zero until it is
 back at 90.
 
+## Apple-style redesign (Phase 16)
+
+Every page is being restyled after apple.com, one step at a time (each step is a commit). Done so far:
+
+* **Header** (step 1): search, account, bag and menu share one cell, `HEADER_CELL` in `components/layout/header-cell.tsx` (44px wide,
+  as tall as the bar: 48px on a phone, 44px from md), no hover background, a fade on hover. Glyphs live in two icon boxes (17x48,
+  14x44); search and bag are apple.com's own outlines, the person is drawn to match.
+* **Tokens** (step 2, `globals.css`): the system font stack (SF Pro on Apple devices; no web font is downloaded any more), body text
+  17px with Apple's tracking, a type scale as utilities (`type-hero`, `type-display`, `type-title`, `type-heading`, `type-intro`,
+  `type-body`, `type-caption`, `type-fine`; sizes step down at 1068px and 734px), `tile` (grey card, 18px corners, 28px from 734px),
+  `link-more` (blue "Learn more >"), `container-nav` (1024px), `--field` (the 1px form border, #86868b), `--primary-hover/-active`.
+* **Controls**: buttons are pills with 15px regular text (`lg` 17px / 44px, `xl` 48px for hero calls to action, `bordered` is
+  Apple's blue outline that fills on hover, no press scale); inputs, textareas and selects are 44px, 12px corners, 17px text on the
+  card colour; the checkbox is 20px with 6px corners.
+
 ## Accounts, cart and checkout
 
 How the pieces fit (API side: `docs/commerce.md`):

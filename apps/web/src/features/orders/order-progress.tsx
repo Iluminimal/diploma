@@ -41,11 +41,19 @@ export function OrderProgress({ order, className }: { order: Progress; className
   return (
     <ol aria-label="Order progress" className={cn("flex", className)}>
       {steps.map((step, index) => {
-        const state = step.stopped ? "stopped" : index < current ? "done" : index === current ? "current" : "upcoming";
+        // The last step, once reached, means the order is complete: it is done, not "in progress".
+        const finished = step.done && index === steps.length - 1;
+        const state = step.stopped
+          ? "stopped"
+          : index < current || finished
+            ? "done"
+            : index === current
+              ? "current"
+              : "upcoming";
         return (
           <li
             key={step.key}
-            aria-current={state === "current" || (step.stopped && index === current) ? "step" : undefined}
+            aria-current={index === current ? "step" : undefined}
             className="relative flex min-w-0 flex-1 flex-col items-center gap-1.5 text-center"
           >
             {index > 0 && (

@@ -8,8 +8,11 @@ import Image from "next/image";
 
 const METHOD_LABELS = { standard: "Standard shipping", express: "Express shipping" } as const;
 
-/** Lines, totals and delivery details exactly as they were charged (prices are snapshots). */
-export function OrderDetail({ order }: { order: Order }) {
+/**
+ * Lines, totals and delivery details exactly as they were charged (prices are snapshots).
+ * `reviewLinks` adds a "Write a review" link to each line of an order that has arrived.
+ */
+export function OrderDetail({ order, reviewLinks = false }: { order: Order; reviewLinks?: boolean }) {
   const date = new Date(order.created_at).toLocaleDateString("en-US", { dateStyle: "long" });
   const address = order.shipping_address;
   return (
@@ -36,6 +39,15 @@ export function OrderDetail({ order }: { order: Order }) {
                 {item.size ? `Size ${item.size} · ` : ""}Qty {item.quantity} ·{" "}
                 <Price cents={item.unit_price_cents} currency={order.currency} /> each
               </p>
+              {reviewLinks && order.status === "delivered" && (
+                <Link
+                  href={`${productPath({ id: item.product_id, slug: item.slug })}#reviews`}
+                  className="text-brand w-fit text-xs hover:underline"
+                >
+                  Write a review{" "}
+                  <span className="sr-only">for {item.name}</span>
+                </Link>
+              )}
             </div>
             <Price cents={item.line_total_cents} currency={order.currency} className="text-sm font-medium" />
           </li>

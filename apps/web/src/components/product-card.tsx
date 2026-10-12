@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ProductImage } from "@/components/product-image";
+import { RatingStars } from "@/components/rating-stars";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
 import { formatPrice, productPath, productSubtitle, type Product } from "@/features/catalog/product";
 import { cn } from "@/lib/utils";
@@ -45,6 +46,14 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
         <div className="mt-4 space-y-0.5 px-1">
           <Heading className="line-clamp-2 text-sm leading-snug font-semibold tracking-tight">{product.name}</Heading>
           <p className="text-muted-foreground truncate text-xs">{productSubtitle(product)}</p>
+          {product.rating_count > 0 && product.rating_average !== null && (
+            <p className="flex items-center gap-1.5 pt-1">
+              <RatingStars rating={product.rating_average} size="sm" />
+              <span aria-hidden className="text-muted-foreground text-xs tabular-nums">
+                ({product.rating_count})
+              </span>
+            </p>
+          )}
           <p className="pt-1.5 text-sm tabular-nums">
             {formatPrice(product.price_cents, product.currency)}
           </p>

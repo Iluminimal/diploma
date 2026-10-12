@@ -56,6 +56,24 @@ describe("product JSON-LD", () => {
     expect(crumbs?.itemListElement?.at(-1)?.item).toContain("/products/41885/alma-women-blue-kurta-60000");
   });
 
+  it("adds the aggregate rating once the product has reviews", () => {
+    const [product] = jsonLd(makeProduct({ rating_average: 4.5, rating_count: 12 }));
+
+    expect(product?.aggregateRating).toEqual({
+      "@type": "AggregateRating",
+      ratingValue: 4.5,
+      reviewCount: 12,
+      bestRating: 5,
+      worstRating: 1,
+    });
+  });
+
+  it("leaves the rating out when there are no reviews (an empty rating is not valid)", () => {
+    const [product] = jsonLd(makeProduct({ rating_average: null, rating_count: 0 }));
+
+    expect(product).not.toHaveProperty("aggregateRating");
+  });
+
   it("marks sold-out products as OutOfStock", () => {
     const [product] = jsonLd(makeProduct({ in_stock: false }));
     expect(product?.offers?.availability).toBe("https://schema.org/OutOfStock");

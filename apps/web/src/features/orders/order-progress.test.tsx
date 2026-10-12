@@ -44,6 +44,15 @@ describe("OrderProgress", () => {
     expect(steps[2]).toHaveTextContent("Oct 2");
   });
 
+  it("shows a delivered order as complete, with the last step done", () => {
+    render(<OrderProgress order={{ status: "delivered", ...delivered }} />);
+
+    const steps = screen.getAllByRole("listitem");
+    expect(steps[3]).toHaveTextContent("Delivered, done");
+    expect(steps[3]).toHaveAttribute("aria-current", "step");
+    expect(steps[3]?.querySelector("svg")).not.toBeNull();
+  });
+
   it("shows a cancelled order as stopped", () => {
     render(<OrderProgress order={{ status: "cancelled", ...base }} />);
 

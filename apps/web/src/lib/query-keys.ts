@@ -6,6 +6,7 @@ export const queryKeys = {
   orders: ["orders"] as const,
   order: (number: string) => ["order", number] as const,
   shippingMethods: ["shipping-methods"] as const,
+  reviews: (productId: number) => ["reviews", productId] as const,
   admin: {
     all: ["admin"] as const,
     products: ["admin", "products"] as const,

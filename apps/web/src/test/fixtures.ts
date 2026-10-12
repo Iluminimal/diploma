@@ -7,6 +7,7 @@ import type {
   AdminReview,
   AdminStats,
 } from "@/features/admin/admin-api";
+import type { Review, ReviewPage } from "@/features/reviews/reviews-api";
 import type { CatalogNav } from "@/features/catalog/nav";
 import type { CatalogFilterOptions, Product, SearchResponse } from "@/features/catalog/product";
 
@@ -381,6 +382,34 @@ export function makeAdminReview(overrides: Partial<AdminReview> = {}): AdminRevi
         blur_data_url: null,
       },
     },
+    ...overrides,
+  };
+}
+
+export function makeReview(overrides: Partial<Review> = {}): Review {
+  return {
+    id: 11,
+    rating: 4,
+    title: "Nice fit",
+    body: "Runs a little large.",
+    author: "Ada L.",
+    status: "published",
+    created_at: "2026-10-07T08:00:00Z",
+    updated_at: "2026-10-07T08:00:00Z",
+    ...overrides,
+  };
+}
+
+export function makeReviewPage(overrides: Partial<ReviewPage> = {}): ReviewPage {
+  const items = [makeReview(), makeReview({ id: 12, rating: 5, title: "Perfect", body: null, author: "Bob K." })];
+  return {
+    items,
+    total: items.length,
+    page: 1,
+    page_size: 5,
+    pages: 1,
+    summary: { average: 4.5, count: 2, distribution: [0, 0, 0, 1, 1] },
+    viewer: null,
     ...overrides,
   };
 }

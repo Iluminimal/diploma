@@ -57,6 +57,19 @@ export const getProduct = cache(async (id: number) => {
   }
 });
 
+/** The first page of a product's reviews, newest first. `null` if they cannot be had: the page does not depend on them. */
+export const getProductReviews = cache(async (id: number) => {
+  try {
+    return await unwrap(
+      createApiClient(60).GET("/api/v1/products/{product_id}/reviews", {
+        params: { path: { product_id: id }, query: { sort: "newest", page: 1, page_size: 5 } },
+      }),
+    );
+  } catch {
+    return null;
+  }
+});
+
 export const getSimilarProducts = cache((id: number, limit = 12) =>
   unwrap(
     createApiClient(300).GET("/api/v1/products/{product_id}/similar", {

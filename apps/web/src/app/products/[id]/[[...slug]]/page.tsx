@@ -13,7 +13,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import { getProduct } from "@/features/catalog/api";
+import { getProduct, getProductReviews } from "@/features/catalog/api";
 import { breadcrumbTrail, productDescription, productJsonLd } from "@/features/catalog/json-ld";
 import { JsonLdScripts } from "@/features/seo/json-ld-scripts";
 import { productPath } from "@/features/catalog/product";
@@ -22,6 +22,8 @@ import { sizesFor } from "@/features/catalog/sizes";
 import { PurchasePanel } from "@/features/cart/purchase-panel";
 import { RailSkeleton } from "@/features/catalog/product-rail";
 import { SimilarProducts } from "@/features/catalog/similar-products";
+import { ProductReviews } from "@/features/reviews/product-reviews";
+import { RatingStars } from "@/components/rating-stars";
 import { Camera, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -58,6 +60,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
   // One canonical URL per product: fix a missing or stale slug with a 308.
   if (slug?.join("/") !== product.slug) permanentRedirect(productPath(product));
 
+  const reviews = await getProductReviews(product.id);
   const sizes = sizesFor(product);
   const trail = breadcrumbTrail(product);
   const details: [string, string | number | null][] = [
@@ -104,6 +107,14 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
         <div className="flex flex-col gap-8 lg:sticky lg:top-24 lg:self-start">
           <header className="space-y-3">
             <h1 className="text-3xl leading-tight font-semibold tracking-tighter md:text-4xl">{product.name}</h1>
+            {product.rating_count > 0 && product.rating_average !== null && (
+              <a href="#reviews" className="inline-flex items-center gap-2 text-sm hover:underline">
+                <RatingStars rating={product.rating_average} />
+                <span className="text-muted-foreground">
+                  {product.rating_average.toFixed(1)} · {product.rating_count} {product.rating_count === 1 ? "review" : "reviews"}
+                </span>
+              </a>
+            )}
             <p className="flex items-center gap-4">
               <Price cents={product.price_cents} currency={product.currency} className="text-xl font-medium" />
               {product.in_stock ? (
@@ -136,6 +147,8 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
           </dl>
         </div>
       </div>
+
+      <ProductReviews productId={product.id} initial={reviews} />
 
       <Suspense
         fallback={

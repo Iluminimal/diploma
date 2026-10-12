@@ -32,6 +32,18 @@ export function productJsonLd(p: Product) {
       category: [p.master_category, p.sub_category, p.article_type].join(" > "),
       ...(p.base_colour && p.base_colour !== "NA" ? { color: p.base_colour } : {}),
       audience: { "@type": "PeopleAudience", suggestedGender: p.gender },
+      // Only once there is a published review: an empty rating is not valid structured data.
+      ...(p.rating_count > 0 && p.rating_average !== null
+        ? {
+            aggregateRating: {
+              "@type": "AggregateRating",
+              ratingValue: Number(p.rating_average.toFixed(2)),
+              reviewCount: p.rating_count,
+              bestRating: 5,
+              worstRating: 1,
+            },
+          }
+        : {}),
       offers: {
         "@type": "Offer",
         url,

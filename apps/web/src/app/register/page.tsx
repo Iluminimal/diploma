@@ -16,7 +16,7 @@ export default async function RegisterPage({
   return (
     <AuthShell
       title="Create an account"
-      subtitle="Save your cart, favourites and order history."
+      subtitle="Save your Bag, favourites and order history."
     >
       <GoogleSignIn next={next} mode="signup" />
       <RegisterForm next={next} />

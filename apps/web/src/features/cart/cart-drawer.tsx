@@ -36,7 +36,7 @@ export function CartDrawer({ open, onOpenChange, count, trigger }: Props) {
         }}
       >
         <SheetHeader className="border-border border-b p-4 pr-12">
-          <SheetTitle>Your cart{count > 0 && ` (${count})`}</SheetTitle>
+          <SheetTitle>Your Bag{count > 0 && ` (${count})`}</SheetTitle>
           <SheetDescription className="sr-only">Items you have added, with quantities and subtotal.</SheetDescription>
         </SheetHeader>
         <div className="flex min-h-0 flex-1 flex-col pt-4">

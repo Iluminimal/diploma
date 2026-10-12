@@ -19,7 +19,7 @@ test("the photo button in the hero opens the photo picker", async ({ page }) => 
 test("below the hero: the story, departments, category pills and shelves", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { level: 2, name: /From a photo to your cart/ })).toBeAttached();
+  await expect(page.getByRole("heading", { level: 2, name: /From a photo to your Bag/ })).toBeAttached();
   const departments = page.getByRole("region", { name: "Departments" });
   await expect(departments.getByRole("link")).toHaveCount(3);
   await expect(departments.getByRole("link", { name: /Women/ })).toHaveAttribute("href", "/c/women");

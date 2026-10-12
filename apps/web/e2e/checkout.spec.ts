@@ -16,7 +16,7 @@ test("an empty cart cannot be checked out", async ({ shopperPage: page }) => {
   await page.goto("/checkout");
 
   await expect(page.getByRole("button", { name: /pay now/i })).toHaveCount(0);
-  await expect(page.getByText(/cart is empty/i).first()).toBeVisible();
+  await expect(page.getByText(/bag is empty/i).first()).toBeVisible();
 });
 
 test("a signed-in shopper pays with the demo card and sees the order afterwards", async ({
@@ -56,7 +56,7 @@ test("a signed-in shopper pays with the demo card and sees the order afterwards"
   await expect(page.getByRole("heading", { name: `Order ${number}` })).toBeVisible();
   await expect(page.getByText("12 Analytical Way").first()).toBeVisible();
   await expect(page.getByText(product.name).first()).toBeVisible();
-  await expect(cartButton(page)).toHaveAttribute("aria-label", "Cart");
+  await expect(cartButton(page)).toHaveAttribute("aria-label", "Bag");
 });
 
 test("repeating a checkout request, or the payment, never creates a second order or charge", async ({

@@ -16,13 +16,13 @@ export function CartView() {
 
   if (isPending) {
     return (
-      <div className="grid gap-8 lg:grid-cols-[1fr_22rem]" aria-busy aria-label="Loading your cart">
+      <div className="grid gap-8 lg:grid-cols-[1fr_22rem]" aria-busy aria-label="Loading your Bag">
         <div className="space-y-4">
           {[0, 1, 2].map((n) => (
-            <Skeleton key={n} className="h-32 rounded-2xl" />
+            <Skeleton key={n} className="h-32 rounded-[var(--radius-tile)]" />
           ))}
         </div>
-        <Skeleton className="hidden h-56 rounded-2xl lg:block" />
+        <Skeleton className="hidden h-56 rounded-[var(--radius-tile)] lg:block" />
       </div>
     );
   }
@@ -45,14 +45,14 @@ export function CartView() {
         <EmptyState
           icon={ShoppingBag}
           as="p"
-          title="Your cart is empty"
+          title="Your Bag is empty"
           description="Browse the collection or search with a photo."
           className="min-h-[26rem] py-16"
         >
-          <Button asChild size="lg" className="h-11 rounded-full px-5">
+          <Button asChild size="lg">
             <Link href="/products">Shop all</Link>
           </Button>
-          <Button asChild variant="outline" size="lg" className="h-11 rounded-full px-5">
+          <Button asChild variant="bordered" size="lg">
             <Link href="/search">Search by photo</Link>
           </Button>
         </EmptyState>
@@ -68,11 +68,11 @@ export function CartView() {
       <CartLines cart={cart} />
       <aside
         aria-label="Order summary"
-        className="border-border bg-card space-y-4 rounded-2xl border p-5 lg:sticky lg:top-24"
+        className="tile space-y-4 p-6 lg:sticky lg:top-20"
       >
-        <h2 className="text-base font-semibold">Summary</h2>
+        <h2 className="type-heading">Summary</h2>
         <FreeShippingProgress subtotalCents={cart.subtotal_cents} />
-        <dl className="space-y-2 text-sm">
+        <dl className="type-body space-y-2">
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Subtotal ({cart.item_count} items)</dt>
             <dd>
@@ -85,15 +85,15 @@ export function CartView() {
           </div>
         </dl>
         <div className="border-border flex items-baseline justify-between border-t pt-4">
-          <span className="font-medium">Estimated total</span>
-          <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} className="text-lg font-semibold" />
+          <span className="type-heading">Estimated total</span>
+          <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} className="type-heading" />
         </div>
         {cart.has_issues && (
           <p role="status" className="text-destructive text-sm">
             Some items need your attention before you can check out.
           </p>
         )}
-        <Button asChild size="lg" className="h-11 w-full rounded-full text-sm" aria-disabled={cart.has_issues}>
+        <Button asChild size="xl" className="w-full" aria-disabled={cart.has_issues}>
           <Link href="/checkout">
             Checkout <ArrowRight />
           </Link>

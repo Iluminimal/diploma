@@ -25,7 +25,7 @@ const COLUMNS = [
       { href: "/account/profile", label: "Profile", private: true },
       { href: "/account/orders", label: "Orders", private: true },
       { href: "/account/wishlist", label: "Wishlist", private: true },
-      { href: "/cart", label: "Cart" },
+      { href: "/cart", label: "Bag" },
     ],
   },
 ] as const;

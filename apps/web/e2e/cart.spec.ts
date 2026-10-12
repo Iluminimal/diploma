@@ -17,21 +17,21 @@ test("a guest adds to the cart: a size is required, the drawer shows the line, t
   const product = pickProduct(products, testInfo.workerIndex);
   await openProduct(page, product);
 
-  await page.getByRole("button", { name: /add to cart/i }).click();
+  await page.getByRole("button", { name: /add to bag/i }).click();
   await expect(page.getByText("Please select a size.")).toBeVisible();
   const size = await chooseSize(page);
-  await page.getByRole("button", { name: /add to cart/i }).click();
+  await page.getByRole("button", { name: /add to bag/i }).click();
 
   const drawer = page.getByRole("dialog");
   await expect(drawer.getByText(product.name)).toBeVisible();
   await expect(drawer.getByText(new RegExp(`Size ${size}`))).toBeVisible();
-  await expect(cartButton(page)).toHaveAttribute("aria-label", "Cart, 1 items");
+  await expect(cartButton(page)).toHaveAttribute("aria-label", "Bag, 1 items");
 });
 
 test("quantities can be changed on the cart page, and stop at the stock on hand", async ({ page, products }, testInfo) => {
   const product = pickProduct(products, testInfo.workerIndex + 1);
   await addToCartFromProductPage(page, product);
-  await page.getByRole("dialog").getByRole("link", { name: "View cart" }).click();
+  await page.getByRole("dialog").getByRole("link", { name: "View Bag" }).click();
   await expect(page).toHaveURL(/\/cart$/);
 
   const increase = page.locator("main").getByRole("button", { name: `Increase quantity of ${product.name}` });
@@ -47,7 +47,7 @@ test("quantities can be changed on the cart page, and stop at the stock on hand"
 
   const remove = page.locator("main").getByRole("button", { name: new RegExp(`Remove ${product.name}`) });
   await remove.click();
-  await expect(page.getByText("Your cart is empty")).toBeVisible();
+  await expect(page.getByText("Your Bag is empty")).toBeVisible();
 });
 
 test("the guest's cart survives a reload", async ({ page, products }, testInfo) => {
@@ -56,7 +56,7 @@ test("the guest's cart survives a reload", async ({ page, products }, testInfo) 
 
   await page.reload();
 
-  await expect(cartButton(page)).toHaveAttribute("aria-label", "Cart, 1 items");
+  await expect(cartButton(page)).toHaveAttribute("aria-label", "Bag, 1 items");
 });
 
 test("signing in merges the guest's cart into the account's", async ({ page, account, api, products }, testInfo) => {
@@ -70,7 +70,7 @@ test("signing in merges the guest's cart into the account's", async ({ page, acc
   await expect(page).toHaveURL(/\/cart$/);
   await expect(page.getByRole("heading", { name: mine.name }).or(page.getByRole("link", { name: mine.name })).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: theirs.name }).or(page.getByRole("link", { name: theirs.name })).first()).toBeVisible();
-  await expect(cartButton(page)).toHaveAttribute("aria-label", "Cart, 2 items");
+  await expect(cartButton(page)).toHaveAttribute("aria-label", "Bag, 2 items");
 });
 
 test("the wishlist asks a guest to sign in", async ({ page, products }, testInfo) => {

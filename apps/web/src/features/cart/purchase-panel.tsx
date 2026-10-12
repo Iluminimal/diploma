@@ -77,7 +77,7 @@ export function PurchasePanel({ product, sizes }: Props) {
   return (
     <div className="space-y-6">
       <p role="status" className="sr-only">
-        {justAdded ? `${product.name} was added to your cart.` : ""}
+        {justAdded ? `${product.name} was added to your Bag.` : ""}
       </p>
       {sizes && (
         <div ref={sizeBox}>

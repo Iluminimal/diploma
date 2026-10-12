@@ -66,7 +66,7 @@ describe("HowItWorks", () => {
 
     render(await HowItWorks());
 
-    expect(screen.getByRole("heading", { level: 2, name: /From a photo to your cart/ })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 2, name: /From a photo to your Bag/ })).toBeInTheDocument();
     expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Snap or upload", "We look", "Find it"]);
     const detected = within(screen.getByRole("list", { name: "What we detected" }));
     expect(detected.getAllByRole("listitem").map((li) => li.textContent)).toEqual(["Shirts", "Navy Blue", "Men"]);

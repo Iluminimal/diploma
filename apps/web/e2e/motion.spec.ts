@@ -35,7 +35,7 @@ test("a removed line can be brought back with Undo", async ({ page, products }, 
   const drawer = page.getByRole("dialog");
 
   await drawer.getByRole("button", { name: new RegExp(`Remove ${product.name}`) }).click();
-  await expect(drawer.getByText("Your cart is empty")).toBeVisible();
+  await expect(drawer.getByText("Your Bag is empty")).toBeVisible();
   await drawer.getByRole("button", { name: "Undo" }).click();
 
   await expect(drawer.getByText(product.name)).toBeVisible();
@@ -107,7 +107,7 @@ test.describe("on a phone", () => {
 
     await expect(bar.getByRole("link", { name: "Angel" })).toBeVisible();
     await expect(bar.getByRole("button", { name: "Search", exact: true })).toBeVisible();
-    await expect(bar.getByRole("button", { name: /^Cart/ })).toBeVisible();
+    await expect(bar.getByRole("button", { name: /^Bag/ })).toBeVisible();
     await expect(bar.getByRole("button", { name: "Open menu" })).toBeVisible();
     // The account is in the menu on a phone, not in the bar.
     await expect(bar.getByRole("button", { name: /^Account/ })).toBeHidden();
@@ -150,9 +150,9 @@ test.describe("on a phone", () => {
   test("the bag opens the cart", async ({ page }) => {
     await page.goto("/");
 
-    await page.getByRole("banner").getByRole("button", { name: /^Cart/ }).click();
+    await page.getByRole("banner").getByRole("button", { name: /^Bag/ }).click();
 
-    await expect(page.getByRole("dialog", { name: "Your cart" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Your Bag" })).toBeVisible();
   });
 
   test("a signed-in customer finds Saved and Sign out on the account page", async ({ shopperPage: page }) => {

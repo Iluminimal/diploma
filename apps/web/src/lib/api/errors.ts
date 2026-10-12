@@ -136,11 +136,11 @@ export function userMessage(error: unknown): string {
     case error.is("insufficientStock"):
       return error.detail ?? "Not enough stock for that quantity.";
     case error.is("cartEmpty"):
-      return "Your cart is empty.";
+      return "Your Bag is empty.";
     case error.is("paymentsUnavailable"):
       return "Payments aren't available right now. Please try again later.";
     case error.is("paymentProvider"):
-      return "We couldn't reach the payment provider. Your cart is unchanged, please try again.";
+      return "We couldn't reach the payment provider. Your Bag is unchanged, please try again.";
     case error.is("paymentInProgress"):
       return error.detail ?? "A payment is already in progress for your last order.";
     case error.is("forbiddenOrigin"):

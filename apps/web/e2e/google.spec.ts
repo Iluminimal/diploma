@@ -68,7 +68,7 @@ test("a guest's cart comes along", async ({ page, products }) => {
   await google(page).click();
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(cartButton(page)).toHaveAttribute("aria-label", /Cart, 1 item/);
+  await expect(cartButton(page)).toHaveAttribute("aria-label", /Bag, 1 item/);
 });
 
 test("an existing password account is linked, and its password stops working", async ({ page, api, account }) => {

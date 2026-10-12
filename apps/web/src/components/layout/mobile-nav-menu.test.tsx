@@ -54,7 +54,7 @@ describe("the phone menu button and page", () => {
       expect(screen.queryByRole("button", { name }) ?? screen.queryByRole("link", { name })).toBeInTheDocument();
     }
     expect(screen.getByRole("link", { name: "New" })).toHaveAttribute("href", "/products?sort=newest");
-    expect(screen.queryByRole("button", { name: /^Cart/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Bag/ })).not.toBeInTheDocument();
   });
 
   it("drills from a department to an article type and back", async () => {

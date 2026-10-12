@@ -119,7 +119,7 @@ test("the mini-cart keeps focus inside, closes with Escape and gives focus back"
   const [product] = products;
   await page.goto(`/products/${product!.id}/${product!.slug}`);
   await page.locator("fieldset label").first().click();
-  await page.getByRole("button", { name: /add to cart/i }).click();
+  await page.getByRole("button", { name: /add to bag/i }).click();
   const drawer = page.getByRole("dialog");
   await expect(drawer).toBeVisible();
 

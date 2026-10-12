@@ -33,18 +33,18 @@ export function ConfirmationView({ number }: { number: string }) {
     const missing = error instanceof ApiError && error.isNotFound;
     return (
       <div className="space-y-4">
-        <h1 className="text-2xl font-semibold">{missing ? "We couldn't find that order" : "Something went wrong"}</h1>
+        <h1 className="type-title">{missing ? "We couldn't find that order" : "Something went wrong"}</h1>
         <p role="alert" className="text-muted-foreground">
           {missing ? "It may belong to another account." : userMessage(error)}
         </p>
-        <Button asChild variant="outline" className="h-10 rounded-full px-4">
+        <Button asChild variant="bordered">
           <Link href="/account/orders">Your orders</Link>
         </Button>
       </div>
     );
   }
   if (!order) {
-    return <Skeleton aria-busy aria-label="Loading your order" className="h-64 rounded-2xl" />;
+    return <Skeleton aria-busy aria-label="Loading your order" className="h-64 rounded-[var(--radius-tile)]" />;
   }
 
   const Icon = order.status === "pending" ? Clock : XCircle;
@@ -69,7 +69,7 @@ export function ConfirmationView({ number }: { number: string }) {
         ) : (
           <Icon aria-hidden className="text-muted-foreground mx-auto size-10 sm:mx-0" />
         )}
-        <h1 ref={heading} tabIndex={-1} className="text-2xl font-semibold tracking-tight outline-none md:text-3xl">
+        <h1 ref={heading} tabIndex={-1} className="type-display outline-none">
           {title}
         </h1>
         <p className="text-muted-foreground" role="status">
@@ -79,10 +79,10 @@ export function ConfirmationView({ number }: { number: string }) {
       {order.status === "paid" && <WhatHappensNext email={order.contact_email} />}
       <OrderDetail order={order} />
       <div className="flex flex-wrap gap-2">
-        <Button asChild size="lg" className="h-11 rounded-full px-5">
+        <Button asChild size="lg">
           <Link href="/products">Continue shopping</Link>
         </Button>
-        <Button asChild variant="outline" size="lg" className="h-11 rounded-full px-5">
+        <Button asChild variant="bordered" size="lg">
           <Link href="/account/orders">View all orders</Link>
         </Button>
       </div>
@@ -98,8 +98,8 @@ function WhatHappensNext({ email }: { email: string }) {
     { title: "Follow it any time", text: "Your order page shows where it is, step by step." },
   ];
   return (
-    <section aria-label="What happens next" className="border-border rounded-2xl border p-5">
-      <h2 className="mb-4 text-base font-semibold">What happens next</h2>
+    <section aria-label="What happens next" className="tile p-6">
+      <h2 className="type-heading mb-4">What happens next</h2>
       <ol className="space-y-4">
         {steps.map((step, i) => (
           <li
@@ -107,7 +107,7 @@ function WhatHappensNext({ email }: { email: string }) {
             className="animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards flex gap-3 duration-500"
             style={{ animationDelay: `${600 + i * 150}ms` }}
           >
-            <span aria-hidden className="bg-secondary grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold">
+            <span aria-hidden className="bg-background grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold">
               {i + 1}
             </span>
             <p className="text-sm">

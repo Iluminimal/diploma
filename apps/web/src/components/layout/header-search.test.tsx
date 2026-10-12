@@ -69,7 +69,7 @@ describe("HeaderSearch", () => {
       render(
         <>
           <HeaderSearch />
-          <div role="dialog" aria-label="Cart">
+          <div role="dialog" aria-label="Bag">
             <button type="button">Checkout</button>
           </div>
         </>,

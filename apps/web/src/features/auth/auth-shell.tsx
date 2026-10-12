@@ -7,7 +7,7 @@ import { emptyFilters } from "@/features/catalog/filters";
 import type { Product } from "@/features/catalog/product";
 
 const BENEFITS = [
-  { icon: ShoppingBag, text: "Your cart follows you from phone to laptop" },
+  { icon: ShoppingBag, text: "Your Bag follows you from phone to laptop" },
   { icon: Heart, text: "Save favourites and come back to them" },
   { icon: CreditCard, text: "Every order and address in one place" },
 ] as const;

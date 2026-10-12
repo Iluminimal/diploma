@@ -192,7 +192,7 @@ describe("CheckoutView", () => {
     await userEvent.click(await payButton());
 
     const alert = await screen.findByText("Update your cart and try again.");
-    expect(within(alert.closest("p")!).getByRole("link", { name: "Review your cart" })).toHaveAttribute("href", "/cart");
+    expect(within(alert.closest("p")!).getByRole("link", { name: "Review your Bag" })).toHaveAttribute("href", "/cart");
     await userEvent.click(await payButton());
     await waitFor(() => expect(api.count("POST /api/v1/checkout")).toBe(2));
     const keys = api.calls.filter((c) => c.path === "/api/v1/checkout").map((c) => c.headers.get("Idempotency-Key"));
@@ -274,14 +274,14 @@ describe("CheckoutView", () => {
     renderWithQuery(<CheckoutView />);
 
     expect(await payButton()).toBeDisabled();
-    expect(screen.getByRole("link", { name: "Review your cart" })).toHaveAttribute("href", "/cart");
+    expect(screen.getByRole("link", { name: "Review your Bag" })).toHaveAttribute("href", "/cart");
   });
 
   it("shows an empty-cart message instead of a form", async () => {
     stubApi(routes({ "GET /api/v1/cart": { body: makeCart() } }) as never);
     renderWithQuery(<CheckoutView />);
 
-    expect(await screen.findByText("Your cart is empty")).toBeInTheDocument();
+    expect(await screen.findByText("Your Bag is empty")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /pay now/i })).not.toBeInTheDocument();
   });
 });

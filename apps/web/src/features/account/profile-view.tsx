@@ -342,7 +342,7 @@ function PasswordDialog({
 function DeleteAccount({ user }: { user: SessionUser }) {
   const [open, setOpen] = useState(false);
   return (
-    <Card title="Delete account" description="Removes your details, addresses, wishlist and cart, and signs you out everywhere.">
+    <Card title="Delete account" description="Removes your details, addresses, wishlist and Bag, and signs you out everywhere.">
       <p className="text-muted-foreground text-sm">
         Orders you have placed are kept for the shop&apos;s records, without your account attached. This can&apos;t be undone.
       </p>

@@ -43,7 +43,7 @@ describe("cart lines", () => {
     renderWithQuery(<MiniCart onNavigate={vi.fn()} />);
     await screen.findByText("White Sneaker");
 
-    await userEvent.click(screen.getByRole("button", { name: "Remove White Sneaker from your cart" }));
+    await userEvent.click(screen.getByRole("button", { name: "Remove White Sneaker from your Bag" }));
 
     expect(await screen.findByRole("status")).toHaveTextContent("Removed White Sneaker");
     await userEvent.click(screen.getByRole("button", { name: "Undo" }));

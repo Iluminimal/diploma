@@ -63,10 +63,10 @@ function Section({
           />
         </span>
       )}
-      <h2 className="flex min-h-7 flex-wrap items-baseline gap-x-3 text-lg font-semibold">
+      <h2 className="type-heading flex min-h-7 flex-wrap items-baseline gap-x-3">
         <span id={`step-${step}`}>{title}</span>
         {done && summary && (
-          <span className="text-muted-foreground animate-in fade-in slide-in-from-left-1 min-w-0 truncate text-sm font-normal duration-500">
+          <span className="text-muted-foreground type-caption animate-in fade-in slide-in-from-left-1 min-w-0 truncate font-normal duration-500">
             {summary}
           </span>
         )}
@@ -106,10 +106,10 @@ function CheckoutSkeleton() {
     <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_24rem]" aria-busy aria-label="Loading checkout">
       <div className="space-y-4">
         {[0, 1, 2].map((n) => (
-          <Skeleton key={n} className="h-40 rounded-2xl" />
+          <Skeleton key={n} className="h-40 rounded-[var(--radius-tile)]" />
         ))}
       </div>
-      <Skeleton className="h-80 rounded-2xl" />
+      <Skeleton className="h-80 rounded-[var(--radius-tile)]" />
     </div>
   );
 }
@@ -207,8 +207,8 @@ export function CheckoutView() {
   if (cart.lines.length === 0) {
     return (
       <div className="space-y-4 py-10 text-center">
-        <p className="text-lg font-medium">Your cart is empty</p>
-        <Button asChild size="lg" className="h-11 rounded-full px-5">
+        <p className="text-lg font-medium">Your Bag is empty</p>
+        <Button asChild size="lg">
           <Link href="/products">Continue shopping</Link>
         </Button>
       </div>
@@ -250,7 +250,7 @@ export function CheckoutView() {
             </div>
           )}
           {showAddressForm ? (
-            <div className="border-border animate-in fade-in slide-in-from-top-2 rounded-2xl border p-4 duration-500 sm:p-5">
+            <div className="tile animate-in fade-in slide-in-from-top-2 p-4 duration-500 sm:p-6">
               <AddressForm
                 submitLabel="Use this address"
                 askDefault={addresses.length > 0}
@@ -263,7 +263,7 @@ export function CheckoutView() {
               />
             </div>
           ) : (
-            <Button type="button" variant="outline" className="h-10 rounded-full px-4" onClick={() => setAddingAddress(true)}>
+            <Button type="button" variant="bordered" onClick={() => setAddingAddress(true)}>
               Add a new address
             </Button>
           )}
@@ -280,7 +280,6 @@ export function CheckoutView() {
                 inputMode="email"
                 value={contactEmail}
                 onChange={(event) => setContactEmail(event.target.value)}
-                className="h-11 rounded-xl"
                 {...fieldAria("contact-email", contactError ?? undefined, "hint")}
               />
             </Field>
@@ -329,12 +328,12 @@ export function CheckoutView() {
         </Section>
       </div>
 
-      <aside aria-label="Order summary" className="border-border bg-card space-y-5 rounded-2xl border p-5 lg:sticky lg:top-24">
-        <h2 className="text-base font-semibold">Order summary</h2>
+      <aside aria-label="Order summary" className="tile space-y-5 p-6 lg:sticky lg:top-20">
+        <h2 className="type-heading">Order summary</h2>
         <ul className="divide-border divide-y" aria-label="Items">
           {cart.lines.map((line) => (
             <li key={line.id} className="flex gap-3 py-3 first:pt-0">
-              <div className="bg-muted aspect-[3/4] w-14 shrink-0 overflow-hidden rounded-lg">
+              <div className="bg-card aspect-[3/4] w-14 shrink-0 overflow-hidden rounded-lg dark:bg-white">
                 <ProductImage product={line.product} sizes="56px" />
               </div>
               <div className="min-w-0 flex-1 text-sm">
@@ -374,7 +373,7 @@ export function CheckoutView() {
           <p role="alert" className="text-destructive text-sm">
             Some items are no longer available.{" "}
             <Link href="/cart" className="font-medium underline underline-offset-2">
-              Review your cart
+              Review your Bag
             </Link>
           </p>
         )}
@@ -383,12 +382,12 @@ export function CheckoutView() {
             {userMessage(pay.error)}{" "}
             {pay.error instanceof ApiError && pay.error.is("insufficientStock") && (
               <Link href="/cart" className="font-medium underline underline-offset-2">
-                Review your cart
+                Review your Bag
               </Link>
             )}
           </p>
         )}
-        <Button type="submit" form="checkout-form" size="lg" disabled={!canPay} className="h-12 w-full rounded-full text-sm">
+        <Button type="submit" form="checkout-form" size="xl" disabled={!canPay} className="w-full">
           {pay.isPending ? <Loader2 className="animate-spin" /> : <Lock />}
           Pay now · <Price cents={total} currency={cart.currency} />
         </Button>

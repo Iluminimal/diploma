@@ -147,7 +147,7 @@ test.describe("storefront", () => {
       await page.context().clearCookies(); // a fresh guest cart: this product has little stock
       await page.goto(`/products/${product!.id}/${product!.slug}`);
       await page.locator("fieldset label").first().click();
-      await page.getByRole("button", { name: /add to cart/i }).click();
+      await page.getByRole("button", { name: /add to bag/i }).click();
       await expect(page.getByRole("dialog")).toBeVisible();
       await settled(page);
       found.push(...(await scan(page, `${variant.viewport}/${variant.scheme}`)));

@@ -31,7 +31,7 @@ export function CartButton() {
         type="button"
         className={HEADER_CELL}
         data-cart-button
-        aria-label={count ? `Cart, ${count} items` : "Cart"}
+        aria-label={count ? `Bag, ${count} items` : "Bag"}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(true)}

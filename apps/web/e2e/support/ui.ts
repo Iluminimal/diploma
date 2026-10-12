@@ -11,7 +11,7 @@ export async function openSearch(page: Page) {
 }
 
 // The phone tab bar has a cart button too (hidden on a computer): the one that can be seen.
-export const cartButton = (page: Page) => page.locator('button[aria-label^="Cart"]:visible');
+export const cartButton = (page: Page) => page.locator('button[aria-label^="Bag"]:visible');
 
 export async function openProduct(page: Page, product: CatalogProduct) {
   await page.goto(`/products/${product.id}/${product.slug}`);
@@ -30,7 +30,7 @@ export async function chooseSize(page: Page): Promise<string> {
 export async function addToCartFromProductPage(page: Page, product: CatalogProduct): Promise<string> {
   await openProduct(page, product);
   const size = await chooseSize(page);
-  await page.getByRole("button", { name: /add to cart/i }).click();
+  await page.getByRole("button", { name: /add to bag/i }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
   return size;
 }

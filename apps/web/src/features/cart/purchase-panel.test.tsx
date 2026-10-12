@@ -78,7 +78,7 @@ describe("PurchasePanel", () => {
     await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
     expect(await screen.findByRole("button", { name: "Added" })).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent("was added to your cart");
+    expect(screen.getByRole("status")).toHaveTextContent("was added to your Bag");
     expect(useCartDrawer.getState().added).toEqual({ productId: shirt.id, size: "M" });
     await waitFor(() => expect(screen.getByRole("button", { name: /add to bag/i })).toBeInTheDocument(), { timeout: 3000 });
   });

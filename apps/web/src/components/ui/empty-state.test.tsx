@@ -17,9 +17,9 @@ describe("EmptyState", () => {
   });
 
   it("can use a paragraph where the page has its own heading", () => {
-    render(<EmptyState icon={Heart} as="p" title="Your cart is empty" />);
+    render(<EmptyState icon={Heart} as="p" title="Your Bag is empty" />);
 
     expect(screen.queryByRole("heading")).not.toBeInTheDocument();
-    expect(screen.getByText("Your cart is empty")).toBeInTheDocument();
+    expect(screen.getByText("Your Bag is empty")).toBeInTheDocument();
   });
 });

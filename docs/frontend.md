@@ -214,6 +214,11 @@ Every page is being restyled after apple.com, one step at a time (each step is a
   48px outlined tiles whose chosen one gets a blue 2px outline (not an inverted black chip); one full-width blue **Add to Bag**
   pill (the label and the sticky phone bar say Bag; the header's accessible name moves with the rest of the Bag wording in step 7)
   with **Save** under it; "Find more like this with a photo" is a blue `link-more`; Details and Delivery use 17px headings.
+* **Bag, checkout, confirmation** (step 7): the shop says **Bag** like apple.com (header and drawer labels, "Add to Bag", "Your Bag is
+  empty", "View Bag", "Review your Bag."; URLs and the API keep `cart`). The Bag page is `type-display` over lines with a grey photo tile,
+  17px names and prices, and a grey `tile` summary with one full-width blue Checkout pill; the drawer's buttons are a blue Checkout and a
+  blue-outline View Bag. Checkout keeps its stepper with 24px headings, choice cards outlined 1px (blue 2px when chosen), a grey order
+  summary tile and a 48px Pay now pill; the confirmation title is `type-display` over a grey "What happens next" tile.
 
 ## Accounts, cart and checkout
 

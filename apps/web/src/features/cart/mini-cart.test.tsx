@@ -34,14 +34,14 @@ describe("MiniCart", () => {
     expect(screen.getByText(/Size 9/)).toBeInTheDocument();
     expect(screen.getByText("$110")).toBeInTheDocument(); // 2 x 30 + 50
     expect(screen.getByRole("link", { name: "Checkout" })).toHaveAttribute("href", "/checkout");
-    expect(screen.getByRole("link", { name: "View cart" })).toHaveAttribute("href", "/cart");
+    expect(screen.getByRole("link", { name: "View Bag" })).toHaveAttribute("href", "/cart");
   });
 
   it("shows a friendly empty state", async () => {
     stubApi({ "GET /api/v1/cart": { body: makeCart() } });
     renderWithQuery(<MiniCart onNavigate={vi.fn()} />);
 
-    expect(await screen.findByText("Your cart is empty")).toBeInTheDocument();
+    expect(await screen.findByText("Your Bag is empty")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Continue shopping" })).toHaveAttribute("href", "/products");
   });
 
@@ -115,7 +115,7 @@ describe("MiniCart", () => {
     renderWithQuery(<MiniCart onNavigate={vi.fn()} />);
     await screen.findByText("White Sneaker");
 
-    await userEvent.click(screen.getByRole("button", { name: "Remove White Sneaker from your cart" }));
+    await userEvent.click(screen.getByRole("button", { name: "Remove White Sneaker from your Bag" }));
 
     await waitFor(() => expect(screen.queryByText("White Sneaker")).not.toBeInTheDocument());
     expect(api.count("DELETE /api/v1/cart/items/11")).toBe(1);

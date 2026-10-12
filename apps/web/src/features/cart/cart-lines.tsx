@@ -29,7 +29,7 @@ type Props = {
 export function CartLines({ cart, onNavigate, className }: Props) {
   return (
     <>
-      <ul className={cn("divide-border divide-y", className)} aria-label="Items in your cart">
+      <ul className={cn("divide-border divide-y", className)} aria-label="Items in your Bag">
         <MotionProvider>
           <AnimatePresence initial={false}>
             {cart.lines.map((line) => (
@@ -125,11 +125,11 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
-      className={cn("flex gap-3 overflow-hidden py-4 first:pt-0", isNew && "animate-highlight")}
+      className={cn("flex gap-4 overflow-hidden py-5 first:pt-0", isNew && "animate-highlight")}
     >
       <Link href={productPath(product)} onClick={onNavigate} className="w-20 shrink-0 sm:w-24">
-        <div className="bg-muted aspect-[3/4] overflow-hidden rounded-xl">
-          <ProductImage product={product} sizes="96px" />
+        <div className="tile aspect-[3/4] rounded-xl dark:bg-white">
+          <ProductImage product={product} sizes="96px" className="mix-blend-multiply dark:mix-blend-normal" />
         </div>
       </Link>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -137,20 +137,20 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
           <Link
             href={productPath(product)}
             onClick={onNavigate}
-            className="line-clamp-2 text-sm leading-snug font-medium hover:underline"
+            className="line-clamp-2 text-[1.0625rem] leading-snug font-semibold hover:underline"
           >
             {product.name}
           </Link>
           <button
             type="button"
-            aria-label={`Remove ${product.name} from your cart`}
+            aria-label={`Remove ${product.name} from your Bag`}
             onClick={removeWithUndo}
             className="text-muted-foreground hover:text-foreground -mt-1 -mr-1 grid size-8 shrink-0 place-items-center rounded-full"
           >
             <Trash2 className="size-4" />
           </button>
         </div>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground type-caption">
           {line.size ? `Size ${line.size} · ` : ""}
           {productSubtitle(product)}
         </p>
@@ -195,7 +195,7 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
           <AnimatedPrice
             cents={line.line_total_cents}
             currency={product.currency}
-            className={cn("text-sm font-medium", soldOut && "text-muted-foreground line-through")}
+            className={cn("text-[1.0625rem] font-semibold", soldOut && "text-muted-foreground line-through")}
           />
         </div>
       </div>

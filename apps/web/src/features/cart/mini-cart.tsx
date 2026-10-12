@@ -50,11 +50,11 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
         <EmptyState
           icon={ShoppingBag}
           as="p"
-          title="Your cart is empty"
+          title="Your Bag is empty"
           description="Find something you love and it will wait for you here."
           className="flex-1 pb-16"
         >
-          <Button asChild variant="outline" size="lg" className="h-10 rounded-full px-5" onClick={onNavigate}>
+          <Button asChild variant="bordered" onClick={onNavigate}>
             <Link href="/products">Continue shopping</Link>
           </Button>
         </EmptyState>
@@ -74,15 +74,15 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
       <div className="border-border space-y-3 border-t p-4">
         <FreeShippingProgress subtotalCents={cart.subtotal_cents} />
         <div className="flex items-baseline justify-between">
-          <span className="text-sm font-medium">Subtotal</span>
-          <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} className="text-base font-semibold" />
+          <span className="type-body font-semibold">Subtotal</span>
+          <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} className="type-body font-semibold" />
         </div>
         <p className="text-muted-foreground text-xs">Shipping is calculated at checkout.</p>
-        <Button asChild size="lg" className="h-11 w-full rounded-full text-sm" onClick={onNavigate}>
+        <Button asChild size="xl" className="w-full" onClick={onNavigate}>
           <Link href="/checkout">Checkout</Link>
         </Button>
-        <Button asChild variant="outline" size="lg" className="h-11 w-full rounded-full text-sm" onClick={onNavigate}>
-          <Link href="/cart">View cart</Link>
+        <Button asChild variant="bordered" size="lg" className="w-full" onClick={onNavigate}>
+          <Link href="/cart">View Bag</Link>
         </Button>
       </div>
     </>

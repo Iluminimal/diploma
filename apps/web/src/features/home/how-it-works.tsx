@@ -8,7 +8,7 @@ import { newest } from "./home-data";
 const STEPS = [
   { title: "Snap or upload", text: "Take a photo, drop a screenshot or paste one. Anything you saw and liked." },
   { title: "We look", text: "Our model reads the garment, its cut and its colour, and ignores the background." },
-  { title: "Find it", text: "You get the closest pieces in the shop, best match first, ready to add to your cart." },
+  { title: "Find it", text: "You get the closest pieces in the shop, best match first, ready to add to your Bag." },
 ] as const;
 
 /** A real photo and its real nearest neighbours, so the demo is the product itself. */
@@ -41,7 +41,7 @@ export async function HowItWorks() {
           <header className="mb-10 max-w-2xl md:mb-8">
             <p className="type-heading text-brand mb-2">How it works</p>
             <h2 id="how-heading" className="type-display text-balance">
-              From a photo to your cart in seconds.
+              From a photo to your Bag in seconds.
             </h2>
           </header>
           <div className="grid items-center gap-10 md:grid-cols-[minmax(0,20rem)_1fr] md:gap-16">

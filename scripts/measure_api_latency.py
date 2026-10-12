@@ -23,16 +23,16 @@ from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
 from redis.asyncio import Redis
 
-from lookalike.core.config import Settings, get_settings
-from lookalike.db.engine import create_engine
-from lookalike.evaluation import (
+from angel.core.config import Settings, get_settings
+from angel.db.engine import create_engine
+from angel.evaluation import (
     format_percentiles,
     make_upload,
     ms_since,
     percentiles,
     sample_products,
 )
-from lookalike.main import create_app
+from angel.main import create_app
 
 TARGET_IMAGE_P95_MS = 400.0
 TARGET_SIMILAR_P95_MS = 50.0

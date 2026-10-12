@@ -76,7 +76,7 @@ describe("MiniCart", () => {
     stubApi({
       "GET /api/v1/cart": { body: twoLines() },
       "PATCH /api/v1/cart/items/10": problem(409, "Not enough stock", {
-        type: "urn:lookalike:problem:insufficient-stock",
+        type: "urn:angel:problem:insufficient-stock",
         detail: "Only 2 of Blue Kurta can be added.",
       }),
     });

@@ -104,7 +104,7 @@ async def test_size_must_be_one_of_the_products_sizes(api_factory: ApiFactory) -
         good_shoe = await add_to_cart(api.client, shoe.product_id, size="9")
 
         assert no_size.status_code == wrong_size.status_code == sized_watch.status_code == 422
-        assert no_size.json()["type"] == "urn:lookalike:problem:invalid-size"
+        assert no_size.json()["type"] == "urn:angel:problem:invalid-size"
         assert "XL" in no_size.json()["sizes"]
         assert "9" in wrong_size.json()["sizes"]
         assert sized_watch.json()["sizes"] == []
@@ -123,7 +123,7 @@ async def test_stock_is_validated_against_what_is_already_in_the_cart(
         fits = await add_to_cart(api.client, product.product_id, quantity=2)
 
         assert too_many.status_code == 409
-        assert too_many.json()["type"] == "urn:lookalike:problem:insufficient-stock"
+        assert too_many.json()["type"] == "urn:angel:problem:insufficient-stock"
         assert too_many.json()["available"] == 7
         assert cumulative.status_code == 409
         assert fits.json()["item_count"] == 7
@@ -157,7 +157,7 @@ async def test_sold_out_unknown_and_inactive_products_cannot_be_added(
         assert sold.status_code == 409
         assert sold.json()["available"] == 0
         assert gone.status_code == unknown.status_code == 404
-        assert unknown.json()["type"] == "urn:lookalike:problem:product-not-found"
+        assert unknown.json()["type"] == "urn:angel:problem:product-not-found"
 
 
 async def test_input_is_validated(api_factory: ApiFactory) -> None:
@@ -209,7 +209,7 @@ async def test_nobody_can_touch_another_visitors_cart_lines(api_factory: ApiFact
             delete = await stranger.delete(f"{CART}/items/{mine}")
 
         assert patch.status_code == delete.status_code == 404
-        assert patch.json()["type"] == "urn:lookalike:problem:cart-item-not-found"
+        assert patch.json()["type"] == "urn:angel:problem:cart-item-not-found"
         assert (await api.client.get(CART)).json()["lines"][0]["quantity"] == 1
 
 

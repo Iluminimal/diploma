@@ -40,12 +40,12 @@ describe("recently viewed", () => {
   });
 
   it("ignores junk in storage", () => {
-    window.localStorage.setItem("lookalike:recently-viewed", JSON.stringify([{ id: "x" }, null, 5, makeProduct({ id: 7 })]));
+    window.localStorage.setItem("angel:recently-viewed", JSON.stringify([{ id: "x" }, null, 5, makeProduct({ id: 7 })]));
 
     expect(readRecentlyViewed().map((p) => p.id)).toEqual([7]);
-    window.localStorage.setItem("lookalike:recently-viewed", "{not json");
+    window.localStorage.setItem("angel:recently-viewed", "{not json");
     expect(readRecentlyViewed()).toEqual([]);
-    window.localStorage.setItem("lookalike:recently-viewed", '{"a":1}');
+    window.localStorage.setItem("angel:recently-viewed", '{"a":1}');
     expect(readRecentlyViewed()).toEqual([]);
   });
 

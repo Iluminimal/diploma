@@ -6,15 +6,15 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from lookalike.ingestion.images import (
+from angel.ingestion.images import (
     ImageJob,
     image_key,
     make_blur_data_url,
     process_image,
     thumbnail_key,
 )
-from lookalike.ml.preprocess import CLIP_SIZE, InvalidImageError, load_image, to_clip_array
-from lookalike.storage import LocalStorage
+from angel.ml.preprocess import CLIP_SIZE, InvalidImageError, load_image, to_clip_array
+from angel.storage import LocalStorage
 
 
 def _save(path: Path, image: Image.Image, **kwargs: Any) -> Path:

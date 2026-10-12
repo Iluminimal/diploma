@@ -24,13 +24,13 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg18
         env:
-          POSTGRES_USER: lookalike
-          POSTGRES_PASSWORD: lookalike
-          POSTGRES_DB: lookalike
+          POSTGRES_USER: angel
+          POSTGRES_PASSWORD: angel
+          POSTGRES_DB: angel
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U lookalike -d lookalike"
+          --health-cmd "pg_isready -U angel -d angel"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -45,7 +45,7 @@ jobs:
           --health-retries 10
     env:
       APP_ENV: test
-      DATABASE_URL: postgresql+asyncpg://lookalike:lookalike@localhost:5432/lookalike
+      DATABASE_URL: postgresql+asyncpg://angel:angel@localhost:5432/angel
       REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v7
@@ -95,13 +95,13 @@ jobs:
       postgres:
         image: pgvector/pgvector:pg18
         env:
-          POSTGRES_USER: lookalike
-          POSTGRES_PASSWORD: lookalike
-          POSTGRES_DB: lookalike
+          POSTGRES_USER: angel
+          POSTGRES_PASSWORD: angel
+          POSTGRES_DB: angel
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U lookalike -d lookalike"
+          --health-cmd "pg_isready -U angel -d angel"
           --health-interval 5s
           --health-timeout 3s
           --health-retries 10
@@ -118,7 +118,7 @@ jobs:
       # The API runs with a deterministic stand-in for FashionCLIP (no model download in CI), the
       # offline payment gateway and no rate limits (every test registers its own customer).
       APP_ENV: test
-      DATABASE_URL: postgresql+asyncpg://lookalike:lookalike@localhost:5432/lookalike
+      DATABASE_URL: postgresql+asyncpg://angel:angel@localhost:5432/angel
       REDIS_URL: redis://localhost:6379/0
       EMBEDDER: fake
       PAYMENTS_MODE: offline
@@ -127,7 +127,7 @@ jobs:
       RATE_LIMIT_ENABLED: "false"
       JWT_SECRET: ci-only-jwt-secret-0123456789-0123456789
       CORS_ORIGINS: http://localhost:3000
-      MEDIA_DIR: /tmp/lookalike-media
+      MEDIA_DIR: /tmp/angel-media
       MEDIA_BASE_URL: http://localhost:8000/media
       E2E_FAKE_MODEL: "1"
     steps:
@@ -153,7 +153,7 @@ jobs:
       - name: Start the API
         working-directory: apps/api
         run: |
-          nohup uv run uvicorn lookalike.main:create_app --factory --host 127.0.0.1 --port 8000 --no-access-log > "$RUNNER_TEMP/api.log" 2>&1 &
+          nohup uv run uvicorn angel.main:create_app --factory --host 127.0.0.1 --port 8000 --no-access-log > "$RUNNER_TEMP/api.log" 2>&1 &
           for i in $(seq 1 60); do
             curl -sf http://localhost:8000/readyz && exit 0
             sleep 1

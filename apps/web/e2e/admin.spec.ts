@@ -46,7 +46,7 @@ test("the API refuses admin requests from anyone but an administrator", async ({
 
   expect(anonymous.status()).toBe(401);
   expect(customer.status()).toBe(403);
-  expect((await customer.json()).type).toBe("urn:lookalike:problem:forbidden");
+  expect((await customer.json()).type).toBe("urn:angel:problem:forbidden");
 });
 
 test("an administrator creates a product from a photo, edits it, replaces the photo and withdraws it", async ({

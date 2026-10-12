@@ -18,7 +18,7 @@ from tests.test_admin_orders_api import administrator, in_stock, place_order
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 
 ADMIN = "/api/v1/admin/orders"
-INVALID = "urn:lookalike:problem:invalid-order-transition"
+INVALID = "urn:angel:problem:invalid-order-transition"
 SHIP = {"carrier": "DHL", "tracking_number": "JD0146 0000 1234"}
 
 
@@ -384,7 +384,7 @@ async def test_acting_on_an_unknown_order_is_a_404(shop: Shop) -> None:
     response = await shop.act("LK-NOSUCH99", "deliver")
 
     assert response.status_code == 404
-    assert response.json()["type"] == "urn:lookalike:problem:order-not-found"
+    assert response.json()["type"] == "urn:angel:problem:order-not-found"
 
 
 async def test_the_whole_history_is_recorded_from_checkout_on(

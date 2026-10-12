@@ -89,7 +89,7 @@ describe("PurchasePanel", () => {
   it("tells the shopper when there is not enough stock and keeps the drawer closed", async () => {
     stubApi({
       "POST /api/v1/cart/items": problem(409, "Not enough stock", {
-        type: "urn:lookalike:problem:insufficient-stock",
+        type: "urn:angel:problem:insufficient-stock",
         detail: "Only 2 of Alma Women Blue Kurta can be added.",
         available: 2,
       }),

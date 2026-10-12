@@ -13,7 +13,7 @@ from tests.conftest import Api, ApiFactory
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 
 ORDERS = "/api/v1/admin/orders"
-ORDER_NOT_FOUND = "urn:lookalike:problem:order-not-found"
+ORDER_NOT_FOUND = "urn:angel:problem:order-not-found"
 
 
 def in_stock(api: Api, skip: int = 0) -> Entry:

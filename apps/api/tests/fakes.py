@@ -6,9 +6,9 @@ from typing import Literal
 import numpy as np
 from PIL import Image
 
-from lookalike.core.mail import Email
-from lookalike.payments import IntentInfo, PaymentProviderError
-from lookalike.payments.offline import OfflineGateway
+from angel.core.mail import Email
+from angel.payments import IntentInfo, PaymentProviderError
+from angel.payments.offline import OfflineGateway
 
 
 def write_jpeg(path: Path, seed: int, size: tuple[int, int] = (300, 400)) -> None:

@@ -62,7 +62,7 @@ describe("RegisterForm", () => {
   it("puts the 'email already registered' error on the email field", async () => {
     stubApi({
       "POST /api/v1/auth/register": problem(409, "Email already registered", {
-        type: "urn:lookalike:problem:email-taken",
+        type: "urn:angel:problem:email-taken",
       }),
     });
     renderWithQuery(<RegisterForm next="/" />);

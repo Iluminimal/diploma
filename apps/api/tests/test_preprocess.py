@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from PIL import Image
 
-from lookalike.ml.preprocess import InvalidImageError, load_image
+from angel.ml.preprocess import InvalidImageError, load_image
 
 
 def encode(image: Image.Image, fmt: str, **kwargs: Any) -> bytes:

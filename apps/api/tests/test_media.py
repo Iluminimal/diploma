@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from lookalike.core.config import Settings
+from angel.core.config import Settings
 
 from .helpers import running_app
 

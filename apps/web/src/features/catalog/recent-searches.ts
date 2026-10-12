@@ -1,4 +1,4 @@
-const KEY = "lookalike:recent-searches";
+const KEY = "angel:recent-searches";
 const MAX = 5;
 
 /** The last few text searches on this device. Storage can be blocked or full: that just means none. */

@@ -11,10 +11,10 @@ function problem(status: number, body: object, headers: Record<string, string> =
 describe("errorFromResponse", () => {
   it("reads an RFC 7807 body", async () => {
     const error = await errorFromResponse(
-      problem(429, { title: "Too many requests", status: 429, type: "urn:lookalike:problem:rate-limited", request_id: "abc" }, { "Retry-After": "12" }),
+      problem(429, { title: "Too many requests", status: 429, type: "urn:angel:problem:rate-limited", request_id: "abc" }, { "Retry-After": "12" }),
     );
     expect(error).toBeInstanceOf(ApiError);
-    expect(error).toMatchObject({ status: 429, type: "urn:lookalike:problem:rate-limited", requestId: "abc", retryAfter: 12 });
+    expect(error).toMatchObject({ status: 429, type: "urn:angel:problem:rate-limited", requestId: "abc", retryAfter: 12 });
   });
 
   it("survives a non-JSON body", async () => {
@@ -30,12 +30,12 @@ describe("userMessage", () => {
   it("explains each upload problem in plain words", () => {
     expect(userMessage(make(413))).toMatch(/too large/i);
     expect(userMessage(make(415))).toMatch(/JPEG, PNG or WebP/);
-    expect(userMessage(make(422, "urn:lookalike:problem:invalid-image"))).toMatch(/couldn't read/i);
+    expect(userMessage(make(422, "urn:angel:problem:invalid-image"))).toMatch(/couldn't read/i);
   });
 
   it("tells a refused origin apart from a missing permission", () => {
-    expect(userMessage(make(403, "urn:lookalike:problem:forbidden-origin"))).toMatch(/blocked for your safety/);
-    expect(userMessage(make(403, "urn:lookalike:problem:forbidden"))).toMatch(/isn't allowed/);
+    expect(userMessage(make(403, "urn:angel:problem:forbidden-origin"))).toMatch(/blocked for your safety/);
+    expect(userMessage(make(403, "urn:angel:problem:forbidden"))).toMatch(/isn't allowed/);
     expect(userMessage(make(403))).toMatch(/isn't allowed/);
   });
 

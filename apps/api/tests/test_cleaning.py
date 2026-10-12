@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from lookalike.ingestion.cleaning import load_catalog
+from angel.ingestion.cleaning import load_catalog
 
 HEADER = (
     "id,gender,masterCategory,subCategory,articleType,baseColour,season,year,usage,"

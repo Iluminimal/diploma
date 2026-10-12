@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from lookalike.core.config import Settings
+from angel.core.config import Settings
 
 from .helpers import running_app
 

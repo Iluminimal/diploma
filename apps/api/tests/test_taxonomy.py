@@ -1,6 +1,6 @@
-from lookalike.models import Category
-from lookalike.schemas.catalog import NavDepartment
-from lookalike.services.taxonomy import TaxonomySnapshot, build_snapshot
+from angel.models import Category
+from angel.schemas.catalog import NavDepartment
+from angel.services.taxonomy import TaxonomySnapshot, build_snapshot
 
 
 def category(id_: int, parent: int | None, level: int, name: str, path: str) -> Category:

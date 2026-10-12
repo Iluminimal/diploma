@@ -106,7 +106,7 @@ describe("CheckoutView", () => {
     const api = stubApi(
       routes({
         "POST /api/v1/checkout": problem(409, "Some items are no longer available", {
-          type: "urn:lookalike:problem:insufficient-stock",
+          type: "urn:angel:problem:insufficient-stock",
           detail: "Update your cart and try again.",
         }),
       }) as never,

@@ -3,9 +3,9 @@ import io
 from PIL import Image
 from starlette.types import ASGIApp, Scope
 
-from lookalike.core.uploads import BodySizeLimitMiddleware
-from lookalike.ingestion.images import THUMBNAIL_SIZES, build_thumbnails
-from lookalike.repositories.patterns import contains_pattern, prefix_pattern
+from angel.core.uploads import BodySizeLimitMiddleware
+from angel.ingestion.images import THUMBNAIL_SIZES, build_thumbnails
+from angel.repositories.patterns import contains_pattern, prefix_pattern
 
 
 def test_thumbnails_cover_every_size_and_never_upscale() -> None:

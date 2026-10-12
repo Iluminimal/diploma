@@ -10,9 +10,9 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from lookalike.core.config import Settings, get_settings
-from lookalike.ingestion.cleaning import CleanProduct, load_catalog
-from lookalike.main import create_app
+from angel.core.config import Settings, get_settings
+from angel.ingestion.cleaning import CleanProduct, load_catalog
+from angel.main import create_app
 
 pytestmark = [pytest.mark.model, pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 

@@ -12,10 +12,10 @@ import asyncio
 
 from sqlalchemy import text
 
-from lookalike.core.config import get_settings
-from lookalike.db.engine import create_engine
-from lookalike.ingestion.images import THUMBNAIL_SIZES, thumbnail_key
-from lookalike.storage import LocalStorage
+from angel.core.config import get_settings
+from angel.db.engine import create_engine
+from angel.ingestion.images import THUMBNAIL_SIZES, thumbnail_key
+from angel.storage import LocalStorage
 
 E2E_EMAIL = r"^e2e-.*@example\.com$"
 

@@ -1,6 +1,6 @@
 import pytest
 
-from lookalike.core.config import Settings
+from angel.core.config import Settings
 
 
 def test_cors_origins_are_split_on_commas(monkeypatch: pytest.MonkeyPatch) -> None:

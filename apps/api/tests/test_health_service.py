@@ -1,7 +1,7 @@
 import pytest
 
-from lookalike.core.errors import ProblemError
-from lookalike.services.health import HealthService
+from angel.core.errors import ProblemError
+from angel.services.health import HealthService
 
 
 class FakeRepository:

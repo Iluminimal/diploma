@@ -1,6 +1,6 @@
 import statistics
 
-from lookalike.ingestion.pricing import base_price_dollars, generate_price_and_stock
+from angel.ingestion.pricing import base_price_dollars, generate_price_and_stock
 
 
 def _generate(source_id: int, article_type: str = "Tshirts") -> tuple[int, int]:

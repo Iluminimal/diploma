@@ -50,7 +50,7 @@ make seed-e2e ARGS="--count 60"       # drawn garments, thumbnails, embeddings f
 E2E_FAKE_MODEL=1 make e2e
 ```
 
-`FakeEmbedder` (`lookalike.ml.fake`) makes a vector from the pixels: identical images match perfectly, different ones are
+`FakeEmbedder` (`angel.ml.fake`) makes a vector from the pixels: identical images match perfectly, different ones are
 unrelated. So search "works" but means nothing, and the browser re-encodes every upload (JPEG, 1600 px) which a pixel hash
 cannot survive. Hence `E2E_FAKE_MODEL=1` skips only the UI assertion that a re-encoded photo finds its product first; the
 API test with the original bytes still runs in both modes. `APP_ENV=prod` refuses `EMBEDDER=fake`, and the seeder refuses
@@ -61,15 +61,15 @@ ports. That is how the job was validated (52/52 at first, 84/84 after the Apple-
 The recipe, which leaves a running `make api` and `make web` alone:
 
 ```bash
-docker exec lookalike-postgres-1 psql -U lookalike -d postgres -c "CREATE DATABASE lookalike_e2e"
-export APP_ENV=test DATABASE_URL=postgresql+asyncpg://lookalike:lookalike@localhost:5433/lookalike_e2e \
+docker exec angel-postgres-1 psql -U angel -d postgres -c "CREATE DATABASE angel_e2e"
+export APP_ENV=test DATABASE_URL=postgresql+asyncpg://angel:angel@localhost:5433/angel_e2e \
   REDIS_URL=redis://localhost:6379/1 EMBEDDER=fake PAYMENTS_MODE=offline OAUTH_MODE=fake RATE_LIMIT_ENABLED=false \
   JWT_SECRET=e2e-only-jwt-secret-0123456789-0123456789 MEDIA_DIR=/tmp/e2e-media MEDIA_BASE_URL=http://localhost:8001/media \
   CORS_ORIGINS=http://localhost:3001 WEB_BASE_URL=http://localhost:3001 \
   GOOGLE_REDIRECT_URI=http://localhost:3001/api/v1/auth/google/callback \
   E2E_API_URL=http://localhost:8001 E2E_BASE_URL=http://localhost:3001 E2E_FAKE_MODEL=1
 (cd apps/api && uv run alembic upgrade head && uv run python ../../scripts/seed_e2e.py --count 60 \
-  && uvicorn lookalike.main:create_app --factory --port 8001 --no-access-log &)       # uv run uvicorn ...
+  && uvicorn angel.main:create_app --factory --port 8001 --no-access-log &)       # uv run uvicorn ...
 # a copy of apps/web (so `next build` does not overwrite your dev server's .next), built against :8001:
 NEXT_PUBLIC_API_URL=http://localhost:8001 API_INTERNAL_URL=http://localhost:8001 npm run build
 NEXT_PUBLIC_API_URL=http://localhost:8001 API_INTERNAL_URL=http://localhost:8001 PORT=3001 npm run start &

@@ -5,7 +5,7 @@ import pytest
 from httpx import Response
 from sqlalchemy import text
 
-from lookalike.core.security import create_access_token
+from angel.core.security import create_access_token
 from tests.commerce import PASSWORD, another_client, register, unique_email
 from tests.conftest import ApiFactory
 
@@ -97,7 +97,7 @@ async def test_register_rejects_duplicates_weak_passwords_and_bad_emails(
         )
 
         assert duplicate.status_code == 409
-        assert duplicate.json()["type"] == "urn:lookalike:problem:email-taken"
+        assert duplicate.json()["type"] == "urn:angel:problem:email-taken"
         assert short.status_code == bad_email.status_code == extra.status_code == 422
 
 
@@ -130,7 +130,7 @@ async def test_login_succeeds_and_fails_with_the_same_error_for_unknown_and_wron
 
         assert ok.status_code == 200
         assert wrong.status_code == unknown.status_code == 401
-        assert wrong.json()["type"] == "urn:lookalike:problem:invalid-credentials"
+        assert wrong.json()["type"] == "urn:angel:problem:invalid-credentials"
         # Not even the request id differs between "no such user" and "wrong password".
         assert without_request_id(wrong) == without_request_id(unknown)
 
@@ -151,7 +151,7 @@ async def test_failed_logins_for_one_email_are_limited_and_success_resets_the_co
 
         assert locked.status_code == 429
         assert locked.headers["retry-after"]
-        assert locked.json()["type"] == "urn:lookalike:problem:rate-limited"
+        assert locked.json()["type"] == "urn:angel:problem:rate-limited"
 
     async with api_factory(seed_count=0, rate_limit_login_email="3/300") as api:
         email = unique_email()
@@ -284,7 +284,7 @@ async def test_refresh_without_a_cookie_is_401(api_factory: ApiFactory) -> None:
         response = await api.client.post(REFRESH)
 
         assert response.status_code == 401
-        assert response.json()["type"] == "urn:lookalike:problem:unauthenticated"
+        assert response.json()["type"] == "urn:angel:problem:unauthenticated"
 
 
 async def test_logout_ends_the_session_and_clears_cookies(api_factory: ApiFactory) -> None:
@@ -321,7 +321,7 @@ async def test_protected_endpoints_need_a_valid_unexpired_token(api_factory: Api
 
         assert [r.status_code for r in (missing, garbage, old, orders)] == [401, 401, 401, 401]
         assert missing.headers["www-authenticate"] == "Bearer"
-        assert missing.json()["type"] == "urn:lookalike:problem:unauthenticated"
+        assert missing.json()["type"] == "urn:angel:problem:unauthenticated"
 
 
 async def test_cookie_endpoints_refuse_cross_site_requests(api_factory: ApiFactory) -> None:
@@ -333,7 +333,7 @@ async def test_cookie_endpoints_refuse_cross_site_requests(api_factory: ApiFacto
         ours = await api.client.post(REFRESH, headers={"Origin": "http://localhost:3000"})
 
         assert evil.status_code == 403
-        assert evil.json()["type"] == "urn:lookalike:problem:forbidden-origin"
+        assert evil.json()["type"] == "urn:angel:problem:forbidden-origin"
         assert fetch_metadata.status_code == 403
         assert ours.status_code == 200
 

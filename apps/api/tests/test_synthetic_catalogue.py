@@ -8,11 +8,11 @@ from PIL import Image
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from lookalike.core.config import Settings
-from lookalike.ingestion.synthetic import STOCK, garment_image, seed_catalogue
-from lookalike.main import _load_embedder
-from lookalike.ml.fake import FakeEmbedder
-from lookalike.storage import LocalStorage
+from angel.core.config import Settings
+from angel.ingestion.synthetic import STOCK, garment_image, seed_catalogue
+from angel.main import _load_embedder
+from angel.ml.fake import FakeEmbedder
+from angel.storage import LocalStorage
 from tests.conftest import ApiFactory
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]

@@ -49,7 +49,7 @@ describe("ConfirmationView", () => {
 
   it("does not reveal whether someone else's order exists", async () => {
     stubApi({
-      "GET /api/v1/orders/LK-OTHER000": problem(404, "Order not found", { type: "urn:lookalike:problem:order-not-found" }),
+      "GET /api/v1/orders/LK-OTHER000": problem(404, "Order not found", { type: "urn:angel:problem:order-not-found" }),
     });
     renderWithQuery(<ConfirmationView number="LK-OTHER000" />);
 

@@ -104,7 +104,7 @@ describe("ProfileView", () => {
 
     it("asks for the current password, and says so when it is wrong", async () => {
       signIn(withPassword);
-      stubApi({ "PUT /api/v1/auth/password": problem(403, "Incorrect password", { type: "urn:lookalike:problem:invalid-credentials" }) });
+      stubApi({ "PUT /api/v1/auth/password": problem(403, "Incorrect password", { type: "urn:angel:problem:invalid-credentials" }) });
       renderWithQuery(<ProfileView />);
 
       await userEvent.click(screen.getByRole("button", { name: /Change password/ }));
@@ -175,7 +175,7 @@ describe("ProfileView", () => {
 
     it("says when the password is wrong and stays signed in", async () => {
       signIn(withPassword);
-      stubApi({ "DELETE /api/v1/auth/me": problem(403, "Incorrect password", { type: "urn:lookalike:problem:invalid-credentials" }) });
+      stubApi({ "DELETE /api/v1/auth/me": problem(403, "Incorrect password", { type: "urn:angel:problem:invalid-credentials" }) });
       renderWithQuery(<ProfileView />);
       const dialog = await openDialog();
 

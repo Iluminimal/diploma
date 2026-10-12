@@ -9,10 +9,10 @@ import pytest
 import torch
 from PIL import Image
 
-from lookalike.core.config import get_settings
-from lookalike.ingestion.cleaning import CleanProduct, load_catalog
-from lookalike.ml.fashion_clip import FashionClipEmbedder, select_device
-from lookalike.ml.preprocess import load_image
+from angel.core.config import get_settings
+from angel.ingestion.cleaning import CleanProduct, load_catalog
+from angel.ml.fashion_clip import FashionClipEmbedder, select_device
+from angel.ml.preprocess import load_image
 
 pytestmark = pytest.mark.model
 

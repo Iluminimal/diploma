@@ -17,9 +17,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 IMAGE = "/api/v1/search/image"
 HYBRID = "/api/v1/search/hybrid"
 MB = 1024 * 1024
-INVALID_IMAGE = "urn:lookalike:problem:invalid-image"
-TOO_LARGE = "urn:lookalike:problem:upload-too-large"
-UNSUPPORTED = "urn:lookalike:problem:unsupported-media-type"
+INVALID_IMAGE = "urn:angel:problem:invalid-image"
+TOO_LARGE = "urn:angel:problem:upload-too-large"
+UNSUPPORTED = "urn:angel:problem:unsupported-media-type"
 
 
 def encode(image: Image.Image, fmt: str, **kwargs: Any) -> bytes:

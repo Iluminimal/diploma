@@ -2,7 +2,7 @@
 
 Everything is under `/api/v1`. Interactive docs: `/api/v1/docs`; schema: `make openapi` (writes
 `docs/openapi.json`, git-ignored). Errors are RFC 7807 `application/problem+json` with a
-`request_id`; `type` is a stable `urn:lookalike:problem:*` for the cases a client reacts to.
+`request_id`; `type` is a stable `urn:angel:problem:*` for the cases a client reacts to.
 
 ## Running it
 

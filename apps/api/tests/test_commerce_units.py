@@ -2,10 +2,10 @@ from typing import ClassVar
 
 import pytest
 
-from lookalike.core.config import Settings
-from lookalike.models import Product
-from lookalike.services.shipping import shipping_cost, shipping_methods
-from lookalike.services.sizes import sizes_for
+from angel.core.config import Settings
+from angel.models import Product
+from angel.services.shipping import shipping_cost, shipping_methods
+from angel.services.sizes import sizes_for
 
 
 def product(**kwargs: str) -> Product:

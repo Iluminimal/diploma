@@ -1,4 +1,4 @@
-# Lookalike: Product & Technical Spec
+# Angel: Product & Technical Spec
 
 Production-quality e-commerce web app. Users upload or capture a photo of clothing and
 the app recommends visually similar products (like Amazon's "search by image"), inside a

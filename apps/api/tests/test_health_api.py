@@ -1,7 +1,7 @@
 import pytest
 
-from lookalike.core.config import Settings
-from lookalike.ml.fake import FakeEmbedder
+from angel.core.config import Settings
+from angel.ml.fake import FakeEmbedder
 
 from .conftest import UNREACHABLE_DATABASE_URL, UNREACHABLE_REDIS_URL
 from .helpers import running_app

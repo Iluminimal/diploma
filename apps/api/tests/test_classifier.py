@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from lookalike.ml.classifier import (
+from angel.ml.classifier import (
     CategoryLabel,
     LazyCategoryClassifier,
     WholeImageLocalizer,
     ZeroShotCategoryClassifier,
 )
-from lookalike.ml.fake import FakeEmbedder
+from angel.ml.fake import FakeEmbedder
 
 LABELS = [
     CategoryLabel("Shirts", "apparel/topwear/shirts", "Shirts"),

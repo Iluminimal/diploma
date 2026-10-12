@@ -78,7 +78,7 @@ describe("LoginForm", () => {
   it("shows a friendly message for wrong credentials and stays on the page", async () => {
     stubApi({
       "POST /api/v1/auth/login": problem(401, "Invalid email or password", {
-        type: "urn:lookalike:problem:invalid-credentials",
+        type: "urn:angel:problem:invalid-credentials",
       }),
     });
     renderWithQuery(<LoginForm next="/" />);
@@ -94,7 +94,7 @@ describe("LoginForm", () => {
 
   it("points people who signed up with Google to the Google button, in the same words for everyone", async () => {
     stubApi({
-      "POST /api/v1/auth/login": problem(401, "Invalid email or password", { type: "urn:lookalike:problem:invalid-credentials" }),
+      "POST /api/v1/auth/login": problem(401, "Invalid email or password", { type: "urn:angel:problem:invalid-credentials" }),
     });
     renderWithQuery(<LoginForm next="/" />);
 

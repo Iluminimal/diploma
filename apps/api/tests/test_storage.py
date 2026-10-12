@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from lookalike.storage import InvalidStorageKeyError, LocalStorage
+from angel.storage import InvalidStorageKeyError, LocalStorage
 
 
 def test_put_exists_and_url(tmp_path: Path) -> None:

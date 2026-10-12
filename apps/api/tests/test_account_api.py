@@ -186,7 +186,7 @@ async def test_address_book_has_a_size_limit(api_factory: ApiFactory) -> None:
         response = await api.client.post(ADDRESSES, json=ADDRESS, headers=shopper.auth)
 
         assert response.status_code == 409
-        assert response.json()["type"] == "urn:lookalike:problem:address-limit"
+        assert response.json()["type"] == "urn:angel:problem:address-limit"
 
 
 async def test_nobody_can_read_change_or_delete_someone_elses_address(

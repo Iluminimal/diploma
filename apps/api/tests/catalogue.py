@@ -13,10 +13,10 @@ from PIL import Image
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from lookalike.ingestion.cleaning import CleanProduct
-from lookalike.ingestion.pipeline import _upsert, build_row, ensure_categories
-from lookalike.ml.fake import FakeEmbedder
-from lookalike.ml.preprocess import load_image
+from angel.ingestion.cleaning import CleanProduct
+from angel.ingestion.pipeline import _upsert, build_row, ensure_categories
+from angel.ml.fake import FakeEmbedder
+from angel.ml.preprocess import load_image
 
 GENDERS = ("Men", "Women", "Unisex")
 TYPES = (

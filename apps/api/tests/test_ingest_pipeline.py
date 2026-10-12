@@ -7,18 +7,18 @@ import pytest
 from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from lookalike.ingestion import embedding_store
-from lookalike.ingestion.cleaning import CleanProduct
-from lookalike.ingestion.images import THUMBNAIL_SIZES, image_key, thumbnail_key
-from lookalike.ingestion.pipeline import (
+from angel.ingestion import embedding_store
+from angel.ingestion.cleaning import CleanProduct
+from angel.ingestion.images import THUMBNAIL_SIZES, image_key, thumbnail_key
+from angel.ingestion.pipeline import (
     IngestOptions,
     export_embeddings,
     ingest_products,
 )
-from lookalike.ingestion.pricing import generate_price_and_stock
-from lookalike.ml.fake import FakeEmbedder
-from lookalike.models import Category, Product
-from lookalike.storage import LocalStorage
+from angel.ingestion.pricing import generate_price_and_stock
+from angel.ml.fake import FakeEmbedder
+from angel.models import Category, Product
+from angel.storage import LocalStorage
 from tests.fakes import write_jpeg
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]

@@ -18,9 +18,9 @@ from pathlib import Path
 import numpy as np
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker
 
-from lookalike.core.config import get_settings
-from lookalike.db.engine import create_engine
-from lookalike.evaluation import (
+from angel.core.config import get_settings
+from angel.db.engine import create_engine
+from angel.evaluation import (
     exact_top_k,
     format_percentiles,
     make_upload,
@@ -28,10 +28,10 @@ from lookalike.evaluation import (
     percentiles,
     sample_products,
 )
-from lookalike.ml.fashion_clip import FashionClipEmbedder, select_device
-from lookalike.ml.preprocess import load_image, to_clip_array
-from lookalike.models import Product
-from lookalike.repositories.products import DEFAULT_EF_SEARCH, ProductRepository, SearchFilters
+from angel.ml.fashion_clip import FashionClipEmbedder, select_device
+from angel.ml.preprocess import load_image, to_clip_array
+from angel.models import Product
+from angel.repositories.products import DEFAULT_EF_SEARCH, ProductRepository, SearchFilters
 
 TARGET_IMAGE_P95_MS = 400.0
 TARGET_SIMILAR_P95_MS = 50.0

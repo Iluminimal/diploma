@@ -76,7 +76,7 @@ export async function addToCart(request: APIRequestContext, account: Account, pr
     });
     if (response.ok()) return;
     const problem = (await response.json().catch(() => ({}))) as { type?: string; sizes?: string[] };
-    if (attempt === 0 && problem.type === "urn:lookalike:problem:invalid-size" && problem.sizes) {
+    if (attempt === 0 && problem.type === "urn:angel:problem:invalid-size" && problem.sizes) {
       // Kids' and shoe sizes differ; a bag or a watch has none, which is a size of "".
       size = problem.sizes[0] ?? "";
       continue;

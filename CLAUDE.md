@@ -1,4 +1,4 @@
-# Lookalike: image-based similar clothing recommendation + e-commerce
+# Angel: image-based similar clothing recommendation + e-commerce
 
 Monorepo: `apps/web` (Next.js, ALREADY CREATED with create-next-app 16: React Compiler on,
 Tailwind, src dir, App Router. Do not recreate it), `apps/api` (FastAPI, to be created),

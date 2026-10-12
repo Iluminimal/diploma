@@ -16,12 +16,12 @@ from pathlib import Path
 
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from lookalike.core.config import get_settings
-from lookalike.db.engine import create_engine
-from lookalike.evaluation import exact_top_k, sample_products
-from lookalike.ml.fashion_clip import FashionClipEmbedder, select_device
-from lookalike.ml.preprocess import load_image
-from lookalike.repositories.products import DEFAULT_EF_SEARCH, ProductRepository
+from angel.core.config import get_settings
+from angel.db.engine import create_engine
+from angel.evaluation import exact_top_k, sample_products
+from angel.ml.fashion_clip import FashionClipEmbedder, select_device
+from angel.ml.preprocess import load_image
+from angel.repositories.products import DEFAULT_EF_SEARCH, ProductRepository
 
 
 async def main_async(args: argparse.Namespace) -> int:

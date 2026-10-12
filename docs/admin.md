@@ -13,7 +13,7 @@ there is no sign-up form to attack:
 make create-admin EMAIL=you@example.com             # asks for a password (twice, not echoed)
 make create-admin EMAIL=you@example.com ARGS=--keep-password   # promote an existing account, keep its password
 ADMIN_PASSWORD=... make create-admin EMAIL=...      # non-interactive (CI); never pass a password as an argument
-cd apps/api && uv run python -m lookalike.cli revoke-admin --email you@example.com
+cd apps/api && uv run python -m angel.cli revoke-admin --email you@example.com
 ```
 
 An administrator who signs in (password form, register form or Google) and did not ask for a particular page lands on
@@ -23,7 +23,7 @@ rule is `landingPath` in `features/auth/landing.ts` for the forms and `OAuthServ
 `users.role` is `customer` or `admin` (a CHECK constraint). The role is **read from the database on every admin request**
 and is never copied into the access token, so demoting or deactivating someone takes effect immediately, even for a token
 that has not expired. Everything admin is behind `get_current_admin` (`core/deps.py`): 401 without a valid token (or for
-a deactivated account), 403 (`urn:lookalike:problem:forbidden`) for a customer. Admin routes also have their own rate limit
+a deactivated account), 403 (`urn:angel:problem:forbidden`) for a customer. Admin routes also have their own rate limit
 (`RATE_LIMIT_ADMIN`, default 120 per minute per client address).
 
 ## The shell
@@ -64,7 +64,7 @@ cancelled          refunded      refunded               refunded
 
 One state machine, `services/order_fulfillment.py`. Each action takes the order's row lock, checks the current state, writes
 an event in the same transaction and then emails the customer. Anything else is a **409**
-(`urn:lookalike:problem:invalid-order-transition`), so two administrators clicking at once get one result and one error.
+(`urn:angel:problem:invalid-order-transition`), so two administrators clicking at once get one result and one error.
 
 | Endpoint | From | Effect |
 | --- | --- | --- |
@@ -156,7 +156,7 @@ load, so reviews themselves are current.
 
 `make seed-demo` fills a development database so the dashboard has something to show: about 25 customers
 (`demo-<name>@example.com`, all with the password `DemoPass12345`) and 75 to 80 orders over 45 days in **every state**, with
-addresses, payments, tracking numbers, history events, stock decrements and reviews (`src/lookalike/demo.py`; the newest few
+addresses, payments, tracking numbers, history events, stock decrements and reviews (`src/angel/demo.py`; the newest few
 orders are fixed: one awaiting payment, two just paid). It is deterministic for a `--seed`, **refuses `APP_ENV=prod`**, does
 nothing if the demo customers already exist, and `make seed-demo-clean` removes exactly what it made, gives the stock back and
 recomputes the affected ratings. Options: `make seed-demo ARGS="--customers 40 --orders 120 --days 60 --seed 7"`. Refunding a

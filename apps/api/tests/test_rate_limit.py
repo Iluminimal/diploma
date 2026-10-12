@@ -5,8 +5,8 @@ from collections.abc import AsyncIterator
 import pytest
 from redis.asyncio import Redis
 
-from lookalike.core.config import Settings
-from lookalike.core.rate_limit import Rate, RateLimiter
+from angel.core.config import Settings
+from angel.core.rate_limit import Rate, RateLimiter
 from tests.conftest import UNREACHABLE_REDIS_URL, ApiFactory
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
@@ -84,7 +84,7 @@ async def test_api_returns_429_problem_with_retry_after(api_factory: ApiFactory)
     assert ok.headers["x-ratelimit-limit"] == "3"
     assert [r.headers["x-ratelimit-remaining"] for r in responses[:3]] == ["2", "1", "0"]
     assert blocked.headers["content-type"] == "application/problem+json"
-    assert blocked.json()["type"] == "urn:lookalike:problem:rate-limited"
+    assert blocked.json()["type"] == "urn:angel:problem:rate-limited"
     assert 1 <= int(blocked.headers["retry-after"]) <= 60
     assert blocked.headers["x-ratelimit-remaining"] == "0"
     assert blocked.json()["request_id"] == blocked.headers["x-request-id"]

@@ -93,7 +93,7 @@ describe("browserApi", () => {
         {
           title: "Invalid",
           status: 401,
-          type: "urn:lookalike:problem:invalid-credentials",
+          type: "urn:angel:problem:invalid-credentials",
         },
         401,
       ),
@@ -136,7 +136,7 @@ describe("call", () => {
           {
             title: "Not enough stock",
             status: 409,
-            type: "urn:lookalike:problem:insufficient-stock",
+            type: "urn:angel:problem:insufficient-stock",
             available: 3,
           },
           409,

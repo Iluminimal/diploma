@@ -3,7 +3,7 @@ import asyncio
 import pytest
 from sqlalchemy import text
 
-from lookalike.services.expiry import OrderExpirer
+from angel.services.expiry import OrderExpirer
 from tests.commerce import (
     Shopper,
     add_address,

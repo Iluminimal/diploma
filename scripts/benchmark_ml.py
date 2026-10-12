@@ -21,10 +21,10 @@ import pandas as pd
 import torch
 from numpy.typing import NDArray
 
-from lookalike.ingestion.images import ImageJob, process_image
-from lookalike.ml.fashion_clip import FashionClipEmbedder, select_device
-from lookalike.ml.preprocess import load_image, to_clip_array
-from lookalike.storage import LocalStorage
+from angel.ingestion.images import ImageJob, process_image
+from angel.ml.fashion_clip import FashionClipEmbedder, select_device
+from angel.ml.preprocess import load_image, to_clip_array
+from angel.storage import LocalStorage
 
 SCOPE = ("Apparel", "Footwear", "Accessories")
 

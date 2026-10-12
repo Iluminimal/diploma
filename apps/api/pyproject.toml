@@ -1,7 +1,7 @@
 [project]
-name = "lookalike"
+name = "angel"
 version = "0.1.0"
-description = "Lookalike API: image-based similar clothing search and e-commerce backend"
+description = "Angel API: image-based similar clothing search and e-commerce backend"
 authors = [
     { name = "Iluminimal", email = "iluminimal@gmail.com" }
 ]

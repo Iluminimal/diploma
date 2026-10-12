@@ -82,7 +82,7 @@ Run `make help` for the full list.
 | `make lighthouse` | Lighthouse on the production build; fails below 90 on home, listing and product |
 | `make openapi` | Export the OpenAPI schema to `docs/openapi.json` |
 
-Tests that write catalogue data use a throwaway `lookalike_test` database (created and dropped by
+Tests that write catalogue data use a throwaway `angel_test` database (created and dropped by
 the test run), so `make test` never touches the ingested catalogue. API integration tests run against the real dev Postgres and Redis, so run `make infra` and
 `make migrate` first. They fail with a clear message, rather than skipping, if the services are
 unreachable.
@@ -94,7 +94,7 @@ to `.env` (git-ignored) on first run. The API reads `.env` from the repository r
 
 | Variable | Default | |
 | --- | --- | --- |
-| `DATABASE_URL` | `postgresql+asyncpg://lookalike:lookalike@localhost:5433/lookalike` | |
+| `DATABASE_URL` | `postgresql+asyncpg://angel:angel@localhost:5433/angel` | |
 | `REDIS_URL` | `redis://localhost:6379/0` | |
 | `CORS_ORIGINS` | `http://localhost:3000` | comma-separated |
 | `LOG_LEVEL` / `LOG_JSON` | `INFO` / `true` | set `LOG_JSON=false` for readable console logs |

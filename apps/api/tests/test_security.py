@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import jwt
 
-from lookalike.core.security import (
+from angel.core.security import (
     create_access_token,
     decode_access_token,
     hash_password,

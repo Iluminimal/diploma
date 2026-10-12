@@ -1,8 +1,8 @@
 import type { Product } from "./product";
 
-const KEY = "lookalike:recently-viewed";
+const KEY = "angel:recently-viewed";
 const MAX = 12;
-const EVENT = "lookalike:recently-viewed-changed";
+const EVENT = "angel:recently-viewed-changed";
 
 const EMPTY: Product[] = [];
 let cache: { raw: string | null; items: Product[] } = { raw: null, items: EMPTY };

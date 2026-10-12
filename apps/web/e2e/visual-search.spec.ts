@@ -153,5 +153,5 @@ test("the API refuses an upload that is not an image, whatever the browser says"
   });
 
   expect(response.status()).toBe(422);
-  expect((await response.json()).type).toBe("urn:lookalike:problem:invalid-image");
+  expect((await response.json()).type).toBe("urn:angel:problem:invalid-image");
 });

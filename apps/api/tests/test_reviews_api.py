@@ -10,8 +10,8 @@ from httpx import Response
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from lookalike.models import User
-from lookalike.services.reviews import author_name
+from angel.models import User
+from angel.services.reviews import author_name
 from tests.commerce import Shopper, register, set_product
 from tests.conftest import Api, ApiFactory
 from tests.fakes import RecordingGateway
@@ -102,7 +102,7 @@ async def test_someone_who_never_bought_it_cannot_review(store: Store) -> None:
     response = await store.review(stranger)
 
     assert response.status_code == 403
-    assert response.json()["type"] == "urn:lookalike:problem:review-not-allowed"
+    assert response.json()["type"] == "urn:angel:problem:review-not-allowed"
     assert (await store.page())["summary"]["count"] == 0
 
 
@@ -140,7 +140,7 @@ async def test_one_review_per_product(store: Store) -> None:
     again = await store.review(buyer, 1)
 
     assert again.status_code == 409
-    assert again.json()["type"] == "urn:lookalike:problem:review-exists"
+    assert again.json()["type"] == "urn:angel:problem:review-exists"
     assert (await store.page())["summary"]["count"] == 1
 
 
@@ -438,7 +438,7 @@ async def test_moderating_an_unknown_review_is_a_404(store: Store) -> None:
     response = await store.moderate(999999, "hide")
 
     assert response.status_code == 404
-    assert response.json()["type"] == "urn:lookalike:problem:review-not-found"
+    assert response.json()["type"] == "urn:angel:problem:review-not-found"
 
 
 # --- names ------------------------------------------------------------------------------------

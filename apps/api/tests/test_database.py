@@ -2,7 +2,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from lookalike.core.config import Settings
+from angel.core.config import Settings
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 

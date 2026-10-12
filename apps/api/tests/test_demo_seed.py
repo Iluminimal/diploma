@@ -6,8 +6,8 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from lookalike.core.config import Settings
-from lookalike.demo import DEMO_PASSWORD, clean_demo, seed_demo
+from angel.core.config import Settings
+from angel.demo import DEMO_PASSWORD, clean_demo, seed_demo
 from tests.commerce import another_client
 from tests.conftest import ApiFactory
 from tests.test_admin_orders_api import administrator

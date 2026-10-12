@@ -7,8 +7,8 @@ import httpx
 import jwt
 import pytest
 
-from lookalike.core.config import Settings
-from lookalike.core.oauth_state import (
+from angel.core.config import Settings
+from angel.core.oauth_state import (
     code_challenge,
     new_flow,
     read_flow,
@@ -16,9 +16,9 @@ from lookalike.core.oauth_state import (
     sign_flow,
     states_match,
 )
-from lookalike.oauth import OAuthError, OAuthProfile, build_oauth_provider
-from lookalike.oauth.fake import FakeOAuth
-from lookalike.oauth.google import GoogleOAuth
+from angel.oauth import OAuthError, OAuthProfile, build_oauth_provider
+from angel.oauth.fake import FakeOAuth
+from angel.oauth.google import GoogleOAuth
 
 SECRET = "unit-test-secret-0123456789-0123456789"
 CLIENT_ID = "client-123.apps.googleusercontent.com"

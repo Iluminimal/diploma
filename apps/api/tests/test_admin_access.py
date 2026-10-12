@@ -3,18 +3,18 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-from lookalike.cli import PASSWORD_ENV, _run, build_parser
-from lookalike.core.config import get_settings
-from lookalike.core.deps import AdminDep
-from lookalike.core.security import verify_password
-from lookalike.services.admin_users import provision_admin
+from angel.cli import PASSWORD_ENV, _run, build_parser
+from angel.core.config import get_settings
+from angel.core.deps import AdminDep
+from angel.core.security import verify_password
+from angel.services.admin_users import provision_admin
 from tests.commerce import PASSWORD, register, set_role, unique_email
 from tests.conftest import ApiFactory
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 
 PROBE = "/api/v1/_probe/admin"
-FORBIDDEN = "urn:lookalike:problem:forbidden"
+FORBIDDEN = "urn:angel:problem:forbidden"
 
 
 def add_probe(app: FastAPI) -> None:

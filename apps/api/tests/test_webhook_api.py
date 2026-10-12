@@ -121,7 +121,7 @@ async def test_unsigned_or_wrongly_signed_webhooks_are_rejected_and_change_nothi
         )
 
         assert [r.status_code for r in (no_header, wrong_secret, tampered, junk)] == [400] * 4
-        assert no_header.json()["type"] == "urn:lookalike:problem:invalid-signature"
+        assert no_header.json()["type"] == "urn:angel:problem:invalid-signature"
         assert (await placed.order())["status"] == "pending"
 
 

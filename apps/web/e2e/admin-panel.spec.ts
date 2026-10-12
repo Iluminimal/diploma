@@ -222,7 +222,7 @@ test.describe("fulfilment", () => {
       data: { rating: 5 },
     });
     expect(response.status()).toBe(403);
-    expect((await response.json()).type).toBe("urn:lookalike:problem:review-not-allowed");
+    expect((await response.json()).type).toBe("urn:angel:problem:review-not-allowed");
   });
 
   test("refunding puts the stock back and tells the customer, and an unpaid order can be cancelled", async ({ newProduct,

@@ -1,6 +1,6 @@
 # Development infrastructure only (Postgres + pgvector, Redis). The API and web run natively
 # (`make api`, `make web`) so PyTorch can use Apple MPS. Full-stack compose is for deployment.
-name: lookalike
+name: angel
 
 services:
   postgres:
@@ -8,9 +8,9 @@ services:
     image: pgvector/pgvector:pg18
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-lookalike}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lookalike}
-      POSTGRES_DB: ${POSTGRES_DB:-lookalike}
+      POSTGRES_USER: ${POSTGRES_USER:-angel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-angel}
+      POSTGRES_DB: ${POSTGRES_DB:-angel}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
     volumes:

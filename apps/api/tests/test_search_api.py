@@ -227,7 +227,7 @@ async def test_similar_products_of_an_unknown_product_is_a_404_problem(api: Api)
 
     assert response.status_code == 404
     assert response.headers["content-type"] == "application/problem+json"
-    assert response.json()["type"] == "urn:lookalike:problem:product-not-found"
+    assert response.json()["type"] == "urn:angel:problem:product-not-found"
 
 
 async def test_similar_products_of_a_deactivated_product_is_a_404(api: Api) -> None:

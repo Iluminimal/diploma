@@ -5,7 +5,7 @@ cd apps/api && uv run python ../../scripts/seed_demo.py --clean
 make seed-demo / make seed-demo-clean
 """
 
-from lookalike.demo import main
+from angel.demo import main
 
 if __name__ == "__main__":
     raise SystemExit(main())

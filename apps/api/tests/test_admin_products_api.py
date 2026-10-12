@@ -10,7 +10,7 @@ from httpx import Response
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from lookalike.repositories.products import ProductRepository
+from angel.repositories.products import ProductRepository
 from tests.catalogue import make_jpeg
 from tests.commerce import Shopper, register, set_role
 from tests.conftest import Api, ApiFactory
@@ -19,9 +19,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 
 ADMIN = "/api/v1/admin"
 PRODUCTS = f"{ADMIN}/products"
-INVALID_CATEGORY = "urn:lookalike:problem:invalid-category"
-INVALID_IMAGE = "urn:lookalike:problem:invalid-image"
-NOT_FOUND = "urn:lookalike:problem:product-not-found"
+INVALID_CATEGORY = "urn:angel:problem:invalid-category"
+INVALID_IMAGE = "urn:angel:problem:invalid-image"
+NOT_FOUND = "urn:angel:problem:product-not-found"
 MB = 1024 * 1024
 
 
@@ -112,7 +112,7 @@ async def test_only_administrators_can_manage_products(
 
         assert anonymous.status_code == 401
         assert as_customer.status_code == 403
-        assert as_customer.json()["type"] == "urn:lookalike:problem:forbidden"
+        assert as_customer.json()["type"] == "urn:angel:problem:forbidden"
 
 
 async def test_admin_requests_are_rate_limited(

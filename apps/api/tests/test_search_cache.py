@@ -3,9 +3,9 @@ import pytest
 from redis.asyncio import Redis
 from sqlalchemy import text
 
-from lookalike.ml.fake import FakeEmbedder
-from lookalike.repositories.products import SearchFilters
-from lookalike.services.cache import SearchCache, normalize_query
+from angel.ml.fake import FakeEmbedder
+from angel.repositories.products import SearchFilters
+from angel.services.cache import SearchCache, normalize_query
 from tests.conftest import UNREACHABLE_REDIS_URL, ApiFactory
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]

@@ -115,7 +115,7 @@ describe("NewProductView", () => {
     stubApi({
       "GET /api/v1/admin/categories": { body: categories },
       "POST /api/v1/admin/products": json(
-        { title: "Invalid image", status: 422, type: "urn:lookalike:problem:invalid-image" },
+        { title: "Invalid image", status: 422, type: "urn:angel:problem:invalid-image" },
         422,
       ),
     });

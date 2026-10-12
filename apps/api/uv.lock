@@ -870,7 +870,7 @@ wheels = [
 ]
 
 [[package]]
-name = "lookalike"
+name = "angel"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

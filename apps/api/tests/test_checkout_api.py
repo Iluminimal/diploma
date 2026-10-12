@@ -172,7 +172,7 @@ async def test_empty_cart_and_foreign_or_unknown_address_are_rejected(
         unknown = await checkout(shopper, 999_999)
 
         assert empty.status_code == 409
-        assert empty.json()["type"] == "urn:lookalike:problem:cart-empty"
+        assert empty.json()["type"] == "urn:angel:problem:cart-empty"
         assert foreign.status_code == unknown.status_code == 404
         assert await orders_in_db(api) == []
 
@@ -191,7 +191,7 @@ async def test_items_that_ran_out_stop_checkout_and_nothing_is_reserved(
         response = await checkout(shopper, address_id)
 
         assert response.status_code == 409
-        assert response.json()["type"] == "urn:lookalike:problem:insufficient-stock"
+        assert response.json()["type"] == "urn:angel:problem:insufficient-stock"
         issues = {i["product_id"]: i["available"] for i in response.json()["issues"]}
         assert issues == {shrinking.product_id: 3, withdrawn.product_id: 0}
         assert await stock_of(api.app.state.engine, fine.product_id) == 7  # nothing reserved
@@ -276,7 +276,7 @@ async def test_a_payment_provider_outage_gives_the_stock_back_and_can_be_retried
         failed = await checkout(shopper, address_id)
 
         assert failed.status_code == 502
-        assert failed.json()["type"] == "urn:lookalike:problem:payment-provider-error"
+        assert failed.json()["type"] == "urn:angel:problem:payment-provider-error"
         assert await stock_of(api.app.state.engine, product.product_id) == 7
         [order] = await orders_in_db(api)
         assert (order["status"], order["cancel_reason"]) == ("cancelled", "payment_setup_failed")
@@ -316,7 +316,7 @@ async def test_if_the_old_payment_went_through_meanwhile_no_second_order_is_made
         response = await checkout(shopper, address_id)
 
         assert response.status_code == 409
-        assert response.json()["type"] == "urn:lookalike:problem:payment-in-progress"
+        assert response.json()["type"] == "urn:angel:problem:payment-in-progress"
         assert len(await orders_in_db(api)) == 1
 
 
@@ -467,7 +467,7 @@ async def test_without_payment_configuration_checkout_is_unavailable_but_the_sho
         response = await checkout(shopper, address_id)
 
         assert response.status_code == 503
-        assert response.json()["type"] == "urn:lookalike:problem:payments-unavailable"
+        assert response.json()["type"] == "urn:angel:problem:payments-unavailable"
         assert (await api.client.get("/api/v1/cart", headers=shopper.auth)).status_code == 200
         assert (await api.client.get("/readyz")).status_code in (200, 503)
 
@@ -503,7 +503,7 @@ async def test_order_history_is_paginated_newest_first_and_private(
         assert page1["items"][0]["item_count"] == 1
         assert page1["items"][0]["images"][0]["thumb_400"]
         assert foreign_detail.status_code == 404
-        assert foreign_detail.json()["type"] == "urn:lookalike:problem:order-not-found"
+        assert foreign_detail.json()["type"] == "urn:angel:problem:order-not-found"
         assert foreign_list.json()["items"] == []
         assert (
             await api.client.get(f"{ORDERS}/LK-NOSUCH00", headers=shopper.auth)

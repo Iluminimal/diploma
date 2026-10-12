@@ -10,7 +10,7 @@ import { ADMIN_EMAIL, ADMIN_PASSWORD } from "./support/env";
 export default function globalSetup() {
   const result = spawnSync(
     "uv",
-    ["run", "python", "-m", "lookalike.cli", "create-admin", "--email", ADMIN_EMAIL, "--name", "E2E Admin"],
+    ["run", "python", "-m", "angel.cli", "create-admin", "--email", ADMIN_EMAIL, "--name", "E2E Admin"],
     {
       cwd: path.resolve(__dirname, "../../api"),
       env: { ...process.env, ADMIN_PASSWORD },

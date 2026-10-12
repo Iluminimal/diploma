@@ -2,8 +2,8 @@ from http import HTTPStatus
 
 from pydantic import BaseModel
 
-from lookalike.core.config import Settings
-from lookalike.core.errors import ProblemError
+from angel.core.config import Settings
+from angel.core.errors import ProblemError
 
 from .helpers import running_app
 

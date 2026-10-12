@@ -5,9 +5,9 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from lookalike import models  # noqa: F401  (registers tables on Base.metadata)
-from lookalike.core.config import get_settings
-from lookalike.db.base import Base
+from angel import models  # noqa: F401  (registers tables on Base.metadata)
+from angel.core.config import get_settings
+from angel.db.base import Base
 
 config = context.config
 target_metadata = Base.metadata

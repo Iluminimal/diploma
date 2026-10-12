@@ -5,8 +5,8 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import pytest
 
-from lookalike.ingestion import embedding_store
-from lookalike.ingestion.embedding_store import EmbeddingStoreError
+from angel.ingestion import embedding_store
+from angel.ingestion.embedding_store import EmbeddingStoreError
 
 VERSION = "fake@test/pad"
 

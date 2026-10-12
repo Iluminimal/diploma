@@ -30,7 +30,9 @@ export function useReviews(productId: number, sort: ReviewSort, page: number, in
     // Wait for the session to be known: a signed-in customer's answer differs from a visitor's.
     enabled: status !== "unknown",
     initialData: !signedIn && isFirstPage && initial ? initial : undefined,
-    // The server's copy is as fresh as the page itself; anything fetched is fresh for a moment.
+    // The server's copy is for the first paint and for crawlers (it may be up to a minute old,
+    // like the rest of the page): the browser fetches a current one straight away.
+    initialDataUpdatedAt: 0,
     staleTime: 30_000,
     placeholderData: (previous) => previous,
   });

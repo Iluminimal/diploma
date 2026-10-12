@@ -19,9 +19,10 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe("ProductReviews for a visitor", () => {
   it("shows the average, how it is made up and the reviews, from what the server sent", () => {
-    const api = stubApi({});
+    stubApi({ [URL]: respond(makeReviewPage()) });
     renderWithQuery(<ProductReviews productId={41885} initial={makeReviewPage()} />);
 
+    // At once, before anything has been asked for.
     expect(screen.getByRole("heading", { level: 2, name: "Customer reviews" })).toBeInTheDocument();
     expect(screen.getByText("4.5")).toBeInTheDocument();
     expect(screen.getByText("2 reviews")).toBeInTheDocument();
@@ -34,7 +35,20 @@ describe("ProductReviews for a visitor", () => {
     expect(list.getByRole("heading", { name: "Nice fit" })).toBeInTheDocument();
     expect(list.getByText("Runs a little large.")).toBeInTheDocument();
     expect(list.getByText(/Bob K\./)).toBeInTheDocument();
-    expect(api.calls).toHaveLength(0);
+  });
+
+  it("then fetches a current copy, because the server's may be a minute old", async () => {
+    const newer = makeReviewPage({
+      items: [makeReview({ id: 40, title: "Posted a moment ago" })],
+      total: 1,
+      summary: { average: 4, count: 1, distribution: [0, 0, 0, 1, 0] },
+    });
+    const api = stubApi({ [URL]: respond(newer) });
+    renderWithQuery(<ProductReviews productId={41885} initial={makeReviewPage()} />);
+
+    expect(await screen.findByRole("heading", { name: "Posted a moment ago" })).toBeInTheDocument();
+    expect(api.calls).toHaveLength(1);
+    expect(screen.queryByRole("heading", { name: "Perfect" })).not.toBeInTheDocument();
   });
 
   it("invites the visitor to sign in, and brings them back to the reviews", () => {
@@ -61,14 +75,13 @@ describe("ProductReviews for a visitor", () => {
   it("asks for another order and page when sorted or paged", async () => {
     const api = stubApi({ [URL]: respond(makeReviewPage({ page: 2, pages: 3, total: 11 })) });
     renderWithQuery(<ProductReviews productId={41885} initial={makeReviewPage({ pages: 3, total: 11 })} />);
+    const asked = () => api.calls.map((call) => Object.fromEntries(new URLSearchParams(call.search)));
 
     await userEvent.selectOptions(screen.getByLabelText("Sort reviews"), "lowest");
-
-    await waitFor(() => expect(api.calls).toHaveLength(1));
-    expect(Object.fromEntries(new URLSearchParams(api.calls[0]!.search))).toMatchObject({ sort: "lowest", page: "1", page_size: "5" });
+    await waitFor(() => expect(asked()).toContainEqual(expect.objectContaining({ sort: "lowest", page: "1", page_size: "5" })));
     await userEvent.click(await screen.findByRole("button", { name: "Next" }));
-    await waitFor(() => expect(api.calls).toHaveLength(2));
-    expect(new URLSearchParams(api.calls[1]!.search).get("page")).toBe("2");
+
+    await waitFor(() => expect(asked()).toContainEqual(expect.objectContaining({ sort: "lowest", page: "2" })));
   });
 
   it("reports a failure to load and can try again", async () => {

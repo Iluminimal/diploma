@@ -81,6 +81,30 @@ the email, identifies the person.
 `login_hint` chooses the email (`unverified:<email>` yields an unverified one, `<email>;picture=https://...` gives it a photo). `APP_ENV=prod` refuses it. Limits:
 `RATE_LIMIT_OAUTH` (default 30 per 5 minutes per address).
 
+## Reviews
+
+Only people who **bought** a product can review it: an order of theirs that is `paid`, `shipped` or `delivered` must contain
+it (a refunded or cancelled order does not count). One review per person per product (a unique constraint), with a 1 to 5
+rating, an optional headline (120 characters) and text (2 000), shown as first name and last initial ("Ada L."), never an
+email.
+
+| Endpoint | |
+| --- | --- |
+| `GET /products/{id}/reviews` | Published reviews (`sort` newest / highest / lowest, paged) with the average and the count per star. Signed in, it also says whether you bought the product and returns **your own review even if it is hidden** (`viewer`); that response is `no-store` |
+| `POST /products/{id}/reviews` | 201; 403 `review-not-allowed` if you have not bought it; 409 `review-exists` if you already reviewed it. Rate limited (`RATE_LIMIT_REVIEW`, 20 per hour) |
+| `PATCH` / `DELETE /reviews/{id}` | Your own only (someone else's is a 404, not a 403, so ids reveal nothing) |
+| `/admin/reviews…` | Moderation: `docs/admin.md` |
+
+`products.rating_average` and `rating_count` are **kept in step with the published reviews in the same transaction**, with
+the product row locked first (the lock checkout and stock changes use), so concurrent reviews cannot overwrite each other's
+recount (tested by posting four at the same moment). They come back in `ProductOut`, so product cards show stars and
+`aggregateRating` goes into the product page's JSON-LD without another query, and only once there is a published review (an
+empty rating is not valid structured data). When an account is deleted its reviews stay, shown as "Deleted user".
+
+On the product page the first page of reviews is rendered on the server (for the first paint and crawlers) and the browser
+immediately fetches a current copy, so a new or hidden review shows at once even though the page itself may be up to a minute
+old (Next's cache). The rating on cards and in the page header, which come from the product record, can lag by that minute (and a product page nobody has opened for a while may show its old copy once before it refreshes).
+
 ## Cart, wishlist, addresses
 
 * **Cart** (`/cart`, `/cart/items`, `/cart/items/{id}`): one per user, or per guest through the `lk_cart` cookie (random id,
@@ -107,6 +131,25 @@ is cleared (only the lines that were bought) when the payment succeeds. Unpaid o
 `ORDER_PENDING_TTL_MINUTES` by a background task that is safe to run in several processes. `GET /orders` and
 `GET /orders/{number}` are owner-only.
 
+### The life of an order
+
+`pending` (stock held, awaiting payment) → `paid` → `shipped` → `delivered`; `pending` → `cancelled` (expired, replaced by a
+newer checkout, cancelled by an administrator, payment cancelled); `paid`, `shipped` or `delivered` → `refunded`. A paid order
+is never "cancelled": its money goes back and it becomes `refunded`. A payment that arrives for an order that is already
+cancelled is refunded automatically. The administrator's actions are in `docs/admin.md`; the state is a CHECK constraint on
+`orders.status`.
+
+Each change is recorded in **`order_events`** in the same transaction as the change (`placed`, `paid`, `shipped`, `delivered`,
+`cancelled`, `refunded`, and administrators' `note`). `OrderOut` carries `shipped_at`, `delivered_at`, `refunded_at`,
+`carrier`, `tracking_number` and a **safe timeline**: only the six public types, and from their data only the carrier and
+tracking number of a shipment and the reason a cancel happened. Notes, the administrator's name, refund reasons and amounts
+never reach the customer's API.
+
+The customer's order page (`/account/orders/{number}`) shows a progress stepper (Placed, Paid, Shipped, Delivered, or ending
+in Cancelled / Refunded), the tracking number, the lines, and the history; once delivered, each line has a "Write a review"
+link. The customer is emailed when the order ships (carrier and tracking number), is delivered, is cancelled and is refunded
+(`core/mail.py`; logged in development).
+
 ## Payments
 
 `PAYMENTS_MODE=offline` (default in `.env.example`): no provider. `POST /checkout/orders/{number}/simulate-payment` marks
@@ -129,4 +172,6 @@ element and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
   so a password can only be set or changed while signed in.
 * Registration reveals whether an email exists (409); it is rate limited, and the alternative would need email verification.
 * Emails are logged, not sent (`core/mail.py`).
-* No reviews or refund UI. Orders can be looked at in the admin area (`docs/admin.md`) but not changed.
+* Refunds are always for the full amount; there are no returns, discount codes or tax. Refunds go through whatever
+  `PaymentGateway` is configured (offline in development), and against real Stripe the path is tested with a fake gateway only.
+* Reviews have no photos, "helpful" votes or replies, and cannot be reported by customers (only hidden by an administrator).

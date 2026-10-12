@@ -132,7 +132,7 @@ function WriteReview({ productId, page }: { productId: number; page: ReviewPage 
   if (status === "signedOut") {
     return (
       <p className="text-muted-foreground text-sm">
-        <Link href={`/login?next=${encodeURIComponent(`/products/${productId}#reviews`)}`} className="text-brand hover:underline">
+        <Link href={`/login?next=${encodeURIComponent(`/products/${productId}#reviews`)}`} className="text-brand underline underline-offset-2 hover:no-underline">
           Sign in
         </Link>{" "}
         to review this product if you have bought it.

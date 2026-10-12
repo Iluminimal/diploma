@@ -155,9 +155,9 @@ export function EditProductView({ id }: { id: number }) {
       <section aria-labelledby="photo-heading" className="flex flex-wrap items-start gap-6">
         <CurrentPhoto product={product} />
         <div className="min-w-60 flex-1 space-y-3">
-          <h3 id="photo-heading" className="font-semibold">
+          <h2 id="photo-heading" className="font-semibold">
             Photo
-          </h3>
+          </h2>
           <p className="text-muted-foreground text-sm">
             A new photo is also what visual search compares against, so it is analysed again when you upload it.
           </p>
@@ -182,9 +182,9 @@ export function EditProductView({ id }: { id: number }) {
       </section>
 
       <section aria-labelledby="details-heading" className="space-y-4">
-        <h3 id="details-heading" className="font-semibold">
+        <h2 id="details-heading" className="font-semibold">
           Details
-        </h3>
+        </h2>
         <ProductForm
           key={product.updated_at}
           categories={categories}

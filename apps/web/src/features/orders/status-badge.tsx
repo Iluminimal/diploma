@@ -6,7 +6,7 @@ const LABELS: Record<Order["status"], { label: string; className: string }> = {
   pending: { label: "Awaiting payment", className: "bg-muted text-muted-foreground" },
   shipped: { label: "Shipped", className: "bg-brand/10 text-brand" },
   delivered: { label: "Delivered", className: "bg-success/15 text-success" },
-  cancelled: { label: "Cancelled", className: "bg-destructive/10 text-destructive" },
+  cancelled: { label: "Cancelled", className: "bg-destructive/10 text-destructive dark:text-[oklch(0.82_0.14_22)]" },
   refunded: { label: "Refunded", className: "bg-muted text-muted-foreground" },
 };
 

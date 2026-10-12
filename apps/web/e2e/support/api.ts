@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext, Cookie } from "@playwright/test";
-import { API_URL, PASSWORD } from "./env";
+import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL, PASSWORD } from "./env";
+import { makePng } from "./images";
 
 export type CatalogProduct = {
   id: number;
@@ -65,7 +66,7 @@ export async function signInAccount(request: APIRequestContext, email: string, p
 
 const bearer = (account: Account) => ({ ...json, Authorization: `Bearer ${account.token}` });
 
-/** Adds to the cart in size M, or in the first size the product has (kids' and shoes have others). */
+/** Adds to the cart in size M, or in the first size the product has (kids' and shoes have others), or in no size at all. */
 export async function addToCart(request: APIRequestContext, account: Account, productId: number, quantity = 1) {
   let size = "M";
   for (let attempt = 0; ; attempt += 1) {
@@ -75,8 +76,9 @@ export async function addToCart(request: APIRequestContext, account: Account, pr
     });
     if (response.ok()) return;
     const problem = (await response.json().catch(() => ({}))) as { type?: string; sizes?: string[] };
-    if (attempt === 0 && problem.type === "urn:lookalike:problem:invalid-size" && problem.sizes?.[0]) {
-      size = problem.sizes[0];
+    if (attempt === 0 && problem.type === "urn:lookalike:problem:invalid-size" && problem.sizes) {
+      // Kids' and shoe sizes differ; a bag or a watch has none, which is a size of "".
+      size = problem.sizes[0] ?? "";
       continue;
     }
     throw new Error(`adding to the cart failed: ${response.status()} ${JSON.stringify(problem)}`);
@@ -131,4 +133,107 @@ export async function productPhoto(request: APIRequestContext, product: CatalogP
 export async function saveToWishlist(request: APIRequestContext, account: Account, productId: number) {
   const response = await request.put(`${API_URL}/api/v1/wishlist/${productId}`, { headers: bearer(account) });
   if (!response.ok()) throw new Error(`saving to the wishlist failed: ${response.status()}`);
+}
+
+/** The e2e administrator, signed in through the API. */
+export const adminSession = (request: APIRequestContext) => signInAccount(request, ADMIN_EMAIL, ADMIN_PASSWORD);
+
+/** An order that has been placed but not paid (stock is held for it until it is paid or expires). */
+export async function placePendingOrder(request: APIRequestContext, account: Account, productId: number): Promise<string> {
+  await addToCart(request, account, productId);
+  const addressId = await addAddress(request, account);
+  const checkout = await ok<{ order: { number: string } }>(
+    await request.post(`${API_URL}/api/v1/checkout`, {
+      headers: { ...bearer(account), "Idempotency-Key": `e2e-${randomUUID()}` },
+      data: { address_id: addressId, shipping_method: "standard" },
+    }),
+    "checking out",
+  );
+  return checkout.order.number;
+}
+
+/**
+ * A product of this test's own (named "E2E ...", which `make e2e-clean` removes), so tests that
+ * change stock or buy it cannot disturb each other or the catalogue other specs read. Use the
+ * `newProduct` fixture rather than calling this: it withdraws the product when the test is over.
+ */
+export async function createProduct(
+  request: APIRequestContext,
+  admin: Account,
+  options: { name?: string; stock?: number } = {},
+): Promise<{ id: number; name: string }> {
+  const categories = await ok<{ id: number; article_type: string }[]>(
+    await request.get(`${API_URL}/api/v1/admin/categories`, { headers: bearer(admin) }),
+    "listing categories",
+  );
+  // Not apparel: other specs pick "the newest in-stock apparel", and a product made from a
+  // photo must not be one of them (see `newProduct` in fixtures.ts, which also withdraws it).
+  const category = categories.find((c) => c.article_type === "Handbags") ?? categories[0]!;
+  const name = options.name ?? `E2E handbag ${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  const created = await ok<{ id: number }>(
+    await request.post(`${API_URL}/api/v1/admin/products`, {
+      headers: { Authorization: `Bearer ${admin.token}` },
+      multipart: {
+        name,
+        category_id: String(category.id),
+        gender: "Women",
+        price_cents: "2999",
+        stock_quantity: String(options.stock ?? 20),
+        file: { name: "p.png", mimeType: "image/png", buffer: makePng(Math.floor(Math.random() * 1_000_000)) },
+      },
+    }),
+    "creating a product",
+  );
+  return { id: created.id, name };
+}
+
+/** Take a product off sale (products are never deleted: orders refer to them). */
+export async function withdrawProduct(request: APIRequestContext, admin: Account, productId: number) {
+  await request.post(`${API_URL}/api/v1/admin/products/${productId}/deactivate`, { headers: bearer(admin) });
+}
+
+/** What the shop's own books say about a product (the storefront only shows "in stock"). */
+export async function stockOf(request: APIRequestContext, admin: Account, productId: number): Promise<number> {
+  const product = await ok<{ stock_quantity: number }>(
+    await request.get(`${API_URL}/api/v1/admin/products/${productId}`, { headers: bearer(admin) }),
+    "reading a product",
+  );
+  return product.stock_quantity;
+}
+
+/** The customer's view of an order, as the API gives it. */
+export async function orderOf(request: APIRequestContext, account: Account, number: string) {
+  return ok<{ status: string; tracking_number: string | null; events: { type: string }[] }>(
+    await request.get(`${API_URL}/api/v1/orders/${number}`, { headers: bearer(account) }),
+    "reading an order",
+  );
+}
+
+/** Ships and delivers an order as the administrator does (the carrier and number are made up). */
+export async function shipAndDeliver(request: APIRequestContext, admin: Account, number: string) {
+  await ok(
+    await request.post(`${API_URL}/api/v1/admin/orders/${number}/ship`, {
+      headers: bearer(admin),
+      data: { carrier: "DHL", tracking_number: "E2E-0146" },
+    }),
+    "shipping",
+  );
+  await ok(await request.post(`${API_URL}/api/v1/admin/orders/${number}/deliver`, { headers: bearer(admin) }), "delivering");
+}
+
+export async function postReview(
+  request: APIRequestContext,
+  account: Account,
+  productId: number,
+  review: { rating: number; title?: string; body?: string },
+) {
+  await ok(
+    await request.post(`${API_URL}/api/v1/products/${productId}/reviews`, { headers: bearer(account), data: review }),
+    "reviewing",
+  );
+}
+
+export async function userId(request: APIRequestContext, account: Account): Promise<number> {
+  const me = await ok<{ id: number }>(await request.get(`${API_URL}/api/v1/auth/me`, { headers: bearer(account) }), "reading the account");
+  return me.id;
 }

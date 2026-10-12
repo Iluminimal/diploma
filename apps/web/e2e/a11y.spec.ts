@@ -1,7 +1,16 @@
 import { test, expect } from "./fixtures";
 import { pickCategory } from "./support/catalog";
 import { openSearch } from "./support/ui";
-import { addToCart, placePaidOrder, productPhoto, saveToWishlist } from "./support/api";
+import {
+  addToCart,
+  adminSession,
+  placePaidOrder,
+  postReview,
+  productPhoto,
+  saveToWishlist,
+  shipAndDeliver,
+  userId,
+} from "./support/api";
 import { SCHEMES, VARIANTS, VIEWPORTS, expectNoViolations, scan, settled, sweep, type Variant } from "./support/axe";
 
 /**
@@ -193,6 +202,39 @@ test.describe("signed in", () => {
   });
 });
 
+test.describe("reviews and tracking", () => {
+  test("a delivered order, and a product with reviews as a visitor and as the buyer", async ({ newProduct,
+    shopperPage: page,
+    browser,
+    api,
+    account,
+  }) => {
+    test.setTimeout(240_000);
+    const admin = await adminSession(api);
+    const product = await newProduct();
+    const number = await placePaidOrder(api, account, product.id);
+    await shipAndDeliver(api, admin, number);
+
+    // The buyer, with the form to write a review, and with their own review afterwards.
+    const reviewsReady = () => expect(page.getByRole("form", { name: "Write a review" })).toBeVisible();
+    await sweep(page, `/account/orders/${number}`, { ready: () => expect(page.getByRole("link", { name: /Write a review/ })).toBeVisible() });
+    await sweep(page, `/products/${product.id}`, { ready: reviewsReady });
+    await postReview(api, account, product.id, { rating: 4, title: "Fits well", body: "Soft cotton and true to size." });
+    await sweep(page, `/products/${product.id}`, {
+      ready: () => expect(page.getByRole("button", { name: "Edit" })).toBeVisible(),
+    });
+
+    // A visitor sees the reviews and the invitation to sign in.
+    const visitor = await (await browser.newContext()).newPage();
+    await sweep(visitor, `/products/${product.id}`, {
+      ready: () => expect(visitor.getByRole("heading", { name: "Fits well" })).toBeVisible(),
+    });
+    await sweep(visitor, `/products?q=${encodeURIComponent(product.name)}`, {
+      ready: () => expect(visitor.getByRole("img", { name: "4 out of 5 stars" }).first()).toBeVisible(),
+    });
+  });
+});
+
 test.describe("admin", () => {
   test("products and orders", async ({ adminPage: page, api, account, products }) => {
     const [product] = products;
@@ -204,5 +246,49 @@ test.describe("admin", () => {
     await sweep(page, `/admin/products/${product!.id}`, { ready: () => expect(page.getByLabel("Name")).toBeVisible() });
     await sweep(page, "/admin/orders", { ready: () => expect(page.getByRole("table", { name: /Orders/ })).toBeVisible() });
     await sweep(page, `/admin/orders/${number}`, { ready: ready("Customer and payment") });
+  });
+  test("dashboard, inventory, customers and reviews", async ({ newProduct, adminPage: page, api, account }) => {
+    test.setTimeout(240_000);
+    const admin = await adminSession(api);
+    const product = await newProduct({ stock: 3 });
+    const number = await placePaidOrder(api, account, product.id);
+    await shipAndDeliver(api, admin, number);
+    await postReview(api, account, product.id, { rating: 5, title: "Lovely", body: "Would buy again." });
+    const customer = await userId(api, account);
+
+    await sweep(page, "/admin", { ready: () => expect(page.getByRole("img", { name: /Daily revenue/ })).toBeVisible() });
+    await sweep(page, "/admin?days=7", { ready: () => expect(page.getByRole("img", { name: /Daily revenue/ })).toBeVisible() });
+    await sweep(page, "/admin/orders?status=delivered", { ready: () => expect(page.getByRole("table", { name: /Orders/ })).toBeVisible() });
+    await sweep(page, `/admin/orders/${number}`, { ready: () => expect(page.getByRole("region", { name: "History" })).toBeVisible() });
+    await sweep(page, `/admin/inventory?q=${encodeURIComponent(product.name)}`, {
+      ready: () => expect(page.getByRole("table", { name: /Products on sale/ })).toBeVisible(),
+    });
+    await sweep(page, "/admin/customers", { ready: () => expect(page.getByRole("table", { name: "Customers" })).toBeVisible() });
+    await sweep(page, `/admin/customers/${customer}`, { ready: () => expect(page.getByRole("region", { name: "Recent orders" })).toBeVisible() });
+    await sweep(page, "/admin/reviews", { ready: () => expect(page.getByRole("list", { name: "Reviews, newest first" })).toBeVisible() });
+  });
+
+  test("the fulfilment dialogs", async ({ newProduct, adminPage: page, api, account }) => {
+    const product = await newProduct();
+    const number = await placePaidOrder(api, account, product.id);
+    const found = [];
+    for (const variant of VARIANTS) {
+      await page.setViewportSize(VIEWPORTS[variant.viewport]);
+      await page.emulateMedia({ colorScheme: variant.scheme, reducedMotion: "reduce" });
+      for (const [button, dialogName] of [
+        ["Mark as shipped", "Mark as shipped"],
+        ["Refund", "Refund this order?"],
+      ] as const) {
+        await page.goto(`/admin/orders/${number}`);
+        await page.getByRole("button", { name: button, exact: true }).click();
+        await expect(page.getByRole("dialog", { name: dialogName })).toBeVisible();
+        // Errors are part of what a screen reader must be able to reach.
+        await page.getByRole("dialog").getByRole("button", { name: /Mark as shipped|Refund order/ }).click();
+        await expect(page.getByRole("dialog").getByRole("alert").first()).toBeVisible();
+        await settled(page);
+        found.push(...(await scan(page, `${variant.viewport}/${variant.scheme}/${dialogName}`)));
+      }
+    }
+    expectNoViolations(found, "the fulfilment dialogs");
   });
 });

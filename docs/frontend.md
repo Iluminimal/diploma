@@ -10,13 +10,13 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 | `/` | per request | storytelling home page, see "The home page" below |
 | `/products` | per request | URL-synced filters, sort and pagination; everything in the query string; the place for free-text search results |
 | `/c/{department}[/{group}[/{sub}[/{type}]]]` | per request | category pages, e.g. `/c/men/apparel/topwear/tshirts`: breadcrumbs (+ `BreadcrumbList` JSON-LD), drill-down sidebar with counts, the same filters and grid as `/products`; an unknown or empty category is a real 404 |
-| `/products/{id}/{slug}` | per request | gallery, size selector, breadcrumbs, similar-products rail, metadata, JSON-LD (Product + BreadcrumbList) |
+| `/products/{id}/{slug}` | per request | gallery, size selector, breadcrumbs, a star rating under the name, **customer reviews** (average, distribution, sort and paging; a form for people who bought it), similar-products rail, metadata, JSON-LD (Product with `aggregateRating` once rated, and BreadcrumbList) |
 | `/search` | per request | visual search (client side) |
 | `/login`, `/register` | per request | forms (React Hook Form + Zod); `?next=` is honoured for same-site paths only; "Continue with Google" appears when the API has it configured (`GET /auth/providers`), and `/login?error=` shows a message for the few known codes (see `docs/commerce.md`) |
 | `/cart` | static shell | the cart is client data (guest or account), see below |
 | `/checkout`, `/checkout/confirmation/{number}` | static shell | needs a session; demo payment |
-| `/account/profile`, `/account/orders`, `/account/orders/{number}`, `/account/addresses`, `/account/wishlist` | static shell | need a session. The profile page: name, how you sign in (Google / password: set or change), delete account |
-| `/admin/products` (+ `new`, `{id}`), `/admin/orders` (+ `{number}`) | static shell | administrators only; `noindex`; see `docs/admin.md` |
+| `/account/profile`, `/account/orders`, `/account/orders/{number}`, `/account/addresses`, `/account/wishlist` | static shell | need a session. The profile page: name, how you sign in (Google / password: set or change), delete account. An order page has a progress stepper, the tracking number, the history and a "Write a review" link per delivered item |
+| `/admin` (dashboard), `/admin/orders` (+ `{number}`), `/admin/products` (+ `new`, `{id}`), `/admin/inventory`, `/admin/customers` (+ `{id}`), `/admin/reviews` | static shell | administrators only; `noindex`; they have their own shell (sidebar, no shop header or footer: `ShopChrome` in the root layout skips the storefront chrome under `/admin`); see `docs/admin.md` |
 | `/sitemap/{n}.xml`, `/robots.txt` | per request | 10,000 products per sitemap file (`GET /catalog/sitemap` gives id, slug and last change); private and low-value paths are disallowed; `robots.txt` still works when the API is down |
 | `/icon`, `/apple-icon`, `/opengraph-image` | static | generated (no binary assets) |
 
@@ -161,7 +161,14 @@ How the pieces fit (API side: `docs/commerce.md`):
   server side, `Idempotency-Key` per attempt, kept across a dropped connection and renewed after any definite answer) and
   calls `simulate-payment`, which only exists when the API runs with `PAYMENTS_MODE=offline`. The confirmation page polls
   until the order is paid. No Stripe code or keys are in the web app.
-* Test helpers: `src/test/api-mock.ts` (`stubApi` routes `fetch` by "METHOD /path"), `src/test/render.tsx`.
+* **Reviews** (`features/reviews`): the product page renders the first page on the server and the browser refetches a current
+  copy at once (`initialDataUpdatedAt: 0`), so a new or hidden review shows without waiting for Next's 60 s cache. A signed-in
+  customer's request carries their token and learns whether they bought it and what their own review is. The star picker is a
+  group of radio buttons (arrow keys, labels), and `RatingStars` is a picture with the rating in words ("4.5 out of 5 stars").
+* **Shared pieces** for orders: `OrderProgress` (stepper), `OrderTimeline` (history; the admin gets the same component with
+  notes and actors), `StatusBadge`; for ratings `RatingStars`; the admin's `AdminPageHeader` gives every admin screen its `h1`.
+* Test helpers: `src/test/api-mock.ts` (`stubApi` routes `fetch` by "METHOD /path"; use `respond(...)` for a route that will be
+  called more than once, because a `Response` can only be read once), `src/test/render.tsx`.
 
 ## Visual search
 
@@ -227,6 +234,14 @@ What the first run found, and the fixes:
 | Escape in the search box left a hidden suggestion highlighted, so Enter opened a product instead of searching (found by the keyboard spec) | Escape only dismisses the list and clears the highlight, and does not let the browser clear the field |
 | `<main>` could not receive the skip link's focus; footer links had no focus style | `tabIndex={-1}` on `<main>`; focus rings on footer links |
 
+The admin and review screens added later were swept the same way and found three more:
+
+| Finding | Fix |
+| --- | --- |
+| The product edit page's section headings were `h3` under the page's `h1` (`heading-order`) | they are `h2` |
+| A "Sign in" link inside a sentence told itself apart from the text by colour alone (`link-in-text-block`) | underlined |
+| The red "Refund order" button: red text on a faint red tint, 3.2:1 in dark mode (the soft destructive badge was the same recipe) | the destructive button is solid (white on the red, 6.0:1; black on the lighter dark-mode red, 7.3:1) and the destructive badge has lighter text in dark mode (6.5:1) |
+
 Contrast ratios were computed from the OKLCH values, not guessed (the colours are CSS variables in `globals.css`).
 
 ## Performance
@@ -281,6 +296,14 @@ filtered listing 92, category page 91, product 94, search 92, cart 91, sign in 9
 208 KB on the listing, 224 KB on the product page. A first version with the Motion library in the root layout cost about
 55 KB on every page and pushed the product page from 97 to 91; scroll reveals, the hero and the sticky bar are CSS now and
 Motion loads only with the cart. Cart has 250 KB because `/cart` shows the animated lines inline.
+
+**After the admin panel, ratings and reviews** (3 runs, median, on the 60-product synthetic catalogue of the hermetic e2e
+stack, so the absolute numbers are not comparable with the real-catalogue rows above; `make lighthouse` on your own data is
+the gate): home 93, listing 92, product 92, each with 100 for accessibility, best practices and SEO, CLS 0, TBT under 40 ms;
+first-load JS 212 KB on home, 206 KB on the listing, 270 KB on the product page. The product page carries the reviews section
+(the star picker, the review form and its validation are one client chunk with the page; the section is `defer-render`), which
+is where its extra 50 KB or so comes from. `RatingStars` is plain markup and SVG on cards, so listings did not grow. The admin
+area is a separate set of routes, so none of it is downloaded by shoppers.
 
 Conventions that keep it this way: new overlays (dialog, sheet, dropdown, popover) go behind `next/dynamic` and a plain
 trigger; keep schema libraries out of modules that browser code shares; do not use `scroll-smooth` on snap containers;

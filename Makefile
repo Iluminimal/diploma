@@ -5,7 +5,7 @@ COMPOSE := docker compose -f infra/docker-compose.dev.yml --env-file .env
 API     := cd apps/api &&
 WEB     := cd apps/web &&
 
-.PHONY: help install infra infra-down infra-reset infra-logs migrate api web web-prod ingest create-admin e2e e2e-clean seed-e2e lighthouse \
+.PHONY: help install infra infra-down infra-reset infra-logs migrate api web web-prod ingest create-admin e2e e2e-clean seed-e2e seed-demo seed-demo-clean lighthouse \
         lint format typecheck test test-api test-web test-ml openapi api-types latency
 
 help: ## Show this help
@@ -56,6 +56,12 @@ e2e-clean: ## Remove the customers, orders and products the e2e tests left in th
 
 seed-e2e: ## Synthetic catalogue for e2e (CI): EMBEDDER=fake; refuses prod; e.g. make seed-e2e ARGS="--count 60"
 	$(API) uv run python ../../scripts/seed_e2e.py $(ARGS)
+
+seed-demo: ## Demo customers, ~80 orders in every state and reviews, for the admin dashboard (dev only)
+	$(API) uv run python ../../scripts/seed_demo.py $(ARGS)
+
+seed-demo-clean: ## Remove what seed-demo made (and put its stock back)
+	$(API) uv run python ../../scripts/seed_demo.py --clean
 
 e2e: ## Playwright end-to-end tests against the running stack; e.g. make e2e ARGS="e2e/cart.spec.ts"
 	@echo "Needs: make infra migrate, the API (RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline make api) and make web-prod. See docs/e2e.md."

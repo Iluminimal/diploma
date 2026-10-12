@@ -21,7 +21,7 @@ def add_probe(app: FastAPI) -> None:
     """The dependency every admin route uses, behind a route that does nothing else."""
 
     async def probe(admin: AdminDep) -> dict[str, str]:
-        return {"email": admin.email}
+        return {"email": admin.identifier}
 
     app.add_api_route(PROBE, probe, methods=["GET"])
 

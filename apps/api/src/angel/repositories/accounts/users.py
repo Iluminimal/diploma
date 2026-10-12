@@ -19,6 +19,10 @@ class UserRepository:
         result = await self._session.execute(select(User).where(User.email == email))
         return result.scalar_one_or_none()
 
+    async def get_by_phone(self, phone: str) -> User | None:
+        result = await self._session.execute(select(User).where(User.phone == phone))
+        return result.scalar_one_or_none()
+
     async def providers(self, user_id: int) -> list[str]:
         result = await self._session.execute(
             select(OAuthIdentity.provider)
@@ -46,12 +50,23 @@ class UserRepository:
     async def create(
         self,
         *,
-        email: str,
+        email: str | None = None,
+        phone: str | None = None,
         password_hash: str | None,
         full_name: str,
         role: str = ROLE_CUSTOMER,
+        email_verified_at: datetime | None = None,
+        phone_verified_at: datetime | None = None,
     ) -> User:
-        user = User(email=email, password_hash=password_hash, full_name=full_name, role=role)
+        user = User(
+            email=email,
+            phone=phone,
+            password_hash=password_hash,
+            full_name=full_name,
+            role=role,
+            email_verified_at=email_verified_at,
+            phone_verified_at=phone_verified_at,
+        )
         self._session.add(user)
         await self._session.flush()
         return user

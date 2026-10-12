@@ -117,7 +117,9 @@ class AdminReviewProduct(BaseModel):
 class AdminReviewOut(ReviewOut):
     product: AdminReviewProduct
     user_id: int
-    author_email: str
+    # None for an author who signed up with a phone number.
+    author_email: str | None
+    author_phone: str | None
 
 
 class AdminReviewPage(BaseModel):

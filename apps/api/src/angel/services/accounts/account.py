@@ -63,7 +63,7 @@ class AccountService:
             self._session.add(user)
             await self._tokens.revoke_all_for_user(user.id, datetime.now(UTC))
             issued = await self._auth.issue_session(user)
-        await self._auth.clear_failures(user.email)
+        await self._auth.clear_failures(user.identifier)
         log.info("password_changed", user_id=user_id, had_password=user.password_hash is not None)
         return issued
 
@@ -78,11 +78,11 @@ class AccountService:
                 "Administrator accounts cannot be deleted here",
                 type_=FORBIDDEN_TYPE,
             )
-        if request.confirm_email != user.email:
+        if request.confirm != user.identifier:
             raise ProblemError(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
                 "Confirmation does not match",
-                "Type the email address of this account to delete it.",
+                "Type the email address or phone number of this account to delete it.",
             )
         await self._check_password(user, request.password)
         async with self._session.begin():
@@ -91,12 +91,15 @@ class AccountService:
                 await self._session.execute(delete(model).where(model.user_id == user.id))
             await self._tokens.delete_all_for_user(user.id)
             user.email = f"deleted-{user.id}@deleted.invalid"
+            user.phone = None
+            user.email_verified_at = None
+            user.phone_verified_at = None
             user.full_name = DELETED_NAME
             user.password_hash = None
             user.avatar_url = None
             user.is_active = False
             self._session.add(user)
-        await self._auth.clear_failures(request.confirm_email)
+        await self._auth.clear_failures(request.confirm)
         log.info("account_deleted", user_id=user_id)
 
     # --- helpers --------------------------------------------------------------------------
@@ -117,7 +120,7 @@ class AccountService:
         """Accounts with a password must prove it; Google-only accounts have nothing to prove."""
         if user.password_hash is None:
             return
-        rate = await self._auth.check_failure_limit(user.email)
+        rate = await self._auth.check_failure_limit(user.identifier)
         if given is None or not await asyncio.to_thread(verify_password, given, user.password_hash):
-            await self._auth.record_failure(user.email, rate)
+            await self._auth.record_failure(user.identifier, rate)
             raise _wrong_password()

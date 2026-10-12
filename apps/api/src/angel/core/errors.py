@@ -39,6 +39,7 @@ INVALID_TRANSITION_TYPE = f"{_PREFIX}invalid-order-transition"
 REVIEW_NOT_FOUND_TYPE = f"{_PREFIX}review-not-found"
 REVIEW_NOT_ALLOWED_TYPE = f"{_PREFIX}review-not-allowed"
 REVIEW_EXISTS_TYPE = f"{_PREFIX}review-exists"
+CONTACT_EMAIL_REQUIRED_TYPE = f"{_PREFIX}contact-email-required"
 
 log = get_logger(__name__)
 

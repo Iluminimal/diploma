@@ -54,7 +54,7 @@ function ReviewCard({ review }: { review: AdminReview }) {
         <p className="text-muted-foreground text-xs">
           {review.author} ·{" "}
           <Link href={`/admin/customers/${review.user_id}`} className="hover:underline">
-            {review.author_email}
+            {review.author_email ?? review.author_phone}
           </Link>{" "}
           · {day(review.created_at)}
         </p>

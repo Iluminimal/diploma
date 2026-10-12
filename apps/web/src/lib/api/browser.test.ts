@@ -19,7 +19,7 @@ const session = {
   access_token: "fresh-token",
   token_type: "bearer",
   expires_in: 900,
-  user: { id: 1, email: "ada@example.com", full_name: "Ada", role: "customer" as const, avatar_url: null, has_password: true, providers: [] as string[] },
+  user: { id: 1, email: "ada@example.com", full_name: "Ada", role: "customer" as const, avatar_url: null, has_password: true, phone: null, email_verified: false, phone_verified: false, providers: [] as string[] },
 };
 
 beforeEach(() => {

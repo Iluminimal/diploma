@@ -23,7 +23,7 @@ export function useChangePassword() {
   });
 }
 
-type Deletion = { confirm_email: string; password?: string };
+type Deletion = { confirm: string; password?: string };
 
 /** Delete the account. The API clears the session cookies; here the in-memory state goes too. */
 export function useDeleteAccount() {

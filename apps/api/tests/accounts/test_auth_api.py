@@ -34,6 +34,9 @@ async def test_register_signs_the_user_in(api_factory: ApiFactory) -> None:
         assert body["user"] == {
             "id": body["user"]["id"],
             "email": "ada@example.com",
+            "phone": None,
+            "email_verified": False,
+            "phone_verified": False,
             "full_name": "Ada",
             "role": "customer",
             "avatar_url": None,

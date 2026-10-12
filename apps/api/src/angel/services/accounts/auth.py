@@ -54,6 +54,9 @@ class UserView:
         return UserOut(
             id=user.id,
             email=user.email,
+            phone=user.phone,
+            email_verified=user.email_verified_at is not None,
+            phone_verified=user.phone_verified_at is not None,
             full_name=user.full_name,
             role="admin" if user.is_admin else "customer",
             avatar_url=user.avatar_url,
@@ -123,7 +126,7 @@ class AuthService:
             issued = await self._issue(user, family_id=uuid.uuid4())
         await self._mailer.send(
             Email(
-                to=user.email,
+                to=request.email,
                 subject="Welcome to Angel",
                 body=f"Hi {user.full_name}, your account is ready.",
             )

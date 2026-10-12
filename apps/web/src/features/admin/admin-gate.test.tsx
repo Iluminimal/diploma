@@ -11,7 +11,7 @@ vi.mock("next/navigation", () => ({
 
 const user = { id: 1, email: "a@b.co", full_name: "Ada" };
 const signIn = (role: "customer" | "admin") =>
-  useAuth.setState({ status: "signedIn", accessToken: "t", user: { ...user, role, avatar_url: null, has_password: true, providers: [] as string[] } });
+  useAuth.setState({ status: "signedIn", accessToken: "t", user: { ...user, role, avatar_url: null, has_password: true, phone: null, email_verified: false, phone_verified: false, providers: [] as string[] } });
 
 beforeEach(() => {
   replace.mockClear();

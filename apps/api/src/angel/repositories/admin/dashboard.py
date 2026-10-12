@@ -16,6 +16,8 @@ REVENUE_STATUSES = ("paid", "shipped", "delivered")
 # Orders a customer actually bought (a refunded one was bought too).
 BOUGHT_STATUSES = (*REVENUE_STATUSES, "refunded")
 DELETED_EMAIL = "%@deleted.invalid"
+# Phone-only accounts have no email: NOT LIKE alone would be NULL for them and drop them.
+_NOT_DELETED = or_(User.email.is_(None), User.email.not_like(DELETED_EMAIL))
 
 
 def _paid_between(start: datetime, end: datetime) -> list[ColumnElement[bool]]:
@@ -50,7 +52,7 @@ class DashboardRepository:
             .select_from(User)
             .where(
                 User.role == "customer",
-                ~User.email.like(DELETED_EMAIL),
+                _NOT_DELETED,
                 User.created_at >= start,
                 User.created_at < end,
             )
@@ -141,7 +143,7 @@ class DashboardRepository:
                 agg.c.last_order.label("last_order"),
             )
             .outerjoin(agg, agg.c.uid == User.id)
-            .where(User.role == "customer", ~User.email.like(DELETED_EMAIL))
+            .where(User.role == "customer", _NOT_DELETED)
         )
 
     async def list_customers(
@@ -154,6 +156,7 @@ class DashboardRepository:
             clauses.append(
                 or_(
                     User.email.ilike(pattern, escape="\\"),
+                    User.phone.ilike(pattern, escape="\\"),
                     User.full_name.ilike(pattern, escape="\\"),
                 )
             )

@@ -41,7 +41,11 @@ class LoginRequest(BaseModel):
 
 class UserOut(BaseModel):
     id: int
-    email: str
+    # An account made with a phone number has no email until it adds one, and the other way round.
+    email: str | None
+    phone: str | None
+    email_verified: bool
+    phone_verified: bool
     full_name: str
     role: Literal["customer", "admin"]
     avatar_url: str | None
@@ -68,11 +72,12 @@ class ChangePasswordRequest(BaseModel):
 class DeleteAccountRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    # Typed back by the person, so a stolen tab cannot delete an account with one click.
-    confirm_email: Annotated[str, Field(min_length=1, max_length=320)]
+    # The account's email (or phone number, if it has no email) typed back by the person, so a
+    # stolen tab cannot delete an account with one click.
+    confirm: Annotated[str, Field(min_length=1, max_length=320)]
     password: Annotated[str, Field(min_length=1, max_length=128)] | None = None
 
-    @field_validator("confirm_email", mode="after")
+    @field_validator("confirm", mode="after")
     @classmethod
     def _lower(cls, value: str) -> str:
         return _normalise_email(value)

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from angel.schemas.accounts.address import AddressSnapshot
 from angel.schemas.catalog.product import ProductImage
@@ -29,6 +29,9 @@ class CheckoutRequest(BaseModel):
 
     address_id: Annotated[int, Field(ge=1, le=2**63 - 1)]
     shipping_method: ShippingMethodId
+    # Where the order emails go. Required only when the account has no email (it signed up with
+    # a phone number); otherwise the account's email is used.
+    contact_email: EmailStr | None = None
 
 
 class OrderItemOut(BaseModel):

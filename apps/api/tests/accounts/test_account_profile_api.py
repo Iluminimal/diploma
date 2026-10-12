@@ -231,7 +231,7 @@ async def test_deleting_an_account_anonymizes_it_and_keeps_the_orders(
         response = await api.client.request(
             "DELETE",
             ME,
-            json={"confirm_email": shopper.email.upper(), "password": PASSWORD},
+            json={"confirm": shopper.email.upper(), "password": PASSWORD},
             headers=shopper.auth,
         )
 
@@ -276,12 +276,12 @@ async def test_deleting_needs_the_typed_email_and_the_password(api_factory: ApiF
         shopper = await register(api.client)
 
         wrong_email = await delete(
-            api.client, shopper.token, confirm_email="someone@else.com", password=PASSWORD
+            api.client, shopper.token, confirm="someone@else.com", password=PASSWORD
         )
         wrong_password = await delete(
-            api.client, shopper.token, confirm_email=shopper.email, password="nope nope nope"
+            api.client, shopper.token, confirm=shopper.email, password="nope nope nope"
         )
-        no_password = await delete(api.client, shopper.token, confirm_email=shopper.email)
+        no_password = await delete(api.client, shopper.token, confirm=shopper.email)
 
         assert wrong_email.status_code == 422
         assert wrong_password.status_code == no_password.status_code == 403
@@ -295,7 +295,7 @@ async def test_a_google_only_account_deletes_with_just_the_typed_email(
         email = unique_email()
         token = await google_session(api.client, email)
 
-        response = await delete(api.client, token, confirm_email=email)
+        response = await delete(api.client, token, confirm=email)
 
         assert response.status_code == 204
         assert await scalar(api, "SELECT count(*) FROM oauth_identities") == 0
@@ -310,9 +310,7 @@ async def test_an_administrator_cannot_delete_their_account_here(api_factory: Ap
                 text("UPDATE users SET role = 'admin' WHERE id = :i"), {"i": shopper.user_id}
             )
 
-        response = await delete(
-            api.client, shopper.token, confirm_email=shopper.email, password=PASSWORD
-        )
+        response = await delete(api.client, shopper.token, confirm=shopper.email, password=PASSWORD)
 
         assert response.status_code == 403
         assert (await api.client.get(ME, headers=shopper.auth)).status_code == 200

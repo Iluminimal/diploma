@@ -489,7 +489,7 @@ class _Maker:
                 "country": person.address.country,
                 "phone": None,
             },
-            contact_email=person.user.email,
+            contact_email=person.user.identifier,
             created_at=created,
         )
         events: list[tuple[str, datetime, dict[str, Any], bool]] = [("placed", created, {}, False)]

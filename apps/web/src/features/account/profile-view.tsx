@@ -100,7 +100,7 @@ function ProfileCard({ user }: { user: SessionUser }) {
           hint={user.providers.includes("google") ? "Provided by Google, so it can't be changed here." : "Contact us to change your email."}
         >
           <Input
-            value={user.email}
+            value={user.email ?? ""}
             readOnly
             className="h-11 rounded-xl"
             {...fieldAria("profile-email", undefined, "hint")}
@@ -305,13 +305,14 @@ function DeleteDialog({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
-  const matches = email.trim().toLowerCase() === user.email.toLowerCase();
+  const identifier = user.email ?? user.phone ?? "";
+  const matches = email.trim().toLowerCase() === identifier.toLowerCase();
   const ready = matches && (!user.has_password || password.length > 0);
 
   async function confirm() {
     setProblem(null);
     try {
-      await remove.mutateAsync({ confirm_email: email.trim(), ...(user.has_password ? { password } : {}) });
+      await remove.mutateAsync({ confirm: email.trim(), ...(user.has_password ? { password } : {}) });
       toast("Your account was deleted.");
       router.push("/");
       router.refresh();

@@ -160,7 +160,7 @@ class AdminDashboardService:
             raise _forbidden("You cannot suspend your own account.")
         async with self._session.begin():
             user = await self._users.get(user_id)
-            if user is None or user.email.endswith("@deleted.invalid"):
+            if user is None or (user.email or "").endswith("@deleted.invalid"):
                 raise _customer_not_found(user_id)
             if user.is_admin:
                 raise _forbidden("Administrator accounts are managed from the command line.")
@@ -179,6 +179,7 @@ def _customer(user: User, orders: int, spent: int, last_order: datetime | None) 
     return AdminCustomer(
         id=user.id,
         email=user.email,
+        phone=user.phone,
         full_name=user.full_name,
         avatar_url=user.avatar_url,
         is_active=user.is_active,

@@ -16,10 +16,10 @@ const withPassword: SessionUser = {
   full_name: "Ada Lovelace",
   role: "customer",
   avatar_url: null,
-  has_password: true,
+  has_password: true, phone: null, email_verified: false, phone_verified: false,
   providers: [],
 };
-const googleOnly: SessionUser = { ...withPassword, has_password: false, providers: ["google"] };
+const googleOnly: SessionUser = { ...withPassword, has_password: false, phone: null, email_verified: false, phone_verified: false, providers: ["google"] };
 
 function signIn(user: SessionUser) {
   useAuth.setState({ status: "signedIn", accessToken: "t", user });
@@ -85,7 +85,7 @@ describe("ProfileView", () => {
     it("lets a Google-only account set one, without a current password", async () => {
       signIn(googleOnly);
       const api = stubApi({
-        "PUT /api/v1/auth/password": { body: { ...session, user: { ...googleOnly, has_password: true } } },
+        "PUT /api/v1/auth/password": { body: { ...session, user: { ...googleOnly, has_password: true, phone: null, email_verified: false, phone_verified: false } } },
       });
       renderWithQuery(<ProfileView />);
 
@@ -169,7 +169,7 @@ describe("ProfileView", () => {
       await userEvent.click(within(dialog).getByRole("button", { name: "Delete account" }));
 
       await waitFor(() => expect(push).toHaveBeenCalledWith("/"));
-      expect(api.calls[0]?.body).toEqual({ confirm_email: "ada@example.com" });
+      expect(api.calls[0]?.body).toEqual({ confirm: "ada@example.com" });
       expect(useAuth.getState().status).toBe("signedOut");
     });
 

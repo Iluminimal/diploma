@@ -86,7 +86,8 @@ class AdminCustomerListQuery(BaseModel):
 
 class AdminCustomer(BaseModel):
     id: int
-    email: str
+    email: str | None
+    phone: str | None
     full_name: str
     avatar_url: str | None
     is_active: bool

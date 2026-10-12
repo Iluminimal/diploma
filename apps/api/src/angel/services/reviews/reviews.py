@@ -249,4 +249,5 @@ class ReviewService:
             ),
             user_id=user.id,
             author_email=user.email,
+            author_phone=user.phone,
         )

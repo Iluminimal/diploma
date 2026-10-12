@@ -9,7 +9,7 @@ import { ProductReviews } from "./product-reviews";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }), usePathname: () => "/products/41885/x" }));
 
-const user = { id: 1, email: "a@b.co", full_name: "Ada", avatar_url: null, has_password: true, providers: [] as string[] };
+const user = { id: 1, email: "a@b.co", full_name: "Ada", avatar_url: null, has_password: true, phone: null, email_verified: false, phone_verified: false, providers: [] as string[] };
 const signedIn = () => useAuth.setState({ status: "signedIn", accessToken: "t", user: { ...user, role: "customer" } });
 const signedOut = () => useAuth.setState({ status: "signedOut", accessToken: null, user: null });
 const URL = "GET /api/v1/products/41885/reviews";

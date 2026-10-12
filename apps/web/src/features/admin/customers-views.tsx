@@ -174,7 +174,7 @@ function CustomerRow({ customer }: { customer: AdminCustomer }) {
         <Link href={`/admin/customers/${customer.id}`} className="block truncate font-medium hover:underline">
           {customer.full_name}
         </Link>
-        <span className="text-muted-foreground block truncate text-xs">{customer.email}</span>
+        <span className="text-muted-foreground block truncate text-xs">{customer.email ?? customer.phone}</span>
       </TableCell>
       <TableCell className="text-muted-foreground whitespace-nowrap">{day(customer.created_at)}</TableCell>
       <TableCell className="text-right tabular-nums">{customer.orders_count}</TableCell>
@@ -231,7 +231,7 @@ export function CustomerView({ id }: { id: number }) {
       <AdminPageHeader
         title={customer.full_name}
         back={back}
-        description={customer.email}
+        description={customer.email ?? customer.phone ?? undefined}
         actions={
           customer.is_active ? (
             <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setConfirming(true)}>

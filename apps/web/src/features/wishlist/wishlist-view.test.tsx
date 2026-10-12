@@ -7,7 +7,7 @@ import { renderWithQuery } from "@/test/render";
 import { WishlistView } from "./wishlist-view";
 
 beforeEach(() =>
-  useAuth.setState({ status: "signedIn", accessToken: "t", user: { id: 1, email: "a@b.co", full_name: "Ada", role: "customer" as const, avatar_url: null, has_password: true, providers: [] as string[] } }),
+  useAuth.setState({ status: "signedIn", accessToken: "t", user: { id: 1, email: "a@b.co", full_name: "Ada", role: "customer" as const, avatar_url: null, has_password: true, phone: null, email_verified: false, phone_verified: false, providers: [] as string[] } }),
 );
 afterEach(() => vi.unstubAllGlobals());
 

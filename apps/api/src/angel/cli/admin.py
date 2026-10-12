@@ -66,11 +66,11 @@ async def _run(args: argparse.Namespace) -> str:
                     )
                 except ValueError as error:
                     raise SystemExit(str(error)) from None
-                return f"{'created' if created else 'promoted'} administrator {user.email}"
+                return f"{'created' if created else 'promoted'} administrator {user.identifier}"
             demoted = await set_role(session, email=args.email, role=ROLE_CUSTOMER)
             if demoted is None:
                 raise SystemExit(f"no account for {args.email}")
-            return f"{demoted.email} is now a customer"
+            return f"{demoted.identifier} is now a customer"
     finally:
         await engine.dispose()
 

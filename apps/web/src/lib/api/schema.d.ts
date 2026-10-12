@@ -1142,7 +1142,7 @@ export interface components {
              */
             created_at: string;
             /** Email */
-            email: string;
+            email: string | null;
             /** Full Name */
             full_name: string;
             /** Id */
@@ -1153,6 +1153,8 @@ export interface components {
             last_order_at: string | null;
             /** Orders Count */
             orders_count: number;
+            /** Phone */
+            phone: string | null;
             /** Total Spent Cents */
             total_spent_cents: number;
         };
@@ -1166,7 +1168,7 @@ export interface components {
              */
             created_at: string;
             /** Email */
-            email: string;
+            email: string | null;
             /** Full Name */
             full_name: string;
             /** Has Password */
@@ -1179,6 +1181,8 @@ export interface components {
             last_order_at: string | null;
             /** Orders Count */
             orders_count: number;
+            /** Phone */
+            phone: string | null;
             /** Providers */
             providers: string[];
             /** Recent Orders */
@@ -1481,7 +1485,9 @@ export interface components {
             /** Author */
             author: string;
             /** Author Email */
-            author_email: string;
+            author_email: string | null;
+            /** Author Phone */
+            author_phone: string | null;
             /** Body */
             body: string | null;
             /**
@@ -1689,6 +1695,8 @@ export interface components {
         CheckoutRequest: {
             /** Address Id */
             address_id: number;
+            /** Contact Email */
+            contact_email?: string | null;
             /**
              * Shipping Method
              * @enum {string}
@@ -1709,8 +1717,8 @@ export interface components {
         };
         /** DeleteAccountRequest */
         DeleteAccountRequest: {
-            /** Confirm Email */
-            confirm_email: string;
+            /** Confirm */
+            confirm: string;
             /** Password */
             password?: string | null;
         };
@@ -2529,13 +2537,19 @@ export interface components {
             /** Avatar Url */
             avatar_url: string | null;
             /** Email */
-            email: string;
+            email: string | null;
+            /** Email Verified */
+            email_verified: boolean;
             /** Full Name */
             full_name: string;
             /** Has Password */
             has_password: boolean;
             /** Id */
             id: number;
+            /** Phone */
+            phone: string | null;
+            /** Phone Verified */
+            phone_verified: boolean;
             /** Providers */
             providers: string[];
             /**

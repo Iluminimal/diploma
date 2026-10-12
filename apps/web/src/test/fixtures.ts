@@ -327,6 +327,7 @@ export function makeAdminCustomer(overrides: Partial<AdminCustomer> = {}): Admin
   return {
     id: 3,
     email: "ada@example.com",
+    phone: null,
     full_name: "Ada Lovelace",
     avatar_url: null,
     is_active: true,
@@ -372,6 +373,7 @@ export function makeAdminReview(overrides: Partial<AdminReview> = {}): AdminRevi
     updated_at: "2026-10-07T08:00:00Z",
     user_id: 3,
     author_email: "ada@example.com",
+    author_phone: null,
     product: {
       id: 41885,
       name: "Alma Women Blue Kurta",

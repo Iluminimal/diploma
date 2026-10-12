@@ -129,7 +129,7 @@ class OrderFulfillmentService:
                 )
         async with self._session.begin():
             order = await self._lock(number)
-            data_user = (admin.id, admin.email)
+            data_user = (admin.id, admin.identifier)
             if not await release_order(self._session, order, "admin", actor=data_user):
                 raise _conflict(order, "cancel")
             if request.reason:
@@ -247,7 +247,7 @@ class OrderFulfillmentService:
 
 
 def _by(admin: User) -> dict[str, object]:
-    return {"actor": admin.email}
+    return {"actor": admin.identifier}
 
 
 def _not_found(number: str) -> ProblemError:

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from urllib.parse import quote
 
 from sqlalchemy.exc import IntegrityError
@@ -113,7 +114,7 @@ class OAuthService:
         if created:
             await self._mailer.send(
                 Email(
-                    to=user.email,
+                    to=email,
                     subject="Welcome to Angel",
                     body=f"Hi {user.full_name}, your account is ready.",
                 )
@@ -128,7 +129,12 @@ class OAuthService:
         user = await self._users.get_by_email(email)
         if user is None:
             full_name = (name or email.split("@")[0]).strip()[:MAX_NAME_LENGTH]
-            user = await self._users.create(email=email, password_hash=None, full_name=full_name)
+            user = await self._users.create(
+                email=email,
+                password_hash=None,
+                full_name=full_name,
+                email_verified_at=datetime.now(UTC),
+            )
             created = True
         else:
             # Google vouches for this email, and nobody has verified the address of an account
@@ -137,7 +143,9 @@ class OAuthService:
             if user.password_hash is not None:
                 log.info("oauth_password_removed", user_id=user.id)
                 user.password_hash = None
-                self._session.add(user)
+            if user.email_verified_at is None:
+                user.email_verified_at = datetime.now(UTC)
+            self._session.add(user)
             created = False
         await self._users.add_identity(
             user_id=user.id, provider=self._provider.name, subject=subject, email=email

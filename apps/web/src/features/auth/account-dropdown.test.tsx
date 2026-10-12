@@ -12,7 +12,7 @@ const user = (role: SessionUser["role"]): SessionUser => ({
   full_name: "Ada Lovelace",
   role,
   avatar_url: null,
-  has_password: true,
+  has_password: true, phone: null, email_verified: false, phone_verified: false,
   providers: [],
 });
 

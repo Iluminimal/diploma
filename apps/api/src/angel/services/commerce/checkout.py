@@ -29,6 +29,7 @@ from angel.core.errors import (
     ADDRESS_NOT_FOUND_TYPE,
     CART_EMPTY_TYPE,
     CHECKOUT_BUSY_TYPE,
+    CONTACT_EMAIL_REQUIRED_TYPE,
     INSUFFICIENT_STOCK_TYPE,
     ORDER_NOT_FOUND_TYPE,
     PAYMENT_IN_PROGRESS_TYPE,
@@ -208,6 +209,14 @@ class CheckoutService:
                     type_=ADDRESS_NOT_FOUND_TYPE,
                 )
             assert user is not None  # the token's subject; users are never deleted
+            contact_email = request.contact_email or user.email
+            if contact_email is None:
+                raise ProblemError(
+                    HTTPStatus.UNPROCESSABLE_ENTITY,
+                    "An email is needed for the order",
+                    "Enter the email address that should receive the order updates.",
+                    type_=CONTACT_EMAIL_REQUIRED_TYPE,
+                )
             cart = await self._carts.find(user_id=user_id)
             if cart is None or not cart.items:
                 raise ProblemError(
@@ -282,7 +291,7 @@ class CheckoutService:
                 shipping_address=AddressSnapshot.model_validate(
                     address, from_attributes=True
                 ).model_dump(),
-                contact_email=user.email,
+                contact_email=contact_email,
             )
             await self._orders.add(order, items)
             self._orders.add_event(order.id, "placed")

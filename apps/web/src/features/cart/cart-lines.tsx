@@ -2,6 +2,7 @@
 
 import { AnimatePresence, m } from "motion/react";
 import { Heart, Trash2 } from "lucide-react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -16,7 +17,7 @@ import { cn } from "@/lib/utils";
 import type { Cart, CartLine } from "./cart-api";
 import { useCartDrawer } from "./cart-ui-store";
 import { QuantityStepper } from "./quantity-stepper";
-import { useAddToCart, useRemoveItem, useSetQuantity } from "./use-cart";
+import { useAddToCart, useCart, useRemoveItem, useSetQuantity } from "./use-cart";
 
 type Props = {
   cart: Cart;
@@ -27,15 +28,54 @@ type Props = {
 
 export function CartLines({ cart, onNavigate, className }: Props) {
   return (
-    <ul className={cn("divide-border divide-y", className)} aria-label="Items in your cart">
-      <MotionProvider>
-        <AnimatePresence initial={false}>
-          {cart.lines.map((line) => (
-            <CartLineItem key={line.id} line={line} onNavigate={onNavigate} />
-          ))}
-        </AnimatePresence>
-      </MotionProvider>
-    </ul>
+    <>
+      <ul className={cn("divide-border divide-y", className)} aria-label="Items in your cart">
+        <MotionProvider>
+          <AnimatePresence initial={false}>
+            {cart.lines.map((line) => (
+              <CartLineItem key={line.id} line={line} onNavigate={onNavigate} />
+            ))}
+          </AnimatePresence>
+        </MotionProvider>
+      </ul>
+      <UndoBar />
+    </>
+  );
+}
+
+/** "Removed Blue Kurta. Undo": for a few seconds after a line is taken out, in the cart itself. */
+export function UndoBar() {
+  const removed = useCartDrawer((state) => state.removed);
+  const setRemoved = useCartDrawer((state) => state.setRemoved);
+  const add = useAddToCart();
+  const { data: cart } = useCart();
+
+  useEffect(() => {
+    if (!removed) return;
+    const timer = window.setTimeout(() => setRemoved(null), 8000);
+    return () => window.clearTimeout(timer);
+  }, [removed, setRemoved]);
+
+  if (!removed) return null;
+  // If the removal failed the line is back in the cart: there is nothing to undo.
+  if (cart?.lines.some((line) => line.product.id === removed.productId && line.size === removed.size)) return null;
+  return (
+    <div
+      role="status"
+      className="bg-secondary animate-in fade-in slide-in-from-bottom-2 mt-3 flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm duration-300"
+    >
+      <span className="min-w-0 truncate">Removed {removed.name}</span>
+      <button
+        type="button"
+        className="text-brand shrink-0 font-semibold underline-offset-2 hover:underline"
+        onClick={() => {
+          add.mutate({ product_id: removed.productId, size: removed.size, quantity: removed.quantity });
+          setRemoved(null);
+        }}
+      >
+        Undo
+      </button>
+    </div>
   );
 }
 
@@ -45,7 +85,6 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
   const status = useAuth((state) => state.status);
   const setQuantity = useSetQuantity();
   const remove = useRemoveItem();
-  const add = useAddToCart();
   const toggleWishlist = useToggleWishlist();
   const added = useCartDrawer((state) => state.added);
   const { product } = line;
@@ -53,16 +92,14 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
   // The line the shopper has just added glows once in the drawer.
   const isNew = added?.productId === product.id && added.size === line.size;
 
-  const removeWithUndo = () =>
-    remove.mutate(line.id, {
-      onSuccess: () =>
-        toast(`Removed ${product.name}`, {
-          action: {
-            label: "Undo",
-            onClick: () => add.mutate({ product_id: product.id, size: line.size, quantity: line.quantity }),
-          },
-        }),
-    });
+  // The undo bar sits inside the cart (a toast would be outside the open drawer, out of reach of
+  // screen readers).
+  const setRemoved = useCartDrawer((state) => state.setRemoved);
+  const removeWithUndo = () => {
+    // Set now, not when the server answers: by then this row is gone and its callbacks never run.
+    setRemoved({ productId: product.id, size: line.size, quantity: line.quantity, name: product.name });
+    remove.mutate(line.id);
+  };
 
   const saveForLater = () => {
     if (status !== "signedIn") {
@@ -72,7 +109,12 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
     }
     toggleWishlist.mutate(
       { product, saved: true },
-      { onSuccess: () => remove.mutate(line.id, { onSuccess: () => toast(`Saved ${product.name} to your wishlist`) }) },
+      {
+        onSuccess: () => {
+          remove.mutate(line.id);
+          toast(`Saved ${product.name} to your wishlist`);
+        },
+      },
     );
   };
 

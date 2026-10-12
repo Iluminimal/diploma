@@ -24,16 +24,20 @@ const twoLines = () =>
 beforeEach(() => {
   notice.mockReset();
   push.mockReset();
-  useCartDrawer.setState({ open: false, added: null });
+  useCartDrawer.setState({ open: false, added: null, removed: null });
   useAuth.setState({ status: "signedOut", accessToken: null, user: null });
 });
 afterEach(() => vi.unstubAllGlobals());
 
 describe("cart lines", () => {
   it("offers to undo a removal, which puts the same size and quantity back", async () => {
+    let server = twoLines();
     const api = stubApi({
-      "GET /api/v1/cart": () => json(twoLines()),
-      "DELETE /api/v1/cart/items/11": () => json(makeCart([makeCartLine({ id: 10, product: kurta, quantity: 2 })])),
+      "GET /api/v1/cart": () => json(server),
+      "DELETE /api/v1/cart/items/11": () => {
+        server = makeCart([makeCartLine({ id: 10, product: kurta, quantity: 2 })]);
+        return json(server);
+      },
       "POST /api/v1/cart/items": () => json(twoLines()),
     });
     renderWithQuery(<MiniCart onNavigate={vi.fn()} />);
@@ -41,10 +45,8 @@ describe("cart lines", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Remove White Sneaker from your cart" }));
 
-    await waitFor(() => expect(notice).toHaveBeenCalledWith("Removed White Sneaker", expect.anything()));
-    const { action } = notice.mock.calls[0]![1] as { action: { label: string; onClick: () => void } };
-    expect(action.label).toBe("Undo");
-    action.onClick();
+    expect(await screen.findByRole("status")).toHaveTextContent("Removed White Sneaker");
+    await userEvent.click(screen.getByRole("button", { name: "Undo" }));
     await waitFor(() => expect(api.count("POST /api/v1/cart/items")).toBe(1));
     expect(api.calls.find((c) => c.method === "POST")?.body).toEqual({ product_id: 2, size: "9", quantity: 1 });
   });

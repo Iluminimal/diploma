@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatedPrice } from "@/components/product/animated-price";
 import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
-import { CartLines } from "./cart-lines";
+import { CartLines, UndoBar } from "./cart-lines";
 import { FreeShippingProgress } from "./free-shipping-progress";
 import { useCart } from "./use-cart";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -46,17 +46,23 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
   }
   if (cart.lines.length === 0) {
     return (
-      <EmptyState
-        icon={ShoppingBag}
-        as="p"
-        title="Your cart is empty"
-        description="Find something you love and it will wait for you here."
-        className="flex-1 pb-16"
-      >
-        <Button asChild variant="outline" size="lg" className="h-10 rounded-full px-5" onClick={onNavigate}>
-          <Link href="/products">Continue shopping</Link>
-        </Button>
-      </EmptyState>
+      <>
+        <EmptyState
+          icon={ShoppingBag}
+          as="p"
+          title="Your cart is empty"
+          description="Find something you love and it will wait for you here."
+          className="flex-1 pb-16"
+        >
+          <Button asChild variant="outline" size="lg" className="h-10 rounded-full px-5" onClick={onNavigate}>
+            <Link href="/products">Continue shopping</Link>
+          </Button>
+        </EmptyState>
+        {/* Taking out the last line leaves an empty cart: the way back is here. */}
+        <div className="px-4 pb-4 empty:hidden">
+          <UndoBar />
+        </div>
+      </>
     );
   }
 

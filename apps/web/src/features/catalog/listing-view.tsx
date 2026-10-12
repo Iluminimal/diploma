@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { AnimatedNumber } from "@/components/motion/animated-number";
+import { AnimatedCount } from "@/components/motion/animated-count";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ActiveFilters } from "./active-filters";
 import { listProducts } from "./api";
@@ -92,7 +92,7 @@ async function ResultCount({ query }: { query: ListingQuery }) {
   const { total } = await listProducts(query);
   return (
     <p className="text-muted-foreground h-5 text-sm" aria-live="polite">
-      <AnimatedNumber value={total} format={(n) => n.toLocaleString("en-US")} /> {total === 1 ? "product" : "products"}
+      <AnimatedCount value={total} /> {total === 1 ? "product" : "products"}
     </p>
   );
 }

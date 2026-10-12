@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AnimatedPrice } from "@/components/product/animated-price";
 import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
-import { CartLines } from "./cart-lines";
+import { CartLines, UndoBar } from "./cart-lines";
 import { FreeShippingProgress } from "./free-shipping-progress";
 import { useCart } from "./use-cart";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -41,20 +41,25 @@ export function CartView() {
   if (cart.lines.length === 0) {
     return (
       // As tall as the loading skeleton (3 rows of 8rem and their gaps), so the page below does not jump.
-      <EmptyState
-        icon={ShoppingBag}
-        as="p"
-        title="Your cart is empty"
-        description="Browse the collection or search with a photo."
-        className="min-h-[26rem] py-16"
-      >
-        <Button asChild size="lg" className="h-11 rounded-full px-5">
-          <Link href="/products">Shop all</Link>
-        </Button>
-        <Button asChild variant="outline" size="lg" className="h-11 rounded-full px-5">
-          <Link href="/search">Search by photo</Link>
-        </Button>
-      </EmptyState>
+      <div>
+        <EmptyState
+          icon={ShoppingBag}
+          as="p"
+          title="Your cart is empty"
+          description="Browse the collection or search with a photo."
+          className="min-h-[26rem] py-16"
+        >
+          <Button asChild size="lg" className="h-11 rounded-full px-5">
+            <Link href="/products">Shop all</Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="h-11 rounded-full px-5">
+            <Link href="/search">Search by photo</Link>
+          </Button>
+        </EmptyState>
+        <div className="mx-auto max-w-sm empty:hidden">
+          <UndoBar />
+        </div>
+      </div>
     );
   }
 

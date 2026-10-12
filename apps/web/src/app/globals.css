@@ -8,6 +8,16 @@
 @theme {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+  /* A spring that overshoots a little, sampled as a CSS easing: for things that land (a drawer, a badge). */
+  --ease-spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077,
+    1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%,
+    0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1
+  );
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 500ms;
+  --animate-shimmer: shimmer 1.8s var(--ease-in-out-quart) infinite;
   --animate-pop: pop 420ms var(--ease-out-expo);
   --animate-float: float 7s ease-in-out infinite;
   --animate-shake: shake 420ms var(--ease-out-expo);
@@ -36,6 +46,11 @@
     }
     50% {
       translate: 0 -10px;
+    }
+  }
+  @keyframes shimmer {
+    to {
+      transform: translateX(100%);
     }
   }
   @keyframes pop {

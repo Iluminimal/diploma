@@ -5,7 +5,7 @@ import { Trash2 } from "lucide-react";
 import Link from "next/link";
 import { EASE_OUT_EXPO } from "@/components/motion/easing";
 import { MotionProvider } from "@/components/motion/motion-provider";
-import { Price } from "@/components/product/price";
+import { AnimatedPrice } from "@/components/product/animated-price";
 import { ProductImage } from "@/components/product/product-image";
 import { productPath, productSubtitle } from "@/features/catalog/product";
 import { cn } from "@/lib/utils";
@@ -104,7 +104,7 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
               onChange={(quantity) => setQuantity.mutate({ itemId: line.id, quantity })}
             />
           )}
-          <Price
+          <AnimatedPrice
             cents={line.line_total_cents}
             currency={product.currency}
             className={cn("text-sm font-medium", soldOut && "text-muted-foreground line-through")}

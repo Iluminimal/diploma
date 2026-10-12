@@ -2,11 +2,12 @@
 
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { Price } from "@/components/product/price";
+import { AnimatedPrice } from "@/components/product/animated-price";
 import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
 import { CartLines } from "./cart-lines";
 import { useCart } from "./use-cart";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function CartView() {
@@ -39,23 +40,20 @@ export function CartView() {
   if (cart.lines.length === 0) {
     return (
       // As tall as the loading skeleton (3 rows of 8rem and their gaps), so the page below does not jump.
-      <div className="flex min-h-[26rem] flex-col items-center justify-center gap-5 py-16 text-center">
-        <span className="bg-muted grid size-16 place-items-center rounded-full">
-          <ShoppingBag className="text-muted-foreground size-7" />
-        </span>
-        <div className="space-y-1">
-          <p className="text-lg font-medium">Your cart is empty</p>
-          <p className="text-muted-foreground text-sm">Browse the collection or search with a photo.</p>
-        </div>
-        <div className="flex flex-wrap justify-center gap-2">
-          <Button asChild size="lg" className="h-11 rounded-full px-5">
-            <Link href="/products">Shop all</Link>
-          </Button>
-          <Button asChild variant="outline" size="lg" className="h-11 rounded-full px-5">
-            <Link href="/search">Search by photo</Link>
-          </Button>
-        </div>
-      </div>
+      <EmptyState
+        icon={ShoppingBag}
+        as="p"
+        title="Your cart is empty"
+        description="Browse the collection or search with a photo."
+        className="min-h-[26rem] py-16"
+      >
+        <Button asChild size="lg" className="h-11 rounded-full px-5">
+          <Link href="/products">Shop all</Link>
+        </Button>
+        <Button asChild variant="outline" size="lg" className="h-11 rounded-full px-5">
+          <Link href="/search">Search by photo</Link>
+        </Button>
+      </EmptyState>
     );
   }
 
@@ -71,7 +69,7 @@ export function CartView() {
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Subtotal ({cart.item_count} items)</dt>
             <dd>
-              <Price cents={cart.subtotal_cents} currency={cart.currency} />
+              <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} />
             </dd>
           </div>
           <div className="flex justify-between">
@@ -81,7 +79,7 @@ export function CartView() {
         </dl>
         <div className="border-border flex items-baseline justify-between border-t pt-4">
           <span className="font-medium">Estimated total</span>
-          <Price cents={cart.subtotal_cents} currency={cart.currency} className="text-lg font-semibold" />
+          <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} className="text-lg font-semibold" />
         </div>
         {cart.has_issues && (
           <p role="status" className="text-destructive text-sm">

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ActiveFilters } from "./active-filters";
 import { listProducts } from "./api";
@@ -92,7 +93,7 @@ async function ResultCount({ query }: { query: ListingQuery }) {
 
 async function Results({ query, path }: { query: ListingQuery; path: string }) {
   const page = await listProducts(query);
-  if (page.items.length === 0) return <EmptyState query={query} path={path} />;
+  if (page.items.length === 0) return <NoResults query={query} path={path} />;
   return (
     <>
       <ProductGrid products={page.items} columns={3} priorityCount={3} />
@@ -101,24 +102,22 @@ async function Results({ query, path }: { query: ListingQuery; path: string }) {
   );
 }
 
-function EmptyState({ query, path }: { query: ListingQuery; path: string }) {
+function NoResults({ query, path }: { query: ListingQuery; path: string }) {
   return (
-    <div className="border-border flex flex-col items-center gap-4 rounded-3xl border border-dashed px-6 py-20 text-center">
-      <SearchX className="text-muted-foreground size-8" />
-      <div className="space-y-1">
-        <h2 className="text-lg font-medium">Nothing matches {query.q ? `“${query.q}”` : "these filters"}</h2>
-        <p className="text-muted-foreground text-sm">Try removing a filter, or search with a photo instead.</p>
-      </div>
-      <div className="flex gap-2">
-        <Button asChild variant="outline" size="lg">
-          <Link href={path}>Clear filters</Link>
-        </Button>
-        <Button asChild size="lg">
-          <Link href="/search">
-            <Camera /> Search by photo
-          </Link>
-        </Button>
-      </div>
-    </div>
+    <EmptyState
+      icon={SearchX}
+      bordered
+      title={`Nothing matches ${query.q ? `“${query.q}”` : "these filters"}`}
+      description="Try removing a filter, or search with a photo instead."
+    >
+      <Button asChild variant="outline" size="lg">
+        <Link href={path}>Clear filters</Link>
+      </Button>
+      <Button asChild size="lg">
+        <Link href="/search">
+          <Camera /> Search by photo
+        </Link>
+      </Button>
+    </EmptyState>
   );
 }

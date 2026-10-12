@@ -2,11 +2,12 @@
 
 import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { Price } from "@/components/product/price";
+import { AnimatedPrice } from "@/components/product/animated-price";
 import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
 import { CartLines } from "./cart-lines";
 import { useCart } from "./use-cart";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function MiniCartSkeleton() {
@@ -44,18 +45,17 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
   }
   if (cart.lines.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 pb-16 text-center">
-        <span className="bg-muted grid size-14 place-items-center rounded-full">
-          <ShoppingBag className="text-muted-foreground size-6" />
-        </span>
-        <div className="space-y-1">
-          <p className="font-medium">Your cart is empty</p>
-          <p className="text-muted-foreground text-sm">Find something you love and it will wait for you here.</p>
-        </div>
+      <EmptyState
+        icon={ShoppingBag}
+        as="p"
+        title="Your cart is empty"
+        description="Find something you love and it will wait for you here."
+        className="flex-1 pb-16"
+      >
         <Button asChild variant="outline" size="lg" className="h-10 rounded-full px-5" onClick={onNavigate}>
           <Link href="/products">Continue shopping</Link>
         </Button>
-      </div>
+      </EmptyState>
     );
   }
 
@@ -67,7 +67,7 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
       <div className="border-border space-y-3 border-t p-4">
         <div className="flex items-baseline justify-between">
           <span className="text-sm font-medium">Subtotal</span>
-          <Price cents={cart.subtotal_cents} currency={cart.currency} className="text-base font-semibold" />
+          <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} className="text-base font-semibold" />
         </div>
         <p className="text-muted-foreground text-xs">Shipping is calculated at checkout.</p>
         <Button asChild size="lg" className="h-11 w-full rounded-full text-sm" onClick={onNavigate}>

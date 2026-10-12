@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import "./zoom.css";
 import { useRef, useState, type PointerEvent } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -47,8 +48,6 @@ export function ProductGallery({ product, images: given }: Props) {
             type="button"
             data-fly-source
             aria-label={`Enlarge photo of ${product.name}`}
-            // Named for the card-to-page transition: the product card's photo morphs into this one.
-            style={{ viewTransitionName: "product-hero" }}
             className="zoom-stage bg-secondary focus-visible:ring-ring/60 relative aspect-[3/4] flex-1 cursor-zoom-in touch-pan-y overflow-hidden rounded-3xl outline-none focus-visible:ring-3 dark:bg-white"
             onPointerMove={zoomAt}
             onPointerEnter={zoomAt}

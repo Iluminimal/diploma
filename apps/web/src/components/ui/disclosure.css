@@ -1,0 +1,27 @@
+/* Imported by disclosure.tsx, so only pages that use a Disclosure download it. */
+/*
+ * A native <details> whose panel opens and closes smoothly where the browser supports animating
+ * to `auto` height (Chromium, Safari); elsewhere it simply opens. No script.
+ */
+.disclosure {
+  interpolate-size: allow-keywords;
+}
+.disclosure::details-content {
+  height: 0;
+  overflow: clip;
+  transition:
+    height 350ms var(--ease-out-expo),
+    content-visibility 350ms allow-discrete;
+}
+.disclosure[open]::details-content {
+  height: auto;
+}
+.disclosure > summary {
+  list-style: none;
+}
+.disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.disclosure[open] > summary .disclosure-chevron {
+  rotate: 180deg;
+}

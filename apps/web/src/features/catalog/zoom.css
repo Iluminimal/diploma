@@ -1,0 +1,21 @@
+/* Product page only (imported by product-gallery.tsx). */
+/*
+ * Hover zoom on the product photo (mouse only): the image grows around the pointer, whose
+ * position the gallery writes to --zx / --zy. Touch has the enlarge dialog and swipe instead.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .zoom-stage .zoom-image {
+    transition:
+      transform 450ms var(--ease-out-expo),
+      opacity 500ms var(--ease-out-expo);
+    transform-origin: var(--zx, 50%) var(--zy, 50%);
+  }
+  .zoom-stage[data-zoom="true"] .zoom-image[data-active="true"] {
+    transform: scale(1.9);
+  }
+}
+
+/* Named for the card-to-page transition: the product card's photo morphs into this one (see .press-card in globals.css). */
+.zoom-stage {
+  view-transition-name: product-hero;
+}

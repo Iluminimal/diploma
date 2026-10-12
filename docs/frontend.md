@@ -136,6 +136,51 @@ headline has no entrance); everything that starts hidden is shown without script
 (`[data-reveal]` in `globals.css`; Motion alone would still fade opacity); view-transition animations are switched off under
 reduced motion too.
 
+## Motion and design pass (Phase 15)
+
+Calm, Apple-style motion across the storefront; CSS first, off under reduced motion, no new library.
+
+**Tokens** (`globals.css`): `--duration-{fast,base,slow}` (150, 300, 500 ms), `--ease-spring` (a CSS `linear()` spring) next to
+the two existing curves, `.skeleton` (one shimmer class: dozens of repeated utility strings would double in the HTML and the
+RSC payload), `.press-card`, the `shake`, `burst`, `scan`, `draw`, `grow-x`, `highlight` keyframes. Dialogs and sheets use the
+house easing (a drawer slides its full width). **Rules**: every animation sits under the global reduced-motion kill-switch or
+`prefers-reduced-motion: no-preference`; the Vitest setup runs with reduced motion on, so counted totals and the like show their
+final value at once in tests (a test of an animation stubs `matchMedia` itself).
+
+| Where | What |
+| --- | --- |
+| Add to cart (`features/cart`) | the button becomes a check mark (`Added`), a copy of the photo flies to the cart icon (`fly-to-cart.ts`, Web Animations, no library) which bounces, then the drawer opens; a missing size shakes and takes focus |
+| Cart drawer and `/cart` | slides in, swipes away on touch (`components/ui/use-swipe-dismiss.ts`), the new line glows, free-shipping progress from `GET /checkout/shipping-methods`, totals and quantities count (`AnimatedNumber`, `AnimatedPrice`), **Undo** (an in-cart bar, not a toast: a toast is outside the open modal and out of reach of screen readers), **Save for later** moves a line to the wishlist |
+| Product page | gallery cross-fades between photos, zooms around the mouse pointer, swipes on touch (ready for several photos); Product details and Delivery are `<details>` that slide (`Disclosure`; Delivery reads the real shipping methods); the card photo grows into the gallery (a named view transition, set by CSS on the hovered or focused card, `.press-card` in `globals.css`) |
+| Cards | press feedback, the wishlist heart bursts when filled |
+| Listing and search | a changed filter keeps the old grid dimmed (no skeleton flash, no `key` on the Suspense boundary), the count counts, the filter and sort bar sticks under the header, the filter sheet closes by swiping its title; a scanning band crosses the photo being searched and results rise in |
+| Checkout | a stepper (checks, a summary beside each finished step, a connector that fills), the card number groups as typed and the card is named, a processing overlay (at least 900 ms, none under reduced motion), an animated confirmation with "What happens next", order progress connectors that fill, a pill that slides between account tabs |
+| Forms | an error fades in and the control shakes once |
+| Edge pages | one designed page for 404 and errors (`LostPage`: a floating mark, a search box, the way back), `global-error.tsx` |
+
+**Phone navigation** (Instagram-style, one place per function): the top bar is the logo and the menu button; a bottom bar of five
+icons (Home, Search, Photo, Cart with its count, You: the customer own photo) is the only place that offers them, so nothing
+appears twice. The bar is `MobileTabBar` (loaded after the page is interactive; the space for it is reserved), shown everywhere
+except checkout and the sign-in pages, with the product page Add-to-cart bar above it. Search opens through `useSearchPanel`,
+the cart through `useCartDrawer`. The menu sheet holds only the departments, and Sign out, which lives in the desktop account
+dropdown, is a button on the account page for phones. The header slides away on scrolling down and returns on scrolling up
+(`ScrollHide`, `data-header` on `<html>`). Desktop is unchanged: the header still carries search, account and cart.
+
+**Lessons**: a `loading.tsx` above `/products/[id]` makes the product page stream, which turns its canonical-URL `permanentRedirect`
+into a client-side redirect (two session refreshes in a row, the second rejected as a replay); a server component can neither pass
+a function to a client component nor use `dynamic(..., { ssr: false })`; route-specific CSS (`features/home/story.css`,
+`features/catalog/zoom.css`, `components/ui/disclosure.css`) is imported by the component that uses it, so other pages do not
+download it; the product-card link is plain CSS rather than a client component (a client component per card is hydrated and
+serialised once per card).
+
+**Lighthouse after this pass** (production build, medians of 5, real catalogue; end of Phase 12 in brackets): home **89** (91),
+listing 90-92 (92), product 91-92 (91-93), search 90 (91). First-load JS is 218 KB on home (213), 213 KB on the listing, 280 KB
+on the product page (270). Blocking time stays under 60 ms and nothing shifts. The home page sits one point under the 90 gate
+(single runs between 89 and 94): its simulated first paint is one round trip (150 ms) later than before, while the real first
+paint is 0.3 s; the cause was not found by removing the tab bar or the per-card client component, nor by moving the
+home-only CSS out of the global file, so the margin is recorded rather than hidden. `make lighthouse` exits non-zero until it is
+back at 90.
+
 ## Accounts, cart and checkout
 
 How the pieces fit (API side: `docs/commerce.md`):
@@ -199,7 +244,7 @@ Not done: cropping the photo before searching (SPEC §5 mentions "preview with c
 
 ## Checks
 
-* `npm test`: Vitest + Testing Library, 267 tests (filters, product helpers, JSON-LD and sitemap, error mapping, image
+* `npm test`: Vitest + Testing Library, 640 tests (filters, product helpers, JSON-LD and sitemap, error mapping, image
   normalization, search, cart, checkout, account, orders, admin screens and their payload logic, forms, the access gate).
 * `make e2e`: Playwright, 52 end-to-end tests against a running stack: visual search, cart, checkout with the demo
   payment, login, admin, plus axe accessibility sweeps and keyboard checks. See `docs/e2e.md`; CI runs it on a seeded

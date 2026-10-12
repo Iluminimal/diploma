@@ -313,147 +313,6 @@
 }
 
 /*
- * Homepage scroll effects. All of them are scroll-driven CSS animations: no script, nothing to
- * download. Browsers without `animation-timeline`, and visitors who asked for less motion, get the
- * plain, fully visible layout.
- */
-@supports (animation-timeline: scroll()) {
-  @media (prefers-reduced-motion: no-preference) {
-    /* Hero photos drift upwards at their own speed while the page scrolls away from the top. */
-    .drift {
-      animation: drift linear both;
-      animation-timeline: scroll(root block);
-      animation-range: 0 90vh;
-    }
-    @keyframes drift {
-      to {
-        translate: 0 var(--drift, -60px);
-      }
-    }
-    /* Cards grow into place as they enter the screen. */
-    .zoom-in {
-      animation: zoom-in linear both;
-      animation-timeline: view();
-      animation-range: entry 0% entry 85%;
-    }
-    @keyframes zoom-in {
-      from {
-        scale: 0.92;
-        opacity: 0.35;
-      }
-    }
-  }
-}
-
-/*
- * "How it works": a tall track with a sticky full-screen stage. The scroll position of the track
- * (a named view timeline) plays the story: the photo appears, a scan line sweeps over it, labels
- * appear, and the matching products rise in. Without support, on phones, or with reduced motion
- * this is just three captions and the finished result, stacked.
- */
-@supports (animation-timeline: view()) {
-  @media (min-width: 48rem) and (prefers-reduced-motion: no-preference) {
-    .story-track {
-      view-timeline: --story block;
-      height: 340vh;
-    }
-    .story-stage {
-      position: sticky;
-      top: 0;
-      height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding-block: 5.5rem 2rem;
-    }
-    .story-captions {
-      position: relative;
-      height: 8.5rem;
-    }
-    .story-caption {
-      position: absolute;
-      inset: 0 0 auto 0;
-    }
-    .story-photo,
-    .story-scan,
-    .story-chips,
-    .story-caption,
-    .story-result {
-      animation-timeline: --story;
-      animation-fill-mode: both;
-      animation-timing-function: linear;
-    }
-    .story-photo {
-      animation-name: story-photo;
-      animation-range: cover 8% cover 24%;
-    }
-    .story-scan {
-      animation-name: story-scan;
-      animation-range: cover 30% cover 54%;
-    }
-    .story-chips {
-      animation-name: story-reveal;
-      animation-range: cover 46% cover 52%;
-    }
-    .story-caption[data-step="1"] {
-      animation-name: story-leave;
-      animation-range: cover 38% cover 43%;
-    }
-    .story-caption[data-step="2"] {
-      animation-name: story-enter, story-leave;
-      animation-range:
-        cover 41% cover 46%,
-        cover 55% cover 60%;
-    }
-    .story-caption[data-step="3"] {
-      animation-name: story-enter;
-      animation-range: cover 59% cover 64%;
-    }
-    .story-result {
-      animation-name: story-rise;
-      animation-range: cover calc(62% + var(--i, 0) * 3%) cover calc(70% + var(--i, 0) * 3%);
-    }
-    @keyframes story-photo {
-      from {
-        opacity: 0;
-        scale: 0.86;
-      }
-    }
-    @keyframes story-scan {
-      from {
-        translate: 0 -100%;
-      }
-      to {
-        translate: 0 420%;
-      }
-    }
-    @keyframes story-reveal {
-      from {
-        opacity: 0;
-      }
-    }
-    @keyframes story-enter {
-      from {
-        opacity: 0;
-        translate: 0 14px;
-      }
-    }
-    @keyframes story-leave {
-      to {
-        opacity: 0;
-        translate: 0 -14px;
-      }
-    }
-    @keyframes story-rise {
-      from {
-        opacity: 0;
-        translate: 0 28px;
-      }
-    }
-  }
-}
-
-/*
  * The header gains a hairline shadow as the page scrolls away from the top. Pure CSS, driven by
  * the scroll position, so it costs no script; browsers without scroll-driven animations keep the
  * plain border.
@@ -634,49 +493,6 @@
 }
 
 /*
- * Hover zoom on the product photo (mouse only): the image grows around the pointer, whose
- * position the gallery writes to --zx / --zy. Touch has the enlarge dialog and swipe instead.
- */
-@media (hover: hover) and (pointer: fine) {
-  .zoom-stage .zoom-image {
-    transition:
-      transform 450ms var(--ease-out-expo),
-      opacity 500ms var(--ease-out-expo);
-    transform-origin: var(--zx, 50%) var(--zy, 50%);
-  }
-  .zoom-stage[data-zoom="true"] .zoom-image[data-active="true"] {
-    transform: scale(1.9);
-  }
-}
-
-/*
- * A native <details> whose panel opens and closes smoothly where the browser supports animating
- * to `auto` height (Chromium, Safari); elsewhere it simply opens. No script.
- */
-.disclosure {
-  interpolate-size: allow-keywords;
-}
-.disclosure::details-content {
-  height: 0;
-  overflow: clip;
-  transition:
-    height 350ms var(--ease-out-expo),
-    content-visibility 350ms allow-discrete;
-}
-.disclosure[open]::details-content {
-  height: auto;
-}
-.disclosure > summary {
-  list-style: none;
-}
-.disclosure > summary::-webkit-details-marker {
-  display: none;
-}
-.disclosure[open] > summary .disclosure-chevron {
-  rotate: 180deg;
-}
-
-/*
  * Phones: the header slides up out of the way while scrolling down and comes back on scrolling up
  * (components/layout/scroll-hide.tsx sets data-header on <html>). Sticky bars under the header
  * follow it through --header-offset. Keyboard focus inside the header keeps it in place.
@@ -727,7 +543,20 @@
   }
 }
 
-/* A product card gives a little under the finger (short name: it is repeated on every card). */
+/*
+ * A product card gives a little under the finger (short name: it is repeated on every card), and
+ * the card under the pointer (or focused) names its photo for the page transition, so the photo
+ * grows into the product page's gallery. One card at a time can be hovered or focused, and then
+ * the page's own hero (the gallery, when navigating between products) gives its name up: two
+ * elements with one name would cancel the whole transition. No script, so no client component
+ * per card.
+ */
+.press-card:is(:hover, :focus-visible) [data-card-photo] {
+  view-transition-name: product-hero;
+}
+body:has(.press-card:is(:hover, :focus-visible)) [data-fly-source] {
+  view-transition-name: none;
+}
 @layer components {
   .press-card {
     transition: transform var(--duration-base) var(--ease-out-expo);

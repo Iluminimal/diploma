@@ -1,4 +1,5 @@
 import Image from "next/image";
+import "./story.css";
 import Link from "next/link";
 import { Reveal } from "@/components/motion/reveal";
 import { ScrollFade } from "@/components/motion/scroll-fade";

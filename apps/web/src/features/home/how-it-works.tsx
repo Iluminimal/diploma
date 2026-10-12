@@ -1,4 +1,5 @@
 import Image from "next/image";
+import "./story.css";
 import Link from "next/link";
 import { getSimilarProducts } from "@/features/catalog/api";
 import { formatPrice, productPath, type Product } from "@/features/catalog/product";

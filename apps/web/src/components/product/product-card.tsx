@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { CardLink } from "@/components/product/card-link";
+import Link from "next/link";
 import { ProductImage } from "@/components/product/product-image";
 import { RatingStars } from "@/components/product/rating-stars";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
@@ -24,7 +24,7 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
   const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
     <article className={cn("group relative", className)}>
-      <CardLink
+      <Link
         href={productPath(product)}
         className="focus-visible:ring-ring/60 block rounded-2xl outline-none focus-visible:ring-3 press-card"
       >
@@ -58,7 +58,7 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
             {formatPrice(product.price_cents, product.currency)}
           </p>
         </div>
-      </CardLink>
+      </Link>
       {badge && <div className="pointer-events-none absolute top-2 left-2">{badge}</div>}
       <WishlistButton product={product} className="absolute top-2 right-2" />
     </article>

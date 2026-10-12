@@ -139,7 +139,7 @@ export function CustomersTable({ params }: { params: CustomerListParams }) {
           </div>
         ) : (
           <div className="space-y-4" aria-busy={isFetching}>
-            <div className="border-border bg-background rounded-2xl border">
+            <div className="border-border bg-background rounded-[var(--radius-tile)] border">
               <Table>
                 <TableCaption>Customers</TableCaption>
                 <TableHeader>
@@ -252,7 +252,7 @@ export function CustomerView({ id }: { id: number }) {
       />
       <div className="grid items-start gap-6 lg:grid-cols-[22rem_minmax(0,1fr)]">
         <div className="space-y-6">
-          <section aria-labelledby="account-heading" className="bg-background border-border space-y-4 rounded-2xl border p-4 text-sm sm:p-5">
+          <section aria-labelledby="account-heading" className="bg-background border-border space-y-4 rounded-[var(--radius-tile)] border p-4 text-sm sm:p-5">
             <div className="flex items-center gap-3">
               <UserAvatar user={{ full_name: customer.full_name, avatar_url: customer.avatar_url }} size={44} />
               <div className="min-w-0">
@@ -289,7 +289,7 @@ export function CustomerView({ id }: { id: number }) {
           </section>
         </div>
 
-        <section aria-labelledby="orders-heading" className="bg-background border-border rounded-2xl border p-4 sm:p-5">
+        <section aria-labelledby="orders-heading" className="bg-background border-border rounded-[var(--radius-tile)] border p-4 sm:p-5">
           <h2 id="orders-heading" className="mb-4 font-semibold">
             Recent orders
           </h2>

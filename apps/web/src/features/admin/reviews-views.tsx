@@ -32,7 +32,7 @@ function ReviewCard({ review }: { review: AdminReview }) {
   const setPublished = useSetReviewPublished();
   const hidden = review.status === "hidden";
   return (
-    <li className="bg-background border-border flex gap-4 rounded-2xl border p-4 sm:p-5">
+    <li className="bg-background border-border flex gap-4 rounded-[var(--radius-tile)] border p-4 sm:p-5">
       <Image
         src={review.product.image.thumb_400}
         alt=""

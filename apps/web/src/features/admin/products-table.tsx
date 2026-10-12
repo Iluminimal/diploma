@@ -145,7 +145,7 @@ export function ProductsTable({ params }: { params: ProductListParams }) {
         </div>
       ) : (
         <div className="space-y-4" aria-busy={isFetching}>
-          <div className="border-border rounded-2xl border">
+          <div className="border-border rounded-[var(--radius-tile)] border">
             <Table>
               <TableCaption>Products</TableCaption>
               <TableHeader>

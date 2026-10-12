@@ -18,7 +18,7 @@ export function AdminPageHeader({
       {back}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight break-words md:text-3xl">
+          <h1 className="type-title break-words">
             {title}
           </h1>
           {description && (

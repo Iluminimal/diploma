@@ -46,7 +46,7 @@ function Panel({
     <section
       aria-labelledby={id}
       className={cn(
-        "bg-background border-border rounded-2xl border p-4 md:p-5",
+        "bg-background border-border rounded-[var(--radius-tile)] border p-4 md:p-5",
         className,
       )}
     >
@@ -141,10 +141,10 @@ function Kpi({
   days: number;
 }) {
   return (
-    <div className="bg-background border-border space-y-2 rounded-2xl border p-4 md:p-5">
+    <div className="bg-background border-border space-y-2 rounded-[var(--radius-tile)] border p-4 md:p-5">
       <dt className="text-muted-foreground text-sm">{label}</dt>
       <dd className="space-y-1">
-        <span className="block text-2xl font-semibold tracking-tight tabular-nums md:text-3xl">
+        <span className="type-title block tabular-nums">
           {value}
         </span>
         <Delta value={delta} days={days} />

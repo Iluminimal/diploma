@@ -146,7 +146,7 @@ export function InventoryTable({ params }: { params: ProductListParams }) {
           </div>
         ) : (
           <div className="space-y-4" aria-busy={isFetching}>
-            <div className="border-border bg-background rounded-2xl border">
+            <div className="border-border bg-background rounded-[var(--radius-tile)] border">
               <Table>
                 <TableCaption>Products on sale, lowest stock first</TableCaption>
                 <TableHeader>

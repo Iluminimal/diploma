@@ -140,7 +140,7 @@ export function OrdersTable({ params }: { params: OrderListParams }) {
           </div>
         ) : (
           <div className="space-y-4" aria-busy={isFetching}>
-            <div className="border-border bg-background rounded-2xl border">
+            <div className="border-border bg-background rounded-[var(--radius-tile)] border">
               <Table>
                 <TableCaption>Orders, newest first</TableCaption>
                 <TableHeader>
@@ -194,7 +194,7 @@ export function OrdersTable({ params }: { params: OrderListParams }) {
 
 function Panel({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="bg-background border-border space-y-3 rounded-2xl border p-4 text-sm sm:p-5">
+    <section aria-labelledby={id} className="bg-background border-border space-y-3 rounded-[var(--radius-tile)] border p-4 text-sm sm:p-5">
       <h2 id={id} className="font-semibold">
         {title}
       </h2>
@@ -288,11 +288,11 @@ export function AdminOrderView({ number }: { number: string }) {
         </p>
       ) : order ? (
         <div className="space-y-6">
-          <div className="bg-background border-border rounded-2xl border p-4 sm:p-6">
+          <div className="bg-background border-border rounded-[var(--radius-tile)] border p-4 sm:p-6">
             <OrderProgress order={order} />
           </div>
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="bg-background border-border rounded-2xl border p-4 sm:p-6">
+            <div className="bg-background border-border rounded-[var(--radius-tile)] border p-4 sm:p-6">
               {/* What the customer sees of it: their view has no internal notes. */}
               <OrderDetail
                 order={{ ...order, events: order.events.filter((event) => event.type !== "note") as Order["events"] }}

@@ -45,7 +45,7 @@ export function AdminNav() {
                 className={cn(
                   "focus-visible:ring-ring/60 flex h-10 items-center gap-2.5 rounded-full px-4 text-sm font-medium transition-colors outline-none focus-visible:ring-3 md:rounded-xl md:px-3",
                   current
-                    ? "bg-foreground text-background"
+                    ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >

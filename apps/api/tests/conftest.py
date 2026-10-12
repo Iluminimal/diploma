@@ -18,8 +18,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from angel.core.config import Settings
 from angel.ml.fake import FakeEmbedder
 from angel.payments import PaymentGateway
-from tests.catalogue import Entry, seed_catalogue
-from tests.helpers import running_app
+from tests.support.catalogue import Entry, seed_catalogue
+from tests.support.helpers import running_app
 
 WEBHOOK_SECRET = "whsec_test_secret"
 UNREACHABLE_DATABASE_URL = "postgresql+asyncpg://nobody:nobody@127.0.0.1:1/nothing"

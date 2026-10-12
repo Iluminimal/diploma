@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { LostPage } from "@/components/layout/lost-page";
 import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
 
@@ -10,12 +11,16 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
   }, [error]);
 
   return (
-    <div className="container-page flex flex-col items-center gap-5 py-32 text-center">
-      <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
-      <p className="text-muted-foreground max-w-md text-sm">{userMessage(error)}</p>
-      <Button size="lg" onClick={reset}>
-        Try again
-      </Button>
-    </div>
+    <LostPage
+      mark="Oops"
+      title="Something went wrong"
+      actions={
+        <Button size="lg" className="h-11 rounded-full px-6" onClick={reset}>
+          Try again
+        </Button>
+      }
+    >
+      {userMessage(error)}
+    </LostPage>
   );
 }

@@ -6,6 +6,7 @@ import { AnimatedPrice } from "@/components/product/animated-price";
 import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
 import { CartLines } from "./cart-lines";
+import { FreeShippingProgress } from "./free-shipping-progress";
 import { useCart } from "./use-cart";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,6 +66,7 @@ export function CartView() {
         className="border-border bg-card space-y-4 rounded-2xl border p-5 lg:sticky lg:top-24"
       >
         <h2 className="text-base font-semibold">Summary</h2>
+        <FreeShippingProgress subtotalCents={cart.subtotal_cents} />
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Subtotal ({cart.item_count} items)</dt>

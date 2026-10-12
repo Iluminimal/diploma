@@ -17,6 +17,7 @@
   --duration-fast: 150ms;
   --duration-base: 300ms;
   --duration-slow: 500ms;
+  --animate-highlight: highlight 2.2s var(--ease-out-expo);
   --animate-shimmer: shimmer 1.8s var(--ease-in-out-quart) infinite;
   --animate-pop: pop 420ms var(--ease-out-expo);
   --animate-float: float 7s ease-in-out infinite;
@@ -46,6 +47,15 @@
     }
     50% {
       translate: 0 -10px;
+    }
+  }
+  /* A line that was just added glows once and settles. */
+  @keyframes highlight {
+    0% {
+      background-color: color-mix(in oklab, var(--brand) 16%, transparent);
+    }
+    100% {
+      background-color: transparent;
     }
   }
   @keyframes shimmer {

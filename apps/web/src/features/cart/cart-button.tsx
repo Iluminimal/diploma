@@ -26,6 +26,7 @@ export function CartButton() {
         variant="ghost"
         size="icon"
         className="relative"
+        data-cart-button
         aria-label={count ? `Cart, ${count} items` : "Cart"}
         aria-haspopup="dialog"
         aria-expanded={open}

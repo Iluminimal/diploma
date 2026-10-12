@@ -6,6 +6,7 @@ import { AnimatedPrice } from "@/components/product/animated-price";
 import { Button } from "@/components/ui/button";
 import { userMessage } from "@/lib/api/errors";
 import { CartLines } from "./cart-lines";
+import { FreeShippingProgress } from "./free-shipping-progress";
 import { useCart } from "./use-cart";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,6 +66,7 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
         <CartLines cart={cart} onNavigate={onNavigate} />
       </div>
       <div className="border-border space-y-3 border-t p-4">
+        <FreeShippingProgress subtotalCents={cart.subtotal_cents} />
         <div className="flex items-baseline justify-between">
           <span className="text-sm font-medium">Subtotal</span>
           <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} className="text-base font-semibold" />

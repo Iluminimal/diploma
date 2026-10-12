@@ -56,6 +56,33 @@ describe("PurchasePanel", () => {
     });
   });
 
+  it("shakes the sizes and puts the cursor in them when none is chosen", async () => {
+    stubApi({});
+    renderPanel();
+
+    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+
+    expect(screen.getByRole("group", { name: /size/i }).parentElement).toHaveClass("animate-shake");
+    expect(screen.getByRole("group", { name: /size/i })).toHaveAttribute("aria-describedby", "size-error");
+    expect(screen.getAllByRole("radio")[0]).toHaveFocus();
+  });
+
+  it("confirms with a check mark on the button after adding, then goes back", async () => {
+    stubApi({
+      "POST /api/v1/cart/items": { body: withShirt },
+      "GET /api/v1/cart": { body: withShirt },
+    });
+    renderPanel();
+
+    await userEvent.click(screen.getByLabelText("M"));
+    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+
+    expect(await screen.findByRole("button", { name: "Added" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("was added to your cart");
+    expect(useCartDrawer.getState().added).toEqual({ productId: shirt.id, size: "M" });
+    await waitFor(() => expect(screen.getByRole("button", { name: /add to cart/i })).toBeInTheDocument(), { timeout: 3000 });
+  });
+
   it("clears the size warning once a size is picked", async () => {
     stubApi({});
     renderPanel();

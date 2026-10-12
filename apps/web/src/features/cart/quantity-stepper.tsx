@@ -23,8 +23,11 @@ export function QuantityStepper({ value, max, name, onChange, className }: Props
       >
         <Minus className="size-4" />
       </button>
-      <span className="min-w-6 text-center text-sm font-medium tabular-nums" aria-live="polite">
-        {value}
+      <span className="min-w-6 overflow-hidden text-center text-sm font-medium tabular-nums" aria-live="polite">
+        {/* A new key replays the entrance: the new quantity rises into place. */}
+        <span key={value} className="animate-in fade-in slide-in-from-bottom-1 block duration-300">
+          {value}
+        </span>
       </span>
       <button
         type="button"

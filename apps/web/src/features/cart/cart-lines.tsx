@@ -1,17 +1,22 @@
 "use client";
 
 import { AnimatePresence, m } from "motion/react";
-import { Trash2 } from "lucide-react";
+import { Heart, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { EASE_OUT_EXPO } from "@/components/motion/easing";
 import { MotionProvider } from "@/components/motion/motion-provider";
 import { AnimatedPrice } from "@/components/product/animated-price";
 import { ProductImage } from "@/components/product/product-image";
+import { useAuth } from "@/features/auth/auth-store";
 import { productPath, productSubtitle } from "@/features/catalog/product";
+import { useToggleWishlist } from "@/features/wishlist/use-wishlist";
 import { cn } from "@/lib/utils";
 import type { Cart, CartLine } from "./cart-api";
+import { useCartDrawer } from "./cart-ui-store";
 import { QuantityStepper } from "./quantity-stepper";
-import { useRemoveItem, useSetQuantity } from "./use-cart";
+import { useAddToCart, useRemoveItem, useSetQuantity } from "./use-cart";
 
 type Props = {
   cart: Cart;
@@ -35,10 +40,41 @@ export function CartLines({ cart, onNavigate, className }: Props) {
 }
 
 function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () => void }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const status = useAuth((state) => state.status);
   const setQuantity = useSetQuantity();
   const remove = useRemoveItem();
+  const add = useAddToCart();
+  const toggleWishlist = useToggleWishlist();
+  const added = useCartDrawer((state) => state.added);
   const { product } = line;
   const soldOut = line.issue === "out_of_stock";
+  // The line the shopper has just added glows once in the drawer.
+  const isNew = added?.productId === product.id && added.size === line.size;
+
+  const removeWithUndo = () =>
+    remove.mutate(line.id, {
+      onSuccess: () =>
+        toast(`Removed ${product.name}`, {
+          action: {
+            label: "Undo",
+            onClick: () => add.mutate({ product_id: product.id, size: line.size, quantity: line.quantity }),
+          },
+        }),
+    });
+
+  const saveForLater = () => {
+    if (status !== "signedIn") {
+      toast("Sign in to save items for later.");
+      router.push(`/login?next=${encodeURIComponent(pathname || "/cart")}`);
+      return;
+    }
+    toggleWishlist.mutate(
+      { product, saved: true },
+      { onSuccess: () => remove.mutate(line.id, { onSuccess: () => toast(`Saved ${product.name} to your wishlist`) }) },
+    );
+  };
 
   return (
     <m.li
@@ -47,7 +83,7 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}
       transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
-      className="flex gap-3 overflow-hidden py-4 first:pt-0"
+      className={cn("flex gap-3 overflow-hidden py-4 first:pt-0", isNew && "animate-highlight")}
     >
       <Link href={productPath(product)} onClick={onNavigate} className="w-20 shrink-0 sm:w-24">
         <div className="bg-muted aspect-[3/4] overflow-hidden rounded-xl">
@@ -66,7 +102,7 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
           <button
             type="button"
             aria-label={`Remove ${product.name} from your cart`}
-            onClick={() => remove.mutate(line.id)}
+            onClick={removeWithUndo}
             className="text-muted-foreground hover:text-foreground -mt-1 -mr-1 grid size-8 shrink-0 place-items-center rounded-full"
           >
             <Trash2 className="size-4" />
@@ -92,6 +128,16 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
               Update to {line.max_quantity}
             </button>
           </p>
+        )}
+        {!soldOut && (
+          <button
+            type="button"
+            onClick={saveForLater}
+            disabled={toggleWishlist.isPending || remove.isPending}
+            className="text-muted-foreground hover:text-foreground mt-1 inline-flex w-fit items-center gap-1 text-xs underline-offset-2 hover:underline disabled:opacity-50"
+          >
+            <Heart aria-hidden className="size-3" /> Save for later
+          </button>
         )}
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
           {soldOut ? (

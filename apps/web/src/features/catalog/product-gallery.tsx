@@ -23,6 +23,7 @@ export function ProductGallery({ product }: Props) {
         <DialogTrigger asChild>
           <button
             type="button"
+            data-fly-source
             aria-label={`Enlarge photo of ${product.name}`}
             className="bg-secondary focus-visible:ring-ring/60 relative aspect-[3/4] flex-1 cursor-zoom-in overflow-hidden rounded-3xl outline-none focus-visible:ring-3 dark:bg-white"
           >

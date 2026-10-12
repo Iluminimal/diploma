@@ -9,7 +9,9 @@ import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Price } from "@/components/product/price";
 import { ProductImage } from "@/components/product/product-image";
+import { Field, fieldAria } from "@/components/forms/form-field";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { AddressForm, formatAddress } from "@/features/account/address-form";
 import { useAddresses, useCreateAddress } from "@/features/account/use-addresses";
 import { useAuth } from "@/features/auth/auth-store";
@@ -53,6 +55,10 @@ export function CheckoutView() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const status = useAuth((state) => state.status);
+  // Accounts made with a phone number have no email: the order updates need one.
+  const hasEmail = useAuth((state) => Boolean(state.user?.email));
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactError, setContactError] = useState<string | null>(null);
   const cartQuery = useCart();
   const addressesQuery = useAddresses();
   const methodsQuery = useQuery({ queryKey: queryKeys.shippingMethods, queryFn: fetchShippingMethods, staleTime: 600_000 });
@@ -77,7 +83,14 @@ export function CheckoutView() {
   const pay = useMutation({
     mutationFn: async () => {
       if (addressId === null) throw new Error("no address");
-      const { order, payment } = await createCheckout({ address_id: addressId, shipping_method: method }, attemptKey.current);
+      const { order, payment } = await createCheckout(
+        {
+          address_id: addressId,
+          shipping_method: method,
+          ...(hasEmail ? {} : { contact_email: contactEmail.trim() }),
+        },
+        attemptKey.current,
+      );
       if (order.status === "cancelled") {
         throw new ApiError({ status: 409, title: "Order expired", detail: "That attempt expired. Please try again." });
       }
@@ -180,6 +193,24 @@ export function CheckoutView() {
               Add a new address
             </Button>
           )}
+          {!hasEmail && (
+            <Field
+              id="contact-email"
+              label="Email for order updates"
+              hint="Your receipt and shipping updates are sent here."
+              error={contactError ?? undefined}
+            >
+              <Input
+                type="email"
+                autoComplete="email"
+                inputMode="email"
+                value={contactEmail}
+                onChange={(event) => setContactEmail(event.target.value)}
+                className="h-11 rounded-xl"
+                {...fieldAria("contact-email", contactError ?? undefined, "hint")}
+              />
+            </Field>
+          )}
         </Section>
 
         <Section step={2} title="Shipping method">
@@ -206,7 +237,14 @@ export function CheckoutView() {
         </Section>
 
         <Section step={3} title="Payment">
-          <form id="checkout-form" noValidate onSubmit={handleSubmit(() => pay.mutate())}>
+          <form id="checkout-form" noValidate onSubmit={handleSubmit(() => {
+              if (!hasEmail && !/^\S+@\S+\.\S+$/.test(contactEmail.trim())) {
+                setContactError("Enter a valid email address.");
+                return;
+              }
+              setContactError(null);
+              pay.mutate();
+            })}>
             <PaymentForm register={register} errors={errors} />
           </form>
         </Section>

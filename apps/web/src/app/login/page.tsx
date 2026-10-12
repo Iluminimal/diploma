@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { GoogleSignIn } from "@/features/auth/google-sign-in";
 import { oauthErrorMessage } from "@/features/auth/oauth-errors";
 import { AuthShell } from "@/features/auth/auth-shell";
-import { LoginForm } from "@/features/auth/login-form";
+import { SignInTabs } from "@/features/auth/sign-in-tabs";
 import { safeNext } from "@/features/auth/safe-next";
 
 export const metadata: Metadata = {
@@ -17,7 +17,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
     <AuthShell
       title="Sign in"
-      subtitle="Welcome back. Your cart and saved items follow you."
+      subtitle="Use your phone number or email. New here? We'll create your account."
     >
       {problem && (
         <p
@@ -28,7 +28,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         </p>
       )}
       <GoogleSignIn next={next} mode="signin" />
-      <LoginForm next={next} />
+      <SignInTabs next={next} initial={params.method === "email" ? "email" : "phone"} />
     </AuthShell>
   );
 }

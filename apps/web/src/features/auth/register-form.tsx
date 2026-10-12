@@ -129,6 +129,16 @@ export function RegisterForm({ next }: { next: string }) {
         </Button>
       </form>
       <p className="text-muted-foreground text-center text-sm">
+        Prefer your phone number?{" "}
+        <Link
+          href={next === "/" ? "/login" : `/login?next=${encodeURIComponent(next)}`}
+          className="text-foreground font-medium underline underline-offset-4"
+        >
+          Sign up with a code
+        </Link>
+        .
+      </p>
+      <p className="text-muted-foreground text-center text-sm">
         Already have an account?{" "}
         <Link
           href={

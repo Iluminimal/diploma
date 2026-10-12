@@ -102,6 +102,35 @@ describe("CheckoutView", () => {
     expect(JSON.stringify(api.calls.map((c) => c.body))).not.toContain("4242");
   });
 
+  it("asks a customer who signed up with a phone for an email, and sends it with the order", async () => {
+    useAuth.setState({
+      user: { ...useAuth.getState().user!, email: null, phone: "+14155552671", phone_verified: true },
+    });
+    const api = stubApi(
+      routes({
+        "POST /api/v1/checkout": {
+          body: {
+            order: makeOrder({ status: "pending" }),
+            payment: { provider: "offline", client_secret: "pi_x_secret" },
+          },
+        },
+        "POST /api/v1/checkout/orders/LK-ABCD2345/simulate-payment": { body: makeOrder() },
+      }) as never,
+    );
+    renderWithQuery(<CheckoutView />);
+
+    await userEvent.click(await payButton());
+    expect(await screen.findByText("Enter a valid email address.")).toBeInTheDocument();
+    expect(api.calls.some((c) => c.method === "POST")).toBe(false);
+
+    await userEvent.type(screen.getByLabelText("Email for order updates"), " ada@example.com ");
+    await userEvent.click(await payButton());
+
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/checkout/confirmation/LK-ABCD2345"));
+    const checkout = api.calls.find((c) => c.path === "/api/v1/checkout")!;
+    expect(checkout.body).toEqual({ address_id: 1, shipping_method: "standard", contact_email: "ada@example.com" });
+  });
+
   it("explains stock problems, links to the cart and uses a fresh key for the next attempt", async () => {
     const api = stubApi(
       routes({

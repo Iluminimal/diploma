@@ -20,6 +20,14 @@ const TYPE = {
   forbiddenOrigin: "urn:angel:problem:forbidden-origin",
   forbidden: "urn:angel:problem:forbidden",
   invalidCategory: "urn:angel:problem:invalid-category",
+  otpInvalid: "urn:angel:problem:otp-invalid",
+  otpExpired: "urn:angel:problem:otp-expired",
+  otpTooManyAttempts: "urn:angel:problem:otp-too-many-attempts",
+  phoneTaken: "urn:angel:problem:phone-taken",
+  lastSignInMethod: "urn:angel:problem:last-sign-in-method",
+  invalidDestination: "urn:angel:problem:invalid-destination",
+  smsUnavailable: "urn:angel:problem:sms-unavailable",
+  contactEmailRequired: "urn:angel:problem:contact-email-required",
 } as const;
 
 /** An RFC 7807 problem returned by the API, or a transport failure (`status` 0). */
@@ -107,6 +115,22 @@ export function userMessage(error: unknown): string {
       return "That email and password don't match. Please try again.";
     case error.is("emailTaken"):
       return "An account with this email already exists. Try signing in instead.";
+    case error.is("otpInvalid"):
+      return "That code isn't right. Check it and try again.";
+    case error.is("otpExpired"):
+      return "That code has expired. Ask for a new one.";
+    case error.is("otpTooManyAttempts"):
+      return "Too many wrong codes. Ask for a new one.";
+    case error.is("phoneTaken"):
+      return "Another account already uses this phone number.";
+    case error.is("lastSignInMethod"):
+      return error.detail ?? "Add another way to sign in first.";
+    case error.is("invalidDestination"):
+      return "Enter a valid phone number or email address.";
+    case error.is("smsUnavailable"):
+      return "We couldn't send the text message. Try again in a moment.";
+    case error.is("contactEmailRequired"):
+      return "Enter an email address for your order updates.";
     case error.is("unauthenticated") || error.status === 401:
       return "Please sign in to continue.";
     case error.is("insufficientStock"):

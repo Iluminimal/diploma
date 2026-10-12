@@ -16,14 +16,19 @@ export function Field({ id, label, error, hint, className, children }: Props) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label htmlFor={id}>{label}</Label>
-      {children}
+      {/* The control shakes once when an error appears (the class is added, so it plays once). */}
+      <div className={error ? "animate-shake" : undefined}>{children}</div>
       {hint && !error && (
         <p id={`${id}-hint`} className="text-muted-foreground text-xs">
           {hint}
         </p>
       )}
       {error && (
-        <p id={`${id}-error`} role="alert" className="text-destructive text-xs">
+        <p
+          id={`${id}-error`}
+          role="alert"
+          className="text-destructive animate-in fade-in slide-in-from-top-1 text-xs duration-300"
+        >
           {error}
         </p>
       )}

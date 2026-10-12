@@ -40,6 +40,13 @@ REVIEW_NOT_FOUND_TYPE = f"{_PREFIX}review-not-found"
 REVIEW_NOT_ALLOWED_TYPE = f"{_PREFIX}review-not-allowed"
 REVIEW_EXISTS_TYPE = f"{_PREFIX}review-exists"
 CONTACT_EMAIL_REQUIRED_TYPE = f"{_PREFIX}contact-email-required"
+INVALID_DESTINATION_TYPE = f"{_PREFIX}invalid-destination"
+OTP_INVALID_TYPE = f"{_PREFIX}otp-invalid"
+OTP_EXPIRED_TYPE = f"{_PREFIX}otp-expired"
+OTP_TOO_MANY_ATTEMPTS_TYPE = f"{_PREFIX}otp-too-many-attempts"
+SMS_UNAVAILABLE_TYPE = f"{_PREFIX}sms-unavailable"
+PHONE_TAKEN_TYPE = f"{_PREFIX}phone-taken"
+LAST_SIGN_IN_METHOD_TYPE = f"{_PREFIX}last-sign-in-method"
 
 log = get_logger(__name__)
 

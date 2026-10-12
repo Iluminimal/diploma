@@ -82,6 +82,26 @@ class Settings(BaseSettings):
     rate_limit_admin: str = "120/60"
     rate_limit_oauth: str = "30/300"
     rate_limit_review: str = "20/3600"
+    # Asking for a one-time code / trying one, per client address. Per phone number or email the
+    # limits are `otp_resend_seconds`, `otp_max_sends_per_hour` and `otp_max_attempts`.
+    rate_limit_otp_send: str = "10/600"
+    rate_limit_otp_verify: str = "30/600"
+
+    # --- one-time codes (sign in by phone or email, verify, change, reset password) -------
+    otp_ttl_seconds: int = 300
+    otp_max_attempts: int = 5
+    otp_resend_seconds: int = 60
+    otp_max_sends_per_hour: int = 5
+    # A fixed code for end-to-end tests and demos: every challenge then has this code. Refused
+    # in prod. Empty = random codes.
+    otp_dev_code: str = ""
+    # Numbers typed without a country code are read in this region (ISO 3166 alpha-2).
+    default_phone_region: str = "US"
+    # `console`: the SMS is written to the API log (development). `twilio`: sent through Twilio.
+    sms_mode: Literal["console", "twilio"] = "console"
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_from_number: str = ""
 
     # --- sign in with Google --------------------------------------------------------------
     # `google`: the real flow (needs the client id and secret). `fake`: an in-process stand-in
@@ -138,6 +158,20 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
         return value
 
+    @field_validator("otp_dev_code")
+    @classmethod
+    def _dev_code_shape(cls, value: str) -> str:
+        if value and not (len(value) == 6 and value.isdigit()):
+            raise ValueError("OTP_DEV_CODE must be six digits")
+        return value
+
+    @field_validator("default_phone_region")
+    @classmethod
+    def _region_shape(cls, value: str) -> str:
+        if len(value) != 2 or not value.isalpha():
+            raise ValueError("DEFAULT_PHONE_REGION must be a two-letter country code")
+        return value.upper()
+
     @model_validator(mode="after")
     def _check_production(self) -> "Settings":
         if self.jwt_secret and len(self.jwt_secret) < 32:
@@ -151,6 +185,15 @@ class Settings(BaseSettings):
                 raise ValueError("PAYMENTS_MODE=offline is not allowed when APP_ENV=prod")
             if self.oauth_mode != "google":
                 raise ValueError("OAUTH_MODE=fake is not allowed when APP_ENV=prod")
+            if self.otp_dev_code:
+                raise ValueError("OTP_DEV_CODE is not allowed when APP_ENV=prod")
+            if self.sms_mode != "twilio":
+                raise ValueError("SMS_MODE=console is not allowed when APP_ENV=prod")
+            if not (self.twilio_account_sid and self.twilio_auth_token and self.twilio_from_number):
+                raise ValueError(
+                    "TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM_NUMBER are required "
+                    "when SMS_MODE=twilio"
+                )
             if not (self.stripe_secret_key and self.stripe_webhook_secret):
                 raise ValueError("STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET are required in prod")
             self.cookie_secure = True

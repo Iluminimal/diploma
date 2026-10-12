@@ -62,6 +62,12 @@ class TestProductionSettings:
         "payments_mode": "stripe",
         "stripe_secret_key": "sk_test_x",
         "stripe_webhook_secret": "whsec_x",
+        # .env may use the console SMS and a fixed code; prod is checked as itself.
+        "sms_mode": "twilio",
+        "otp_dev_code": "",
+        "twilio_account_sid": "AC1",
+        "twilio_auth_token": "token",
+        "twilio_from_number": "+15005550006",
     }
 
     def test_a_complete_production_config_is_accepted_and_forces_secure_cookies(self) -> None:
@@ -76,6 +82,9 @@ class TestProductionSettings:
             ({"payments_mode": "offline"}, "not allowed when APP_ENV=prod"),
             ({"stripe_secret_key": ""}, "STRIPE_SECRET_KEY"),
             ({"stripe_webhook_secret": ""}, "STRIPE_SECRET_KEY"),
+            ({"otp_dev_code": "000000"}, "OTP_DEV_CODE"),
+            ({"sms_mode": "console"}, "SMS_MODE=console"),
+            ({"twilio_auth_token": ""}, "TWILIO_ACCOUNT_SID"),
         ],
     )
     def test_unsafe_production_configs_refuse_to_start(

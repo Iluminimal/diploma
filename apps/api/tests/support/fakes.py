@@ -1,5 +1,6 @@
 """Test doubles and image helpers for the ML/ingestion tests."""
 
+import re
 from pathlib import Path
 from typing import Literal
 
@@ -7,6 +8,7 @@ import numpy as np
 from PIL import Image
 
 from angel.core.mail import Email
+from angel.core.sms import Sms
 from angel.payments import IntentInfo, PaymentProviderError
 from angel.payments.offline import OfflineGateway
 
@@ -66,3 +68,18 @@ class RecordingMailer:
 
     async def send(self, email: Email) -> None:
         self.sent.append(email)
+
+
+class RecordingSmsSender:
+    """Keeps every text message so a test can read the one-time code from it."""
+
+    def __init__(self) -> None:
+        self.sent: list[Sms] = []
+
+    async def send(self, sms: Sms) -> None:
+        self.sent.append(sms)
+
+    def last_code(self) -> str:
+        match = re.search(r"\b(\d{6})\b", self.sent[-1].body)
+        assert match, self.sent[-1].body
+        return match.group(1)

@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy import text
 
 from tests.conftest import Api, ApiFactory
+from tests.support.accounts import install_sms, sign_in_with_phone
 from tests.support.catalogue import Entry
 from tests.support.commerce import (
     PASSWORD,
@@ -42,7 +43,7 @@ async def shopper_with_cart(
     return shopper, await add_address(shopper)
 
 
-async def orders_in_db(api: Api, **where: str) -> list[dict[str, object]]:
+async def orders_in_db(api: Api, **where: str | int) -> list[dict[str, object]]:
     clause = " AND ".join(f"{column} = :{column}" for column in where) or "TRUE"
     async with api.app.state.engine.connect() as connection:
         rows = await connection.execute(
@@ -528,3 +529,26 @@ async def test_login_from_another_browser_sees_the_same_orders(
         listing = await api.client.get(ORDERS, headers={"Authorization": f"Bearer {token}"})
 
         assert [o["number"] for o in listing.json()["items"]] == [number]
+
+
+async def test_a_customer_who_signed_up_with_a_phone_gives_an_email_for_the_order(
+    api_factory: ApiFactory, gateway: RecordingGateway
+) -> None:
+    async with api_factory(gateway=gateway) as api:
+        sms = install_sms(api)
+        shopper = await sign_in_with_phone(api, sms)
+        await add_to_cart(shopper.client, in_stock(api).product_id, quantity=1, token=shopper.token)
+        address_id = await add_address(shopper)
+        headers = {**shopper.auth, "Idempotency-Key": uuid.uuid4().hex}
+        body = {"address_id": address_id, "shipping_method": "standard"}
+
+        without = await shopper.client.post(CHECKOUT, json=body, headers=headers)
+        placed = await shopper.client.post(
+            CHECKOUT, json={**body, "contact_email": "Ada@Example.com"}, headers=headers
+        )
+
+        assert without.status_code == 422
+        assert without.json()["type"] == "urn:angel:problem:contact-email-required"
+        assert placed.status_code == 200, placed.text
+        (order,) = await orders_in_db(api, user_id=shopper.user_id)
+        assert order["contact_email"] == "ada@example.com"

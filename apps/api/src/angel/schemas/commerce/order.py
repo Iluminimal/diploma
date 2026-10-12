@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from angel.schemas.accounts.address import AddressSnapshot
 from angel.schemas.catalog.product import ProductImage
@@ -32,6 +32,11 @@ class CheckoutRequest(BaseModel):
     # Where the order emails go. Required only when the account has no email (it signed up with
     # a phone number); otherwise the account's email is used.
     contact_email: EmailStr | None = None
+
+    @field_validator("contact_email", mode="after")
+    @classmethod
+    def _lower(cls, value: str | None) -> str | None:
+        return value.lower() if value else value
 
 
 class OrderItemOut(BaseModel):

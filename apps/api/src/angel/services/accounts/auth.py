@@ -71,6 +71,7 @@ class IssuedSession:
     refresh_token: str
     refresh_max_age: int
     user: UserView
+    is_new_user: bool = False
 
 
 def _invalid_credentials() -> ProblemError:

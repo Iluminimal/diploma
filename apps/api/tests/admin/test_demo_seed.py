@@ -60,6 +60,11 @@ async def test_it_refuses_to_run_in_production(db_engine: AsyncEngine) -> None:
         stripe_secret_key="k",
         stripe_webhook_secret="w",
         oauth_mode="google",
+        sms_mode="twilio",
+        otp_dev_code="",
+        twilio_account_sid="AC1",
+        twilio_auth_token="t",
+        twilio_from_number="+15005550006",
         google_client_id="id",
         google_client_secret="secret",
     )

@@ -18,6 +18,7 @@ from angel.core.errors import (
 from angel.core.mail import Mailer
 from angel.core.rate_limit import RateLimiter
 from angel.core.security import decode_access_token, new_opaque_token
+from angel.core.sms import SmsSender
 from angel.ml.classifier import GarmentLocalizer, LazyCategoryClassifier
 from angel.ml.embeddings import EmbeddingService
 from angel.models import User
@@ -29,6 +30,8 @@ from angel.services.accounts.account import AccountService
 from angel.services.accounts.addresses import AddressService
 from angel.services.accounts.auth import AuthService
 from angel.services.accounts.oauth import OAuthService
+from angel.services.accounts.otp import OtpService
+from angel.services.accounts.otp_login import OtpLoginService
 from angel.services.admin.dashboard import AdminDashboardService
 from angel.services.admin.orders import AdminOrderService
 from angel.services.admin.products import AdminProductService
@@ -295,6 +298,37 @@ def get_auth_service(
 
 
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
+
+
+def get_sms_sender(request: Request) -> SmsSender:
+    sender: SmsSender = request.app.state.sms
+    return sender
+
+
+def get_otp_service(
+    request: Request,
+    settings: SettingsDep,
+    session: SessionDep,
+    mailer: Annotated[Mailer, Depends(get_mailer)],
+    sms: Annotated[SmsSender, Depends(get_sms_sender)],
+) -> OtpService:
+    return OtpService(session, settings, request.app.state.jwt_secret, mailer, sms)
+
+
+OtpServiceDep = Annotated[OtpService, Depends(get_otp_service)]
+
+
+def get_otp_login_service(
+    settings: SettingsDep,
+    session: SessionDep,
+    otp: OtpServiceDep,
+    auth: AuthServiceDep,
+    mailer: Annotated[Mailer, Depends(get_mailer)],
+) -> OtpLoginService:
+    return OtpLoginService(session, settings, otp, auth, mailer)
+
+
+OtpLoginServiceDep = Annotated[OtpLoginService, Depends(get_otp_login_service)]
 
 
 def get_account_service(session: SessionDep, auth: AuthServiceDep) -> AccountService:

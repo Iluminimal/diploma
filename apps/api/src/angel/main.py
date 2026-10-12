@@ -19,6 +19,7 @@ from angel.core.logging import configure_logging, get_logger
 from angel.core.mail import ConsoleMailer
 from angel.core.request_context import REQUEST_ID_HEADER, RequestContextMiddleware
 from angel.core.security_headers import SecurityHeadersMiddleware
+from angel.core.sms import build_sms_sender
 from angel.core.static import MediaFiles
 from angel.core.uploads import BodySizeLimitMiddleware
 from angel.db.engine import create_engine
@@ -114,6 +115,7 @@ def create_app(
         )
         app.state.storage = LocalStorage(settings.media_dir, settings.media_base_url)
         app.state.mailer = ConsoleMailer(log_body=settings.app_env != "prod")
+        app.state.sms = build_sms_sender(settings)
         app.state.payment_gateway = payment_gateway or build_gateway(settings)
         app.state.oauth_provider = build_oauth_provider(settings)
         if not settings.jwt_secret:

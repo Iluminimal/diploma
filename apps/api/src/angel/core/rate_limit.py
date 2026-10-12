@@ -23,7 +23,17 @@ log = get_logger(__name__)
 
 RATE_LIMITED_TYPE = "urn:angel:problem:rate-limited"
 LimitName = Literal[
-    "image", "text", "similar", "register", "login", "refresh", "admin", "oauth", "review"
+    "image",
+    "text",
+    "similar",
+    "register",
+    "login",
+    "refresh",
+    "admin",
+    "oauth",
+    "review",
+    "otp_send",
+    "otp_verify",
 ]
 
 _SCRIPT = """
@@ -133,6 +143,8 @@ def _rate_for(settings: Settings, name: LimitName) -> Rate:
             "admin": settings.rate_limit_admin,
             "oauth": settings.rate_limit_oauth,
             "review": settings.rate_limit_review,
+            "otp_send": settings.rate_limit_otp_send,
+            "otp_verify": settings.rate_limit_otp_verify,
         }[name]
     )
 

@@ -91,9 +91,31 @@ class SessionOut(BaseModel):
     token_type: Literal["bearer"] = "bearer"  # noqa: S105 - OAuth scheme name
     expires_in: int
     user: UserOut
+    # True when this sign-in just created the account (a new phone number or email): the page
+    # then asks for a name.
+    is_new_user: bool = False
 
 
 class ProvidersOut(BaseModel):
     """Which ways of signing in besides a password are available, so the page shows only those."""
 
     google: bool
+
+
+Destination = Annotated[str, Field(min_length=3, max_length=320)]
+OtpCode = Annotated[str, Field(pattern=r"^[0-9]{6}$")]
+
+
+class OtpRequest(BaseModel):
+    """Ask for a sign-in code. `destination` is a phone number (any common spelling) or an email."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    destination: Destination
+
+
+class OtpVerifyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    destination: Destination
+    code: OtpCode

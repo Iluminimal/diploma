@@ -19,6 +19,7 @@ from angel.core.deps import (
     AuthServiceDep,
     CurrentUserDep,
     OAuthServiceDep,
+    OtpLoginServiceDep,
     SettingsDep,
     no_store,
 )
@@ -28,6 +29,8 @@ from angel.schemas.accounts.auth import (
     ChangePasswordRequest,
     DeleteAccountRequest,
     LoginRequest,
+    OtpRequest,
+    OtpVerifyRequest,
     ProvidersOut,
     RegisterRequest,
     SessionOut,
@@ -61,6 +64,7 @@ def _respond(issued: IssuedSession, response: Response, settings: SettingsDep) -
         access_token=issued.access.value,
         expires_in=issued.access.expires_in,
         user=issued.user.out(),
+        is_new_user=issued.is_new_user,
     )
 
 
@@ -95,6 +99,41 @@ async def login(
     guest_cart: GuestCartCookie = None,
 ) -> SessionOut:
     return _respond(await service.login(body, guest_cart), response, settings)
+
+
+@router.post(
+    "/otp/request",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Send a sign-in code to a phone number or an email address",
+    dependencies=[Depends(rate_limit("otp_send"))],
+    responses={
+        422: {"model": ProblemDetail, "description": "Not a valid phone number or email"},
+        429: {"model": ProblemDetail, "description": "A code was sent a moment ago"},
+        503: {"model": ProblemDetail, "description": "The text message could not be sent"},
+    },
+)
+async def otp_request(body: OtpRequest, service: OtpLoginServiceDep) -> None:
+    await service.request_code(body.destination)
+
+
+@router.post(
+    "/otp/verify",
+    summary="Sign in (or sign up) with a code; merges the guest cart into the account's",
+    dependencies=[Depends(rate_limit("otp_verify"))],
+    responses={
+        400: {"model": ProblemDetail, "description": "Wrong or expired code"},
+        429: {"model": ProblemDetail, "description": "Too many wrong codes"},
+    },
+)
+async def otp_verify(
+    body: OtpVerifyRequest,
+    response: Response,
+    service: OtpLoginServiceDep,
+    settings: SettingsDep,
+    guest_cart: GuestCartCookie = None,
+) -> SessionOut:
+    issued = await service.sign_in(body.destination, body.code, guest_cart)
+    return _respond(issued, response, settings)
 
 
 @router.post(

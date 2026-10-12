@@ -151,6 +151,14 @@ async def api_factory(
             "rate_limit_refresh": "10000/60",
             "rate_limit_admin": "10000/60",
             "rate_limit_oauth": "10000/60",
+            "rate_limit_otp_send": "10000/60",
+            "rate_limit_otp_verify": "10000/60",
+            # No wait between codes in tests (the cooldown has its own test).
+            "otp_resend_seconds": 0,
+            "otp_max_sends_per_hour": 1000,
+            "otp_dev_code": "",
+            "sms_mode": "console",
+            "default_phone_region": "US",
             # Whatever .env says (a preview may use the fake), tests start with Google off.
             "oauth_mode": "google",
             "google_client_id": "",

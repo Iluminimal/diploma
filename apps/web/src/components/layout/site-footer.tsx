@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { AngelLogo } from "@/components/layout/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { categoryHref } from "@/features/catalog/nav";
 
@@ -32,26 +31,27 @@ const COLUMNS = [
 ] as const;
 
 const LINK =
-  "hover:text-foreground focus-visible:ring-ring/60 rounded-sm transition-colors outline-none hover:underline focus-visible:ring-3";
+  "text-foreground/80 hover:text-foreground focus-visible:ring-ring/60 rounded-sm transition-colors outline-none hover:underline focus-visible:ring-3";
 
-/** Apple's footer: pale grey, small type, a few quiet columns and one line of fine print. */
+/**
+ * Apple's global footer: pale grey, 12px type, the fine print first, then the directory (a small
+ * bold heading over a short list of links, per column), a "more ways to shop" line and the
+ * copyright. Rules between the parts are 1px hairlines. No columns collapse on a phone: two
+ * columns side by side keep every link one tap away.
+ */
 export function SiteFooter() {
   return (
-    <footer className="bg-secondary text-muted-foreground mt-16 text-xs">
-      <div className="container-page py-10 md:py-12">
-        <div className="border-border grid gap-10 border-b pb-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,1fr)]">
-          <div className="max-w-xs space-y-3">
-            <p className="text-foreground text-lg">
-              <AngelLogo />
-            </p>
-            <p className="leading-relaxed">
-              Show us a look you love and we&apos;ll find the pieces that match it.
-            </p>
-          </div>
+    <footer className="bg-secondary text-muted-foreground type-fine mt-16">
+      <div className="container-nav pt-4 pb-5 md:pt-5">
+        <p className="border-border border-b pb-4 text-pretty">
+          Photos are from the Kaggle Fashion Product Images dataset. Angel is a diploma project: checkout uses test
+          payments, so no card is ever charged, and prices and stock are generated for the demo.
+        </p>
+        <div className="border-border grid grid-cols-2 gap-x-6 gap-y-8 border-b py-6 md:grid-cols-3 md:py-8">
           {COLUMNS.map((column) => (
             <nav key={column.title} aria-label={column.title}>
-              <p className="text-foreground mb-3 font-semibold">{column.title}</p>
-              <ul className="space-y-2.5">
+              <p className="text-foreground mb-2.5 font-semibold">{column.title}</p>
+              <ul className="space-y-2">
                 {column.links.map((link) => (
                   <li key={link.href}>
                     {/* Account pages answer a signed-out visitor with a redirect to the login page. Prefetched,
@@ -65,11 +65,19 @@ export function SiteFooter() {
             </nav>
           ))}
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-6">
-          <p className="max-w-2xl leading-relaxed">
-            © {new Date().getFullYear()} Angel. A diploma project; photos from the Kaggle Fashion Product Images
-            dataset. Checkout uses test payments.
-          </p>
+        <p className="border-border border-b py-3">
+          More ways to shop:{" "}
+          <Link href="/search" className="text-brand hover:underline">
+            search with a photo
+          </Link>{" "}
+          or{" "}
+          <Link href="/products" className="text-brand hover:underline">
+            browse everything
+          </Link>
+          .
+        </p>
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pt-3">
+          <p>Copyright © {new Date().getFullYear()} Angel. All rights reserved.</p>
           <ThemeToggle />
         </div>
       </div>

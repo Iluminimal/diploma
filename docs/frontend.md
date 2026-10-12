@@ -198,6 +198,9 @@ Every page is being restyled after apple.com, one step at a time (each step is a
 * **Controls**: buttons are pills with 15px regular text (`lg` 17px / 44px, `xl` 48px for hero calls to action, `bordered` is
   Apple's blue outline that fills on hover, no press scale); inputs, textareas and selects are 44px, 12px corners, 17px text on the
   card colour; the checkbox is 20px with 6px corners.
+* **Footer** (step 3, `site-footer.tsx`): apple.com's global footer: grey, 12px, the fine print first, a directory of three columns
+  (bold heading over a short list), a "More ways to shop" line and the copyright with the theme switch, hairlines between the parts.
+  Columns stay open on a phone (two side by side) instead of collapsing. There is no breadcrumb row: the pages carry their own.
 
 ## Accounts, cart and checkout
 

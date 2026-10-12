@@ -7,7 +7,6 @@ import { Hero } from "./hero";
 import { HowItWorks } from "./how-it-works";
 import { RecentlyViewed } from "./recently-viewed";
 import { CategoryPills } from "./shelves";
-import { TrustStrip } from "./trust-strip";
 
 vi.mock("server-only", () => ({}));
 const newest = vi.fn();
@@ -123,15 +122,5 @@ describe("RecentlyViewed", () => {
     expect(await within(rail).findByText("Second look")).toBeInTheDocument();
     expect(within(rail).getAllByRole("heading").map((h) => h.textContent)).toEqual(["Second look", "First look"]);
     expect(within(rail).getByRole("link", { name: /Second look/ })).toHaveAttribute("href", "/products/2/second");
-  });
-});
-
-describe("TrustStrip", () => {
-  it("says only true things", () => {
-    render(<TrustStrip />);
-
-    expect(screen.getByText("Free shipping over $100")).toBeInTheDocument();
-    expect(screen.getByText(/never stored/)).toBeInTheDocument();
-    expect(screen.getByText(/test payments/)).toBeInTheDocument();
   });
 });

@@ -27,7 +27,6 @@ test("below the hero: the story, departments, category pills and shelves", async
   await expect(pills.getByRole("link").first()).toHaveAttribute("href", /^\/c\//);
   await expect(page.getByRole("region", { name: "New arrivals" })).toBeAttached();
   await expect(page.getByRole("list", { name: "Matching products" }).getByRole("link").first()).toHaveAttribute("href", /^\/products\//);
-  await expect(page.getByText("Free shipping over $100")).toBeAttached();
 });
 
 test("the story stays on screen while you scroll through it, and reads as a list when motion is reduced", async ({ page }) => {

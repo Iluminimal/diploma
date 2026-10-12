@@ -6,7 +6,6 @@ import { HowItWorks } from "@/features/home/how-it-works";
 import { PhotoCta } from "@/features/home/photo-cta";
 import { RecentlyViewed } from "@/features/home/recently-viewed";
 import { BasicShelves, CategoryPills, PopularShelves } from "@/features/home/shelves";
-import { TrustStrip } from "@/features/home/trust-strip";
 import { JsonLdScripts } from "@/features/seo/json-ld-scripts";
 import { siteJsonLd } from "@/features/seo/site-json-ld";
 
@@ -43,7 +42,6 @@ export default function Home() {
       </Suspense>
       <RecentlyViewed />
       <PhotoCta />
-      <TrustStrip />
     </>
   );
 }

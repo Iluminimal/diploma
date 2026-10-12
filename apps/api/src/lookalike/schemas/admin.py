@@ -68,6 +68,7 @@ class AdminProductImageForm(BaseModel):
 
 
 AdminStatusFilter = Literal["all", "active", "inactive"]
+AdminStockFilter = Literal["all", "low", "out"]
 AdminSortKey = Literal["newest", "price_asc", "price_desc", "stock_asc"]
 
 
@@ -76,6 +77,8 @@ class AdminProductListQuery(BaseModel):
 
     q: Annotated[str | None, Field(min_length=1, max_length=200, description="Name or id")] = None
     status: AdminStatusFilter = "all"
+    # "low": on the shelf but running out (see LOW_STOCK_THRESHOLD); "out": none left.
+    stock: AdminStockFilter = "all"
     category_id: int | None = None
     sort: AdminSortKey = "newest"
     page: Annotated[int, Field(ge=1, le=10_000)] = 1

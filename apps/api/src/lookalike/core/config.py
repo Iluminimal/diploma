@@ -106,6 +106,8 @@ class Settings(BaseSettings):
     # Stock is reserved when an order is created; unpaid orders give it back after this long.
     order_pending_ttl_minutes: int = 30
     order_sweep_interval_seconds: int = 60
+    # At or below this many units a product counts as low on stock (dashboard and inventory).
+    low_stock_threshold: int = 5
 
     # --- payments -------------------------------------------------------------------------
     # `stripe`: real PaymentIntents (test keys in dev). `offline`: an in-process gateway so the

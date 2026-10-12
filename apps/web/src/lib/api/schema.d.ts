@@ -57,6 +57,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/customers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Customers with what they have bought */
+        get: operations["list_customers_api_v1_admin_customers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One customer with their latest orders */
+        get: operations["get_customer_api_v1_admin_customers__user_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{user_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reinstate a customer */
+        post: operations["activate_customer_api_v1_admin_customers__user_id__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/customers/{user_id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suspend a customer
+         * @description They are signed out everywhere and cannot sign in again until reinstated.
+         */
+        post: operations["deactivate_customer_api_v1_admin_customers__user_id__deactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/orders": {
         parameters: {
             query?: never;
@@ -265,6 +336,40 @@ export interface paths {
         get?: never;
         /** Replace a product's photo and recompute its embedding */
         put: operations["replace_image_api_v1_admin_products__product_id__image_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/products/{product_id}/stock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set how many are on the shelf */
+        put: operations["set_product_stock_api_v1_admin_products__product_id__stock_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The dashboard: figures for a period against the one before it */
+        get: operations["stats_api_v1_admin_stats_get"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -940,6 +1045,73 @@ export interface components {
             /** Sub Category */
             sub_category: string;
         };
+        /** AdminCustomer */
+        AdminCustomer: {
+            /** Avatar Url */
+            avatar_url: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string;
+            /** Full Name */
+            full_name: string;
+            /** Id */
+            id: number;
+            /** Is Active */
+            is_active: boolean;
+            /** Last Order At */
+            last_order_at: string | null;
+            /** Orders Count */
+            orders_count: number;
+            /** Total Spent Cents */
+            total_spent_cents: number;
+        };
+        /** AdminCustomerDetail */
+        AdminCustomerDetail: {
+            /** Avatar Url */
+            avatar_url: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string;
+            /** Full Name */
+            full_name: string;
+            /** Has Password */
+            has_password: boolean;
+            /** Id */
+            id: number;
+            /** Is Active */
+            is_active: boolean;
+            /** Last Order At */
+            last_order_at: string | null;
+            /** Orders Count */
+            orders_count: number;
+            /** Providers */
+            providers: string[];
+            /** Recent Orders */
+            recent_orders: components["schemas"]["AdminOrderSummary"][];
+            /** Total Spent Cents */
+            total_spent_cents: number;
+        };
+        /** AdminCustomerPage */
+        AdminCustomerPage: {
+            /** Items */
+            items: components["schemas"]["AdminCustomer"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Pages */
+            pages: number;
+            /** Total */
+            total: number;
+        };
         /**
          * AdminOrderEventOut
          * @description The same step with everything an administrator may see: notes and who did it.
@@ -1217,6 +1389,44 @@ export interface components {
             /** Year */
             year?: number | null;
         };
+        /**
+         * AdminStats
+         * @description The dashboard. Revenue counts orders that are paid, shipped or delivered, by the day they
+         *     were paid; a refunded order is not revenue.
+         */
+        AdminStats: {
+            average_order_cents: components["schemas"]["Delta"];
+            /** Awaiting Payment */
+            awaiting_payment: number;
+            /** Currency */
+            currency: string;
+            /** Days */
+            days: number;
+            /** Low Stock */
+            low_stock: components["schemas"]["LowStockProduct"][];
+            /** Low Stock Threshold */
+            low_stock_threshold: number;
+            /** Low Stock Total */
+            low_stock_total: number;
+            new_customers: components["schemas"]["Delta"];
+            orders: components["schemas"]["Delta"];
+            /** Out Of Stock Total */
+            out_of_stock_total: number;
+            /** Recent Orders */
+            recent_orders: components["schemas"]["AdminOrderSummary"][];
+            revenue_cents: components["schemas"]["Delta"];
+            /** Series */
+            series: components["schemas"]["DailyPoint"][];
+            /** Status Counts */
+            status_counts: {
+                [key: string]: number;
+            };
+            /** To Ship */
+            to_ship: number;
+            /** Top Products */
+            top_products: components["schemas"]["TopProduct"][];
+            units: components["schemas"]["Delta"];
+        };
         /** CancelRequest */
         CancelRequest: {
             /** Reason */
@@ -1338,12 +1548,34 @@ export interface components {
              */
             shipping_method: "standard" | "express";
         };
+        /** DailyPoint */
+        DailyPoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Orders */
+            orders: number;
+            /** Revenue Cents */
+            revenue_cents: number;
+        };
         /** DeleteAccountRequest */
         DeleteAccountRequest: {
             /** Confirm Email */
             confirm_email: string;
             /** Password */
             password?: string | null;
+        };
+        /**
+         * Delta
+         * @description A figure for the period and for the equally long period just before it.
+         */
+        Delta: {
+            /** Current */
+            current: number;
+            /** Previous */
+            previous: number;
         };
         /** DetectedCategory */
         DetectedCategory: {
@@ -1562,6 +1794,18 @@ export interface components {
             email: string;
             /** Password */
             password: string;
+        };
+        /** LowStockProduct */
+        LowStockProduct: {
+            /** Id */
+            id: number;
+            image: components["schemas"]["ProductImage"];
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Stock Quantity */
+            stock_quantity: number;
         };
         /** NavDepartment */
         NavDepartment: {
@@ -1981,6 +2225,11 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** StockUpdate */
+        StockUpdate: {
+            /** Quantity */
+            quantity: number;
+        };
         /** TextSearchRequest */
         TextSearchRequest: {
             /**
@@ -2003,6 +2252,20 @@ export interface components {
             limit?: number | null;
             /** Query */
             query: string;
+        };
+        /** TopProduct */
+        TopProduct: {
+            image: components["schemas"]["ProductImage"];
+            /** Name */
+            name: string;
+            /** Product Id */
+            product_id: number;
+            /** Revenue Cents */
+            revenue_cents: number;
+            /** Slug */
+            slug: string;
+            /** Units */
+            units: number;
         };
         /** UpdateProfileRequest */
         UpdateProfileRequest: {
@@ -2261,6 +2524,270 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    list_customers_api_v1_admin_customers_get: {
+        parameters: {
+            query?: {
+                /** @description Name or email */
+                q?: string | null;
+                status?: "all" | "active" | "inactive";
+                sort?: "newest" | "spent" | "orders" | "name";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCustomerPage"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    get_customer_api_v1_admin_customers__user_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCustomerDetail"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such customer */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    activate_customer_api_v1_admin_customers__user_id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCustomerDetail"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Yourself or an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such customer */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    deactivate_customer_api_v1_admin_customers__user_id__deactivate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCustomerDetail"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Yourself or an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such customer */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
             /** @description Rate limit exceeded */
@@ -2814,6 +3341,7 @@ export interface operations {
                 /** @description Name or id */
                 q?: string | null;
                 status?: "all" | "active" | "inactive";
+                stock?: "all" | "low" | "out";
                 category_id?: number | null;
                 sort?: "newest" | "price_asc" | "price_desc" | "stock_asc";
                 page?: number;
@@ -3298,6 +3826,136 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    set_product_stock_api_v1_admin_products__product_id__stock_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StockUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminProductOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such product */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    stats_api_v1_admin_stats_get: {
+        parameters: {
+            query?: {
+                /** @description Length of the period, ending today */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminStats"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
             /** @description Rate limit exceeded */

@@ -69,6 +69,7 @@ class AdminProductService:
         *,
         currency: str,
         max_upload_pixels: int,
+        low_stock_threshold: int = 5,
     ) -> None:
         self._session = session
         self._storage = storage
@@ -76,6 +77,7 @@ class AdminProductService:
         self._cache = cache
         self._currency = currency
         self._max_pixels = max_upload_pixels
+        self._low_stock = low_stock_threshold
         self._products = ProductRepository(session)
         self._categories = CategoryRepository(session)
 
@@ -104,6 +106,8 @@ class AdminProductService:
                 sort=query.sort,
                 offset=(query.page - 1) * query.page_size,
                 limit=query.page_size,
+                stock=query.stock,
+                low_stock_threshold=self._low_stock,
             )
         return AdminProductPage(
             items=[to_admin_product_out(p, self._storage) for p in products],
@@ -233,6 +237,20 @@ class AdminProductService:
                 await self._products.save(product)
         await self._cache.invalidate_catalogue()
         log.info("admin_product_active_changed", product_id=product_id, active=active)
+        return to_admin_product_out(product, self._storage)
+
+    async def set_stock(self, product_id: int, quantity: int) -> AdminProductOut:
+        """Set the number on the shelf. The row is locked, like checkout locks it to reserve
+        stock, so a recount cannot be lost to (or lose) a sale happening at the same moment."""
+        async with self._session.begin():
+            product = await self._products.get_any(product_id, for_update=True)
+            if product is None:
+                raise _not_found(product_id)
+            previous = product.stock_quantity
+            product.stock_quantity = quantity
+            await self._products.save(product)
+        await self._cache.invalidate_catalogue()
+        log.info("admin_stock_set", product_id=product_id, previous=previous, quantity=quantity)
         return to_admin_product_out(product, self._storage)
 
     # --- steps -----------------------------------------------------------------------------

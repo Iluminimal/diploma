@@ -198,6 +198,8 @@ class ProductRepository:
         sort: AdminSort,
         offset: int,
         limit: int,
+        stock: str = "all",
+        low_stock_threshold: int = 5,
     ) -> tuple[list[Product], int]:
         """Admin listing. A plain substring match on the name (or the exact id), because an admin
         types half a word; the storefront's stemmed full-text search would miss it."""
@@ -210,6 +212,10 @@ class ProductRepository:
             clauses.append(Product.is_active.is_(status == "active"))
         if category_id is not None:
             clauses.append(Product.category_id == category_id)
+        if stock == "out":
+            clauses.append(Product.stock_quantity == 0)
+        elif stock == "low":
+            clauses.append(Product.stock_quantity.between(1, low_stock_threshold))
         orders: dict[AdminSort, list[UnaryExpression[Any]]] = {
             "newest": [Product.created_at.desc(), Product.id.desc()],
             "price_asc": [Product.price_cents.asc(), Product.id.asc()],

@@ -27,6 +27,7 @@ from lookalike.repositories.health import HealthRepository
 from lookalike.repositories.users import UserRepository
 from lookalike.services.account import AccountService
 from lookalike.services.addresses import AddressService
+from lookalike.services.admin_dashboard import AdminDashboardService
 from lookalike.services.admin_orders import AdminOrderService
 from lookalike.services.admin_products import AdminProductService
 from lookalike.services.auth import AuthService
@@ -142,10 +143,20 @@ def get_admin_product_service(
         cache,
         currency=settings.currency,
         max_upload_pixels=settings.max_upload_pixels,
+        low_stock_threshold=settings.low_stock_threshold,
     )
 
 
 AdminProductServiceDep = Annotated[AdminProductService, Depends(get_admin_product_service)]
+
+
+def get_admin_dashboard_service(
+    session: SessionDep, storage: StorageDep, settings: SettingsDep
+) -> AdminDashboardService:
+    return AdminDashboardService(session, storage, settings)
+
+
+AdminDashboardServiceDep = Annotated[AdminDashboardService, Depends(get_admin_dashboard_service)]
 
 
 def get_admin_order_service(session: SessionDep, storage: StorageDep) -> AdminOrderService:

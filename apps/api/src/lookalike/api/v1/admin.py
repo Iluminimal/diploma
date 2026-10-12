@@ -3,6 +3,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Form, Path, Query, status
 
 from lookalike.core.deps import (
+    AdminDashboardServiceDep,
     AdminDep,
     AdminOrderServiceDep,
     AdminProductServiceDep,
@@ -29,6 +30,14 @@ from lookalike.schemas.admin import (
     ProductFields,
     RefundRequest,
     ShipRequest,
+)
+from lookalike.schemas.admin_dashboard import (
+    AdminCustomerDetail,
+    AdminCustomerListQuery,
+    AdminCustomerPage,
+    AdminStats,
+    StatsQuery,
+    StockUpdate,
 )
 from lookalike.schemas.problem import ProblemDetail
 
@@ -211,3 +220,75 @@ async def add_order_note(
     service: FulfillmentServiceDep,
 ) -> AdminOrderOut:
     return await service.add_note(number, admin, body)
+
+
+# --- dashboard, customers, stock ----------------------------------------------------------------
+
+
+@router.get("/stats", summary="The dashboard: figures for a period against the one before it")
+async def stats(
+    query: Annotated[StatsQuery, Query()], service: AdminDashboardServiceDep
+) -> AdminStats:
+    return await service.stats(query.days)
+
+
+@router.get("/customers", summary="Customers with what they have bought")
+async def list_customers(
+    query: Annotated[AdminCustomerListQuery, Query()], service: AdminDashboardServiceDep
+) -> AdminCustomerPage:
+    return await service.customers(query)
+
+
+@router.get(
+    "/customers/{user_id}",
+    summary="One customer with their latest orders",
+    responses={404: {"model": ProblemDetail, "description": "No such customer"}},
+)
+async def get_customer(
+    user_id: Annotated[int, Path(ge=1, le=2**63 - 1)], service: AdminDashboardServiceDep
+) -> AdminCustomerDetail:
+    return await service.customer(user_id)
+
+
+_CUSTOMER_ACTION: dict[int | str, dict[str, Any]] = {
+    403: {"model": ProblemDetail, "description": "Yourself or an administrator"},
+    404: {"model": ProblemDetail, "description": "No such customer"},
+}
+
+
+@router.post(
+    "/customers/{user_id}/deactivate",
+    summary="Suspend a customer",
+    description="They are signed out everywhere and cannot sign in again until reinstated.",
+    responses=_CUSTOMER_ACTION,
+)
+async def deactivate_customer(
+    user_id: Annotated[int, Path(ge=1, le=2**63 - 1)],
+    admin: AdminDep,
+    service: AdminDashboardServiceDep,
+) -> AdminCustomerDetail:
+    return await service.set_active(admin, user_id, active=False)
+
+
+@router.post(
+    "/customers/{user_id}/activate", summary="Reinstate a customer", responses=_CUSTOMER_ACTION
+)
+async def activate_customer(
+    user_id: Annotated[int, Path(ge=1, le=2**63 - 1)],
+    admin: AdminDep,
+    service: AdminDashboardServiceDep,
+) -> AdminCustomerDetail:
+    return await service.set_active(admin, user_id, active=True)
+
+
+@router.put(
+    "/products/{product_id}/stock",
+    summary="Set how many are on the shelf",
+    responses=_NOT_FOUND,
+)
+async def set_product_stock(
+    product_id: Annotated[int, Path(ge=1, le=2**63 - 1)],
+    body: StockUpdate,
+    service: AdminProductServiceDep,
+) -> AdminProductOut:
+    return await service.set_stock(product_id, body.quantity)

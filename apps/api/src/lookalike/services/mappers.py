@@ -16,7 +16,7 @@ from lookalike.schemas.product import FilterParams, ProductImage, ProductOut
 from lookalike.storage import Storage
 
 
-def _image(image_key: str, blur_data_url: str | None, storage: Storage) -> ProductImage:
+def product_image(image_key: str, blur_data_url: str | None, storage: Storage) -> ProductImage:
     return ProductImage(
         thumb_400=storage.url(thumbnail_key(image_key, 400)),
         thumb_800=storage.url(thumbnail_key(image_key, 800)),
@@ -40,7 +40,7 @@ def to_product_out(product: Product, storage: Storage) -> ProductOut:
         price_cents=product.price_cents,
         currency=product.currency,
         in_stock=product.stock_quantity > 0,
-        image=_image(product.image_key, product.blur_data_url, storage),
+        image=product_image(product.image_key, product.blur_data_url, storage),
     )
 
 
@@ -64,7 +64,7 @@ def to_admin_product_out(product: Product, storage: Storage) -> AdminProductOut:
         is_active=product.is_active,
         source_id=product.source_id,
         embedding_version=product.embedding_version,
-        image=_image(product.image_key, product.blur_data_url, storage),
+        image=product_image(product.image_key, product.blur_data_url, storage),
         created_at=product.created_at,
         updated_at=product.updated_at,
     )
@@ -90,7 +90,7 @@ def to_order_item_out(item: OrderItem, storage: Storage) -> OrderItemOut:
         product_id=item.product_id,
         name=item.product_name,
         slug=item.product_slug,
-        image=_image(item.image_key, None, storage),
+        image=product_image(item.image_key, None, storage),
         size=item.size,
         unit_price_cents=item.unit_price_cents,
         quantity=item.quantity,
@@ -151,7 +151,7 @@ def to_order_summary(order: Order, storage: Storage) -> OrderSummary:
         currency=order.currency,
         total_cents=order.total_cents,
         item_count=sum(item.quantity for item in order.items),
-        images=[_image(item.image_key, None, storage) for item in order.items[:4]],
+        images=[product_image(item.image_key, None, storage) for item in order.items[:4]],
     )
 
 

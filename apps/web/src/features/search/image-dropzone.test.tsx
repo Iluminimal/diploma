@@ -37,14 +37,14 @@ describe("ImageDropzone", () => {
 
   it("accepts a dropped image", async () => {
     render(<ImageDropzone />);
-    const zone = screen.getByText("Drop a photo here").closest("div[class*=border-dashed]")!;
+    const zone = screen.getByText("Drop a photo here").closest("[data-slot=dropzone]")!;
     fireEvent.drop(zone, { dataTransfer: { files: [photo()] } });
     await waitFor(() => expect(useSearchStore.getState().image).not.toBeNull());
   });
 
   it("tells the user when a dropped file is not an image", async () => {
     render(<ImageDropzone />);
-    const zone = screen.getByText("Drop a photo here").closest("div[class*=border-dashed]")!;
+    const zone = screen.getByText("Drop a photo here").closest("[data-slot=dropzone]")!;
     fireEvent.drop(zone, { dataTransfer: { files: [new File(["x"], "notes.txt", { type: "text/plain" })] } });
     expect(await screen.findByRole("alert")).toHaveTextContent(new ImageInputError("not-image").message);
     expect(useSearchStore.getState().image).toBeNull();

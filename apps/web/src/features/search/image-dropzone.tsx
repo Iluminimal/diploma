@@ -69,33 +69,34 @@ export function ImageDropzone({ onPicked, listenForPaste = false, className, siz
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false);
         }}
         onDrop={onDrop}
+        data-slot="dropzone"
         className={cn(
-          "border-border flex flex-col items-center justify-center rounded-3xl border-2 border-dashed text-center transition-colors",
+          "flex flex-col items-center justify-center rounded-3xl text-center transition-[background-color,box-shadow] duration-200",
           size === "compact" ? "gap-4 rounded-2xl px-4 py-8" : "gap-5",
           size === "hero" && "px-6 py-12 sm:py-16",
           size === "default" && "px-6 py-14 sm:py-20",
-          dragging ? "border-brand bg-brand/5" : "bg-muted/30",
+          dragging ? "bg-brand/10 ring-brand ring-2 ring-inset" : "bg-secondary",
         )}
       >
-        <div className="bg-background shadow-soft grid size-14 place-items-center rounded-2xl">
+        <div className="bg-background grid size-14 place-items-center rounded-full">
           {busy ? <Loader2 className="size-6 animate-spin" aria-label="Preparing photo" /> : <ImagePlus className="size-6" />}
         </div>
         <div className="space-y-1.5">
-          <p className="text-base font-medium">{dragging ? "Drop to search" : "Drop a photo here"}</p>
-          <p className="text-muted-foreground text-sm">
+          <p className="type-heading">{dragging ? "Drop to search" : "Drop a photo here"}</p>
+          <p className="text-muted-foreground type-caption">
             or paste one with <kbd className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-mono text-xs">⌘/Ctrl V</kbd>
             {size !== "compact" && ". JPEG, PNG, WebP or iPhone HEIC."}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <Button size="lg" className="h-11 px-5" onClick={() => fileRef.current?.click()} disabled={busy}>
+          <Button size="lg" onClick={() => fileRef.current?.click()} disabled={busy}>
             <ImagePlus /> Choose a photo
           </Button>
-          <Button variant="outline" size="lg" className="h-11 px-5" onClick={takePhoto} disabled={busy}>
+          <Button variant="bordered" size="lg" onClick={takePhoto} disabled={busy}>
             <Camera /> Take a photo
           </Button>
         </div>
-        <p className="text-muted-foreground text-xs">Your photo is used only for this search and is never stored.</p>
+        <p className="text-muted-foreground type-fine">Your photo is used only for this search and is never stored.</p>
         {error && (
           <p role="alert" className="text-destructive text-sm">
             {error}

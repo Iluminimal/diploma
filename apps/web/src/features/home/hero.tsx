@@ -3,7 +3,6 @@ import "./story.css";
 import Link from "next/link";
 import { Reveal } from "@/components/motion/reveal";
 import { ScrollFade } from "@/components/motion/scroll-fade";
-import { Button } from "@/components/ui/button";
 import { categoryHref } from "@/features/catalog/nav";
 import type { Product } from "@/features/catalog/product";
 import { PhotoSearchTrigger } from "@/features/search/photo-search-trigger";
@@ -32,25 +31,22 @@ export async function Hero() {
   const photos = await collage();
   return (
     <section aria-labelledby="hero-heading" className="relative overflow-hidden pb-8 md:pb-16">
-      <ScrollFade className="container-page pt-14 text-center md:pt-24">
-        <p className="text-muted-foreground mb-4 text-sm font-medium md:text-base">Visual search for fashion</p>
-        <h1
-          id="hero-heading"
-          className="mx-auto max-w-4xl text-6xl leading-[0.95] font-semibold tracking-tighter text-balance sm:text-7xl md:text-8xl"
-        >
+      <ScrollFade className="container-page pt-12 text-center md:pt-20">
+        <p className="type-heading text-muted-foreground mb-2">Visual search for fashion</p>
+        <h1 id="hero-heading" className="type-hero mx-auto max-w-4xl text-balance">
           Shop by photo.
         </h1>
-        <Reveal as="p" when="mount" delay={0.12} className="text-muted-foreground mx-auto mt-6 max-w-xl text-lg text-balance md:text-xl">
+        <Reveal as="p" when="mount" delay={0.12} className="type-intro mx-auto mt-3 max-w-xl text-balance md:mt-4">
           Show us a look you love. We&apos;ll find the pieces that match it, ready to buy.
         </Reveal>
-        <Reveal when="mount" delay={0.24} className="mt-9 flex flex-wrap items-center justify-center gap-3">
+        <Reveal when="mount" delay={0.24} className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 md:mt-8">
           <PhotoSearchTrigger />
-          <Button asChild size="lg" variant="outline" className="h-12 rounded-full px-7 text-base">
-            <Link href={categoryHref("women")}>Shop women</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline" className="h-12 rounded-full px-7 text-base">
-            <Link href={categoryHref("men")}>Shop men</Link>
-          </Button>
+          <Link href={categoryHref("women")} className="link-more">
+            Shop women
+          </Link>
+          <Link href={categoryHref("men")} className="link-more">
+            Shop men
+          </Link>
         </Reveal>
       </ScrollFade>
 
@@ -65,7 +61,7 @@ export async function Hero() {
                 className={`drift ${slot.size} ${slot.offset} ${slot.hide}`}
                 style={{ "--drift": slot.drift } as React.CSSProperties}
               >
-                <div className="bg-secondary aspect-3/4 overflow-hidden rounded-3xl shadow-[0_30px_60px_-30px_oklch(0_0_0/0.35)] dark:bg-white">
+                <div className="tile aspect-3/4 dark:bg-white">
                   <Image
                     src={product.image.thumb_800}
                     alt=""

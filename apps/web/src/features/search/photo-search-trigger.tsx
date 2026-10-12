@@ -4,7 +4,6 @@ import { Camera } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 
 // The picker (and the dialog library behind it) is fetched the first time someone asks for it.
 const PhotoSearchDialog = dynamic(() => import("./photo-search-dialog").then((m) => m.PhotoSearchDialog), {
@@ -18,9 +17,9 @@ export function PhotoSearchTrigger({ className, label = "Search with a photo" }:
   return (
     <>
       <Button
-        size="lg"
+        size="xl"
         aria-haspopup="dialog"
-        className={cn("h-12 rounded-full px-7 text-base", className)}
+        className={className}
         onClick={() => {
           setRequested(true);
           setOpen(true);

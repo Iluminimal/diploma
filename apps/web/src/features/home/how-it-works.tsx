@@ -35,17 +35,17 @@ export async function HowItWorks() {
   const { photo, matches } = data;
   const chips = [photo.article_type, photo.base_colour, photo.gender].filter((c): c is string => Boolean(c) && c !== "NA");
   return (
-    <section aria-labelledby="how-heading" className="bg-secondary">
+    <section aria-labelledby="how-heading" className="bg-secondary mt-12 md:mt-16">
       <div className="story-track">
         <div className="story-stage container-page py-16 md:py-0">
           <header className="mb-10 max-w-2xl md:mb-8">
-            <p className="text-brand mb-2 text-sm font-medium">How it works</p>
-            <h2 id="how-heading" className="text-4xl leading-[1.02] font-semibold tracking-tighter text-balance md:text-6xl">
+            <p className="type-heading text-brand mb-2">How it works</p>
+            <h2 id="how-heading" className="type-display text-balance">
               From a photo to your cart in seconds.
             </h2>
           </header>
           <div className="grid items-center gap-10 md:grid-cols-[minmax(0,20rem)_1fr] md:gap-16">
-            <figure className="story-photo bg-background relative mx-auto aspect-3/4 w-full max-w-xs overflow-hidden rounded-3xl shadow-[0_40px_80px_-40px_oklch(0_0_0/0.4)]">
+            <figure className="story-photo bg-background relative mx-auto aspect-3/4 w-full max-w-xs overflow-hidden rounded-[var(--radius-tile)] md:rounded-[1.75rem]">
               <Image
                 src={photo.image.thumb_800}
                 alt={`A ${photo.name} photo, the example search`}
@@ -70,9 +70,9 @@ export async function HowItWorks() {
               <ol className="story-captions space-y-5 md:space-y-0">
                 {STEPS.map((step, i) => (
                   <li key={step.title} data-step={i + 1} className="story-caption">
-                    <p className="text-muted-foreground mb-1 text-sm font-medium tabular-nums">Step {i + 1}</p>
-                    <h3 className="text-2xl font-semibold tracking-tight md:text-3xl">{step.title}</h3>
-                    <p className="text-muted-foreground mt-2 max-w-md text-base md:text-lg">{step.text}</p>
+                    <p className="text-muted-foreground type-caption mb-1 font-semibold tabular-nums">Step {i + 1}</p>
+                    <h3 className="type-title">{step.title}</h3>
+                    <p className="text-muted-foreground type-intro mt-2 max-w-md">{step.text}</p>
                   </li>
                 ))}
               </ol>

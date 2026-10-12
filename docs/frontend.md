@@ -201,6 +201,11 @@ Every page is being restyled after apple.com, one step at a time (each step is a
 * **Footer** (step 3, `site-footer.tsx`): apple.com's global footer: grey, 12px, the fine print first, a directory of three columns
   (bold heading over a short list), a "More ways to shop" line and the copyright with the theme switch, hairlines between the parts.
   Columns stay open on a phone (two side by side) instead of collapsing. There is no breadcrumb row: the pages carry their own.
+* **Home** (step 4, `features/home`): the hero is apple.com's: a small eyebrow, `type-hero` headline, the 21px line and a blue pill with
+  "Shop women >" / "Shop men >" links (the old outlined buttons are gone); the photo collage keeps its scroll drift on flat grey tiles.
+  Departments are three grey tiles (title, line, blue link, photo below, multiplied into the grey in light mode, on white in dark);
+  section headings use `type-title` and `link-more`; "How it works" and the black photo-search tile use `type-display`/`type-title`,
+  and the drop zone is a soft grey panel (no dashed border) with Apple buttons.
 
 ## Accounts, cart and checkout
 

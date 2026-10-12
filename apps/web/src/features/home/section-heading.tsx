@@ -13,11 +13,11 @@ export function SectionHeading({
   className?: string;
 }) {
   return (
-    <div className={cn("mb-6 flex items-end justify-between gap-4", className)}>
-      <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">{title}</h2>
+    <div className={cn("mb-6 flex items-baseline justify-between gap-4 md:mb-8", className)}>
+      <h2 className="type-title">{title}</h2>
       {href && (
-        <Link href={href} className="text-brand hover:underline text-sm underline-offset-4 md:text-base">
-          {linkLabel ?? "See all"} <span aria-hidden>›</span>
+        <Link href={href} className="link-more shrink-0">
+          {linkLabel ?? "See all"}
         </Link>
       )}
     </div>

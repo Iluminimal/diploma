@@ -138,7 +138,7 @@ export function HeaderSearch() {
                     beside the field. */}
                 <div className="flex h-12 items-center justify-between md:hidden">
                   <Link href="/" onClick={close} className="focus-visible:ring-ring/60 rounded-md text-[1.0625rem] outline-none focus-visible:ring-3">
-                    <AngelLogo markClassName="size-[1.35rem]" />
+                    <AngelLogo showName={false} markClassName="size-7" />
                   </Link>
                   <Button variant="ghost" size="icon-lg" aria-label="Close search" onClick={close}>
                     <X />

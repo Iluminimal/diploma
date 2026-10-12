@@ -22,9 +22,9 @@ export default function OpenGraphImage() {
       >
         <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 44, fontWeight: 600, letterSpacing: -1 }}>
           <svg width="56" height="56" viewBox="0 0 32 32" fill="none" stroke="#ffffff" strokeLinecap="round" strokeLinejoin="round">
-            <ellipse cx="16" cy="5.5" rx="6.5" ry="2.4" strokeWidth="2" />
-            <path d="M6.5 28 16 11l9.5 17" strokeWidth="3" />
-            <path d="M11 21.5h10" strokeWidth="3" />
+            <ellipse cx="16" cy="5" rx="6" ry="2" transform="rotate(-10 16 5)" strokeWidth="1.5" />
+            <path d="M6.5 28.5 16 10.5l9.5 18" strokeWidth="2.4" />
+            <path d="M10.8 22.6Q16 19.8 21.2 22.6" strokeWidth="2.4" />
           </svg>
           Angel
         </div>

@@ -20,7 +20,7 @@ export function SiteHeader() {
     >
       <div className="container-page flex h-12 items-center gap-1 md:h-11 md:gap-4">
         <Link href="/" className="focus-visible:ring-ring/60 mr-auto rounded-md text-[1.0625rem] outline-none focus-visible:ring-3 md:mr-0">
-          <AngelLogo markClassName="size-[1.35rem]" />
+          <AngelLogo showName={false} markClassName="size-7" />
         </Link>
         <MegaMenu />
         {/* Logo, search, bag, menu: the phone bar of apple.com. The account is in the menu on a phone

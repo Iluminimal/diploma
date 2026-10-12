@@ -41,13 +41,13 @@ export function AnimatedNumber({
 }) {
   const [shown, setShown] = useState(value);
   const from = useRef(value);
+  const instant = reducedMotion();
 
   useEffect(() => {
     const start = from.current;
-    if (start === value || reducedMotion()) {
+    if (instant || start === value) {
       from.current = value;
-      const frame = requestAnimationFrame(() => setShown(value));
-      return () => cancelAnimationFrame(frame);
+      return;
     }
     let frame = 0;
     const began = performance.now();
@@ -60,7 +60,9 @@ export function AnimatedNumber({
     };
     frame = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frame);
-  }, [value, duration]);
+  }, [value, duration, instant]);
 
-  return <span className={className}>{format(Math.round(shown))}</span>;
+  // Reduced motion shows the value itself; otherwise the last frame of the count (which ends on it).
+  const display = instant ? value : shown;
+  return <span className={className}>{format(Math.round(display))}</span>;
 }

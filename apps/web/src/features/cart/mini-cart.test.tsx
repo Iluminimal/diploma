@@ -66,8 +66,7 @@ describe("MiniCart", () => {
 
     // The request is still pending, yet the cart already shows the new quantity and total.
     expect(within(screen.getAllByRole("listitem")[0]!).getByText("3")).toBeInTheDocument();
-    // (totals count up to the new figure, so give the count a moment)
-    expect(await screen.findByText("$140")).toBeInTheDocument();
+    expect(screen.getByText("$140")).toBeInTheDocument();
     release();
     await waitFor(() => expect(api.count("PATCH /api/v1/cart/items/10")).toBe(1));
     expect(api.calls.find((c) => c.method === "PATCH")?.body).toEqual({ quantity: 3 });

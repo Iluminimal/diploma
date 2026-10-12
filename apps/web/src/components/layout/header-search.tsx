@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
+import { AngelLogo } from "@/components/layout/logo";
 import { Button } from "@/components/ui/button";
 import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
 import { useSearchPanel } from "./search-ui-store";
@@ -131,13 +132,26 @@ export function HeaderSearch() {
               onKeyDown={onKeyDown}
               className="search-panel bg-background fixed inset-x-0 top-0 z-50 max-h-dvh overflow-y-auto pb-10"
             >
-              <div className="container-page flex items-start gap-3 pt-3 md:pt-4">
-                <div className="mx-auto w-full max-w-2xl flex-1 md:pl-12">
-                  <SearchBar variant="overlay" onNavigate={close} quickLinks={<QuickLinks onNavigate={close} />} />
+              <div className="container-page">
+                {/* On a phone, as on apple.com: a row like the header with the logo and the X where the
+                    menu button was, and the field on a row of its own below. From md up the X sits
+                    beside the field. */}
+                <div className="flex h-12 items-center justify-between md:hidden">
+                  <Link href="/" onClick={close} className="focus-visible:ring-ring/60 rounded-md text-[1.0625rem] outline-none focus-visible:ring-3">
+                    <AngelLogo markClassName="size-[1.35rem]" />
+                  </Link>
+                  <Button variant="ghost" size="icon-lg" aria-label="Close search" onClick={close}>
+                    <X />
+                  </Button>
                 </div>
-                <Button variant="ghost" size="icon-lg" aria-label="Close search" onClick={close}>
-                  <X />
-                </Button>
+                <div className="flex items-start gap-3 pt-1 md:pt-4">
+                  <div className="mx-auto w-full max-w-2xl flex-1 md:pl-12">
+                    <SearchBar variant="overlay" onNavigate={close} quickLinks={<QuickLinks onNavigate={close} />} />
+                  </div>
+                  <Button variant="ghost" size="icon-lg" className="hidden md:inline-flex" aria-label="Close search" onClick={close}>
+                    <X />
+                  </Button>
+                </div>
               </div>
             </div>
           </>,

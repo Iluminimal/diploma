@@ -6,10 +6,12 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from lookalike.models import Order, OrderItem, Payment, StripeEvent
+from lookalike.models import Order, OrderEvent, OrderItem, Payment, StripeEvent
 from lookalike.repositories.patterns import contains_pattern, prefix_pattern
 
 _WITH_DETAILS = (selectinload(Order.items), selectinload(Order.payment))
+# Plus the history, for the pages that show it.
+_WITH_EVENTS = (*_WITH_DETAILS, selectinload(Order.events))
 
 
 class OrderRepository:
@@ -39,7 +41,7 @@ class OrderRepository:
         result = await self._session.execute(
             select(Order)
             .where(Order.user_id == user_id, Order.number == number)
-            .options(*_WITH_DETAILS)
+            .options(*_WITH_EVENTS)
             .execution_options(populate_existing=True)
         )
         return result.scalar_one_or_none()
@@ -117,9 +119,36 @@ class OrderRepository:
 
     async def get_by_number(self, number: str) -> Order | None:
         result = await self._session.execute(
-            select(Order).where(Order.number == number).options(*_WITH_DETAILS)
+            select(Order)
+            .where(Order.number == number)
+            .options(*_WITH_EVENTS)
+            .execution_options(populate_existing=True)
         )
         return result.scalar_one_or_none()
+
+    async def id_for_number(self, number: str) -> int | None:
+        result = await self._session.execute(select(Order.id).where(Order.number == number))
+        return result.scalar_one_or_none()
+
+    async def status_counts(self, text_query: str | None) -> dict[str, int]:
+        """Orders per status for the admin tabs (the search applies, the status filter does not)."""
+        clauses = self._admin_clauses(text_query, "all")
+        rows = await self._session.execute(
+            select(Order.status, func.count()).where(*clauses).group_by(Order.status)
+        )
+        return {status: int(count) for status, count in rows.all()}
+
+    def add_event(
+        self,
+        order_id: int,
+        event_type: str,
+        data: dict[str, object] | None = None,
+        actor_id: int | None = None,
+    ) -> None:
+        """Part of the caller's transaction: the event exists exactly if the change does."""
+        self._session.add(
+            OrderEvent(order_id=order_id, type=event_type, data=data or {}, actor_id=actor_id)
+        )
 
     async def pending_for_user(self, user_id: int) -> list[Order]:
         result = await self._session.execute(

@@ -36,6 +36,7 @@ from lookalike.services.catalog import CatalogService
 from lookalike.services.checkout import CheckoutService
 from lookalike.services.health import HealthService
 from lookalike.services.oauth import OAuthService
+from lookalike.services.order_fulfillment import OrderFulfillmentService
 from lookalike.services.orders import OrderService
 from lookalike.services.payments import PaymentSettlement
 from lookalike.services.search import SearchService
@@ -281,6 +282,18 @@ def get_account_service(session: SessionDep, auth: AuthServiceDep) -> AccountSer
 
 
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
+
+
+def get_fulfillment_service(
+    session: SessionDep,
+    storage: StorageDep,
+    gateway: GatewayDep,
+    mailer: Annotated[Mailer, Depends(get_mailer)],
+) -> OrderFulfillmentService:
+    return OrderFulfillmentService(session, gateway, mailer, storage)
+
+
+FulfillmentServiceDep = Annotated[OrderFulfillmentService, Depends(get_fulfillment_service)]
 
 
 def get_oauth_service(

@@ -1,16 +1,17 @@
 """ORM rows and request models to DTOs and repository inputs."""
 
 from lookalike.ingestion.images import thumbnail_key
-from lookalike.models import Order, OrderItem, Product
+from lookalike.models import Order, OrderEvent, OrderItem, Product
 from lookalike.repositories.products import SearchFilters
 from lookalike.schemas.address import AddressSnapshot
 from lookalike.schemas.admin import (
+    AdminOrderEventOut,
     AdminOrderOut,
     AdminOrderSummary,
     AdminPaymentOut,
     AdminProductOut,
 )
-from lookalike.schemas.order import OrderItemOut, OrderOut, OrderSummary
+from lookalike.schemas.order import OrderEventOut, OrderItemOut, OrderOut, OrderSummary
 from lookalike.schemas.product import FilterParams, ProductImage, ProductOut
 from lookalike.storage import Storage
 
@@ -97,8 +98,36 @@ def to_order_item_out(item: OrderItem, storage: Storage) -> OrderItemOut:
     )
 
 
+PUBLIC_EVENT_TYPES = ("placed", "paid", "shipped", "delivered", "cancelled", "refunded")
+_PUBLIC_DATA = {"shipped": ("carrier", "tracking_number"), "cancelled": ("reason",)}
+
+
+def _loaded_events(order: Order) -> list[OrderEvent]:
+    """The history, when the order was loaded with it (checkout and listings do not)."""
+    return list(order.__dict__.get("events", []))
+
+
+def to_public_events(order: Order) -> list[OrderEventOut]:
+    """What a customer may see: no notes, no names of staff, no internal detail."""
+    return [
+        OrderEventOut(
+            type=event.type,
+            at=event.created_at,
+            data={k: event.data[k] for k in _PUBLIC_DATA.get(event.type, ()) if k in event.data},
+        )
+        for event in _loaded_events(order)
+        if event.type in PUBLIC_EVENT_TYPES
+    ]
+
+
 def to_order_out(order: Order, storage: Storage) -> OrderOut:
     return OrderOut(
+        shipped_at=order.shipped_at,
+        delivered_at=order.delivered_at,
+        refunded_at=order.refunded_at,
+        carrier=order.carrier,
+        tracking_number=order.tracking_number,
+        events=to_public_events(order),
         number=order.number,
         status=order.status,
         created_at=order.created_at,
@@ -144,7 +173,11 @@ def to_admin_order_out(order: Order, storage: Storage) -> AdminOrderOut:
     base = to_order_out(order, storage)
     payment = order.payment
     return AdminOrderOut(
-        **base.model_dump(),
+        **base.model_dump(exclude={"events"}),
+        events=[
+            AdminOrderEventOut(type=e.type, at=e.created_at, data=e.data)
+            for e in _loaded_events(order)
+        ],
         user_id=order.user_id,
         cancel_reason=order.cancel_reason,
         cancelled_at=order.cancelled_at,

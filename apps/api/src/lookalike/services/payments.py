@@ -67,18 +67,25 @@ class PaymentSettlement:
             # Paid after we gave the stock back (expired, or replaced by a newer checkout). The
             # goods may be gone, so the money goes back instead.
             await self._refund(payment, reason="order_cancelled")
+            self._orders.add_event(
+                order.id, "refunded", {"reason": "order_cancelled", "automatic": True}
+            )
             log.warning("payment_after_cancel_refunded", order=order.number)
             return None
         if event.amount_cents != order.total_cents or event.currency != order.currency:
             log.error("payment_amount_mismatch", order=order.number, paid=event.amount_cents)
             await self._refund(payment, reason="amount_mismatch")
             await release_order(self._session, order, "amount_mismatch")
+            self._orders.add_event(
+                order.id, "refunded", {"reason": "amount_mismatch", "automatic": True}
+            )
             return None
         order.status = "paid"
         order.paid_at = datetime.now(UTC)
         payment.status = "succeeded"
         payment.client_secret = None
         payment.last_error = None
+        self._orders.add_event(order.id, "paid", {"amount_cents": payment.amount_cents})
         carts = CartRepository(self._session)
         cart = await carts.find(user_id=order.user_id)
         if cart is not None:  # the bought lines leave the cart; anything added since stays

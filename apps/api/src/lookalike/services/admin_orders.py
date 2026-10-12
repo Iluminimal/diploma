@@ -15,7 +15,7 @@ from lookalike.storage import Storage
 
 
 class AdminOrderService:
-    """Read-only view of every customer's orders."""
+    """Read-only view of every customer's orders (changes are `OrderFulfillmentService`)."""
 
     def __init__(self, session: AsyncSession, storage: Storage) -> None:
         self._session = session
@@ -31,8 +31,10 @@ class AdminOrderService:
                 offset=(query.page - 1) * query.page_size,
             )
             items = [to_admin_order_summary(order) for order in rows]
+            counts = await self._orders.status_counts(query.q)
         return AdminOrderPage(
             items=items,
+            status_counts=counts,
             total=total,
             page=query.page,
             page_size=query.page_size,

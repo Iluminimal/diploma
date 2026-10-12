@@ -4,10 +4,13 @@ from datetime import UTC, datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from lookalike.models import Order
+from lookalike.repositories.orders import OrderRepository
 from lookalike.repositories.products import ProductRepository
 
 
-async def release_order(session: AsyncSession, order: Order, reason: str) -> bool:
+async def release_order(
+    session: AsyncSession, order: Order, reason: str, *, actor: tuple[int, str] | None = None
+) -> bool:
     """Cancel a pending order and give its reserved stock back.
 
     The caller holds the order row lock (`OrderRepository.get_for_update`) and runs inside a
@@ -30,5 +33,11 @@ async def release_order(session: AsyncSession, order: Order, reason: str) -> boo
     if payment is not None and payment.status in ("requires_payment", "failed"):
         payment.status = "canceled"
         payment.client_secret = None
+    data: dict[str, object] = {"reason": reason}
+    if actor is not None:
+        data["actor"] = actor[1]
+    OrderRepository(session).add_event(
+        order.id, "cancelled", data, actor_id=actor[0] if actor else None
+    )
     await session.flush()
     return True

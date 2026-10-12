@@ -20,14 +20,21 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from lookalike.db.base import Base
 from lookalike.models.mixins import TimestampMixin
 
+ORDER_STATUSES = ("pending", "paid", "shipped", "delivered", "cancelled", "refunded")
+
 
 class Order(TimestampMixin, Base):
-    """pending -> paid, pending -> cancelled. A paid order is never cancelled; a payment that
-    arrives for an already cancelled order is refunded instead."""
+    """pending -> paid -> shipped -> delivered; pending -> cancelled; paid, shipped or delivered
+    -> refunded. A paid order is never "cancelled": its money goes back and it becomes
+    `refunded`. A payment that arrives for an already cancelled order is refunded instead.
+    Every change is recorded as an `OrderEvent`."""
 
     __tablename__ = "orders"
     __table_args__ = (
-        CheckConstraint("status IN ('pending', 'paid', 'cancelled')", name="status_valid"),
+        CheckConstraint(
+            "status IN ('pending', 'paid', 'shipped', 'delivered', 'cancelled', 'refunded')",
+            name="status_valid",
+        ),
         CheckConstraint("subtotal_cents >= 0 AND shipping_cents >= 0", name="amounts_non_negative"),
         CheckConstraint("total_cents = subtotal_cents + shipping_cents", name="total_matches"),
         UniqueConstraint("user_id", "idempotency_key"),
@@ -58,6 +65,12 @@ class Order(TimestampMixin, Base):
 
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Fulfilment: set by an administrator when the parcel leaves and when it arrives.
+    carrier: Mapped[str | None] = mapped_column(String(40))
+    tracking_number: Mapped[str | None] = mapped_column(String(100))
+    shipped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    refunded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     items: Mapped[list["OrderItem"]] = relationship(
         back_populates="order", order_by="OrderItem.id", lazy="raise"
@@ -65,6 +78,26 @@ class Order(TimestampMixin, Base):
     payment: Mapped["Payment | None"] = relationship(
         back_populates="order", uselist=False, lazy="raise"
     )
+    events: Mapped[list["OrderEvent"]] = relationship(
+        back_populates="order", order_by="OrderEvent.id", lazy="raise"
+    )
+
+
+class OrderEvent(TimestampMixin, Base):
+    """What happened to an order and when: placed, paid, shipped, delivered, cancelled, refunded,
+    or an administrator's internal note. `data` carries the details (carrier and tracking number,
+    the reason, who did it); `actor_id` is empty for things the system did."""
+
+    __tablename__ = "order_events"
+    __table_args__ = (Index("ix_order_events_order_id", "order_id"),)
+
+    id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
+    order_id: Mapped[int] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"))
+    type: Mapped[str] = mapped_column(String(20))
+    data: Mapped[dict[str, Any]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    actor_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+
+    order: Mapped[Order] = relationship(back_populates="events", lazy="raise")
 
 
 class OrderItem(TimestampMixin, Base):

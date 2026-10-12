@@ -91,6 +91,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/orders/{number}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel an unpaid order
+         * @description Gives the reserved stock back. A paid order is refunded instead.
+         */
+        post: operations["cancel_order_api_v1_admin_orders__number__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{number}/deliver": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a shipped order as delivered */
+        post: operations["deliver_order_api_v1_admin_orders__number__deliver_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{number}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add an internal note */
+        post: operations["add_order_note_api_v1_admin_orders__number__notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{number}/refund": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refund a paid, shipped or delivered order in full */
+        post: operations["refund_order_api_v1_admin_orders__number__refund_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/orders/{number}/ship": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark a paid order as shipped */
+        post: operations["ship_order_api_v1_admin_orders__number__ship_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/products": {
         parameters: {
             query?: never;
@@ -852,12 +940,34 @@ export interface components {
             /** Sub Category */
             sub_category: string;
         };
+        /**
+         * AdminOrderEventOut
+         * @description The same step with everything an administrator may see: notes and who did it.
+         */
+        AdminOrderEventOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "placed" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded" | "note";
+        };
         /** AdminOrderOut */
         AdminOrderOut: {
             /** Cancel Reason */
             cancel_reason: string | null;
             /** Cancelled At */
             cancelled_at: string | null;
+            /** Carrier */
+            carrier: string | null;
             /** Contact Email */
             contact_email: string;
             /**
@@ -867,6 +977,10 @@ export interface components {
             created_at: string;
             /** Currency */
             currency: string;
+            /** Delivered At */
+            delivered_at: string | null;
+            /** Events */
+            events: components["schemas"]["AdminOrderEventOut"][];
             /** Items */
             items: components["schemas"]["OrderItemOut"][];
             /** Number */
@@ -874,6 +988,10 @@ export interface components {
             /** Paid At */
             paid_at: string | null;
             payment: components["schemas"]["AdminPaymentOut"] | null;
+            /** Refunded At */
+            refunded_at: string | null;
+            /** Shipped At */
+            shipped_at: string | null;
             shipping_address: components["schemas"]["AddressSnapshot"];
             /** Shipping Cents */
             shipping_cents: number;
@@ -886,11 +1004,13 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "pending" | "paid" | "cancelled";
+            status: "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
             /** Subtotal Cents */
             subtotal_cents: number;
             /** Total Cents */
             total_cents: number;
+            /** Tracking Number */
+            tracking_number: string | null;
             /** User Id */
             user_id: number;
         };
@@ -904,6 +1024,10 @@ export interface components {
             page_size: number;
             /** Pages */
             pages: number;
+            /** Status Counts */
+            status_counts: {
+                [key: string]: number;
+            };
             /** Total */
             total: number;
         };
@@ -930,7 +1054,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "pending" | "paid" | "cancelled";
+            status: "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
             /** Total Cents */
             total_cents: number;
         };
@@ -1092,6 +1216,11 @@ export interface components {
             usage?: string | null;
             /** Year */
             year?: number | null;
+        };
+        /** CancelRequest */
+        CancelRequest: {
+            /** Reason */
+            reason?: string | null;
         };
         /** CartItemIn */
         CartItemIn: {
@@ -1469,6 +1598,31 @@ export interface components {
             /** Slug */
             slug: string;
         };
+        /** NoteRequest */
+        NoteRequest: {
+            /** Text */
+            text: string;
+        };
+        /**
+         * OrderEventOut
+         * @description One step in an order's history, as the customer sees it.
+         */
+        OrderEventOut: {
+            /**
+             * At
+             * Format: date-time
+             */
+            at: string;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "placed" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
+        };
         /** OrderItemOut */
         OrderItemOut: {
             image: components["schemas"]["ProductImage"];
@@ -1489,6 +1643,8 @@ export interface components {
         };
         /** OrderOut */
         OrderOut: {
+            /** Carrier */
+            carrier: string | null;
             /** Contact Email */
             contact_email: string;
             /**
@@ -1498,12 +1654,20 @@ export interface components {
             created_at: string;
             /** Currency */
             currency: string;
+            /** Delivered At */
+            delivered_at: string | null;
+            /** Events */
+            events: components["schemas"]["OrderEventOut"][];
             /** Items */
             items: components["schemas"]["OrderItemOut"][];
             /** Number */
             number: string;
             /** Paid At */
             paid_at: string | null;
+            /** Refunded At */
+            refunded_at: string | null;
+            /** Shipped At */
+            shipped_at: string | null;
             shipping_address: components["schemas"]["AddressSnapshot"];
             /** Shipping Cents */
             shipping_cents: number;
@@ -1516,11 +1680,13 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "pending" | "paid" | "cancelled";
+            status: "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
             /** Subtotal Cents */
             subtotal_cents: number;
             /** Total Cents */
             total_cents: number;
+            /** Tracking Number */
+            tracking_number: string | null;
         };
         /** OrderPage */
         OrderPage: {
@@ -1554,7 +1720,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "pending" | "paid" | "cancelled";
+            status: "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
             /** Total Cents */
             total_cents: number;
         };
@@ -1679,6 +1845,16 @@ export interface components {
              */
             status: "ok";
         };
+        /**
+         * RefundRequest
+         * @description Always the full amount (what the payment gateway supports).
+         */
+        RefundRequest: {
+            /** Reason */
+            reason: string;
+            /** Restock */
+            restock: boolean;
+        };
         /** RegisterRequest */
         RegisterRequest: {
             /**
@@ -1744,6 +1920,13 @@ export interface components {
              */
             token_type: "bearer";
             user: components["schemas"]["UserOut"];
+        };
+        /** ShipRequest */
+        ShipRequest: {
+            /** Carrier */
+            carrier: string;
+            /** Tracking Number */
+            tracking_number: string;
         };
         /** ShippingMethodList */
         ShippingMethodList: {
@@ -2096,7 +2279,7 @@ export interface operations {
             query?: {
                 /** @description Order number or customer email */
                 q?: string | null;
-                status?: "all" | "pending" | "paid" | "cancelled";
+                status?: "all" | "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
                 page?: number;
                 page_size?: number;
             };
@@ -2193,6 +2376,411 @@ export interface operations {
             };
             /** @description No such order */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    cancel_order_api_v1_admin_orders__number__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["CancelRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such order */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The order is not in a state this applies to */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    deliver_order_api_v1_admin_orders__number__deliver_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such order */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The order is not in a state this applies to */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    add_order_note_api_v1_admin_orders__number__notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such order */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The order is not in a state this applies to */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    refund_order_api_v1_admin_orders__number__refund_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RefundRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such order */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The order is not in a state this applies to */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Provider unavailable */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    ship_order_api_v1_admin_orders__number__ship_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShipRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOrderOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not an administrator */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description No such order */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The order is not in a state this applies to */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

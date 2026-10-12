@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import type { Order } from "@/features/orders/orders-api";
 import { OrderDetail } from "@/features/orders/order-detail";
 import { StatusBadge } from "@/features/orders/status-badge";
 import { ApiError, userMessage } from "@/lib/api/errors";
@@ -167,7 +168,8 @@ export function AdminOrderView({ number }: { number: string }) {
         </p>
       ) : order ? (
         <div className="space-y-8">
-          <OrderDetail order={order} />
+          {/* The customer's view of the order (internal notes are the admin's own). */}
+          <OrderDetail order={{ ...order, events: order.events.filter((event) => event.type !== "note") as Order["events"] }} />
           <section aria-labelledby="payment-heading" className="border-border space-y-3 rounded-2xl border p-4 text-sm sm:p-5">
             <h3 id="payment-heading" className="font-semibold">
               Customer and payment

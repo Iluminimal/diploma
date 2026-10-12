@@ -285,6 +285,7 @@ class CheckoutService:
                 contact_email=user.email,
             )
             await self._orders.add(order, items)
+            self._orders.add_event(order.id, "placed")
             return order.id
 
     async def _complete(self, user_id: int, order_id: int, gateway: PaymentGateway) -> CheckoutOut:

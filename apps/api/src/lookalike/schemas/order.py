@@ -1,12 +1,12 @@
 from datetime import datetime
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from lookalike.schemas.address import AddressSnapshot
 from lookalike.schemas.product import ProductImage
 
-OrderStatus = Literal["pending", "paid", "cancelled"]
+OrderStatus = Literal["pending", "paid", "shipped", "delivered", "cancelled", "refunded"]
 ShippingMethodId = Literal["standard", "express"]
 
 
@@ -42,11 +42,26 @@ class OrderItemOut(BaseModel):
     line_total_cents: int
 
 
+class OrderEventOut(BaseModel):
+    """One step in an order's history, as the customer sees it."""
+
+    type: Literal["placed", "paid", "shipped", "delivered", "cancelled", "refunded"]
+    at: datetime
+    # Only what is safe to show: a shipment's carrier and tracking number, why it was cancelled.
+    data: dict[str, Any]
+
+
 class OrderOut(BaseModel):
     number: str
     status: OrderStatus
     created_at: datetime
     paid_at: datetime | None
+    shipped_at: datetime | None
+    delivered_at: datetime | None
+    refunded_at: datetime | None
+    carrier: str | None
+    tracking_number: str | None
+    events: list[OrderEventOut]
     currency: str
     subtotal_cents: int
     shipping_cents: int

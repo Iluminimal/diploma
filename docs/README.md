@@ -6,6 +6,7 @@ Start with [`architecture.md`](architecture.md): where everything is and how a r
 | --- | --- |
 | [`SPEC.md`](SPEC.md) | The product and technical requirements |
 | [`architecture.md`](architecture.md) | Repository map, the backend layers and domains, the frontend structure, where to add things |
+| [`accounts.md`](accounts.md) | Phone and email sign-in with one-time codes, changing them, forgot password, your devices |
 | [`commerce.md`](commerce.md) | Sessions, Google sign-in, cart, checkout, payments, the life of an order, reviews |
 | [`admin.md`](admin.md) | The admin panel: dashboard, orders, inventory, customers, review moderation, demo data |
 | [`search-api.md`](search-api.md) | Visual, text and hybrid search endpoints |

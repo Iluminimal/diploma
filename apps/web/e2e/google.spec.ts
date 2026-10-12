@@ -94,7 +94,7 @@ test("cancelling at Google ends on the login page with a message", async ({ page
 
   await expect(page).toHaveURL(/\/login\?error=google_denied$/);
   await expect(problem(page)).toContainText("cancelled");
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Phone" })).toBeVisible();
 });
 
 test("an unverified Google email is refused", async ({ page }) => {

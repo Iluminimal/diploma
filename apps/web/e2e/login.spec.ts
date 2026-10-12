@@ -34,6 +34,7 @@ test("an email that is already registered is refused", async ({ page, account })
 test("signing in with the right password, and a wrong one", async ({ page, account }) => {
   await page.goto("/login");
 
+  await page.getByRole("tab", { name: "Email" }).click();
   await page.getByLabel("Email").fill(account.email);
   await page.getByLabel("Password", { exact: true }).fill("not the password");
   await page.getByRole("button", { name: "Sign in" }).click();

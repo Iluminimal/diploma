@@ -22,6 +22,7 @@ test("the register page speaks of signing up, shows a password strength and lets
 test("the sign in page points people who used Google to the Google button when a password fails", async ({ page }) => {
   await page.goto("/login");
 
+  await page.getByRole("tab", { name: "Email" }).click();
   await page.getByLabel("Email").fill("nobody-here@example.com");
   await page.getByLabel("Password", { exact: true }).fill("wrong password");
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -31,6 +32,7 @@ test("the sign in page points people who used Google to the Google button when a
 
 test("the two pages keep where you were going", async ({ page }) => {
   await page.goto("/login?next=/account/orders");
+  await page.getByRole("tab", { name: "Email" }).click();
   await page.getByRole("link", { name: "Create an account" }).click();
 
   await expect(page).toHaveURL(/\/register\?next=%2Faccount%2Forders$/);

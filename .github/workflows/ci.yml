@@ -124,6 +124,9 @@ jobs:
       PAYMENTS_MODE: offline
       # Sign in with Google without Google: the API's stand-in runs the real flow minus the consent screen.
       OAUTH_MODE: fake
+      OTP_DEV_CODE: "000000"
+      # Tests sign the same phone in twice within a minute.
+      OTP_RESEND_SECONDS: "0"
       RATE_LIMIT_ENABLED: "false"
       JWT_SECRET: ci-only-jwt-secret-0123456789-0123456789
       CORS_ORIGINS: http://localhost:3000

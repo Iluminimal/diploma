@@ -147,7 +147,13 @@ export function ContactDialog({
     }
   }
 
-  const title = verifying ? "Confirm your email" : current ? `Change ${noun}` : `Add a ${noun}`;
+  const title = verifying
+    ? "Confirm your email"
+    : current
+      ? `Change ${noun}`
+      : kind === "phone"
+        ? "Add a phone number"
+        : "Add an email address";
   const shown = verifying ? user.email : kind === "phone" ? (destination ?? phone.text) : email.trim();
 
   return (
@@ -163,7 +169,7 @@ export function ContactDialog({
         </DialogHeader>
 
         {step === "enter" ? (
-          <form onSubmit={send} noValidate className="space-y-4" aria-label={title}>
+          <form onSubmit={send} noValidate className="space-y-4" aria-label="Where to send the code">
             {kind === "phone" ? (
               <Field id="contact-phone" label="Phone number">
                 <PhoneInput id="contact-phone" value={phone} onChange={setPhone} autoFocus />

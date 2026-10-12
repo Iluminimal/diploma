@@ -18,6 +18,8 @@ from angel.ingestion.images import THUMBNAIL_SIZES, thumbnail_key
 from angel.storage import LocalStorage
 
 E2E_EMAIL = r"^e2e-.*@example\.com$"
+# The phone tests sign up with numbers in this range (see apps/web/e2e/support/api.ts).
+E2E_PHONE = r"^\+1415555[0-9]{4}$"
 
 
 async def clean() -> str:
@@ -37,14 +39,18 @@ async def clean() -> str:
                 )
             ]
             orders = await connection.execute(
-                text("DELETE FROM orders WHERE user_id IN (SELECT id FROM users WHERE email ~ :e)"),
-                {"e": E2E_EMAIL},
+                text(
+                    "DELETE FROM orders WHERE user_id IN "
+                    "(SELECT id FROM users WHERE email ~ :e OR phone ~ :p)"
+                ),
+                {"e": E2E_EMAIL, "p": E2E_PHONE},
             )
             products = await connection.execute(
                 text("DELETE FROM products WHERE source_id IS NULL AND name LIKE 'E2E %'")
             )
             users = await connection.execute(
-                text("DELETE FROM users WHERE email ~ :e"), {"e": E2E_EMAIL}
+                text("DELETE FROM users WHERE email ~ :e OR phone ~ :p"),
+                {"e": E2E_EMAIL, "p": E2E_PHONE},
             )
     finally:
         await engine.dispose()

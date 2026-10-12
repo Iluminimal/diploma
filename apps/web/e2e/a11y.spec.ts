@@ -125,6 +125,8 @@ test.describe("storefront", () => {
 
   test("sign in and register", async ({ page }) => {
     await sweep(page, "/login", { ready: heading(page) });
+    await sweep(page, "/login?method=email", { ready: heading(page) });
+    await sweep(page, "/forgot-password", { ready: heading(page) });
     await sweep(page, "/register", { ready: heading(page) });
   });
 

@@ -64,7 +64,7 @@ seed-demo-clean: ## Remove what seed-demo made (and put its stock back)
 	$(API) uv run python ../../scripts/seed_demo.py --clean
 
 e2e: ## Playwright end-to-end tests against the running stack; e.g. make e2e ARGS="e2e/cart.spec.ts"
-	@echo "Needs: make infra migrate, the API (RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline make api) and make web-prod. See docs/e2e.md."
+	@echo "Needs: make infra migrate, the API (RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline OAUTH_MODE=fake OTP_DEV_CODE=000000 OTP_RESEND_SECONDS=0 make api) and make web-prod. See docs/e2e.md."
 	$(WEB) npx playwright test $(ARGS)
 
 lighthouse: ## Lighthouse on the running production build (make web-prod); e.g. make lighthouse ARGS="--runs 5"

@@ -268,7 +268,6 @@ class AuthService:
             expires_at=now + timedelta(seconds=max_age),
             user_agent=self._client.user_agent,
             ip=self._client.ip,
-            last_used_at=now,
         )
         access = create_access_token(user.id, self._secret, self._settings.access_token_ttl_seconds)
         view = UserView(user, await self._users.providers(user.id))

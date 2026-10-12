@@ -17,7 +17,8 @@ test("the profile page shows who you are and how you sign in", async ({ shopperP
   await openProfile(page);
 
   await expect(page.getByLabel("Full name")).toHaveValue("E2E Shopper");
-  await expect(page.getByLabel("Email")).toHaveValue(account.email);
+  await expect(page.getByText(account.email).first()).toBeVisible();
+  await expect(page.getByText("Phone number")).toBeVisible();
   await expect(page.getByText(/Not connected/)).toBeVisible();
   await expect(page.getByRole("button", { name: /Change password/ })).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Account", exact: true }).getByRole("link", { name: "Profile" })).toHaveAttribute("aria-current", "page");

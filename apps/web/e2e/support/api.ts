@@ -40,6 +40,12 @@ export async function inStockProducts(request: APIRequestContext, count = 12): P
   return page.items;
 }
 
+/** A fresh US number for a phone sign-up. `make e2e-clean` removes accounts in this range. */
+export const uniquePhone = () => `+1415555${String(Math.floor(Math.random() * 9000) + 1000)}`;
+
+/** The one-time code every challenge has when the API runs with OTP_DEV_CODE=000000. */
+export const OTP_CODE = "000000";
+
 export const uniqueEmail = (label: string) =>
   `e2e-${label}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}@example.com`;
 
@@ -236,4 +242,14 @@ export async function postReview(
 export async function userId(request: APIRequestContext, account: Account): Promise<number> {
   const me = await ok<{ id: number }>(await request.get(`${API_URL}/api/v1/auth/me`, { headers: bearer(account) }), "reading the account");
   return me.id;
+}
+
+/** A phone-only customer, created through the API (a code that is always `OTP_CODE`). */
+export async function signUpWithPhone(request: APIRequestContext, phone: string): Promise<Account & { phone: string }> {
+  await ok(await request.post(`${API_URL}/api/v1/auth/otp/request`, { headers: json, data: { destination: phone } }), "asking for a code");
+  const body = await ok<{ access_token: string }>(
+    await request.post(`${API_URL}/api/v1/auth/otp/verify`, { headers: json, data: { destination: phone, code: OTP_CODE } }),
+    "signing in with a code",
+  );
+  return { email: "", phone, password: "", token: body.access_token, cookies: (await request.storageState()).cookies };
 }

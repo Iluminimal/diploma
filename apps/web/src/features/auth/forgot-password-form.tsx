@@ -69,7 +69,7 @@ export function ForgotPasswordForm() {
 
   if (step === "reset") {
     return (
-      <form onSubmit={reset} noValidate className="space-y-4" aria-label="Choose a new password">
+      <form onSubmit={reset} noValidate className="space-y-4" aria-label="Reset password">
         <p className="text-sm" id="reset-sent">
           If an account matches <span className="font-medium">{destination.trim()}</span>, we sent it a 6-digit code.
         </p>

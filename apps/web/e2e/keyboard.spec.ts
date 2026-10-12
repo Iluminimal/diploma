@@ -81,6 +81,7 @@ test("pressing / opens the search panel with the cursor in the field, and Escape
 
 test("a slash typed in a form field is just a slash", async ({ page }) => {
   await page.goto("/login");
+  await page.getByRole("tab", { name: "Email" }).click();
   const email = page.getByLabel("Email");
   await email.focus();
 
@@ -154,6 +155,7 @@ test("category filters expand and collapse with the keyboard and announce their 
 
 test("a form says what is wrong and moves nothing out of reach", async ({ page }) => {
   await page.goto("/login");
+  await page.getByRole("tab", { name: "Email" }).click();
   await page.getByRole("button", { name: "Sign in" }).click();
 
   const email = page.getByLabel("Email");

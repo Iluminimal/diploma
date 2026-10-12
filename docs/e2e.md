@@ -14,6 +14,7 @@ and Redis. 104 tests:
 | `navigation.spec.ts` | the department menu (hover, one shared flyout with instant switching, solid bar, closing on New or on leaving, keyboard, phone drill-down) leads to category pages with breadcrumb and counts; the sidebar drills down; an unknown category is a real 404; the camera button inside the search bar starts a photo search; the search box suggests categories and remembers searches |
 | `google.spec.ts` | sign in with Google (the API's `OAUTH_MODE=fake` stand-in): a new customer lands on the page they asked for, the guest cart comes along, an existing password account is linked and its password stops working, cancelling and unverified emails end on the login page with a message, hostile `?error=` and `?next=` are harmless. Skips when the API has no Google configured |
 | `home.spec.ts` | the headline, the hero's photo button, the departments / category pills / shelves, the pinned story (sticky stage while scrolling; stacked list under reduced motion), Recently viewed appearing after a product visit |
+| `phone.spec.ts` | a new phone number signs up with a code and is asked for a name; the same number signs in again; a wrong code is refused; an impossible number is caught early; a phone customer adds an email, changes the number and signs out the other devices; a forgotten password is replaced with a code. **Needs the API to run with `OTP_DEV_CODE=000000 OTP_RESEND_SECONDS=0`** |
 | `profile.spec.ts` | the profile page; rename shows in the header and survives a reload; change password (wrong current refused, old password stops working); a Google account sees "Connected" and adds a password; delete account (wrong password refused, then signed out for good); the account menu leads to the profile |
 | `auth-pages.spec.ts` | "Sign up with Google" wording, password strength and show/hide, the Google hint after a failed login, `?next=` kept between the two pages |
 | `a11y.spec.ts` | axe (WCAG 2.1 A/AA + best practices) on every kind of screen (including category pages, the open department menu, the photo dialog and the profile page with its dialogs, **and the whole admin area: dashboard, orders, order page, inventory, customers, a customer, reviews, and the ship and refund dialogs with their errors showing; on the storefront a delivered order page and a product page with reviews as a visitor, as the buyer with the form, and with their own review**), in light and dark, at 390 and 1440 px |
@@ -26,7 +27,7 @@ payment gateway. Production-like web output is also needed (the dev server is sl
 
 ```bash
 make infra migrate                                            # Postgres + Redis
-RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline OAUTH_MODE=fake make api   # terminal 1 (environment beats .env)
+RATE_LIMIT_ENABLED=false PAYMENTS_MODE=offline OAUTH_MODE=fake OTP_DEV_CODE=000000 OTP_RESEND_SECONDS=0 make api   # terminal 1 (environment beats .env)
 make web-prod                                                 # terminal 2: build + serve on :3000
 make e2e                                                      # terminal 3 (ARGS="e2e/cart.spec.ts" for one file)
 make e2e-clean                                                # afterwards: remove what the tests created
@@ -34,7 +35,7 @@ make e2e-clean                                                # afterwards: remo
 
 This is the real catalogue and the real FashionCLIP model. `global-setup.ts` creates the e2e administrator
 (`e2e-admin@example.com`, password in `e2e/support/env.ts`) with the same CLI an operator uses. `make e2e-clean` deletes
-`e2e-*@example.com` customers with their orders, and the products named `E2E ...` (the API can withdraw a product but not
+`e2e-*@example.com` customers and the phone customers in `+1415555xxxx` with their orders, and the products named `E2E ...` (the API can withdraw a product but not
 delete it) with their photos. It refuses to run when `APP_ENV=prod`.
 
 ## Hermetic (what CI does)
@@ -44,7 +45,7 @@ runs the API with `EMBEDDER=fake`:
 
 ```bash
 # an empty database with pgvector, then:
-EMBEDDER=fake PAYMENTS_MODE=offline OAUTH_MODE=fake RATE_LIMIT_ENABLED=false (cd apps/api && uv run alembic upgrade head)
+EMBEDDER=fake PAYMENTS_MODE=offline OAUTH_MODE=fake OTP_DEV_CODE=000000 OTP_RESEND_SECONDS=0 RATE_LIMIT_ENABLED=false (cd apps/api && uv run alembic upgrade head)
 make seed-e2e ARGS="--count 60"       # drawn garments, thumbnails, embeddings from the served thumbnails
 # start the API and `make web-prod`, then
 E2E_FAKE_MODEL=1 make e2e
@@ -63,7 +64,7 @@ The recipe, which leaves a running `make api` and `make web` alone:
 ```bash
 docker exec angel-postgres-1 psql -U angel -d postgres -c "CREATE DATABASE angel_e2e"
 export APP_ENV=test DATABASE_URL=postgresql+asyncpg://angel:angel@localhost:5433/angel_e2e \
-  REDIS_URL=redis://localhost:6379/1 EMBEDDER=fake PAYMENTS_MODE=offline OAUTH_MODE=fake RATE_LIMIT_ENABLED=false \
+  REDIS_URL=redis://localhost:6379/1 EMBEDDER=fake PAYMENTS_MODE=offline OAUTH_MODE=fake OTP_DEV_CODE=000000 OTP_RESEND_SECONDS=0 RATE_LIMIT_ENABLED=false \
   JWT_SECRET=e2e-only-jwt-secret-0123456789-0123456789 MEDIA_DIR=/tmp/e2e-media MEDIA_BASE_URL=http://localhost:8001/media \
   CORS_ORIGINS=http://localhost:3001 WEB_BASE_URL=http://localhost:3001 \
   GOOGLE_REDIRECT_URI=http://localhost:3001/api/v1/auth/google/callback \

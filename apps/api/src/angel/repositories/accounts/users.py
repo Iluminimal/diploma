@@ -85,8 +85,8 @@ class RefreshTokenRepository:
         expires_at: datetime,
         user_agent: str | None = None,
         ip: str | None = None,
-        last_used_at: datetime | None = None,
     ) -> RefreshToken:
+        """`last_used_at` is the database clock, like `created_at`, so the two never disagree."""
         token = RefreshToken(
             user_id=user_id,
             family_id=family_id,
@@ -94,7 +94,7 @@ class RefreshTokenRepository:
             expires_at=expires_at,
             user_agent=user_agent,
             ip=ip,
-            last_used_at=last_used_at,
+            last_used_at=func.now(),
         )
         self._session.add(token)
         await self._session.flush()

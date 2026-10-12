@@ -52,10 +52,10 @@ export function SignInTabs({ next, initial = "phone" }: { next: string; initial?
         ))}
       </div>
 
-      <div role="tabpanel" id="signin-panel-phone" aria-labelledby="signin-tab-phone" hidden={method !== "phone"}>
+      <div role="tabpanel" id="signin-panel-phone" aria-label="Sign in with a text-message code" hidden={method !== "phone"}>
         {method === "phone" && <CodeSignIn kind="phone" next={next} onNaming={setNaming} />}
       </div>
-      <div role="tabpanel" id="signin-panel-email" aria-labelledby="signin-tab-email" hidden={method !== "email"}>
+      <div role="tabpanel" id="signin-panel-email" aria-label="Sign in with a password or code" hidden={method !== "email"}>
         {method === "email" &&
           (emailMode === "password" ? (
             <div className="space-y-4">

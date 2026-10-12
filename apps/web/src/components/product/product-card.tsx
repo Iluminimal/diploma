@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
+import { CardLink } from "@/components/product/card-link";
 import { ProductImage } from "@/components/product/product-image";
 import { RatingStars } from "@/components/product/rating-stars";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
@@ -24,13 +24,13 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
   const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
     <article className={cn("group relative", className)}>
-      <Link
+      <CardLink
         href={productPath(product)}
-        className="focus-visible:ring-ring/60 block rounded-2xl outline-none focus-visible:ring-3"
+        className="focus-visible:ring-ring/60 block rounded-2xl outline-none transition-transform duration-300 ease-out-expo focus-visible:ring-3 active:scale-[0.985]"
       >
         {/* The catalogue photos have white backgrounds: multiplied onto the grey tile they melt into it,
             the way Apple's product shots sit on their tiles. In dark mode the tile is white instead. */}
-        <div className="bg-secondary relative aspect-3/4 overflow-hidden rounded-3xl dark:bg-white">
+        <div data-card-photo className="bg-secondary relative aspect-3/4 overflow-hidden rounded-3xl dark:bg-white">
           <ProductImage
             product={product}
             sizes={sizes}
@@ -58,7 +58,7 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
             {formatPrice(product.price_cents, product.currency)}
           </p>
         </div>
-      </Link>
+      </CardLink>
       {badge && <div className="pointer-events-none absolute top-2 left-2">{badge}</div>}
       <WishlistButton product={product} className="absolute top-2 right-2" />
     </article>

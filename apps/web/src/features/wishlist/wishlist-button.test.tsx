@@ -34,6 +34,20 @@ describe("WishlistButton", () => {
     expect(api.calls).toHaveLength(0); // guests never hit the wishlist API
   });
 
+  it("bursts when the heart is filled, but not for one that was already saved", async () => {
+    useAuth.setState({ status: "signedIn", accessToken: "t", user });
+    stubApi({
+      "GET /api/v1/wishlist": { body: { items: [] } },
+      "PUT /api/v1/wishlist/41885": { body: { items: [product] } },
+    });
+    const { container } = renderWithQuery(<WishlistButton product={product} />);
+    expect(container.querySelector(".animate-burst")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: /save alma women blue kurta/i }));
+
+    expect(container.querySelectorAll(".animate-burst")).toHaveLength(6);
+  });
+
   it("saves optimistically for a signed-in shopper", async () => {
     useAuth.setState({ status: "signedIn", accessToken: "t", user });
     let release: () => void = () => {};

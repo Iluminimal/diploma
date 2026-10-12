@@ -13,6 +13,8 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import { Disclosure } from "@/components/ui/disclosure";
+import { DeliveryInfo } from "@/features/catalog/delivery-info";
 import { getProduct, getProductReviews } from "@/features/catalog/api";
 import { breadcrumbTrail, productDescription, productJsonLd } from "@/features/catalog/json-ld";
 import { JsonLdScripts } from "@/features/seo/json-ld-scripts";
@@ -135,16 +137,23 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
             </Link>
           </Button>
 
-          <dl className="border-border grid grid-cols-[7rem_1fr] gap-x-4 gap-y-2.5 border-t pt-6 text-sm">
-            {details
-              .filter(([, v]) => v !== null && v !== "")
-              .map(([term, value]) => (
-                <div key={term} className="contents">
-                  <dt className="text-muted-foreground">{term}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-          </dl>
+          <div>
+            <Disclosure title="Product details" defaultOpen>
+              <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-2.5">
+                {details
+                  .filter(([, v]) => v !== null && v !== "")
+                  .map(([term, value]) => (
+                    <div key={term} className="contents">
+                      <dt className="text-muted-foreground">{term}</dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ))}
+              </dl>
+            </Disclosure>
+            <Disclosure title="Delivery" className="border-b">
+              <DeliveryInfo />
+            </Disclosure>
+          </div>
         </div>
       </div>
 

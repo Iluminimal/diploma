@@ -1,6 +1,7 @@
 "use client";
 
 import { Heart } from "lucide-react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/auth-store";
@@ -23,18 +24,42 @@ export function WishlistButton({ product, variant = "card", className }: Props) 
   const toggle = useToggleWishlist();
   const saved = data?.items.some((item) => item.id === product.id) ?? false;
 
+  // The particles fly only when the shopper fills the heart, not for hearts that load already filled.
+  const [burst, setBurst] = useState(false);
+  useEffect(() => {
+    if (!burst) return;
+    const timer = window.setTimeout(() => setBurst(false), 700);
+    return () => window.clearTimeout(timer);
+  }, [burst]);
+
   const onClick = () => {
     if (status === "signedOut") {
       toast("Sign in to save items to your wishlist.");
       router.push(`/login?next=${encodeURIComponent(pathname || "/")}`);
       return;
     }
+    if (!saved) setBurst(true);
     toggle.mutate({ product, saved: !saved });
   };
 
   const label = saved ? `Remove ${product.name} from your wishlist` : `Save ${product.name} to your wishlist`;
   // `key` restarts the pop each time the heart fills.
-  const icon = <Heart key={String(saved)} className={cn("size-[1.15rem]", saved && "animate-pop fill-current")} />;
+  const icon = (
+    <span className="relative grid place-items-center">
+      <Heart key={String(saved)} className={cn("size-[1.15rem]", saved && "animate-pop fill-current")} />
+      {burst && (
+        <span aria-hidden className="pointer-events-none absolute inset-0 grid place-items-center">
+          {[0, 60, 120, 180, 240, 300].map((angle) => (
+            <i
+              key={angle}
+              style={{ "--a": `${angle}deg` } as React.CSSProperties}
+              className="animate-burst bg-foreground absolute size-1 rounded-full"
+            />
+          ))}
+        </span>
+      )}
+    </span>
+  );
 
   if (variant === "button") {
     return (
@@ -62,7 +87,7 @@ export function WishlistButton({ product, variant = "card", className }: Props) 
       aria-label={label}
       disabled={status === "unknown"}
       className={cn(
-        "bg-background/85 hover:bg-background focus-visible:ring-ring/60 grid size-9 place-items-center rounded-full shadow-sm backdrop-blur transition-colors outline-none focus-visible:ring-3 disabled:opacity-50",
+        "bg-background/85 hover:bg-background focus-visible:ring-ring/60 grid size-9 place-items-center rounded-full shadow-sm backdrop-blur transition-[background-color,scale] outline-none focus-visible:ring-3 active:scale-90 disabled:opacity-50",
         className,
       )}
     >

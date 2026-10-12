@@ -17,6 +17,7 @@
   --duration-fast: 150ms;
   --duration-base: 300ms;
   --duration-slow: 500ms;
+  --animate-burst: burst 650ms var(--ease-out-expo) forwards;
   --animate-highlight: highlight 2.2s var(--ease-out-expo);
   --animate-shimmer: shimmer 1.8s var(--ease-in-out-quart) infinite;
   --animate-pop: pop 420ms var(--ease-out-expo);
@@ -47,6 +48,17 @@
     }
     50% {
       translate: 0 -10px;
+    }
+  }
+  /* The little particles that fly out of a heart when it is filled. */
+  @keyframes burst {
+    0% {
+      opacity: 1;
+      transform: rotate(var(--a)) translateY(-5px) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: rotate(var(--a)) translateY(-19px) scale(0.2);
     }
   }
   /* A line that was just added glows once and settles. */
@@ -595,4 +607,47 @@
     animation-duration: 0s !important;
     animation-delay: 0s !important;
   }
+}
+
+/*
+ * Hover zoom on the product photo (mouse only): the image grows around the pointer, whose
+ * position the gallery writes to --zx / --zy. Touch has the enlarge dialog and swipe instead.
+ */
+@media (hover: hover) and (pointer: fine) {
+  .zoom-stage .zoom-image {
+    transition:
+      transform 450ms var(--ease-out-expo),
+      opacity 500ms var(--ease-out-expo);
+    transform-origin: var(--zx, 50%) var(--zy, 50%);
+  }
+  .zoom-stage[data-zoom="true"] .zoom-image[data-active="true"] {
+    transform: scale(1.9);
+  }
+}
+
+/*
+ * A native <details> whose panel opens and closes smoothly where the browser supports animating
+ * to `auto` height (Chromium, Safari); elsewhere it simply opens. No script.
+ */
+.disclosure {
+  interpolate-size: allow-keywords;
+}
+.disclosure::details-content {
+  height: 0;
+  overflow: clip;
+  transition:
+    height 350ms var(--ease-out-expo),
+    content-visibility 350ms allow-discrete;
+}
+.disclosure[open]::details-content {
+  height: auto;
+}
+.disclosure > summary {
+  list-style: none;
+}
+.disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.disclosure[open] > summary .disclosure-chevron {
+  rotate: 180deg;
 }

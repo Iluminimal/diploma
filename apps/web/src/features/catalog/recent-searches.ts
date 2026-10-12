@@ -23,11 +23,3 @@ export function rememberSearch(query: string): string[] {
   }
   return next;
 }
-
-export function clearRecentSearches(): void {
-  try {
-    window.localStorage.removeItem(KEY);
-  } catch {
-    // Nothing to clear.
-  }
-}

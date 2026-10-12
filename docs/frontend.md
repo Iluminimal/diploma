@@ -130,7 +130,7 @@ takes `department` and `category` (a node `path`); unknown values are a 404 prob
 | Menu panel, suggestions, sticky add-to-cart bar, heart and cart-badge pops | CSS transitions and keyframes |
 | A cart line sliding shut when removed | the only use of the `motion` library (`AnimatePresence`), inside the lazily loaded cart drawer and `/cart` |
 
-Curves and durations are tokens (`--ease-out-expo`, `--ease-in-out-quart`; `components/motion/easing.ts` mirrors them). Rules
+Curves and durations are tokens (`--ease-out-expo`, `--ease-in-out-quart`; `components/motion/easing.ts` mirrors `--ease-out-expo` for Motion). Rules
 to keep: never start the largest element of the first screen hidden (it would delay the largest contentful paint: the hero
 headline has no entrance); everything that starts hidden is shown without scripting and with `prefers-reduced-motion`
 (`[data-reveal]` in `globals.css`; Motion alone would still fade opacity); view-transition animations are switched off under

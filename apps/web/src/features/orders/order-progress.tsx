@@ -57,13 +57,18 @@ export function OrderProgress({ order, className }: { order: Progress; className
             className="relative flex min-w-0 flex-1 flex-col items-center gap-1.5 text-center"
           >
             {index > 0 && (
-              <span
-                aria-hidden
-                className={cn(
-                  "absolute top-3.5 right-1/2 h-0.5 w-full -translate-y-1/2",
-                  step.done ? (step.stopped ? "bg-destructive/40" : "bg-foreground") : "bg-border",
+              <span aria-hidden className="bg-border absolute top-3.5 right-1/2 h-0.5 w-full -translate-y-1/2">
+                {step.done && (
+                  // Fills from the previous step when the page loads, one connector after the other.
+                  <span
+                    className={cn(
+                      "animate-grow absolute inset-0 origin-left",
+                      step.stopped ? "bg-destructive/40" : "bg-foreground",
+                    )}
+                    style={{ animationDelay: `${(index - 1) * 160}ms` }}
+                  />
                 )}
-              />
+              </span>
             )}
             <span
               aria-hidden

@@ -1,9 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Clock, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { AnimatedCheck } from "@/components/ui/animated-check";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-store";
 import { fetchOrder } from "@/features/orders/orders-api";
@@ -46,7 +47,7 @@ export function ConfirmationView({ number }: { number: string }) {
     return <Skeleton aria-busy aria-label="Loading your order" className="h-64 rounded-2xl" />;
   }
 
-  const Icon = order.status === "paid" ? CheckCircle2 : order.status === "pending" ? Clock : XCircle;
+  const Icon = order.status === "pending" ? Clock : XCircle;
   const title =
     order.status === "paid"
       ? "Thank you for your order"
@@ -63,10 +64,11 @@ export function ConfirmationView({ number }: { number: string }) {
   return (
     <div className="space-y-8">
       <header className="space-y-3 text-center sm:text-left">
-        <Icon
-          aria-hidden
-          className={order.status === "paid" ? "text-success mx-auto size-10 sm:mx-0" : "text-muted-foreground mx-auto size-10 sm:mx-0"}
-        />
+        {order.status === "paid" ? (
+          <AnimatedCheck className="text-success mx-auto sm:mx-0" />
+        ) : (
+          <Icon aria-hidden className="text-muted-foreground mx-auto size-10 sm:mx-0" />
+        )}
         <h1 ref={heading} tabIndex={-1} className="text-2xl font-semibold tracking-tight outline-none md:text-3xl">
           {title}
         </h1>
@@ -74,6 +76,7 @@ export function ConfirmationView({ number }: { number: string }) {
           Order <span className="text-foreground font-medium">{order.number}</span>. {lead}
         </p>
       </header>
+      {order.status === "paid" && <WhatHappensNext email={order.contact_email} />}
       <OrderDetail order={order} />
       <div className="flex flex-wrap gap-2">
         <Button asChild size="lg" className="h-11 rounded-full px-5">
@@ -84,5 +87,35 @@ export function ConfirmationView({ number }: { number: string }) {
         </Button>
       </div>
     </div>
+  );
+}
+
+/** Three short steps after paying, each rising in a little after the one before. */
+function WhatHappensNext({ email }: { email: string }) {
+  const steps = [
+    { title: "Confirmation sent", text: `A receipt is on its way to ${email}.` },
+    { title: "We pack your order", text: "You'll get an email with the tracking number when it ships." },
+    { title: "Follow it any time", text: "Your order page shows where it is, step by step." },
+  ];
+  return (
+    <section aria-label="What happens next" className="border-border rounded-2xl border p-5">
+      <h2 className="mb-4 text-base font-semibold">What happens next</h2>
+      <ol className="space-y-4">
+        {steps.map((step, i) => (
+          <li
+            key={step.title}
+            className="animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards flex gap-3 duration-500"
+            style={{ animationDelay: `${600 + i * 150}ms` }}
+          >
+            <span aria-hidden className="bg-secondary grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold">
+              {i + 1}
+            </span>
+            <p className="text-sm">
+              <span className="font-medium">{step.title}.</span> <span className="text-muted-foreground">{step.text}</span>
+            </p>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }

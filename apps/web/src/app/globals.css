@@ -17,6 +17,8 @@
   --duration-fast: 150ms;
   --duration-base: 300ms;
   --duration-slow: 500ms;
+  --animate-grow: grow-x 700ms var(--ease-out-expo) both;
+  --animate-draw: draw 650ms var(--ease-out-expo) both;
   --animate-scan: scan 1.8s var(--ease-in-out-quart) infinite;
   --animate-burst: burst 650ms var(--ease-out-expo) forwards;
   --animate-highlight: highlight 2.2s var(--ease-out-expo);
@@ -49,6 +51,24 @@
     }
     50% {
       translate: 0 -10px;
+    }
+  }
+  /* A progress connector fills from its left end. */
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  /* Strokes that draw themselves (the confirmation check mark). */
+  @keyframes draw {
+    from {
+      stroke-dashoffset: var(--len, 100);
+    }
+    to {
+      stroke-dashoffset: 0;
     }
   }
   /* A soft band sweeps down a photo while it is being searched. */

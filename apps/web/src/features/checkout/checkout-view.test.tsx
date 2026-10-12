@@ -131,6 +131,54 @@ describe("CheckoutView", () => {
     expect(checkout.body).toEqual({ address_id: 1, shipping_method: "standard", contact_email: "ada@example.com" });
   });
 
+  it("shows the first two steps as done, with a one-line summary, once an address is chosen", async () => {
+    stubApi(routes() as never);
+    renderWithQuery(<CheckoutView />);
+
+    const address = await screen.findByRole("region", { name: "Delivery address" });
+    expect(address).toHaveTextContent("12 Analytical Way"); // the summary beside the title
+    const shipping = screen.getByRole("region", { name: "Shipping method" });
+    expect(shipping).toHaveTextContent("Standard shipping, 3-5 business days");
+    expect(screen.getByRole("region", { name: "Payment" })).not.toHaveTextContent("3-5 business days");
+  });
+
+  it("groups the card number as it is typed and names the card", async () => {
+    stubApi(routes() as never);
+    renderWithQuery(<CheckoutView />);
+    const card = await screen.findByLabelText("Card number");
+
+    await userEvent.clear(card);
+    await userEvent.type(card, "5555555555554444");
+
+    expect(card).toHaveValue("5555 5555 5555 4444");
+    expect(screen.getByText("Mastercard")).toBeInTheDocument();
+  });
+
+  it("covers the page with a status while the payment goes through", async () => {
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    stubApi(
+      routes({
+        "POST /api/v1/checkout": {
+          body: { order: makeOrder({ status: "pending" }), payment: { provider: "offline", client_secret: "pi_x_secret" } },
+        },
+        "POST /api/v1/checkout/orders/LK-ABCD2345/simulate-payment": async () => {
+          await gate;
+          return json(makeOrder());
+        },
+      }) as never,
+    );
+    renderWithQuery(<CheckoutView />);
+
+    await userEvent.click(await payButton());
+
+    expect(await screen.findByRole("status", { name: "" })).toHaveTextContent("Processing your payment");
+    expect(push).not.toHaveBeenCalled();
+    release();
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/checkout/confirmation/LK-ABCD2345"));
+    expect(screen.queryByText(/Processing your payment/)).not.toBeInTheDocument();
+  });
+
   it("explains stock problems, links to the cart and uses a fresh key for the next attempt", async () => {
     const api = stubApi(
       routes({

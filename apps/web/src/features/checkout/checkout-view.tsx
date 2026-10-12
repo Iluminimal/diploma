@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Lock } from "lucide-react";
+import { Check, Loader2, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -23,18 +23,81 @@ import { shippingCostFor } from "./checkout-math";
 import { ChoiceCard } from "./choice-card";
 import { cardSchema, DEMO_CARD, PaymentForm, type CardValues } from "./payment-form";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
-function Section({ step, title, children }: { step: number; title: string; children: React.ReactNode }) {
+/** A step of the checkout: its number turns into a check mark once done, and a line to the next step fills. */
+function Section({
+  step,
+  title,
+  done = false,
+  summary,
+  last = false,
+  children,
+}: {
+  step: number;
+  title: string;
+  done?: boolean;
+  /** One line shown beside the title when the step is done ("Ada Lovelace, 12 Analytical Way"). */
+  summary?: string;
+  last?: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <section aria-labelledby={`step-${step}`} className="space-y-4">
-      <h2 id={`step-${step}`} className="flex items-center gap-3 text-lg font-semibold">
-        <span aria-hidden className="bg-foreground text-background grid size-7 place-items-center rounded-full text-sm">
-          {step}
+    <section aria-labelledby={`step-${step}`} className="relative space-y-4 pl-11">
+      <span
+        aria-hidden
+        className={cn(
+          "absolute top-0 left-0 grid size-7 place-items-center rounded-full text-sm transition-colors duration-500",
+          done ? "bg-success text-white" : "bg-foreground text-background",
+        )}
+      >
+        {done ? <Check key="done" className="animate-pop size-4" /> : step}
+      </span>
+      {!last && (
+        <span aria-hidden className="bg-border absolute top-9 -bottom-10 left-3.5 w-px">
+          <span
+            className={cn(
+              "bg-success absolute inset-0 origin-top transition-transform duration-700 ease-out-expo",
+              done ? "scale-y-100" : "scale-y-0",
+            )}
+          />
         </span>
-        {title}
+      )}
+      <h2 className="flex min-h-7 flex-wrap items-baseline gap-x-3 text-lg font-semibold">
+        <span id={`step-${step}`}>{title}</span>
+        {done && summary && (
+          <span className="text-muted-foreground animate-in fade-in slide-in-from-left-1 min-w-0 truncate text-sm font-normal duration-500">
+            {summary}
+          </span>
+        )}
       </h2>
       {children}
     </section>
+  );
+}
+
+/** Resolves after `ms`, or at once when the shopper asked for less motion. */
+function minimumWait(ms: number): Promise<void> {
+  const reduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return reduced ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Covers the page while the payment goes through; announced to screen readers as a status. */
+function ProcessingOverlay() {
+  return (
+    <div className="bg-background/75 animate-in fade-in fixed inset-0 z-50 grid place-items-center backdrop-blur-md duration-300">
+      <div role="status" className="animate-in zoom-in-95 fade-in flex flex-col items-center gap-4 text-center duration-500">
+        <span className="relative grid size-14 place-items-center">
+          <span aria-hidden className="border-border absolute inset-0 rounded-full border-2" />
+          <Loader2 aria-hidden className="size-14 animate-spin stroke-[1.5]" />
+          <Lock aria-hidden className="absolute size-4" />
+        </span>
+        <div className="space-y-1">
+          <p className="text-lg font-semibold">Processing your payment…</p>
+          <p className="text-muted-foreground text-sm">Please don&apos;t close this page.</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -74,6 +137,7 @@ export function CheckoutView() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<CardValues>({ resolver: zodResolver(cardSchema), defaultValues: DEMO_CARD });
 
@@ -102,7 +166,9 @@ export function CheckoutView() {
           detail: "This demo store only takes demo payments, but the server is set up for live ones.",
         });
       }
-      return payDemoOrder(order.number);
+      // The overlay is on screen for at least a moment, so a fast answer does not flash it.
+      const [paid] = await Promise.all([payDemoOrder(order.number), minimumWait(900)]);
+      return paid;
     },
     onSuccess: async (order) => {
       attemptKey.current = crypto.randomUUID();
@@ -153,11 +219,19 @@ export function CheckoutView() {
   const total = cart.subtotal_cents + shipping;
   const canPay = addressId !== null && !cart.has_issues && !pay.isPending;
   const showAddressForm = addingAddress || addresses.length === 0;
+  const chosenAddress = addresses.find((address) => address.id === addressId);
+  const chosenMethod = methods.items.find((option) => option.id === method);
 
   return (
     <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_24rem] lg:gap-14">
+      {pay.isPending && <ProcessingOverlay />}
       <div className="space-y-10">
-        <Section step={1} title="Delivery address">
+        <Section
+          step={1}
+          title="Delivery address"
+          done={chosenAddress !== undefined && !showAddressForm}
+          summary={chosenAddress ? `${chosenAddress.full_name}, ${formatAddress(chosenAddress)}` : undefined}
+        >
           {addresses.length > 0 && (
             <div role="radiogroup" aria-label="Saved addresses" className="grid gap-3">
               {addresses.map((address) => (
@@ -176,7 +250,7 @@ export function CheckoutView() {
             </div>
           )}
           {showAddressForm ? (
-            <div className="border-border rounded-2xl border p-4 sm:p-5">
+            <div className="border-border animate-in fade-in slide-in-from-top-2 rounded-2xl border p-4 duration-500 sm:p-5">
               <AddressForm
                 submitLabel="Use this address"
                 askDefault={addresses.length > 0}
@@ -213,7 +287,12 @@ export function CheckoutView() {
           )}
         </Section>
 
-        <Section step={2} title="Shipping method">
+        <Section
+          step={2}
+          title="Shipping method"
+          done={chosenAddress !== undefined && !showAddressForm}
+          summary={chosenMethod ? `${chosenMethod.label}, ${chosenMethod.estimated_days}` : undefined}
+        >
           <div role="radiogroup" aria-label="Shipping method" className="grid gap-3">
             {methods.items.map((option) => {
               const cost = shippingCostFor(methods, option.id, cart.subtotal_cents);
@@ -236,7 +315,7 @@ export function CheckoutView() {
           </div>
         </Section>
 
-        <Section step={3} title="Payment">
+        <Section step={3} title="Payment" last>
           <form id="checkout-form" noValidate onSubmit={handleSubmit(() => {
               if (!hasEmail && !/^\S+@\S+\.\S+$/.test(contactEmail.trim())) {
                 setContactError("Enter a valid email address.");
@@ -245,7 +324,7 @@ export function CheckoutView() {
               setContactError(null);
               pay.mutate();
             })}>
-            <PaymentForm register={register} errors={errors} />
+            <PaymentForm register={register} errors={errors} control={control} />
           </form>
         </Section>
       </div>

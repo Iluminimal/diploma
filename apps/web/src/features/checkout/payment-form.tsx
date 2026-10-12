@@ -1,10 +1,11 @@
 "use client";
 
 import { CreditCard, Info } from "lucide-react";
-import type { FieldErrors, UseFormRegister } from "react-hook-form";
+import { useWatch, type Control, type FieldErrors, type UseFormRegister } from "react-hook-form";
 import { z } from "zod";
 import { Field, fieldAria } from "@/components/forms/form-field";
 import { Input } from "@/components/ui/input";
+import { cardBrand, formatCardNumber, formatExpiry } from "./card";
 
 export const cardSchema = z.object({
   card_number: z
@@ -28,10 +29,12 @@ export const DEMO_CARD: CardValues = {
 type Props = {
   register: UseFormRegister<CardValues>;
   errors: FieldErrors<CardValues>;
+  control: Control<CardValues>;
 };
 
-export function PaymentForm({ register, errors }: Props) {
+export function PaymentForm({ register, errors, control }: Props) {
   const input = "h-11 rounded-xl";
+  const brand = cardBrand(useWatch({ control, name: "card_number" }) ?? "");
   return (
     <fieldset className="space-y-4">
       <legend className="sr-only">Payment details</legend>
@@ -50,10 +53,23 @@ export function PaymentForm({ register, errors }: Props) {
           <Input
             inputMode="numeric"
             autoComplete="off"
-            className={`${input} pl-9`}
+            className={`${input} pl-9 ${brand ? "pr-32" : ""}`}
             {...fieldAria("card_number", errors.card_number?.message)}
-            {...register("card_number")}
+            {...register("card_number", {
+              onChange: (event) => {
+                event.target.value = formatCardNumber(event.target.value);
+              },
+            })}
           />
+          {brand && (
+            // Named from the first digits; it pops in when the card is recognised.
+            <span
+              key={brand}
+              className="animate-pop bg-secondary text-secondary-foreground pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded-full px-2.5 py-1 text-xs font-medium"
+            >
+              {brand}
+            </span>
+          )}
         </div>
       </Field>
       <Field id="card_name" label="Name on card" error={errors.card_name?.message}>
@@ -67,7 +83,13 @@ export function PaymentForm({ register, errors }: Props) {
             placeholder="MM/YY"
             className={input}
             {...fieldAria("card_expiry", errors.card_expiry?.message)}
-            {...register("card_expiry")}
+            {...register("card_expiry", {
+              onChange: (event) => {
+                const field = event.target as HTMLInputElement;
+                field.value = formatExpiry(field.value, field.dataset.previous ?? "");
+                field.dataset.previous = field.value;
+              },
+            })}
           />
         </Field>
         <Field id="card_cvc" label="Security code" error={errors.card_cvc?.message}>

@@ -28,6 +28,15 @@ describe("ConfirmationView", () => {
     expect(screen.getAllByText(/ada@example.com/).length).toBeGreaterThan(0);
   });
 
+  it("says what happens next once the order is paid, and not before", async () => {
+    stubApi({ "GET /api/v1/orders/LK-ABCD2345": { body: makeOrder() } });
+    renderWithQuery(<ConfirmationView number="LK-ABCD2345" />);
+
+    const next = await screen.findByRole("region", { name: "What happens next" });
+    expect(next).toHaveTextContent("A receipt is on its way to ada@example.com");
+    expect(next).toHaveTextContent("tracking number");
+  });
+
   it("keeps checking while the payment is still being confirmed", async () => {
     const api = stubApi({
       "GET /api/v1/orders/LK-ABCD2345": () => json(makeOrder({ status: api.count("GET /api/v1/orders/LK-ABCD2345") > 1 ? "paid" : "pending" })),

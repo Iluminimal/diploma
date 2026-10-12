@@ -31,6 +31,14 @@ describe("orderSteps", () => {
 });
 
 describe("OrderProgress", () => {
+  it("fills a connector for every step that has happened, one after the other", () => {
+    const { container } = render(<OrderProgress order={{ status: "shipped", ...shipped }} />);
+
+    const fills = [...container.querySelectorAll<HTMLElement>(".animate-grow")];
+    expect(fills).toHaveLength(2); // placed -> paid -> shipped
+    expect(fills.map((fill) => fill.style.animationDelay)).toEqual(["0ms", "160ms"]);
+  });
+
   it("marks the step the order is on and says so to a screen reader", () => {
     render(<OrderProgress order={{ status: "shipped", ...shipped }} />);
 

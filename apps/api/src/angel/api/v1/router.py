@@ -1,19 +1,10 @@
 from fastapi import APIRouter
 
-from angel.api.v1 import (
-    addresses,
-    admin,
-    auth,
-    cart,
-    catalog,
-    checkout,
-    orders,
-    products,
-    reviews,
-    search,
-    webhooks,
-    wishlist,
-)
+from angel.api.v1 import admin
+from angel.api.v1.accounts import addresses, auth
+from angel.api.v1.catalog import catalog, products, search
+from angel.api.v1.commerce import cart, checkout, orders, webhooks, wishlist
+from angel.api.v1.reviews import reviews
 
 router = APIRouter()
 router.include_router(search.router)

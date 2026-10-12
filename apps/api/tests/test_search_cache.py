@@ -4,7 +4,7 @@ from redis.asyncio import Redis
 from sqlalchemy import text
 
 from angel.ml.fake import FakeEmbedder
-from angel.repositories.products import SearchFilters
+from angel.repositories.catalog.products import SearchFilters
 from angel.services.cache import SearchCache, normalize_query
 from tests.conftest import UNREACHABLE_REDIS_URL, ApiFactory
 

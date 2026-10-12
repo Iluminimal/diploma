@@ -1,7 +1,7 @@
 import pytest
 
 from angel.core.errors import ProblemError
-from angel.services.health import HealthService
+from angel.services.system.health import HealthService
 
 
 class FakeRepository:

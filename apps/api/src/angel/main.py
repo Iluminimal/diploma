@@ -11,7 +11,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from starlette.formparsers import MultiPartParser
 
-from angel.api.routes import health
+from angel.api import health
 from angel.api.v1.router import router as v1_router
 from angel.core.config import Settings, get_settings
 from angel.core.errors import register_exception_handlers
@@ -34,10 +34,10 @@ from angel.ml.fashion_clip import FashionClipEmbedder, select_device
 from angel.models import Category
 from angel.oauth import build_oauth_provider
 from angel.payments import PaymentGateway, build_gateway
-from angel.repositories.categories import CategoryRepository
-from angel.repositories.products import ProductRepository
+from angel.repositories.catalog.categories import CategoryRepository
+from angel.repositories.catalog.products import ProductRepository
 from angel.services.cache import SearchCache
-from angel.services.expiry import OrderExpirer
+from angel.services.commerce.expiry import OrderExpirer
 from angel.storage import LocalStorage
 
 log = get_logger(__name__)

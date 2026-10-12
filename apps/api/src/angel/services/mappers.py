@@ -2,17 +2,17 @@
 
 from angel.ingestion.images import thumbnail_key
 from angel.models import Order, OrderEvent, OrderItem, Product
-from angel.repositories.products import SearchFilters
-from angel.schemas.address import AddressSnapshot
-from angel.schemas.admin import (
+from angel.repositories.catalog.products import SearchFilters
+from angel.schemas.accounts.address import AddressSnapshot
+from angel.schemas.admin.orders import (
     AdminOrderEventOut,
     AdminOrderOut,
     AdminOrderSummary,
     AdminPaymentOut,
-    AdminProductOut,
 )
-from angel.schemas.order import OrderEventOut, OrderItemOut, OrderOut, OrderSummary
-from angel.schemas.product import FilterParams, ProductImage, ProductOut
+from angel.schemas.admin.products import AdminProductOut
+from angel.schemas.catalog.product import FilterParams, ProductImage, ProductOut
+from angel.schemas.commerce.order import OrderEventOut, OrderItemOut, OrderOut, OrderSummary
 from angel.storage import Storage
 
 

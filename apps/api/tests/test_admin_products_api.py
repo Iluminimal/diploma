@@ -10,7 +10,7 @@ from httpx import Response
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from angel.repositories.products import ProductRepository
+from angel.repositories.catalog.products import ProductRepository
 from tests.catalogue import make_jpeg
 from tests.commerce import Shopper, register, set_role
 from tests.conftest import Api, ApiFactory

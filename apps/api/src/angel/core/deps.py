@@ -23,27 +23,27 @@ from angel.ml.embeddings import EmbeddingService
 from angel.models import User
 from angel.oauth import OAuthProvider
 from angel.payments import PaymentGateway
-from angel.repositories.health import HealthRepository
-from angel.repositories.users import UserRepository
-from angel.services.account import AccountService
-from angel.services.addresses import AddressService
-from angel.services.admin_dashboard import AdminDashboardService
-from angel.services.admin_orders import AdminOrderService
-from angel.services.admin_products import AdminProductService
-from angel.services.auth import AuthService
+from angel.repositories.accounts.users import UserRepository
+from angel.repositories.system.health import HealthRepository
+from angel.services.accounts.account import AccountService
+from angel.services.accounts.addresses import AddressService
+from angel.services.accounts.auth import AuthService
+from angel.services.accounts.oauth import OAuthService
+from angel.services.admin.dashboard import AdminDashboardService
+from angel.services.admin.orders import AdminOrderService
+from angel.services.admin.products import AdminProductService
 from angel.services.cache import SearchCache
-from angel.services.cart import CartOwner, CartService
-from angel.services.catalog import CatalogService
-from angel.services.checkout import CheckoutService
-from angel.services.health import HealthService
-from angel.services.oauth import OAuthService
-from angel.services.order_fulfillment import OrderFulfillmentService
-from angel.services.orders import OrderService
-from angel.services.payments import PaymentSettlement
-from angel.services.reviews import ReviewService
-from angel.services.search import SearchService
-from angel.services.webhooks import WebhookService
-from angel.services.wishlist import WishlistService
+from angel.services.catalog.catalog import CatalogService
+from angel.services.catalog.search import SearchService
+from angel.services.commerce.cart import CartOwner, CartService
+from angel.services.commerce.checkout import CheckoutService
+from angel.services.commerce.order_fulfillment import OrderFulfillmentService
+from angel.services.commerce.orders import OrderService
+from angel.services.commerce.payments import PaymentSettlement
+from angel.services.commerce.webhooks import WebhookService
+from angel.services.commerce.wishlist import WishlistService
+from angel.services.reviews.reviews import ReviewService
+from angel.services.system.health import HealthService
 from angel.storage import Storage
 
 

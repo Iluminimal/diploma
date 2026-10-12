@@ -33,9 +33,9 @@ from angel.models import (
     User,
 )
 from angel.models.user import ROLE_CUSTOMER
-from angel.schemas.order import ShippingMethodId
-from angel.services.shipping import shipping_cost
-from angel.services.sizes import sizes_for
+from angel.schemas.commerce.order import ShippingMethodId
+from angel.services.catalog.sizes import sizes_for
+from angel.services.commerce.shipping import shipping_cost
 
 # Share of delivered items whose buyer wrote a review.
 REVIEW_CHANCE = 0.5

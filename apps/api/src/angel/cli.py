@@ -12,8 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from angel.core.config import get_settings
 from angel.db.engine import create_engine
 from angel.models.user import ROLE_CUSTOMER
-from angel.schemas.auth import FullName, Password
-from angel.services.admin_users import provision_admin, set_role
+from angel.schemas.accounts.auth import FullName, Password
+from angel.services.admin.users import provision_admin, set_role
 
 PASSWORD_ENV = "ADMIN_PASSWORD"  # noqa: S105 - the variable's name, not a secret
 

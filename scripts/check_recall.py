@@ -21,7 +21,7 @@ from angel.db.engine import create_engine
 from angel.evaluation import exact_top_k, sample_products
 from angel.ml.fashion_clip import FashionClipEmbedder, select_device
 from angel.ml.preprocess import load_image
-from angel.repositories.products import DEFAULT_EF_SEARCH, ProductRepository
+from angel.repositories.catalog.products import DEFAULT_EF_SEARCH, ProductRepository
 
 
 async def main_async(args: argparse.Namespace) -> int:

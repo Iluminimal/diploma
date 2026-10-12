@@ -4,8 +4,8 @@ import pytest
 
 from angel.core.config import Settings
 from angel.models import Product
-from angel.services.shipping import shipping_cost, shipping_methods
-from angel.services.sizes import sizes_for
+from angel.services.catalog.sizes import sizes_for
+from angel.services.commerce.shipping import shipping_cost, shipping_methods
 
 
 def product(**kwargs: str) -> Product:

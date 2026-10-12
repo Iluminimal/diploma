@@ -11,7 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from angel.models import User
-from angel.services.reviews import author_name
+from angel.services.reviews.reviews import author_name
 from tests.commerce import Shopper, register, set_product
 from tests.conftest import Api, ApiFactory
 from tests.fakes import RecordingGateway

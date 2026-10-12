@@ -1,6 +1,6 @@
 from angel.models import Category
-from angel.schemas.catalog import NavDepartment
-from angel.services.taxonomy import TaxonomySnapshot, build_snapshot
+from angel.schemas.catalog.catalog import NavDepartment
+from angel.services.catalog.taxonomy import TaxonomySnapshot, build_snapshot
 
 
 def category(id_: int, parent: int | None, level: int, name: str, path: str) -> Category:

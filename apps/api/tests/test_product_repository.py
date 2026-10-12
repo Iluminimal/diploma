@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from angel.ingestion.cleaning import CleanProduct
 from angel.ingestion.pipeline import _upsert, build_row, ensure_categories
-from angel.repositories.products import MAX_EF_SEARCH, ProductRepository, SearchFilters
+from angel.repositories.catalog.products import MAX_EF_SEARCH, ProductRepository, SearchFilters
 from tests.test_ingest_pipeline import _TYPES  # noqa: F401  (shared category fixtures)
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]

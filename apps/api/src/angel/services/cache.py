@@ -13,10 +13,10 @@ from pydantic import TypeAdapter
 from redis.asyncio import Redis
 
 from angel.core.logging import get_logger
-from angel.repositories.products import SearchFilters
-from angel.schemas.catalog import CatalogFilters
-from angel.schemas.search import SearchHit
-from angel.services.taxonomy import TaxonomySnapshot
+from angel.repositories.catalog.products import SearchFilters
+from angel.schemas.catalog.catalog import CatalogFilters
+from angel.schemas.catalog.search import SearchHit
+from angel.services.catalog.taxonomy import TaxonomySnapshot
 
 log = get_logger(__name__)
 

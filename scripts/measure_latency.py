@@ -31,7 +31,7 @@ from angel.evaluation import (
 from angel.ml.fashion_clip import FashionClipEmbedder, select_device
 from angel.ml.preprocess import load_image, to_clip_array
 from angel.models import Product
-from angel.repositories.products import DEFAULT_EF_SEARCH, ProductRepository, SearchFilters
+from angel.repositories.catalog.products import DEFAULT_EF_SEARCH, ProductRepository, SearchFilters
 
 TARGET_IMAGE_P95_MS = 400.0
 TARGET_SIMILAR_P95_MS = 50.0

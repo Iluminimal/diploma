@@ -13,7 +13,7 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from angel.models import Product
-from angel.repositories.products import SearchFilters
+from angel.repositories.catalog.products import SearchFilters
 
 
 async def sample_products(engine: AsyncEngine, n: int, seed: int) -> list[tuple[int, int]]:

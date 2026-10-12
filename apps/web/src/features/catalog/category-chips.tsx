@@ -13,7 +13,7 @@ export function CategoryChips({ label, items, className }: { label: string; item
           <li key={chip.href} className="shrink-0">
             <Link
               href={chip.href}
-              className="group/chip bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background focus-visible:ring-ring/60 inline-flex h-9 items-center gap-2 rounded-full px-4 text-sm outline-none transition-colors duration-200 focus-visible:ring-3"
+              className="group/chip bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background focus-visible:ring-ring/60 inline-flex h-10 items-center gap-2 rounded-full px-4 text-[0.9375rem] outline-none transition-colors duration-200 focus-visible:ring-3"
             >
               {chip.label}
               {chip.count !== undefined && (

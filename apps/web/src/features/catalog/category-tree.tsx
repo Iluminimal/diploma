@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { categoryHref, drilldown, type CategoryTrail } from "./nav";
 
 const ROW =
-  "focus-visible:ring-ring/60 flex items-center justify-between gap-3 rounded-lg py-1.5 pr-2 text-sm outline-none transition-colors duration-200 focus-visible:ring-3";
+  "focus-visible:ring-ring/60 flex items-center justify-between gap-3 rounded-lg py-1.5 pr-2 text-[0.9375rem] outline-none transition-colors duration-200 focus-visible:ring-3";
 
 /**
  * Amazon-style drill-down in the sidebar: the way back up, then the next level down with counts.
@@ -16,7 +16,7 @@ export function CategoryTree({ trail }: { trail: CategoryTrail }) {
   const depthPad = (depth: number) => ({ paddingLeft: `${depth * 0.875}rem` });
   return (
     <nav aria-label="Categories" className="border-border mb-2 border-b pb-4">
-      <h2 className="mb-2 text-sm font-medium">Category</h2>
+      <h2 className="mb-2 text-[1.0625rem] font-semibold">Category</h2>
       <ul className="space-y-0.5">
         <li>
           <Link

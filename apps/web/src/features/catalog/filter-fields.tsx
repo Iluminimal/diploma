@@ -25,12 +25,12 @@ type Props<T extends CatalogFilters> = {
 
 function Group({ title, children, defaultOpen = true }: { title: string; children: ReactNode; defaultOpen?: boolean }) {
   return (
-    <details open={defaultOpen} className="group border-border border-b py-4 last:border-b-0">
-      <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium [&::-webkit-details-marker]:hidden">
+    <details open={defaultOpen} className="group border-border border-b py-5 last:border-b-0">
+      <summary className="flex cursor-pointer list-none items-center justify-between text-[1.0625rem] font-semibold [&::-webkit-details-marker]:hidden">
         {title}
         <ChevronDown className="text-muted-foreground size-4 transition-transform group-open:rotate-180" />
       </summary>
-      <div className="pt-3">{children}</div>
+      <div className="pt-4">{children}</div>
     </details>
   );
 }
@@ -49,7 +49,7 @@ function CheckRow({
   return (
     <div className="flex items-center gap-2.5 py-1.5">
       <Checkbox id={id} checked={checked} onCheckedChange={onCheckedChange} />
-      <Label htmlFor={id} className="flex-1 cursor-pointer text-sm font-normal">
+      <Label htmlFor={id} className="flex-1 cursor-pointer text-[0.9375rem] font-normal">
         {label}
       </Label>
     </div>

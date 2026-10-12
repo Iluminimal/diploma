@@ -72,7 +72,7 @@ export function SearchFilterBar({ options, filters, onChange }: Props) {
         </Chip>
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="lg" className="h-9 shrink-0 rounded-full px-4">
+            <Button variant="outline" className="shrink-0">
               <SlidersHorizontal /> More filters
             </Button>
           </SheetTrigger>

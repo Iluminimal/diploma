@@ -48,9 +48,9 @@ export function ListingView({
   return (
     <div className="container-page py-8 md:py-12">
       {above}
-      <div className="mb-6 flex flex-col gap-1">
-        <h1 className="text-4xl font-semibold tracking-tighter text-balance md:text-5xl">{title}</h1>
-        <Suspense fallback={<Skeleton className="h-5 w-24" />}>
+      <div className="mb-6 flex flex-col gap-1 md:mb-8">
+        <h1 className="type-display text-balance">{title}</h1>
+        <Suspense fallback={<Skeleton className="h-6 w-28" />}>
           <ResultCount query={query} />
         </Suspense>
       </div>
@@ -91,7 +91,7 @@ export function ListingView({
 async function ResultCount({ query }: { query: ListingQuery }) {
   const { total } = await listProducts(query);
   return (
-    <p className="text-muted-foreground h-5 text-sm" aria-live="polite">
+    <p className="text-muted-foreground type-body h-6" aria-live="polite">
       <AnimatedCount value={total} /> {total === 1 ? "product" : "products"}
     </p>
   );

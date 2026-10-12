@@ -60,7 +60,7 @@ export function MobileFilters({
   if (requested) return <MobileFiltersSheet options={options} query={query} defaultOpen {...scope} />;
   const count = activeFilterCount(query);
   return (
-    <Button variant="outline" size="lg" className="lg:hidden" aria-haspopup="dialog" onClick={() => setRequested(true)}>
+    <Button variant="outline" className="lg:hidden" aria-haspopup="dialog" onClick={() => setRequested(true)}>
       <SlidersHorizontal />
       Filters{count > 0 && ` (${count})`}
     </Button>
@@ -77,7 +77,7 @@ export function SortSelect({ query }: { query: ListingQuery }) {
   return (
     <select
       aria-label="Sort by"
-      className={cn(selectClass, "h-9 w-auto min-w-44 rounded-lg py-0 text-sm")}
+      className={cn(selectClass, "h-10 w-auto min-w-44 rounded-full px-4 py-0 text-[0.9375rem]")}
       value={query.sort ?? fallback}
       onChange={(event) => {
         const sort = event.target.value as Sort;

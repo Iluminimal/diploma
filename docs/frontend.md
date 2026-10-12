@@ -206,6 +206,10 @@ Every page is being restyled after apple.com, one step at a time (each step is a
   Departments are three grey tiles (title, line, blue link, photo below, multiplied into the grey in light mode, on white in dark);
   section headings use `type-title` and `link-more`; "How it works" and the black photo-search tile use `type-display`/`type-title`,
   and the drop zone is a soft grey panel (no dashed border) with Apple buttons.
+* **Listing and search** (step 5): a product card is one grey `tile` (photo on top, name, subtitle, rating and price inside it,
+  price pinned to the bottom so cards in a row line up); the title is `type-display`; the sort select and the phone Filters button
+  are 40px pills; filter groups have 17px semibold titles and more air; the category drill-down and the photo-search results use
+  the same sizes, and empty and error states are grey tiles instead of dashed boxes.
 
 ## Accounts, cart and checkout
 

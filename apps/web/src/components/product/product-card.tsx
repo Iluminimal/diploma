@@ -23,14 +23,14 @@ export const GRID_SIZES = "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50
 export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, headingLevel = 3, className }: Props) {
   const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
-    <article className={cn("group relative", className)}>
+    <article className={cn("group relative h-full", className)}>
       <Link
         href={productPath(product)}
-        className="focus-visible:ring-ring/60 block rounded-2xl outline-none focus-visible:ring-3 press-card"
+        className="tile press-card focus-visible:ring-ring/60 flex h-full flex-col outline-none focus-visible:ring-3"
       >
         {/* The catalogue photos have white backgrounds: multiplied onto the grey tile they melt into it,
             the way Apple's product shots sit on their tiles. In dark mode the tile is white instead. */}
-        <div data-card-photo className="bg-secondary relative aspect-3/4 overflow-hidden rounded-3xl dark:bg-white">
+        <div data-card-photo className="relative aspect-3/4 overflow-hidden dark:bg-white">
           <ProductImage
             product={product}
             sizes={sizes}
@@ -38,14 +38,14 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
             className="mix-blend-multiply transition-transform duration-700 ease-[var(--ease-out-expo)] group-hover:scale-[1.04] dark:mix-blend-normal"
           />
           {!product.in_stock && (
-            <span className="bg-background/90 text-foreground absolute right-2 bottom-2 rounded-full px-2.5 py-1 text-xs font-medium backdrop-blur">
+            <span className="bg-background/90 text-foreground type-fine absolute right-3 bottom-3 rounded-full px-2.5 py-1 font-medium backdrop-blur">
               Sold out
             </span>
           )}
         </div>
-        <div className="mt-4 space-y-0.5 px-1">
-          <Heading className="line-clamp-2 text-sm leading-snug font-semibold tracking-tight">{product.name}</Heading>
-          <p className="text-muted-foreground truncate text-xs">{productSubtitle(product)}</p>
+        <div className="flex flex-1 flex-col gap-0.5 px-4 pt-4 pb-4 md:px-5 md:pb-5">
+          <Heading className="line-clamp-2 text-[0.9375rem] leading-snug font-semibold md:text-[1.0625rem]">{product.name}</Heading>
+          <p className="text-muted-foreground type-caption truncate">{productSubtitle(product)}</p>
           {product.rating_count > 0 && product.rating_average !== null && (
             <p className="flex items-center gap-1.5 pt-1">
               <RatingStars rating={product.rating_average} size="sm" />
@@ -54,12 +54,12 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
               </span>
             </p>
           )}
-          <p className="pt-1.5 text-sm tabular-nums">
+          <p className="type-caption mt-auto pt-2 tabular-nums">
             {formatPrice(product.price_cents, product.currency)}
           </p>
         </div>
       </Link>
-      {badge && <div className="pointer-events-none absolute top-2 left-2">{badge}</div>}
+      {badge && <div className="pointer-events-none absolute top-3 left-3">{badge}</div>}
       <WishlistButton product={product} className="absolute top-2 right-2" />
     </article>
   );
@@ -67,12 +67,12 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
 
 export function ProductCardSkeleton() {
   return (
-    <div aria-hidden>
-      <Skeleton className="aspect-3/4 rounded-3xl" />
-      <div className="mt-3 space-y-2 px-0.5">
-        <Skeleton className="h-3.5 w-4/5 rounded" />
-        <Skeleton className="h-3 w-2/5 rounded" />
-        <Skeleton className="h-3.5 w-1/4 rounded" />
+    <div aria-hidden className="tile">
+      <Skeleton className="aspect-3/4 rounded-none opacity-50" />
+      <div className="space-y-2 px-4 py-4 md:px-5 md:pb-5">
+        <Skeleton className="h-4 w-4/5 rounded opacity-60" />
+        <Skeleton className="h-3.5 w-2/5 rounded opacity-60" />
+        <Skeleton className="h-3.5 w-1/4 rounded opacity-60" />
       </div>
     </div>
   );

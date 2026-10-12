@@ -70,8 +70,8 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
       onDrop={onDrop}
     >
       <div className="mb-8 max-w-2xl space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Search by photo</h1>
-        <p className="text-muted-foreground text-sm md:text-base">
+        <h1 className="type-display">Search by photo</h1>
+        <p className="text-muted-foreground type-intro">
           Upload a picture of something you like and we&apos;ll find similar pieces in our catalogue.
         </p>
       </div>
@@ -82,7 +82,7 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
         <div className="grid gap-8 lg:grid-cols-[19rem_1fr] lg:gap-12">
           <aside className="space-y-5 self-start lg:sticky lg:top-24">
             <div className="flex gap-4 lg:block">
-              <div className="bg-muted relative aspect-[3/4] w-28 shrink-0 overflow-hidden rounded-2xl sm:w-36 lg:w-full">
+              <div className="tile relative aspect-[3/4] w-28 shrink-0 sm:w-36 lg:w-full">
                 {/* eslint-disable-next-line @next/next/no-img-element -- a local blob URL, not optimizable */}
                 <img src={image.previewUrl} alt="Your photo" className="size-full object-cover" />
                 {search.isFetching && (
@@ -128,7 +128,7 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
             </p>
 
             {search.isError ? (
-              <div role="alert" className="border-border flex flex-col items-center gap-4 rounded-3xl border border-dashed px-6 py-16 text-center">
+              <div role="alert" className="tile flex flex-col items-center gap-4 px-6 py-16 text-center">
                 <p className="max-w-sm text-sm">{userMessage(search.error)}</p>
                 <Button variant="outline" size="lg" onClick={() => void search.refetch()}>
                   <RefreshCw /> Try again
@@ -137,7 +137,7 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
             ) : search.isPending ? (
               <ProductGridSkeleton count={9} columns={3} />
             ) : data && data.results.length === 0 ? (
-              <div className="border-border flex flex-col items-center gap-3 rounded-3xl border border-dashed px-6 py-16 text-center">
+              <div className="tile flex flex-col items-center gap-3 px-6 py-16 text-center">
                 <SearchX className="text-muted-foreground size-8" />
                 <p className="font-medium">No close matches</p>
                 <p className="text-muted-foreground max-w-sm text-sm">

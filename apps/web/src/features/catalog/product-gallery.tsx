@@ -48,7 +48,7 @@ export function ProductGallery({ product, images: given }: Props) {
             type="button"
             data-fly-source
             aria-label={`Enlarge photo of ${product.name}`}
-            className="zoom-stage bg-secondary focus-visible:ring-ring/60 relative aspect-[3/4] flex-1 cursor-zoom-in touch-pan-y overflow-hidden rounded-3xl outline-none focus-visible:ring-3 dark:bg-white"
+            className="zoom-stage tile focus-visible:ring-ring/60 relative aspect-[3/4] flex-1 cursor-zoom-in touch-pan-y outline-none focus-visible:ring-3 dark:bg-white"
             onPointerMove={zoomAt}
             onPointerEnter={zoomAt}
             onPointerLeave={() => {

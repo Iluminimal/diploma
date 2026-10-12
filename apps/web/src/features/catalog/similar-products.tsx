@@ -7,7 +7,7 @@ export async function SimilarProducts({ productId }: { productId: number }) {
   if (results.length === 0) return null;
   return (
     <section aria-labelledby="similar-heading" className="defer-render mt-20">
-      <h2 id="similar-heading" className="mb-6 text-xl font-semibold tracking-tight">
+      <h2 id="similar-heading" className="type-title mb-6 md:mb-8">
         You may also like
       </h2>
       <ProductRail products={results.map((r) => r.product)} label="Similar products" />

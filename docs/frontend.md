@@ -210,6 +210,10 @@ Every page is being restyled after apple.com, one step at a time (each step is a
   price pinned to the bottom so cards in a row line up); the title is `type-display`; the sort select and the phone Filters button
   are 40px pills; filter groups have 17px semibold titles and more air; the category drill-down and the photo-search results use
   the same sizes, and empty and error states are grey tiles instead of dashed boxes.
+* **Product page** (step 6): the gallery is a grey `tile`; the name is `type-display`, the price `type-heading`; size options are
+  48px outlined tiles whose chosen one gets a blue 2px outline (not an inverted black chip); one full-width blue **Add to Bag**
+  pill (the label and the sticky phone bar say Bag; the header's accessible name moves with the rest of the Bag wording in step 7)
+  with **Save** under it; "Find more like this with a photo" is a blue `link-more`; Details and Delivery use 17px headings.
 
 ## Accounts, cart and checkout
 

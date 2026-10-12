@@ -21,14 +21,14 @@ export function Disclosure({
 }) {
   return (
     <details open={defaultOpen} className={cn("disclosure border-border border-t", className)}>
-      <summary className="focus-visible:ring-ring/60 flex cursor-pointer items-center justify-between gap-4 rounded-md py-4 text-sm font-semibold outline-none select-none focus-visible:ring-3">
+      <summary className="focus-visible:ring-ring/60 flex cursor-pointer items-center justify-between gap-4 rounded-md py-5 text-[1.0625rem] font-semibold outline-none select-none focus-visible:ring-3">
         {title}
         <ChevronDown
           aria-hidden
           className="disclosure-chevron text-muted-foreground size-4 transition-[rotate] duration-300 ease-out-expo"
         />
       </summary>
-      <div className="pb-5 text-sm">{children}</div>
+      <div className="type-caption pb-6 text-[0.9375rem]">{children}</div>
     </details>
   );
 }

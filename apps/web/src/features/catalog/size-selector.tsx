@@ -28,13 +28,13 @@ export function SizeSelector({ label, sizes, disabled, value, onChange, invalid,
 
   return (
     <fieldset disabled={disabled} aria-describedby={invalid ? describedBy : undefined} className="space-y-3">
-      <legend className="flex w-full items-baseline justify-between text-sm font-medium">
+      <legend className="flex w-full items-baseline justify-between text-[1.0625rem] font-semibold">
         <span>{label}</span>
-        <span className="text-muted-foreground text-xs font-normal" aria-live="polite">
+        <span className="text-muted-foreground type-caption font-normal" aria-live="polite">
           {selected ? `Selected: ${selected}` : "Select a size"}
         </span>
       </legend>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {sizes.map((size) => {
           const id = `${name}-${size}`;
           return (
@@ -51,9 +51,10 @@ export function SizeSelector({ label, sizes, disabled, value, onChange, invalid,
               <label
                 htmlFor={id}
                 className={cn(
-                  invalid ? "border-destructive/60" : "border-input",
-                  "bg-background flex h-11 min-w-12 cursor-pointer items-center justify-center rounded-xl border px-3.5 text-sm font-medium transition-colors select-none",
-                  "hover:border-foreground peer-checked:border-foreground peer-checked:bg-foreground peer-checked:text-background",
+                  invalid ? "border-destructive/60" : "border-field",
+                  "bg-card flex h-12 min-w-14 cursor-pointer items-center justify-center rounded-xl border px-4 text-[1.0625rem] transition-[border-color,box-shadow] select-none",
+                  // Apple's option tiles: the chosen one gets a blue 2px outline.
+                  "hover:border-foreground peer-checked:border-primary peer-checked:shadow-[0_0_0_1px_var(--primary)]",
                   "peer-focus-visible:ring-ring/60 peer-focus-visible:ring-3 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 peer-disabled:hover:border-input",
                 )}
               >

@@ -32,7 +32,7 @@ describe("PurchasePanel", () => {
     const api = stubApi({});
     renderPanel();
 
-    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+    await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
     expect(screen.getByRole("alert")).toHaveTextContent("Please select a size");
     expect(api.calls).toHaveLength(0);
@@ -46,7 +46,7 @@ describe("PurchasePanel", () => {
     renderPanel();
 
     await userEvent.click(screen.getByLabelText("M"));
-    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+    await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
     await waitFor(() => expect(useCartDrawer.getState().open).toBe(true));
     expect(api.calls.find((c) => c.method === "POST")?.body).toEqual({
@@ -60,7 +60,7 @@ describe("PurchasePanel", () => {
     stubApi({});
     renderPanel();
 
-    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+    await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
     expect(screen.getByRole("group", { name: /size/i }).parentElement).toHaveClass("animate-shake");
     expect(screen.getByRole("group", { name: /size/i })).toHaveAttribute("aria-describedby", "size-error");
@@ -75,18 +75,18 @@ describe("PurchasePanel", () => {
     renderPanel();
 
     await userEvent.click(screen.getByLabelText("M"));
-    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+    await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
     expect(await screen.findByRole("button", { name: "Added" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("was added to your cart");
     expect(useCartDrawer.getState().added).toEqual({ productId: shirt.id, size: "M" });
-    await waitFor(() => expect(screen.getByRole("button", { name: /add to cart/i })).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.getByRole("button", { name: /add to bag/i })).toBeInTheDocument(), { timeout: 3000 });
   });
 
   it("clears the size warning once a size is picked", async () => {
     stubApi({});
     renderPanel();
-    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+    await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
     await userEvent.click(screen.getByLabelText("L"));
 
@@ -101,7 +101,7 @@ describe("PurchasePanel", () => {
     renderPanel(watch);
 
     expect(screen.queryByRole("group")).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+    await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
     await waitFor(() => expect(api.calls.some((c) => c.method === "POST")).toBe(true));
     expect(api.calls.find((c) => c.method === "POST")?.body).toMatchObject({ product_id: 7, size: "" });
@@ -125,7 +125,7 @@ describe("PurchasePanel", () => {
     renderPanel();
 
     await userEvent.click(screen.getByLabelText("M"));
-    await userEvent.click(screen.getByRole("button", { name: /add to cart/i }));
+    await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
     await waitFor(() => expect(toastError).toHaveBeenCalledWith("Only 2 of Alma Women Blue Kurta can be added."));
     expect(useCartDrawer.getState().open).toBe(false);
@@ -147,17 +147,17 @@ describe("PurchasePanel", () => {
       );
     });
 
-    const main = () => screen.getAllByRole("button", { name: /^add to cart$/i });
-    const bar = () => screen.queryByRole("button", { name: "Add Alma Women Blue Kurta to cart" });
+    const main = () => screen.getAllByRole("button", { name: /^add to bag$/i });
+    const bar = () => screen.queryByRole("button", { name: "Add Alma Women Blue Kurta to Bag" });
 
-    it("keeps Add to cart in reach once the main button has scrolled away", async () => {
+    it("keeps Add to Bag in reach once the main button has scrolled away", async () => {
       renderPanel();
       expect(main()).toHaveLength(1);
       expect(bar()).not.toBeInTheDocument();
 
       act(() => report(false));
 
-      expect(await screen.findByRole("button", { name: "Add Alma Women Blue Kurta to cart" })).toBeInTheDocument();
+      expect(await screen.findByRole("button", { name: "Add Alma Women Blue Kurta to Bag" })).toBeInTheDocument();
       expect(main()).toHaveLength(1);
 
       act(() => report(true));
@@ -168,7 +168,7 @@ describe("PurchasePanel", () => {
       renderPanel();
       act(() => report(false));
 
-      await userEvent.click(await screen.findByRole("button", { name: "Add Alma Women Blue Kurta to cart" }));
+      await userEvent.click(await screen.findByRole("button", { name: "Add Alma Women Blue Kurta to Bag" }));
 
       expect(screen.getByRole("alert")).toHaveTextContent("Please select a size");
     });

@@ -166,7 +166,7 @@ export function ProductReviews({ productId, initial }: { productId: number; init
 
   return (
     <section id="reviews" aria-labelledby="reviews-heading" className="defer-render mt-20 scroll-mt-24">
-      <h2 id="reviews-heading" className="mb-6 text-xl font-semibold tracking-tight">
+      <h2 id="reviews-heading" className="type-title mb-6 md:mb-8">
         Customer reviews
       </h2>
       {!data ? (
@@ -190,7 +190,7 @@ export function ProductReviews({ productId, initial }: { productId: number; init
             {data.summary.count > 0 && data.summary.average !== null ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <span className="text-5xl font-semibold tracking-tight tabular-nums">{data.summary.average.toFixed(1)}</span>
+                  <span className="type-display tabular-nums">{data.summary.average.toFixed(1)}</span>
                   <div className="space-y-1">
                     <RatingStars rating={data.summary.average} size="lg" />
                     <p className="text-muted-foreground text-sm">

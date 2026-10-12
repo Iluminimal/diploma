@@ -12,7 +12,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { DeliveryInfo } from "@/features/catalog/delivery-info";
 import { getProduct, getProductReviews } from "@/features/catalog/api";
@@ -26,7 +25,7 @@ import { RailSkeleton } from "@/features/catalog/product-rail";
 import { SimilarProducts } from "@/features/catalog/similar-products";
 import { ProductReviews } from "@/features/reviews/product-reviews";
 import { RatingStars } from "@/components/product/rating-stars";
-import { Camera, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function parseId(raw: string): number | null {
@@ -103,39 +102,37 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-14">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-16">
         <ProductGallery product={product} />
 
-        <div className="flex flex-col gap-8 lg:sticky lg:top-24 lg:self-start">
+        <div className="flex flex-col gap-8 lg:sticky lg:top-20 lg:self-start">
           <header className="space-y-3">
-            <h1 className="text-3xl leading-tight font-semibold tracking-tighter md:text-4xl">{product.name}</h1>
+            <h1 className="type-display text-balance">{product.name}</h1>
             {product.rating_count > 0 && product.rating_average !== null && (
-              <a href="#reviews" className="inline-flex items-center gap-2 text-sm hover:underline">
+              <a href="#reviews" className="type-caption inline-flex items-center gap-2 hover:underline">
                 <RatingStars rating={product.rating_average} />
                 <span className="text-muted-foreground">
                   {product.rating_average.toFixed(1)} · {product.rating_count} {product.rating_count === 1 ? "review" : "reviews"}
                 </span>
               </a>
             )}
-            <p className="flex items-center gap-4">
-              <Price cents={product.price_cents} currency={product.currency} className="text-xl font-medium" />
+            <p className="flex items-baseline gap-4">
+              <Price cents={product.price_cents} currency={product.currency} className="type-heading" />
               {product.in_stock ? (
-                <span className="text-success inline-flex items-center gap-1 text-sm font-medium">
+                <span className="text-success type-caption inline-flex items-center gap-1 font-medium">
                   <Check className="size-4" /> In stock
                 </span>
               ) : (
-                <span className="text-muted-foreground text-sm font-medium">Sold out</span>
+                <span className="text-muted-foreground type-caption font-medium">Sold out</span>
               )}
             </p>
           </header>
 
           <PurchasePanel product={product} sizes={sizes} />
 
-          <Button asChild variant="outline" size="lg" className="h-11 w-full sm:w-fit">
-            <Link href="/search">
-              <Camera /> Find more like this with a photo
-            </Link>
-          </Button>
+          <Link href="/search" className="link-more w-fit">
+            Find more like this with a photo
+          </Link>
 
           <div>
             <Disclosure title="Product details" defaultOpen>

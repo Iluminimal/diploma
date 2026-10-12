@@ -14,12 +14,12 @@ test("adding to the cart confirms on the button, flies to the cart and shows the
   await openProduct(page, product);
 
   // No size yet: the sizes shake and the message slides in.
-  await page.getByRole("button", { name: "Add to cart", exact: true }).click();
+  await page.getByRole("button", { name: "Add to Bag", exact: true }).click();
   await expect(page.getByText("Please select a size.")).toBeVisible();
   await expect(page.locator("fieldset").locator("xpath=..")).toHaveClass(/animate-shake/);
 
   await chooseSize(page);
-  await page.getByRole("button", { name: "Add to cart", exact: true }).click();
+  await page.getByRole("button", { name: "Add to Bag", exact: true }).click();
 
   await expect(page.getByRole("button", { name: "Added", exact: true })).toBeVisible();
   const drawer = page.getByRole("dialog");

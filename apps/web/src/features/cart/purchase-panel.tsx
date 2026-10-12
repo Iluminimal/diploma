@@ -18,7 +18,7 @@ type Props = {
   sizes: { label: string; sizes: string[] } | null;
 };
 
-/** Size choice, "Add to cart" and the wishlist heart: the interactive part of the product page. */
+/** Size choice, "Add to Bag" and the wishlist heart: the interactive part of the product page. */
 export function PurchasePanel({ product, sizes }: Props) {
   const [size, setSize] = useState<string | null>(null);
   const [missingSize, setMissingSize] = useState(false);
@@ -46,7 +46,7 @@ export function PurchasePanel({ product, sizes }: Props) {
     if (shake > 0) sizeBox.current?.querySelector("input")?.focus({ preventScroll: true });
   }, [shake]);
 
-  // The check mark on the button lasts a moment, then it is "Add to cart" again.
+  // The check mark on the button lasts a moment, then it is "Add to Bag" again.
   useEffect(() => {
     if (!justAdded) return;
     const timer = window.setTimeout(() => setJustAdded(false), 1600);
@@ -106,18 +106,18 @@ export function PurchasePanel({ product, sizes }: Props) {
           )}
         </div>
       )}
-      <div ref={buttonRow} className="flex gap-2">
+      <div ref={buttonRow} className="flex flex-col gap-3">
         <Button
           type="button"
-          size="lg"
-          className="h-11 flex-1 rounded-full text-sm"
+          size="xl"
+          className="w-full"
           disabled={!product.in_stock || add.isPending}
           onClick={(event) => addToCart(event.currentTarget)}
         >
           <AddIcon pending={add.isPending} added={justAdded} />
-          {justAdded ? "Added" : product.in_stock ? "Add to cart" : "Sold out"}
+          {justAdded ? "Added" : product.in_stock ? "Add to Bag" : "Sold out"}
         </Button>
-        <WishlistButton product={product} variant="button" />
+        <WishlistButton product={product} variant="button" className="h-12 w-full text-[1.0625rem] font-normal" />
       </div>
       <div
         // Slides up when the main button leaves the screen; hidden (and out of the tab order) otherwise.
@@ -129,20 +129,18 @@ export function PurchasePanel({ product, sizes }: Props) {
         )}
       >
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{product.name}</p>
-          <Price cents={product.price_cents} currency={product.currency} className="text-muted-foreground text-sm" />
+          <p className="type-caption truncate font-semibold">{product.name}</p>
+          <Price cents={product.price_cents} currency={product.currency} className="text-muted-foreground type-caption" />
         </div>
         <Button
           type="button"
-          size="lg"
-          className="h-11 rounded-full px-6 text-sm"
           disabled={add.isPending}
           // Not the same name as the main button: a screen reader meets both on this page.
-          aria-label={`Add ${product.name} to cart`}
+          aria-label={`Add ${product.name} to Bag`}
           onClick={(event) => addToCart(event.currentTarget)}
         >
           <AddIcon pending={add.isPending} added={justAdded} />
-          {justAdded ? "Added" : "Add to cart"}
+          {justAdded ? "Added" : "Add to Bag"}
         </Button>
       </div>
     </div>

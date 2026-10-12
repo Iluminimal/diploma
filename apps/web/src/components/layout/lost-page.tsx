@@ -30,7 +30,7 @@ export function LostPage({
       </p>
       <div className="animate-in fade-in slide-in-from-bottom-3 space-y-2 duration-700">
         <h1 className="type-display text-balance">{title}</h1>
-        <p className="text-muted-foreground mx-auto max-w-md text-sm text-balance">{children}</p>
+        <p className="text-muted-foreground type-body mx-auto max-w-md text-balance">{children}</p>
       </div>
       <form
         action="/products"
@@ -46,7 +46,7 @@ export function LostPage({
           name="q"
           type="search"
           placeholder="Search the shop"
-          className="bg-secondary focus-visible:ring-ring/50 h-11 w-full rounded-full pr-4 pl-10 text-sm outline-none focus-visible:ring-3"
+          className="bg-secondary focus-visible:ring-ring/50 h-11 w-full rounded-full pr-4 pl-10 text-[1.0625rem] outline-none focus-visible:ring-3"
         />
       </form>
       <nav
@@ -54,14 +54,14 @@ export function LostPage({
         className="animate-in fade-in slide-in-from-bottom-3 flex flex-wrap justify-center gap-2 delay-200 duration-700 fill-mode-backwards"
       >
         {DEPARTMENT_LINKS.map((department) => (
-          <Button key={department.slug} asChild variant="outline" className="h-10 rounded-full px-5">
+          <Button key={department.slug} asChild variant="secondary">
             <Link href={categoryHref(department.slug)}>{department.label}</Link>
           </Button>
         ))}
-        <Button asChild variant="outline" className="h-10 rounded-full px-5">
+        <Button asChild variant="secondary">
           <Link href="/products?sort=newest">New arrivals</Link>
         </Button>
-        <Button asChild variant="outline" className="h-10 rounded-full px-5">
+        <Button asChild variant="secondary">
           <Link href="/search">Search by photo</Link>
         </Button>
       </nav>

@@ -223,6 +223,9 @@ Every page is being restyled after apple.com, one step at a time (each step is a
   heading, like the Apple Account page (the dark side panel and its product fetch are gone); the account pages' cards, address
   cards, order rows and the empty and error states are grey `tile`s instead of outlined boxes; small outlined buttons became the blue
   `bordered` variant.
+* **Shared pieces** (step 9): dialogs and sheets have 28px corners, a blurred 35% scrim, 24px padding and `type-heading` titles (the
+  footer band is gone, buttons just sit right-aligned); the account dropdown has 12px corners; toasts 18px; the 404 and error page
+  uses `type-display` with grey pill links; skeleton and empty states follow the tile shapes.
 
 ## Accounts, cart and checkout
 

@@ -26,6 +26,15 @@ describe("MobileNavMenu", () => {
     expect(screen.getByRole("heading", { name: "Clothing" })).toBeInTheDocument();
   });
 
+  it("has only the shop in it: the account lives in the bottom bar, so it is not listed twice", () => {
+    render(<MobileNavMenu defaultOpen />);
+
+    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
+    for (const name of ["Profile", "Orders", "Wishlist", "Addresses"]) {
+      expect(screen.queryByRole("link", { name })).not.toBeInTheDocument();
+    }
+  });
+
   it("makes a department without data an ordinary link", () => {
     render(<MobileNavMenu defaultOpen />);
 

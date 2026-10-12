@@ -2,8 +2,6 @@
 
 import { LayoutDashboard, LogOut } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/layout/user-avatar";
 import {
@@ -16,23 +14,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ACCOUNT_LINKS } from "./account-links";
 import type { SessionUser } from "./auth-store";
-import { useAuthActions } from "./use-auth-actions";
+import { useSignOut } from "./use-sign-out";
 
 /** The signed-in menu. Loaded on first click (see `AccountMenu`): it needs the dropdown library. */
 export function AccountDropdown({ user, defaultOpen }: { user: SessionUser; defaultOpen?: boolean }) {
-  const router = useRouter();
-  const { signOut } = useAuthActions();
-
-  const leave = async () => {
-    try {
-      await signOut();
-      toast("You're signed out.");
-    } catch {
-      toast.error("We couldn't reach the server, but you're signed out on this device.");
-    }
-    router.push("/");
-    router.refresh();
-  };
+  const leave = useSignOut();
 
   return (
     <DropdownMenu defaultOpen={defaultOpen}>

@@ -10,6 +10,7 @@ import { CartButton } from "@/features/cart/cart-button";
 /**
  * Apple's global bar: slim, translucent, the name on the left, small links spread across the
  * middle, search / account / cart on the right. A hairline appears under it once the page scrolls.
+ * On a phone it is just the name and the menu button, like Instagram's top bar.
  */
 export function SiteHeader() {
   return (
@@ -20,16 +21,18 @@ export function SiteHeader() {
     >
       <ScrollHide />
       <div className="container-page flex h-12 items-center gap-1 md:h-11 md:gap-4">
-        <MobileNav />
         <Link href="/" className="focus-visible:ring-ring/60 mr-auto rounded-md text-[1.0625rem] outline-none focus-visible:ring-3 md:mr-0">
           <AngelLogo markClassName="size-[1.35rem]" />
         </Link>
         <MegaMenu />
-        <div className="flex items-center md:ml-0">
+        {/* On a phone search, cart and account are in the bottom bar and only the menu is up here, so
+            nothing appears twice. They stay mounted (the cart drawer lives in `CartButton`). */}
+        <div className="hidden items-center md:ml-0 md:flex">
           <HeaderSearch />
           <AccountMenu />
           <CartButton />
         </div>
+        <MobileNav />
       </div>
     </header>
   );

@@ -1,7 +1,7 @@
 import { test, expect } from "./fixtures";
 import { PASSWORD } from "./support/env";
 import { uniqueEmail } from "./support/api";
-import { signInThroughTheForm } from "./support/ui";
+import { cartButton, signInThroughTheForm } from "./support/ui";
 
 const accountMenu = (page: import("@playwright/test").Page) => page.getByRole("button", { name: /^Account: / });
 
@@ -84,11 +84,11 @@ test("the cart is not shown to someone who signed out", async ({ shopperPage: pa
   const { addToCart } = await import("./support/api");
   await addToCart(api, account, products[0]!.id);
   await page.goto("/");
-  await expect(page.locator('button[aria-label^="Cart"]')).toHaveAttribute("aria-label", "Cart, 1 items");
+  await expect(cartButton(page)).toHaveAttribute("aria-label", "Cart, 1 items");
 
   await accountMenu(page).click();
   await page.getByRole("menuitem", { name: /Sign out/ }).click();
   await expect(page.getByRole("link", { name: "Sign in" }).first()).toBeVisible();
 
-  await expect(page.locator('button[aria-label^="Cart"]')).toHaveAttribute("aria-label", "Cart");
+  await expect(cartButton(page)).toHaveAttribute("aria-label", "Cart");
 });

@@ -1,12 +1,16 @@
 "use client";
 
-import { Camera, Heart, House, Store, UserRound } from "lucide-react";
+import { Camera, House, Search, ShoppingBag, UserRound } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { UserAvatar } from "@/components/layout/user-avatar";
 import { useAuth } from "@/features/auth/auth-store";
+import { useCartDrawer } from "@/features/cart/cart-ui-store";
+import { useCart } from "@/features/cart/use-cart";
 import { cn } from "@/lib/utils";
+import { useSearchPanel } from "./search-ui-store";
 import { showsTabBar } from "./tab-bar-rules";
 
 // The photo picker (and the dialog library behind it) is fetched the first time it is wanted.
@@ -14,91 +18,93 @@ const PhotoSearchDialog = dynamic(() => import("@/features/search/photo-search-d
   ssr: false,
 });
 
-type Tab = "home" | "shop" | "saved" | "account";
-
-function activeTab(pathname: string): Tab | null {
-  if (pathname === "/") return "home";
-  if (pathname.startsWith("/products") || pathname.startsWith("/c/")) return "shop";
-  if (pathname.startsWith("/account/wishlist")) return "saved";
-  if (pathname.startsWith("/account") || pathname === "/login") return "account";
-  return null;
-}
-
-const item =
-  "focus-visible:ring-ring/60 relative z-10 flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[0.6875rem] font-medium outline-none transition-colors duration-300 focus-visible:ring-3";
+const tab =
+  "focus-visible:ring-ring/60 relative grid h-12 place-items-center rounded-xl outline-none transition-[color,scale] duration-200 focus-visible:ring-3 active:scale-90";
 
 /**
- * None of its links is prefetched: the bar is on screen from the first paint, so prefetching would
- * download the whole listing's code before the visitor has asked for anything.
- *
- * A bar along the bottom of the screen on phones: Home, Shop, a raised Photo button in the middle
- * (the store's reason to exist), Saved and Account. A small dot slides to the section you are in.
+ * Instagram's bottom bar: five icons and no words. Home, Search, Photo (the camera in the middle,
+ * where Instagram has "create"), Cart and You (your own photo). It is the only place on a phone
+ * that offers these, so nothing appears twice: the top bar keeps just the logo and the menu.
+ * Each icon has a name for screen readers; the current one is drawn with a bolder line.
  */
 export function MobileTabBar() {
   const pathname = usePathname();
+  const user = useAuth((state) => state.user);
   const signedIn = useAuth((state) => state.status === "signedIn");
+  const { data: cart } = useCart();
+  const cartOpen = useCartDrawer((state) => state.open);
+  const setCartOpen = useCartDrawer((state) => state.setOpen);
+  const requestSearch = useSearchPanel((state) => state.request);
   const [requested, setRequested] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
   if (!showsTabBar(pathname)) return null;
 
-  const active = activeTab(pathname);
-  const slots: (Tab | "photo")[] = ["home", "shop", "photo", "saved", "account"];
-  const tone = (tab: Tab) => (active === tab ? "text-foreground" : "text-muted-foreground");
+  const home = pathname === "/";
+  const you = pathname.startsWith("/account") || pathname === "/login";
+  const count = cart?.item_count ?? 0;
+  const tone = (active: boolean) => (active ? "text-foreground" : "text-muted-foreground");
 
   return (
     <>
       <nav
         aria-label="Quick navigation"
-        className="bg-background/85 border-border fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
+        className="bg-background/90 border-border fixed inset-x-0 bottom-0 z-40 border-t pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden"
       >
-        <div className="relative mx-auto grid max-w-md grid-cols-5 px-2">
-          {active && (
-            <span
-              aria-hidden
-              className="bg-foreground absolute bottom-1 left-2 h-1 w-[calc((100%-1rem)/5)] origin-center transition-transform duration-500 ease-out-expo"
-              style={{ transform: `translateX(${slots.indexOf(active) * 100}%) scaleX(0.18)` }}
-            />
-          )}
-          <Link href="/" prefetch={false} aria-current={active === "home" ? "page" : undefined} className={cn(item, tone("home"))}>
-            <House aria-hidden className="size-5" /> Home
+        <div className="mx-auto grid max-w-md grid-cols-5 px-2">
+          <Link href="/" prefetch={false} aria-label="Home" aria-current={home ? "page" : undefined} className={cn(tab, tone(home))}>
+            <House aria-hidden className="size-6" strokeWidth={home ? 2.6 : 1.8} />
           </Link>
-          <Link href="/products" prefetch={false} aria-current={active === "shop" ? "page" : undefined} className={cn(item, tone("shop"))}>
-            <Store aria-hidden className="size-5" /> Shop
-          </Link>
+          <button type="button" aria-label="Search" aria-haspopup="dialog" onClick={requestSearch} className={cn(tab, tone(false))}>
+            <Search aria-hidden className="size-6" strokeWidth={1.8} />
+          </button>
           <button
             type="button"
-            aria-haspopup="dialog"
             aria-label="Search with a photo"
+            aria-haspopup="dialog"
             onClick={() => {
               setRequested(true);
-              setOpen(true);
+              setPhotoOpen(true);
             }}
-            className="focus-visible:ring-ring/60 relative z-10 flex flex-col items-center justify-center outline-none"
+            className={cn(tab, tone(false))}
           >
-            <span className="bg-primary text-primary-foreground -mt-5 grid size-12 place-items-center rounded-full shadow-lg transition-transform duration-200 active:scale-90">
-              <Camera aria-hidden className="size-5" />
-            </span>
-            <span className="text-muted-foreground mt-0.5 text-[0.6875rem] font-medium">Photo</span>
+            <Camera aria-hidden className="size-6" strokeWidth={1.8} />
           </button>
-          <Link
-            href="/account/wishlist"
-            prefetch={false}
-            aria-current={active === "saved" ? "page" : undefined}
-            className={cn(item, tone("saved"))}
+          <button
+            type="button"
+            aria-label={count ? `Cart, ${count} items` : "Cart"}
+            aria-haspopup="dialog"
+            aria-expanded={cartOpen}
+            onClick={() => setCartOpen(true)}
+            className={cn(tab, tone(cartOpen))}
           >
-            <Heart aria-hidden className="size-5" /> Saved
-          </Link>
+            <ShoppingBag aria-hidden className="size-6" strokeWidth={cartOpen ? 2.6 : 1.8} />
+            {count > 0 && (
+              <span
+                // Remounts when the count changes, which replays the pop.
+                key={count}
+                aria-hidden
+                className="animate-pop bg-primary text-primary-foreground absolute top-1.5 left-1/2 grid min-w-4.5 translate-x-1 place-items-center rounded-full px-1 text-[0.65rem] leading-4.5 font-semibold tabular-nums"
+              >
+                {count > 99 ? "99+" : count}
+              </span>
+            )}
+          </button>
           <Link
             href={signedIn ? "/account/profile" : "/login"}
             prefetch={false}
-            aria-current={active === "account" ? "page" : undefined}
-            className={cn(item, tone("account"))}
+            aria-label={signedIn && user ? `Account: ${user.full_name}` : "Sign in"}
+            aria-current={you ? "page" : undefined}
+            className={cn(tab, tone(you))}
           >
-            <UserRound aria-hidden className="size-5" /> {signedIn ? "Account" : "Sign in"}
+            {signedIn && user ? (
+              <UserAvatar user={user} size={26} className={cn(you && "ring-foreground ring-2 ring-offset-2 ring-offset-background")} />
+            ) : (
+              <UserRound aria-hidden className="size-6" strokeWidth={you ? 2.4 : 1.8} />
+            )}
           </Link>
         </div>
       </nav>
-      {requested && <PhotoSearchDialog open={open} onOpenChange={setOpen} />}
+      {requested && <PhotoSearchDialog open={photoOpen} onOpenChange={setPhotoOpen} />}
     </>
   );
 }

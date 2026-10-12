@@ -101,24 +101,66 @@ test("a page that does not exist helps you back into the shop", async ({ page })
 test.describe("on a phone", () => {
   test.use({ viewport: { width: 390, height: 800 } });
 
-  test("a tab bar leads around the shop, and photo search opens from its middle button", async ({ page }) => {
+  test("each function is in one place: logo and menu on top, five icons below", async ({ page }) => {
     await page.goto("/");
     const bar = page.getByRole("navigation", { name: "Quick navigation" });
     await expect(bar).toBeVisible();
-    await expect(bar.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
 
-    await bar.getByRole("link", { name: "Shop" }).click();
-    await expect(page).toHaveURL(/\/products/);
-    await expect(bar.getByRole("link", { name: "Shop" })).toHaveAttribute("aria-current", "page");
+    // The top bar carries only the logo and the menu: no search, cart or account up there.
+    const top = page.getByRole("banner");
+    await expect(top.getByRole("button", { name: "Open menu" })).toBeVisible();
+    for (const name of ["Search", /^Cart/, /^Account/, "Sign in"]) {
+      await expect(top.getByRole("button", { name })).toBeHidden();
+      await expect(top.getByRole("link", { name })).toBeHidden();
+    }
+
+    // The bottom bar has the five, icons only.
+    await expect(bar.getByRole("link", { name: "Home" })).toHaveAttribute("aria-current", "page");
+    await expect(bar.getByRole("button", { name: "Search", exact: true })).toBeVisible();
+    await expect(bar.getByRole("button", { name: "Search with a photo" })).toBeVisible();
+    await expect(bar.getByRole("button", { name: /^Cart/ })).toBeVisible();
+    await expect(bar.getByRole("link", { name: "Sign in" })).toBeVisible();
+    expect((await bar.innerText()).trim()).toBe("");
+  });
+
+  test("the bar's Search opens the search panel, its camera the photo picker, its bag the cart", async ({ page }) => {
+    await page.goto("/");
+    const bar = page.getByRole("navigation", { name: "Quick navigation" });
+
+    await bar.getByRole("button", { name: "Search", exact: true }).click();
+    await expect(page.getByRole("combobox")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("combobox")).toBeHidden();
 
     await bar.getByRole("button", { name: "Search with a photo" }).click();
     await expect(page.getByRole("dialog", { name: "Search by photo" })).toBeVisible();
+    await page.keyboard.press("Escape");
+
+    await bar.getByRole("button", { name: /^Cart/ }).click();
+    await expect(page.getByRole("dialog", { name: "Your cart" })).toBeVisible();
   });
 
-  test("the bar stays away from a product page, which has its own add-to-cart bar", async ({ page, products }, testInfo) => {
+  test("on a product page the bar is there, with the Add-to-cart bar above it", async ({ page, products }, testInfo) => {
     await openProduct(page, pickProduct(products, testInfo.workerIndex));
+    // Scroll past the main button so the sticky Add-to-cart bar slides up.
+    await page.getByRole("heading", { name: "Customer reviews" }).scrollIntoViewIfNeeded();
 
-    await expect(page.getByRole("navigation", { name: "Quick navigation" })).toHaveCount(0);
+    const bar = page.getByRole("navigation", { name: "Quick navigation" });
+    await expect(bar).toBeVisible();
+    const add = page.getByRole("button", { name: /^Add .* to cart$/ });
+    await expect(add).toBeVisible();
+    const [barBox, addBox] = [await bar.boundingBox(), await add.boundingBox()];
+    expect(addBox!.y + addBox!.height).toBeLessThanOrEqual(barBox!.y + 1);
+  });
+
+  test("a signed-in customer finds Saved and Sign out on the account page", async ({ shopperPage: page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await page.goto("/account/wishlist");
+
+    await expect(page.getByRole("navigation", { name: "Account", exact: true }).getByRole("link", { name: "Wishlist" })).toBeVisible();
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByRole("navigation", { name: "Quick navigation" }).getByRole("link", { name: "Sign in" })).toBeVisible();
   });
 
   test("the header slides away while scrolling down and returns scrolling up", async ({ page }) => {

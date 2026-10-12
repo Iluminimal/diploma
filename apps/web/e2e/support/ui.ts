@@ -10,7 +10,8 @@ export async function openSearch(page: Page) {
   return box;
 }
 
-export const cartButton = (page: Page) => page.locator('button[aria-label^="Cart"]');
+// The phone tab bar has a cart button too (hidden on a computer): the one that can be seen.
+export const cartButton = (page: Page) => page.locator('button[aria-label^="Cart"]:visible');
 
 export async function openProduct(page: Page, product: CatalogProduct) {
   await page.goto(`/products/${product.id}/${product.slug}`);

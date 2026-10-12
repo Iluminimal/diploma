@@ -6,8 +6,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ACCOUNT_LINKS } from "@/features/auth/account-links";
-import { useAuth } from "@/features/auth/auth-store";
 import {
   DEPARTMENT_LINKS,
   categoryHref,
@@ -50,7 +48,6 @@ export function MobileNavMenu({ defaultOpen }: { defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
   const [stack, setStack] = useState<Step[]>([]);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
-  const status = useAuth((state) => state.status);
   const { data, isPending } = useCatalogNav(open);
 
   const root: Step = { name: "Menu", href: "/", children: departments(data) };
@@ -67,7 +64,7 @@ export function MobileNavMenu({ defaultOpen }: { defaultOpen?: boolean }) {
           <Menu />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-80 overflow-hidden">
+      <SheetContent side="right" className="w-80 overflow-hidden">
         <SheetHeader className="flex-row items-center gap-1">
           {stack.length > 0 && (
             <Button
@@ -119,22 +116,9 @@ export function MobileNavMenu({ defaultOpen }: { defaultOpen?: boolean }) {
             ),
           )}
           {stack.length === 0 && (
-            <>
-              <Link href="/products?sort=newest" onClick={close} className={cn(ITEM, "font-medium")}>
-                New
-              </Link>
-              {status === "signedIn" ? (
-                ACCOUNT_LINKS.map((link) => (
-                  <Link key={link.href} href={link.href} onClick={close} className={cn(ITEM, "text-muted-foreground")}>
-                    {link.label}
-                  </Link>
-                ))
-              ) : (
-                <Link href="/login" onClick={close} className={cn(ITEM, "text-muted-foreground")}>
-                  Sign in
-                </Link>
-              )}
-            </>
+            <Link href="/products?sort=newest" onClick={close} className={cn(ITEM, "font-medium")}>
+              New
+            </Link>
           )}
         </nav>
       </SheetContent>

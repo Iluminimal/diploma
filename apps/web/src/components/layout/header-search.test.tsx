@@ -1,7 +1,8 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { HeaderSearch } from "./header-search";
+import { useSearchPanel } from "./search-ui-store";
 
 vi.mock("./search-bar", () => ({ SearchBar: () => <input role="combobox" aria-label="Search products" aria-expanded={false} aria-controls="list" /> }));
 
@@ -18,6 +19,16 @@ describe("HeaderSearch", () => {
 
     await userEvent.keyboard("{Escape}");
     await waitFor(() => expect(isOpen()).toBe(false));
+  });
+
+  it("opens when another part of the page asks (the phone tab bar's Search tab)", async () => {
+    render(<HeaderSearch />);
+    expect(isOpen()).toBe(false);
+
+    act(() => useSearchPanel.getState().request());
+
+    await waitFor(() => expect(isOpen()).toBe(true));
+    expect(await screen.findByRole("combobox")).toBeInTheDocument();
   });
 
   it("advertises the / shortcut", () => {

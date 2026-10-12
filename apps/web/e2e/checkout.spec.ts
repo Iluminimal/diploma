@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { test, expect } from "./fixtures";
 import { addAddress, addToCart, placePaidOrder, registerAccount } from "./support/api";
 import { API_URL } from "./support/env";
-import { addToCartFromProductPage, pickProduct } from "./support/ui";
+import { addToCartFromProductPage, cartButton, pickProduct } from "./support/ui";
 
 test("checkout needs an account", async ({ page, products }, testInfo) => {
   await addToCartFromProductPage(page, pickProduct(products, testInfo.workerIndex));
@@ -56,7 +56,7 @@ test("a signed-in shopper pays with the demo card and sees the order afterwards"
   await expect(page.getByRole("heading", { name: `Order ${number}` })).toBeVisible();
   await expect(page.getByText("12 Analytical Way").first()).toBeVisible();
   await expect(page.getByText(product.name).first()).toBeVisible();
-  await expect(page.locator('button[aria-label^="Cart"]')).toHaveAttribute("aria-label", "Cart");
+  await expect(cartButton(page)).toHaveAttribute("aria-label", "Cart");
 });
 
 test("repeating a checkout request, or the payment, never creates a second order or charge", async ({

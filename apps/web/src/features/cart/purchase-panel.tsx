@@ -124,7 +124,7 @@ export function PurchasePanel({ product, sizes }: Props) {
         aria-hidden={!barVisible}
         inert={!barVisible}
         className={cn(
-          "bg-background/90 border-border fixed inset-x-0 bottom-0 z-30 flex items-center gap-4 border-t px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-lg transition-[translate,visibility] duration-500 ease-[var(--ease-out-expo)] md:hidden",
+          "bg-background/90 border-border fixed inset-x-0 bottom-[calc(3.0625rem+env(safe-area-inset-bottom))] z-30 flex items-center gap-4 border-t px-4 py-3 backdrop-blur-lg transition-[translate,visibility] duration-500 ease-[var(--ease-out-expo)] md:hidden",
           barVisible ? "visible translate-y-0" : "invisible translate-y-full",
         )}
       >

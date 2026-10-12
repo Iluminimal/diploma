@@ -35,7 +35,7 @@ export function ShopChrome({
       {footer}
       <MobileTabBar />
       {/* Room under the footer so the bar never covers its last line. */}
-      {showsTabBar(pathname) && <div aria-hidden className="h-[calc(3.5rem+env(safe-area-inset-bottom))] md:hidden" />}
+      {showsTabBar(pathname) && <div aria-hidden className="h-[calc(3.0625rem+env(safe-area-inset-bottom))] md:hidden" />}
     </>
   );
 }

@@ -8,6 +8,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
+import { useSearchPanel } from "./search-ui-store";
 
 // The search field, its suggestions and the photo picker are fetched the first time search opens.
 const SearchBar = dynamic(() => import("./search-bar").then((m) => m.SearchBar), { ssr: false });
@@ -52,6 +53,15 @@ export function HeaderSearch() {
   const [requested, setRequested] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const open = openedAt !== null && openedAt === pathname;
+
+  // Another part of the page (the phone tab bar) asked for the panel.
+  const requests = useSearchPanel((state) => state.requests);
+  const [handled, setHandled] = useState(requests);
+  if (requests !== handled) {
+    setHandled(requests);
+    setRequested(true);
+    setOpenedAt(pathname);
+  }
 
   const close = () => setOpenedAt(null);
 

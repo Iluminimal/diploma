@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ACCOUNT_LINKS } from "@/features/auth/account-links";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-store";
+import { useSignOut } from "@/features/auth/use-sign-out";
 
 type Thumb = { left: number; width: number };
 
@@ -67,5 +70,20 @@ export function AccountGreeting() {
     <p className="text-muted-foreground text-sm">
       {user ? `Signed in as ${user.full_name} (${user.email ?? user.phone})` : " "}
     </p>
+  );
+}
+
+/**
+ * Sign out, on phones only: the account dropdown that holds it on a computer is not in the phone's
+ * bars (the bottom bar's last tab goes straight to the profile).
+ */
+export function AccountSignOut() {
+  const leave = useSignOut();
+  const signedIn = useAuth((state) => state.status === "signedIn");
+  if (!signedIn) return null;
+  return (
+    <Button variant="outline" className="h-9 shrink-0 rounded-full px-4 md:hidden" onClick={() => void leave()}>
+      <LogOut aria-hidden /> Sign out
+    </Button>
   );
 }

@@ -24,7 +24,7 @@ export function LostPage({
     <div className="container-page flex flex-col items-center gap-6 py-24 text-center md:py-32">
       <p
         aria-hidden
-        className="animate-float from-foreground to-foreground/20 bg-linear-to-b bg-clip-text text-[7rem] leading-none font-semibold tracking-tighter text-transparent select-none md:text-[10rem]"
+        className="animate-float text-foreground/15 text-[7rem] leading-none font-semibold tracking-tighter select-none md:text-[10rem]"
       >
         {mark}
       </p>

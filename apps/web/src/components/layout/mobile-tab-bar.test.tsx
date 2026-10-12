@@ -2,7 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuth } from "@/features/auth/auth-store";
-import { MobileTabBar, showsTabBar } from "./mobile-tab-bar";
+import { MobileTabBar } from "./mobile-tab-bar";
+import { showsTabBar } from "./tab-bar-rules";
 
 let pathname = "/";
 vi.mock("next/navigation", () => ({

@@ -26,7 +26,7 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
     <article className={cn("group relative", className)}>
       <CardLink
         href={productPath(product)}
-        className="focus-visible:ring-ring/60 block rounded-2xl outline-none transition-transform duration-300 ease-out-expo focus-visible:ring-3 active:scale-[0.985]"
+        className="focus-visible:ring-ring/60 block rounded-2xl outline-none focus-visible:ring-3 press-card"
       >
         {/* The catalogue photos have white backgrounds: multiplied onto the grey tile they melt into it,
             the way Apple's product shots sit on their tiles. In dark mode the tile is white instead. */}

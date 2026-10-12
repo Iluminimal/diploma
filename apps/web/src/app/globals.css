@@ -22,7 +22,6 @@
   --animate-scan: scan 1.8s var(--ease-in-out-quart) infinite;
   --animate-burst: burst 650ms var(--ease-out-expo) forwards;
   --animate-highlight: highlight 2.2s var(--ease-out-expo);
-  --animate-shimmer: shimmer 1.8s var(--ease-in-out-quart) infinite;
   --animate-pop: pop 420ms var(--ease-out-expo);
   --animate-float: float 7s ease-in-out infinite;
   --animate-shake: shake 420ms var(--ease-out-expo);
@@ -98,11 +97,6 @@
     }
     100% {
       background-color: transparent;
-    }
-  }
-  @keyframes shimmer {
-    to {
-      transform: translateX(100%);
     }
   }
   @keyframes pop {
@@ -704,5 +698,41 @@
   }
   .sticky-under-header {
     transition: top 350ms var(--ease-out-expo);
+  }
+}
+
+/*
+ * The loading skeleton: a soft highlight sweeps across (transform only, so it costs no layout or
+ * paint). A class rather than utilities because the page carries dozens of skeletons in its HTML.
+ * In the components layer, so `rounded-2xl` and friends on the element still win.
+ */
+@layer components {
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--muted);
+  }
+  .skeleton::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(90deg, transparent, color-mix(in oklab, var(--foreground) 6%, transparent), transparent);
+    animation: shimmer 1.8s var(--ease-in-out-quart) infinite;
+  }
+}
+@keyframes shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* A product card gives a little under the finger (short name: it is repeated on every card). */
+@layer components {
+  .press-card {
+    transition: transform var(--duration-base) var(--ease-out-expo);
+  }
+  .press-card:active {
+    transform: scale(0.985);
   }
 }

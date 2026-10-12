@@ -7,22 +7,12 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/features/auth/auth-store";
 import { cn } from "@/lib/utils";
+import { showsTabBar } from "./tab-bar-rules";
 
 // The photo picker (and the dialog library behind it) is fetched the first time it is wanted.
 const PhotoSearchDialog = dynamic(() => import("@/features/search/photo-search-dialog").then((m) => m.PhotoSearchDialog), {
   ssr: false,
 });
-
-/**
- * Where the bar is not wanted: a product page has its own bar for "Add to cart", checkout and the
- * sign-in pages should not offer ways out. (The admin area has no shop chrome at all.)
- */
-export function showsTabBar(pathname: string): boolean {
-  if (/^\/products\/\d+/.test(pathname)) return false;
-  return !["/checkout", "/login", "/register", "/forgot-password"].some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
-}
 
 type Tab = "home" | "shop" | "saved" | "account";
 
@@ -38,6 +28,9 @@ const item =
   "focus-visible:ring-ring/60 relative z-10 flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[0.6875rem] font-medium outline-none transition-colors duration-300 focus-visible:ring-3";
 
 /**
+ * None of its links is prefetched: the bar is on screen from the first paint, so prefetching would
+ * download the whole listing's code before the visitor has asked for anything.
+ *
  * A bar along the bottom of the screen on phones: Home, Shop, a raised Photo button in the middle
  * (the store's reason to exist), Saved and Account. A small dot slides to the section you are in.
  */
@@ -66,10 +59,10 @@ export function MobileTabBar() {
               style={{ transform: `translateX(${slots.indexOf(active) * 100}%) scaleX(0.18)` }}
             />
           )}
-          <Link href="/" aria-current={active === "home" ? "page" : undefined} className={cn(item, tone("home"))}>
+          <Link href="/" prefetch={false} aria-current={active === "home" ? "page" : undefined} className={cn(item, tone("home"))}>
             <House aria-hidden className="size-5" /> Home
           </Link>
-          <Link href="/products" aria-current={active === "shop" ? "page" : undefined} className={cn(item, tone("shop"))}>
+          <Link href="/products" prefetch={false} aria-current={active === "shop" ? "page" : undefined} className={cn(item, tone("shop"))}>
             <Store aria-hidden className="size-5" /> Shop
           </Link>
           <button

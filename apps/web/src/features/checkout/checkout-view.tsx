@@ -85,7 +85,7 @@ function minimumWait(ms: number): Promise<void> {
 /** Covers the page while the payment goes through; announced to screen readers as a status. */
 function ProcessingOverlay() {
   return (
-    <div className="bg-background/75 animate-in fade-in fixed inset-0 z-50 grid place-items-center backdrop-blur-md duration-300">
+    <div className="bg-background/75 animate-in fade-in fixed inset-0 z-50 grid place-items-center backdrop-blur-xl duration-300">
       <div role="status" className="animate-in zoom-in-95 fade-in flex flex-col items-center gap-4 text-center duration-500">
         <span className="relative grid size-14 place-items-center">
           <span aria-hidden className="border-border absolute inset-0 rounded-full border-2" />

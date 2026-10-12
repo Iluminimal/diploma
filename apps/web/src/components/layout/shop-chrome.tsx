@@ -2,7 +2,12 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { MobileTabBar, showsTabBar } from "./mobile-tab-bar";
+import dynamic from "next/dynamic";
+import { showsTabBar } from "./tab-bar-rules";
+
+// The phone tab bar is not part of the first paint: its code arrives right after the page is
+// interactive (the space for it is reserved below, so nothing moves when it appears).
+const MobileTabBar = dynamic(() => import("./mobile-tab-bar").then((m) => m.MobileTabBar), { ssr: false });
 
 /**
  * The storefront's header, main area and footer around every page except the admin area, which

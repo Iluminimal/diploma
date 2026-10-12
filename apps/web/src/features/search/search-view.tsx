@@ -85,6 +85,12 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
               <div className="bg-muted relative aspect-[3/4] w-28 shrink-0 overflow-hidden rounded-2xl sm:w-36 lg:w-full">
                 {/* eslint-disable-next-line @next/next/no-img-element -- a local blob URL, not optimizable */}
                 <img src={image.previewUrl} alt="Your photo" className="size-full object-cover" />
+                {search.isFetching && (
+                  // A soft band sweeps down the photo while it is being searched.
+                  <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                    <div className="animate-scan from-brand/0 via-brand/45 to-brand/0 absolute inset-x-0 top-0 h-1/3 bg-linear-to-b" />
+                  </div>
+                )}
               </div>
               <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 lg:mt-3 lg:flex-row lg:flex-initial lg:justify-start">
                 <ReplaceButton onPick={pick} busy={busy} />
@@ -145,7 +151,12 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
                   aria-busy={refreshing}
                 >
                   {data.results.map((hit, i) => (
-                    <li key={hit.product.id}>
+                    <li
+                      key={hit.product.id}
+                      // Results rise in one after another; the delay repeats per row of nine.
+                      className="animate-in fade-in slide-in-from-bottom-3 fill-mode-backwards duration-500"
+                      style={{ animationDelay: `${(i % 9) * 45}ms` }}
+                    >
                       <ProductCard
                         product={hit.product}
                         priority={i < 3}

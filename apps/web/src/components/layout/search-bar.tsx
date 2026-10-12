@@ -287,7 +287,13 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           {options.map((option, i) => {
             const heading = options[i - 1]?.type !== option.type ? HEADINGS[option.type] : null;
             return (
-              <li key={option.key} role="presentation">
+              <li
+                key={option.key}
+                role="presentation"
+                // Suggestions that appear as you type rise in, a hair apart.
+                className="animate-in fade-in slide-in-from-top-1 fill-mode-backwards duration-200"
+                style={{ animationDelay: `${Math.min(i, 6) * 28}ms` }}
+              >
                 {heading && (
                   <p aria-hidden className="text-muted-foreground px-3 pt-2 pb-1 text-xs font-medium">
                     {heading}

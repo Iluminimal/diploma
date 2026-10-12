@@ -51,6 +51,20 @@ describe("SearchView", () => {
     expect(search).toHaveBeenCalledTimes(1);
   });
 
+  it("sweeps a scanning band over the photo while it is searched, and stops when the results are in", async () => {
+    let finish: (value: ReturnType<typeof makeSearchResponse>) => void = () => {};
+    search.mockReturnValue(new Promise((resolve) => (finish = resolve)));
+    const { container } = renderView();
+    pickPhoto();
+    await screen.findByAltText("Your photo");
+    expect(container.querySelector(".animate-scan")).not.toBeNull();
+
+    await act(async () => finish(makeSearchResponse([makeProduct()])));
+
+    await screen.findByText("Alma Women Blue Kurta");
+    expect(container.querySelector(".animate-scan")).toBeNull();
+  });
+
   it("shows skeletons while waiting", async () => {
     search.mockReturnValue(new Promise(() => {}));
     renderView();

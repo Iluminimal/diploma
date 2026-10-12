@@ -42,6 +42,31 @@ describe("useSwipeDismiss", () => {
     expect(onDismiss).toHaveBeenCalledTimes(1);
   });
 
+  it("with a handle, only a drag that starts on it moves the panel", () => {
+    function Sheet({ onDismiss }: { onDismiss: () => void }) {
+      const swipe = useSwipeDismiss("y", onDismiss, "[data-handle]");
+      return (
+        <div data-testid="sheet" {...swipe}>
+          <div data-handle data-testid="handle">
+            title
+          </div>
+          <div data-testid="list">list</div>
+        </div>
+      );
+    }
+    const onDismiss = vi.fn();
+    render(<Sheet onDismiss={onDismiss} />);
+
+    drag(screen.getByTestId("list"), [50, 10], [52, 300], 100);
+    expect(onDismiss).not.toHaveBeenCalled();
+
+    fireEvent.pointerDown(screen.getByTestId("handle"), { ...touch, clientX: 50, clientY: 10 });
+    fireEvent.pointerMove(screen.getByTestId("sheet"), { ...touch, clientX: 50, clientY: 60 });
+    vi.advanceTimersByTime(60);
+    fireEvent.pointerUp(screen.getByTestId("sheet"), { ...touch, clientX: 50, clientY: 300 });
+    expect(onDismiss).toHaveBeenCalledTimes(1);
+  });
+
   it("dismisses on a quick flick even if it is short", () => {
     const onDismiss = vi.fn();
     render(<Panel axis="y" onDismiss={onDismiss} />);

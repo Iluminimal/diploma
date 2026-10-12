@@ -9,9 +9,10 @@ const FLICK = 0.6; // px per ms
  * Drag a panel away to close it: a drawer to the right, a bottom sheet down. Touch only (a mouse
  * has the close button), and only when the finger moves along `axis` more than across it, so the
  * list inside still scrolls. The panel follows the finger; let go past a distance or with a flick
- * and `onDismiss` runs, otherwise it springs back.
+ * and `onDismiss` runs, otherwise it springs back. With `handle` (a CSS selector) only a drag that
+ * starts on that part moves the panel, so the scrolling content below it is left alone.
  */
-export function useSwipeDismiss(axis: "x" | "y", onDismiss: () => void) {
+export function useSwipeDismiss(axis: "x" | "y", onDismiss: () => void, handle?: string) {
   const drag = useRef<{ x: number; y: number; at: number; active: boolean; last: number } | null>(null);
 
   function follow(element: HTMLElement, distance: number, animated: boolean) {
@@ -22,6 +23,7 @@ export function useSwipeDismiss(axis: "x" | "y", onDismiss: () => void) {
   return {
     onPointerDown(event: PointerEvent<HTMLElement>) {
       if (event.pointerType !== "touch") return;
+      if (handle && !(event.target as Element).closest(handle)) return;
       drag.current = { x: event.clientX, y: event.clientY, at: performance.now(), active: false, last: 0 };
     },
     onPointerMove(event: PointerEvent<HTMLElement>) {

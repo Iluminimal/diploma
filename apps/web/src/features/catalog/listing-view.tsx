@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { ProductGrid, ProductGridSkeleton } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { AnimatedNumber } from "@/components/motion/animated-number";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ActiveFilters } from "./active-filters";
 import { listProducts } from "./api";
@@ -12,6 +13,7 @@ import type { ListingQuery } from "./filters";
 import type { FilterGroup } from "./filter-fields";
 import { FilterSidebar, MobileFilters, SortSelect } from "./listing-controls";
 import { Pagination } from "./pagination";
+import { PendingResults } from "./pending-results";
 import type { CatalogFilterOptions } from "./product";
 
 type Props = {
@@ -63,7 +65,8 @@ export function ListingView({
         </aside>
 
         <section aria-label="Products" className="min-w-0">
-          <div className="mb-5 flex items-center justify-between gap-3">
+          {/* On a phone the filter and sort buttons stay under the header while the grid scrolls. */}
+          <div className="bg-background/85 sticky top-12 z-20 -mx-4 mb-5 flex items-center justify-between gap-3 px-4 py-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
             <MobileFilters options={options} query={query} showCategories={showCategories} groups={groups} />
             <div className="ml-auto">
               <SortSelect query={query} />
@@ -73,8 +76,11 @@ export function ListingView({
             <ActiveFilters query={query} path={path} />
           </div>
 
-          <Suspense key={JSON.stringify(query)} fallback={<ProductGridSkeleton count={12} />}>
-            <Results query={query} path={path} />
+          {/* No key on the boundary: a changed filter keeps the old grid (dimmed) rather than a skeleton. */}
+          <Suspense fallback={<ProductGridSkeleton count={12} />}>
+            <PendingResults>
+              <Results query={query} path={path} />
+            </PendingResults>
           </Suspense>
         </section>
       </div>
@@ -86,7 +92,7 @@ async function ResultCount({ query }: { query: ListingQuery }) {
   const { total } = await listProducts(query);
   return (
     <p className="text-muted-foreground h-5 text-sm" aria-live="polite">
-      {total.toLocaleString("en-US")} {total === 1 ? "product" : "products"}
+      <AnimatedNumber value={total} format={(n) => n.toLocaleString("en-US")} /> {total === 1 ? "product" : "products"}
     </p>
   );
 }

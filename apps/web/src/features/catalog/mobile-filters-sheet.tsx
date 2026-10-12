@@ -3,6 +3,7 @@
 import { SlidersHorizontal } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useSwipeDismiss } from "@/components/ui/use-swipe-dismiss";
 import {
   Sheet,
   SheetContent,
@@ -34,6 +35,8 @@ export function MobileFiltersSheet({
   const [open, setOpen] = useState(defaultOpen ?? false);
   const { apply } = useListingNavigation(query);
   const count = activeFilterCount(query);
+  // Pull the sheet down by its title to close it.
+  const swipe = useSwipeDismiss("y", () => setOpen(false), "[data-slot=sheet-header]");
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
@@ -42,8 +45,9 @@ export function MobileFiltersSheet({
           Filters{count > 0 && ` (${count})`}
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="max-h-[88dvh] gap-0 rounded-t-3xl">
-        <SheetHeader>
+      <SheetContent side="bottom" className="max-h-[88dvh] gap-0 rounded-t-3xl" {...swipe}>
+        <SheetHeader className="touch-none">
+          <span aria-hidden className="bg-muted-foreground/30 mx-auto mb-2 h-1 w-10 rounded-full" />
           <SheetTitle>Filters</SheetTitle>
           <SheetDescription className="sr-only">Narrow down the products shown.</SheetDescription>
         </SheetHeader>

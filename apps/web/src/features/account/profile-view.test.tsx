@@ -2,7 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuth, type SessionUser } from "@/features/auth/auth-store";
-import { json, problem, stubApi } from "@/test/api-mock";
+import { json, problem, respond, stubApi } from "@/test/api-mock";
 import { renderWithQuery } from "@/test/render";
 import { ProfileView } from "./profile-view";
 
@@ -21,6 +21,19 @@ const withPassword: SessionUser = {
 };
 const googleOnly: SessionUser = { ...withPassword, has_password: false, phone: null, email_verified: false, phone_verified: false, providers: ["google"] };
 
+const SESSIONS = "/api/v1/auth/sessions";
+
+/** `stubApi` plus an empty device list, which the page always asks for; `calls` leaves that one out. */
+function stubProfileApi(routes: Parameters<typeof stubApi>[0]) {
+  const api = stubApi({ [`GET ${SESSIONS}`]: respond([]), ...routes });
+  return {
+    ...api,
+    get calls() {
+      return api.calls.filter((call) => call.path !== SESSIONS);
+    },
+  };
+}
+
 function signIn(user: SessionUser) {
   useAuth.setState({ status: "signedIn", accessToken: "t", user });
 }
@@ -37,7 +50,7 @@ describe("ProfileView", () => {
     expect(screen.getByText("Connected")).toBeInTheDocument();
     expect(screen.getByText(/Not set\. You sign in with Google/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Set a password/ })).toBeInTheDocument();
-    expect(screen.getByText(/can't be changed here/)).toBeInTheDocument();
+    expect(screen.getByText(/Not added\. Add one to sign in with a text-message code/)).toBeInTheDocument();
   });
 
   it("offers to change, not set, a password that exists", () => {
@@ -50,7 +63,7 @@ describe("ProfileView", () => {
 
   it("saves a new name only once it has changed, and the header sees it", async () => {
     signIn(withPassword);
-    const api = stubApi({
+    const api = stubProfileApi({
       "PATCH /api/v1/auth/me": (call) => json({ ...withPassword, ...(call.body as object) }),
     });
     renderWithQuery(<ProfileView />);
@@ -69,7 +82,7 @@ describe("ProfileView", () => {
 
   it("refuses an empty name without asking the API", async () => {
     signIn(withPassword);
-    const api = stubApi({});
+    const api = stubProfileApi({});
     renderWithQuery(<ProfileView />);
 
     await userEvent.clear(screen.getByLabelText("Full name"));
@@ -84,7 +97,7 @@ describe("ProfileView", () => {
 
     it("lets a Google-only account set one, without a current password", async () => {
       signIn(googleOnly);
-      const api = stubApi({
+      const api = stubProfileApi({
         "PUT /api/v1/auth/password": { body: { ...session, user: { ...googleOnly, has_password: true, phone: null, email_verified: false, phone_verified: false } } },
       });
       renderWithQuery(<ProfileView />);
@@ -104,7 +117,7 @@ describe("ProfileView", () => {
 
     it("asks for the current password, and says so when it is wrong", async () => {
       signIn(withPassword);
-      stubApi({ "PUT /api/v1/auth/password": problem(403, "Incorrect password", { type: "urn:angel:problem:invalid-credentials" }) });
+      stubProfileApi({ "PUT /api/v1/auth/password": problem(403, "Incorrect password", { type: "urn:angel:problem:invalid-credentials" }) });
       renderWithQuery(<ProfileView />);
 
       await userEvent.click(screen.getByRole("button", { name: /Change password/ }));
@@ -120,7 +133,7 @@ describe("ProfileView", () => {
 
     it("catches a short password and a mismatch before asking the API", async () => {
       signIn(googleOnly);
-      const api = stubApi({});
+      const api = stubProfileApi({});
       renderWithQuery(<ProfileView />);
 
       await userEvent.click(screen.getByRole("button", { name: /Set a password/ }));
@@ -160,7 +173,7 @@ describe("ProfileView", () => {
 
     it("deletes, signs out here and goes home", async () => {
       signIn(googleOnly);
-      const api = stubApi({ "DELETE /api/v1/auth/me": { status: 204 }, "GET /api/v1/cart": { body: { lines: [] } } });
+      const api = stubProfileApi({ "DELETE /api/v1/auth/me": { status: 204 }, "GET /api/v1/cart": { body: { lines: [] } } });
       renderWithQuery(<ProfileView />);
       const dialog = await openDialog();
       expect(within(dialog).queryByLabelText("Your password")).not.toBeInTheDocument();
@@ -175,7 +188,7 @@ describe("ProfileView", () => {
 
     it("says when the password is wrong and stays signed in", async () => {
       signIn(withPassword);
-      stubApi({ "DELETE /api/v1/auth/me": problem(403, "Incorrect password", { type: "urn:angel:problem:invalid-credentials" }) });
+      stubProfileApi({ "DELETE /api/v1/auth/me": problem(403, "Incorrect password", { type: "urn:angel:problem:invalid-credentials" }) });
       renderWithQuery(<ProfileView />);
       const dialog = await openDialog();
 

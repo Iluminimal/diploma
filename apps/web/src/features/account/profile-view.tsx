@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, KeyRound, Loader2, Trash2 } from "lucide-react";
+import { Check, KeyRound, Loader2, Mail, Phone, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -24,6 +24,8 @@ import { UserAvatar } from "@/components/layout/user-avatar";
 import { useAuth, type SessionUser } from "@/features/auth/auth-store";
 import { PasswordStrengthMeter } from "@/features/auth/password-strength-meter";
 import { ApiError, userMessage } from "@/lib/api/errors";
+import { ContactDialog, RemoveContactDialog, type ContactKind } from "./contact-dialog";
+import { DevicesCard } from "./devices-card";
 import { useChangePassword, useDeleteAccount, useUpdateName } from "./use-profile";
 
 function Card({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
@@ -45,6 +47,7 @@ export function ProfileView() {
     <div className="mx-auto grid max-w-2xl gap-6">
       <ProfileCard user={user} />
       <SignInMethods user={user} />
+      <DevicesCard />
       <DeleteAccount user={user} />
     </div>
   );
@@ -82,7 +85,7 @@ function ProfileCard({ user }: { user: SessionUser }) {
         <UserAvatar user={user} size={64} />
         <div className="min-w-0">
           <p className="truncate font-medium">{user.full_name}</p>
-          <p className="text-muted-foreground truncate text-sm">{user.email}</p>
+          <p className="text-muted-foreground truncate text-sm">{user.email ?? user.phone}</p>
         </div>
       </div>
       <form onSubmit={save} noValidate className="space-y-4" aria-label="Edit your name">
@@ -92,19 +95,6 @@ function ProfileCard({ user }: { user: SessionUser }) {
             className="h-11 rounded-xl"
             {...fieldAria("profile-name", errors.full_name?.message)}
             {...register("full_name")}
-          />
-        </Field>
-        <Field
-          id="profile-email"
-          label="Email"
-          hint={user.providers.includes("google") ? "Provided by Google, so it can't be changed here." : "Contact us to change your email."}
-        >
-          <Input
-            value={user.email ?? ""}
-            readOnly
-            className="h-11 rounded-xl"
-            {...fieldAria("profile-email", undefined, "hint")}
-            aria-describedby="profile-email-hint"
           />
         </Field>
         <Button type="submit" disabled={!isDirty || rename.isPending} className="h-10 rounded-full px-5">
@@ -129,12 +119,78 @@ function Method({ name, status, children }: { name: string; status: ReactNode; c
   );
 }
 
+function Verified({ yes }: { yes: boolean }) {
+  return yes ? (
+    <span className="text-success inline-flex items-center gap-1.5">
+      <Check aria-hidden className="size-4" /> Verified
+    </span>
+  ) : (
+    <span>Not verified</span>
+  );
+}
+
 function SignInMethods({ user }: { user: SessionUser }) {
   const [open, setOpen] = useState(false);
+  const [contact, setContact] = useState<ContactKind | null>(null);
+  const [removing, setRemoving] = useState<"phone" | "email" | null>(null);
   const google = user.providers.includes("google");
+  // The last way to sign in cannot be removed (the API enforces it; this just hides the button).
+  const canRemovePhone = user.phone !== null && user.email !== null;
+  const canRemoveEmail = user.email !== null && user.phone !== null;
   return (
     <Card title="How you sign in" description="You can use any of these to get back into your account.">
       <ul className="divide-border divide-y">
+        <Method
+          name="Phone number"
+          status={
+            user.phone ? (
+              <>
+                {user.phone} · <Verified yes={user.phone_verified} />
+              </>
+            ) : (
+              "Not added. Add one to sign in with a text-message code."
+            )
+          }
+        >
+          <div className="flex gap-2">
+            <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setContact("phone")}>
+              <Phone aria-hidden /> {user.phone ? "Change phone" : "Add a phone"}
+            </Button>
+            {canRemovePhone && (
+              <Button variant="ghost" className="h-10 rounded-full px-4" onClick={() => setRemoving("phone")}>
+                Remove phone
+              </Button>
+            )}
+          </div>
+        </Method>
+        <Method
+          name="Email"
+          status={
+            user.email ? (
+              <>
+                {user.email} · <Verified yes={user.email_verified} />
+              </>
+            ) : (
+              "Not added. Add one for receipts and to sign in with a password."
+            )
+          }
+        >
+          <div className="flex flex-wrap gap-2">
+            {user.email && !user.email_verified && (
+              <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setContact("verify-email")}>
+                Verify email
+              </Button>
+            )}
+            <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setContact("email")}>
+              <Mail aria-hidden /> {user.email ? "Change email" : "Add an email"}
+            </Button>
+            {canRemoveEmail && (
+              <Button variant="ghost" className="h-10 rounded-full px-4" onClick={() => setRemoving("email")}>
+                Remove email
+              </Button>
+            )}
+          </div>
+        </Method>
         <Method
           name="Google"
           status={
@@ -147,12 +203,19 @@ function SignInMethods({ user }: { user: SessionUser }) {
             )
           }
         />
-        <Method name="Password" status={user.has_password ? "Set" : "Not set. You sign in with Google."}>
-          <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setOpen(true)}>
-            <KeyRound aria-hidden /> {user.has_password ? "Change password" : "Set a password"}
-          </Button>
-        </Method>
+        {user.email && (
+          <Method
+            name="Password"
+            status={user.has_password ? "Set" : google ? "Not set. You sign in with Google." : "Not set. You sign in with a code."}
+          >
+            <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setOpen(true)}>
+              <KeyRound aria-hidden /> {user.has_password ? "Change password" : "Set a password"}
+            </Button>
+          </Method>
+        )}
       </ul>
+      {contact && <ContactDialog key={contact} kind={contact} user={user} open onOpenChange={(next) => !next && setContact(null)} />}
+      {removing && <RemoveContactDialog kind={removing} user={user} open onOpenChange={(next) => !next && setRemoving(null)} />}
       <PasswordDialog open={open} onOpenChange={setOpen} hasPassword={user.has_password} />
     </Card>
   );
@@ -339,11 +402,11 @@ function DeleteDialog({
         <DialogHeader>
           <DialogTitle>Delete your account?</DialogTitle>
           <DialogDescription>
-            This can&apos;t be undone. Type <strong className="text-foreground">{user.email}</strong> to confirm.
+            This can&apos;t be undone. Type <strong className="text-foreground">{identifier}</strong> to confirm.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <Field id="delete-email" label="Your email">
+          <Field id="delete-email" label={user.email ? "Your email" : "Your phone number"}>
             <Input
               id="delete-email"
               value={email}

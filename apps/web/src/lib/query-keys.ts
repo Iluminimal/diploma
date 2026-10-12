@@ -4,6 +4,7 @@ export const queryKeys = {
   wishlist: ["wishlist"] as const,
   addresses: ["addresses"] as const,
   orders: ["orders"] as const,
+  sessions: ["sessions"] as const,
   order: (number: string) => ["order", number] as const,
   shippingMethods: ["shipping-methods"] as const,
   reviews: (productId: number) => ["reviews", productId] as const,
@@ -27,6 +28,7 @@ export const accountKeys = [
   queryKeys.wishlist,
   queryKeys.addresses,
   queryKeys.orders,
+  queryKeys.sessions,
   ["order"],
   queryKeys.admin.all,
 ] as const;

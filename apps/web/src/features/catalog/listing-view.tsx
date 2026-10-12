@@ -66,7 +66,7 @@ export function ListingView({
 
         <section aria-label="Products" className="min-w-0">
           {/* On a phone the filter and sort buttons stay under the header while the grid scrolls. */}
-          <div className="bg-background/85 sticky top-12 z-20 -mx-4 mb-5 flex items-center justify-between gap-3 px-4 py-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
+          <div className="bg-background/85 sticky-under-header sticky top-(--header-offset) z-20 -mx-4 mb-5 flex items-center justify-between gap-3 px-4 py-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
             <MobileFilters options={options} query={query} showCategories={showCategories} groups={groups} />
             <div className="ml-auto">
               <SortSelect query={query} />

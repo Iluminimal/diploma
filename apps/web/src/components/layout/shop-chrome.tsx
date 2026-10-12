@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { MobileTabBar, showsTabBar } from "./mobile-tab-bar";
 
 /**
  * The storefront's header, main area and footer around every page except the admin area, which
@@ -27,6 +28,9 @@ export function ShopChrome({
         {children}
       </main>
       {footer}
+      <MobileTabBar />
+      {/* Room under the footer so the bar never covers its last line. */}
+      {showsTabBar(pathname) && <div aria-hidden className="h-[calc(3.5rem+env(safe-area-inset-bottom))] md:hidden" />}
     </>
   );
 }

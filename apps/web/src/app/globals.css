@@ -681,3 +681,28 @@
 .disclosure[open] > summary .disclosure-chevron {
   rotate: 180deg;
 }
+
+/*
+ * Phones: the header slides up out of the way while scrolling down and comes back on scrolling up
+ * (components/layout/scroll-hide.tsx sets data-header on <html>). Sticky bars under the header
+ * follow it through --header-offset. Keyboard focus inside the header keeps it in place.
+ */
+:root {
+  --header-offset: 3rem;
+}
+@media (max-width: 47.99rem) and (prefers-reduced-motion: no-preference) {
+  .header-elevate {
+    transition:
+      transform 350ms var(--ease-out-expo),
+      background-color 300ms;
+  }
+  html[data-header="hidden"] {
+    --header-offset: 0px;
+  }
+  html[data-header="hidden"] .header-elevate:not(:focus-within) {
+    transform: translateY(-100%);
+  }
+  .sticky-under-header {
+    transition: top 350ms var(--ease-out-expo);
+  }
+}

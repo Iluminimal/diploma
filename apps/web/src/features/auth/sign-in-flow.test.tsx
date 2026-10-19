@@ -58,13 +58,22 @@ describe("SignInFlow: the first step", () => {
     expect(screen.getByText("social slot")).toBeInTheDocument();
   });
 
-  it("shows the country picker as soon as digits are typed, and formats the number", async () => {
+  it("shows the country picker, on Mongolia, as soon as digits are typed", async () => {
     renderWithQuery(<SignInFlow next="/" />);
 
-    await userEvent.type(await field(), "4155552671");
+    await userEvent.type(await field(), "80172121");
 
-    expect(screen.getByRole("combobox", { name: "Country" })).toBeInTheDocument();
-    expect(await field()).toHaveValue("(415) 555-2671");
+    expect(screen.getByRole("combobox", { name: "Country" })).toHaveValue("MN");
+  });
+
+  it("sends a Mongolian number without a country code to +976", async () => {
+    const api = stubApi({ "POST /api/v1/auth/otp/request": { status: 202 } });
+    renderWithQuery(<SignInFlow next="/" />);
+
+    await enter("8017 2121");
+
+    await screen.findByText(/We sent a 6-digit code/);
+    expect(api.calls[0]?.body).toEqual({ destination: "+97680172121" });
   });
 
   it("takes the picker away again for an email", async () => {
@@ -108,7 +117,7 @@ describe("SignInFlow with a phone number", () => {
     });
     renderWithQuery(<SignInFlow next="/checkout" />);
 
-    await enter("415 555 2671");
+    await enter("+1 415 555 2671");
     expect(await screen.findByRole("heading", { name: "Enter the code" })).toBeInTheDocument();
     expect(screen.getByText(/We sent a 6-digit code to/)).toHaveTextContent("415");
     await userEvent.keyboard("123456");
@@ -125,7 +134,7 @@ describe("SignInFlow with a phone number", () => {
       "POST /api/v1/auth/otp/verify": problem(400, "That code is not right", { type: "urn:angel:problem:otp-invalid" }),
     });
     renderWithQuery(<SignInFlow next="/" />);
-    await enter("415 555 2671");
+    await enter("+1 415 555 2671");
     await screen.findByText(/We sent a 6-digit code/);
 
     await userEvent.keyboard("000000");
@@ -140,7 +149,7 @@ describe("SignInFlow with a phone number", () => {
     stubApi({ "POST /api/v1/auth/otp/request": { status: 202 } });
     renderWithQuery(<SignInFlow next="/" />);
 
-    await enter("415 555 2671");
+    await enter("+1 415 555 2671");
 
     expect(await screen.findByRole("button", { name: /Resend code in \d+s/ })).toBeDisabled();
   });
@@ -148,18 +157,18 @@ describe("SignInFlow with a phone number", () => {
   it("goes back with the number kept when Edit is pressed", async () => {
     stubApi({ "POST /api/v1/auth/otp/request": { status: 202 } });
     renderWithQuery(<SignInFlow next="/" />);
-    await enter("415 555 2671");
+    await enter("+1 415 555 2671");
 
     await userEvent.click(await screen.findByRole("button", { name: /^Change / }));
 
-    expect(await field()).toHaveValue("(415) 555-2671");
+    expect(await field()).toHaveValue("+1 415 555 2671");
   });
 
   it("stays on the first step and says why when the code cannot be sent", async () => {
     stubApi({ "POST /api/v1/auth/otp/request": problem(429, "Too many requests", { type: "urn:angel:problem:rate-limited" }) });
     renderWithQuery(<SignInFlow next="/" />);
 
-    await enter("415 555 2671");
+    await enter("+1 415 555 2671");
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Sign in or create account" })).toBeInTheDocument();
@@ -173,7 +182,7 @@ describe("SignInFlow with a phone number", () => {
       "PATCH /api/v1/auth/me": json({ ...user, full_name: "Ada Lovelace" }),
     });
     renderWithQuery(<SignInFlow next="/" />);
-    await enter("415 555 2671");
+    await enter("+1 415 555 2671");
     await screen.findByText(/We sent a 6-digit code/);
 
     await userEvent.keyboard("123456");
@@ -193,7 +202,7 @@ describe("SignInFlow with a phone number", () => {
       "GET /api/v1/cart": json(emptyCart),
     });
     renderWithQuery(<SignInFlow next="/" />);
-    await enter("415 555 2671");
+    await enter("+1 415 555 2671");
     await screen.findByText(/We sent a 6-digit code/);
     await userEvent.keyboard("123456");
 

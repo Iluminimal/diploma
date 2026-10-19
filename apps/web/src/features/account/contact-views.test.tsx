@@ -42,7 +42,7 @@ describe("phone number", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /Add a phone/ }));
     const dialog = await screen.findByRole("dialog");
-    await userEvent.type(within(dialog).getByLabelText("Phone number"), "415 555 2671");
+    await userEvent.type(within(dialog).getByLabelText("Phone number"), "+1 415 555 2671");
     await userEvent.click(within(dialog).getByRole("button", { name: "Send code" }));
     expect(await within(dialog).findByText("Enter your password to continue.")).toBeInTheDocument();
 
@@ -67,7 +67,7 @@ describe("phone number", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /Add a phone/ }));
     const dialog = await screen.findByRole("dialog");
-    await userEvent.type(within(dialog).getByLabelText("Phone number"), "415 555 2671");
+    await userEvent.type(within(dialog).getByLabelText("Phone number"), "+1 415 555 2671");
     await userEvent.type(within(dialog).getByLabelText("Your password"), "correct horse battery");
     await userEvent.click(within(dialog).getByRole("button", { name: "Send code" }));
 

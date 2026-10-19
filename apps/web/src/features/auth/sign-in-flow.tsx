@@ -13,7 +13,7 @@ import { looksLikePhone, parseIdentifier, type Identifier } from "./identifier";
 import { landingPath } from "./landing";
 import { NameStep } from "./name-step";
 import { PasswordStep } from "./password-step";
-import { regionOfBrowser, typePhone } from "./phone-input";
+import { DEFAULT_REGION, typePhone } from "./phone-input";
 import { useAuthActions } from "./use-auth-actions";
 import { useCountdown } from "./use-countdown";
 import { useRedirectWhenSignedIn } from "./use-redirect-when-signed-in";
@@ -47,8 +47,7 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
   const countdown = useCountdown();
   const [step, setStep] = useState<Step>("identify");
   const [text, setText] = useState("");
-  const [region, setRegion] = useState<CountryCode>("US");
-  const [regionPicked, setRegionPicked] = useState(false);
+  const [region, setRegion] = useState<CountryCode>(DEFAULT_REGION);
   const [who, setWho] = useState<Identifier | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -61,9 +60,7 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
   function change(raw: string) {
     setProblem(null);
     if (!looksLikePhone(raw)) return setText(raw);
-    // The first digits typed: start from the visitor's own country, unless they already picked one.
-    const guess = !phone && !regionPicked ? regionOfBrowser() : undefined;
-    const typed = typePhone(raw, guess ?? region);
+    const typed = typePhone(raw, region);
     setText(typed.text);
     setRegion(typed.region);
   }
@@ -141,10 +138,7 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
                 onChange={change}
                 phone={phone}
                 region={region}
-                onRegionChange={(picked) => {
-                  setRegionPicked(true);
-                  setRegion(picked);
-                }}
+                onRegionChange={setRegion}
                 error={problem ?? undefined}
               />
               <Button type="submit" size="lg" disabled={busy} className="w-full">

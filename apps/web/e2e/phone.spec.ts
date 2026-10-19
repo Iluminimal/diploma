@@ -6,8 +6,8 @@ import { OTP_CODE, signInAccount, signUpWithPhone, uniquePhone } from "./support
 // These need the API to run with OTP_DEV_CODE=000000 (docs/e2e.md): every code is then 000000.
 
 const accountMenu = (page: Page) => page.getByRole("button", { name: /^Account: / });
-/** "+14155550123" -> "415 555 0123": how a person types a US number, with the picker on US. */
-const national = (phone: string) => phone.slice(2).replace(/(\d{3})(\d{3})(\d{4})/, "$1 $2 $3");
+/** "+14155550123" -> "+1 415 555 0123": a number typed in full picks its own country, whatever the picker says. */
+const national = (phone: string) => phone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, "+1 $1 $2 $3");
 
 /** The second step of a dialog: the six boxes appear after the code was sent. */
 async function typeCodeInDialog(page: Page) {

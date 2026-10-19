@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import type { SessionUser } from "@/features/auth/auth-store";
 import { OtpInput } from "@/features/auth/otp-input";
-import { PhoneInput, toE164, type PhoneValue } from "@/features/auth/phone-input";
+import { DEFAULT_REGION, PhoneInput, toE164, type PhoneValue } from "@/features/auth/phone-input";
 import { useCountdown } from "@/features/auth/use-countdown";
 import { ApiError, userMessage } from "@/lib/api/errors";
 import {
@@ -61,7 +61,7 @@ export function ContactDialog({
   const confirmVerification = useConfirmEmailVerification();
   const countdown = useCountdown();
   const [step, setStep] = useState<"enter" | "code">(verifying ? "code" : "enter");
-  const [phone, setPhone] = useState<PhoneValue>({ text: "", region: "US" });
+  const [phone, setPhone] = useState<PhoneValue>({ text: "", region: DEFAULT_REGION });
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");

@@ -6,7 +6,7 @@ and Redis. 122 tests:
 | File | Covers |
 | --- | --- |
 | `visual-search.spec.ts` | a photo search shows results, match badges and a detected category; the user can override the category; words refine (hybrid) and filter chips narrow; paste, drop and a fake camera start a search; a non-image is refused; through the API a catalogue photo finds its own product first |
-| `cart.spec.ts` | size required, drawer and badge, quantity stepper stopping at the stock limit, guest cart survives a reload, guest cart merges on sign-in, wishlist asks a guest to sign in |
+| `cart.spec.ts` | size required, Bag panel and badge, quantity stepper stopping at the stock limit, guest cart survives a reload, guest cart merges on sign-in, wishlist asks a guest to sign in |
 | `checkout.spec.ts` | checkout needs an account; an empty cart cannot be paid; address, express shipping, **demo payment to the confirmation page and the order in the account**; a repeated checkout or payment never makes a second order; another customer cannot see an order (app and API) |
 | `login.spec.ts` | register (short password refused), duplicate email refused, wrong then right password, return to the page that asked for sign-in, `next` cannot leave the site, session survives a reload, sign-out clears the session and the cart |
 | `admin.spec.ts` | customers and visitors are kept out (UI and API); create a product from a photo, edit, replace the photo, withdraw and restore; order with its payment record |

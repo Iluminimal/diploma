@@ -1,17 +1,42 @@
 # Angel
 
-Upload or capture a photo of clothing and get visually similar products, inside a complete,
-minimal online store. Image embeddings come from FashionCLIP, similarity search from
-PostgreSQL + pgvector.
+[![CI](https://github.com/Iluminimal/diploma/actions/workflows/ci.yml/badge.svg)](https://github.com/Iluminimal/diploma/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **Status:** Phase 10 (a real admin panel and a complete order lifecycle). A working store:
-> visual, text and hybrid search over 41,885 products, accounts (password and Google), cart, checkout
-> with a demo payment, orders that are shipped, delivered, cancelled and refunded with tracking and a
-> history, product reviews, and an admin panel (dashboard, orders, products, inventory, customers,
-> review moderation). Product requirements: [`docs/SPEC.md`](docs/SPEC.md). Details:
-> [`ml-pipeline`](docs/ml-pipeline.md), [`search-api`](docs/search-api.md), [`commerce`](docs/commerce.md),
-> [`frontend`](docs/frontend.md) (accessibility and performance results), [`admin`](docs/admin.md),
-> [`e2e`](docs/e2e.md).
+Upload or capture a photo of clothing and get visually similar products, inside a complete,
+minimal online store. Image embeddings come from [FashionCLIP](https://huggingface.co/patrickjohncyh/fashion-clip),
+similarity search from PostgreSQL + pgvector. The storefront follows the design language of apple.com.
+
+![Home](docs/screenshots/home.jpg)
+
+| Category menu | Bag | Search on a phone |
+| --- | --- | --- |
+| ![Category menu](docs/screenshots/category-menu.jpg) | ![Bag](docs/screenshots/bag.jpg) | <img src="docs/screenshots/search-phone.jpg" width="220" alt="Search on a phone"> |
+
+## Features
+
+- **Visual, text and hybrid search** over 41,885 products: upload, drop, paste or take a photo.
+- **Store**: category navigation, filters, product pages with reviews, wishlist, bag, checkout with a
+  demo payment, order history with tracking.
+- **Accounts**: email or phone sign-in with one-time codes, Google sign-in, profile and devices.
+- **Admin panel**: dashboard, orders (ship, deliver, cancel, refund), products, inventory, customers,
+  review moderation.
+- **Quality**: strict typing on both sides, unit, integration and end-to-end (Playwright) tests,
+  axe accessibility checks, Lighthouse budgets, CI on every push.
+
+Product requirements: [`docs/SPEC.md`](docs/SPEC.md). Details: [`ml-pipeline`](docs/ml-pipeline.md),
+[`search-api`](docs/search-api.md), [`commerce`](docs/commerce.md), [`frontend`](docs/frontend.md)
+(accessibility and performance results), [`admin`](docs/admin.md), [`e2e`](docs/e2e.md).
+
+## Tech stack
+
+| Area | Technology |
+| --- | --- |
+| Web | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, shadcn/ui, TanStack Query |
+| API | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2 (async), Alembic |
+| Data | PostgreSQL + pgvector (HNSW, cosine), Redis |
+| ML | FashionCLIP (PyTorch, 512-dim, L2-normalised embeddings) |
+| Tooling | uv, Ruff, mypy, ESLint, Vitest, Playwright, GitHub Actions |
 
 ## Repository layout
 
@@ -135,3 +160,7 @@ API (and scripts) lint, format check, mypy, migration apply/rollback/re-apply, `
 real Postgres+pgvector and Redis service containers; web lint, typecheck, Vitest and a production
 build; an end-to-end job (Playwright against a seeded catalogue, the fake embedder and the production web build; the
 report is kept when it fails); and validation of the compose file.
+
+## License
+
+[MIT](LICENSE)

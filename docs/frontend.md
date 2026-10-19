@@ -107,10 +107,10 @@ takes `department` and `category` (a node `path`); unknown values are a 404 prob
 "Apparel" -> "Clothing") are a small table in the taxonomy module.
 
 * **Desktop menu** (`components/layout/mega-menu.tsx`): the department names are ordinary links (they work before any script or
-  data arrive); a panel with the category tree opens on hover or keyboard focus (ArrowDown enters it, Escape returns to the
-  link). The tree is fetched in the browser (`useCatalogNav`, shared TanStack Query cache) rather than by the layout, so
+  data arrive); a solid panel as tall as the screen under the bar, with the category tree, opens on hover or keyboard focus (ArrowDown
+  enters it, Escape returns to the link; moving onto the empty part below the links closes it). The tree is fetched in the browser (`useCatalogNav`, shared TanStack Query cache) rather than by the layout, so
   pages that are static stay static and a slow API cannot take the header down.
-* **Phones** (`components/layout/mobile-nav-menu.tsx`): a drawer that drills down level by level, each step sliding in.
+* **Phones** (`components/layout/mobile-nav-menu.tsx`): a page that drills down level by level, each step sliding in.
 * **Category pages** (`app/c/...`): the segment layout validates the URL against the nav *before* streaming, so a dead
   category answers 404 (a `notFound()` inside a page behind `loading.tsx` would already be a 200). Do not put a
   `loading.tsx` on `/products/[id]`: the page's 308 canonical redirect and 404 need the status line to be unsent.
@@ -128,7 +128,7 @@ takes `department` and `category` (a node `path`); unknown values are a 404 prob
 | Header gains a shadow after scrolling | `.header-elevate`, CSS scroll-driven animation |
 | Page transitions | React `<ViewTransition>` in `app/template.tsx` (new page fades up, old one fades out); the header is named `site-header` and stays put |
 | Menu panel, suggestions, sticky add-to-cart bar, heart and cart-badge pops | CSS transitions and keyframes |
-| A cart line sliding shut when removed | the only use of the `motion` library (`AnimatePresence`), inside the lazily loaded cart drawer and `/cart` |
+| A cart line sliding shut when removed | the only use of the `motion` library (`AnimatePresence`), inside the lazily loaded Bag panel and `/cart` |
 
 Curves and durations are tokens (`--ease-out-expo`, `--ease-in-out-quart`; `components/motion/easing.ts` mirrors `--ease-out-expo` for Motion). Rules
 to keep: never start the largest element of the first screen hidden (it would delay the largest contentful paint: the hero
@@ -143,14 +143,14 @@ Calm, Apple-style motion across the storefront; CSS first, off under reduced mot
 **Tokens** (`globals.css`): `--duration-{fast,base,slow}` (150, 300, 500 ms), `--ease-spring` (a CSS `linear()` spring) next to
 the two existing curves, `.skeleton` (one shimmer class: dozens of repeated utility strings would double in the HTML and the
 RSC payload), `.press-card`, the `shake`, `burst`, `scan`, `draw`, `grow-x`, `highlight` keyframes. Dialogs and sheets use the
-house easing (a drawer slides its full width). **Rules**: every animation sits under the global reduced-motion kill-switch or
+house easing (a panel slides in over the whole screen). **Rules**: every animation sits under the global reduced-motion kill-switch or
 `prefers-reduced-motion: no-preference`; the Vitest setup runs with reduced motion on, so counted totals and the like show their
 final value at once in tests (a test of an animation stubs `matchMedia` itself).
 
 | Where | What |
 | --- | --- |
-| Add to cart (`features/cart`) | the button becomes a check mark (`Added`), a copy of the photo flies to the cart icon (`fly-to-cart.ts`, Web Animations, no library) which bounces, then the drawer opens; a missing size shakes and takes focus |
-| Cart drawer and `/cart` | slides in, swipes away on touch (`components/ui/use-swipe-dismiss.ts`), the new line glows, free-shipping progress from `GET /checkout/shipping-methods`, totals and quantities count (`AnimatedNumber`, `AnimatedPrice`), **Undo** (an in-cart bar, not a toast: a toast is outside the open modal and out of reach of screen readers), **Save for later** moves a line to the wishlist |
+| Add to cart (`features/cart`) | the button becomes a check mark (`Added`), a copy of the photo flies to the cart icon (`fly-to-cart.ts`, Web Animations, no library) which bounces, then the Bag opens; a missing size shakes and takes focus |
+| Bag panel and `/cart` | a solid full-height page that drops in from the top like apple.com's Bag (`features/cart/bag-panel.tsx`), closes with the X or Escape, the new line glows, free-shipping progress from `GET /checkout/shipping-methods`, totals and quantities count (`AnimatedNumber`, `AnimatedPrice`), **Undo** (an in-cart bar, not a toast: a toast is outside the open modal and out of reach of screen readers), **Save for later** moves a line to the wishlist |
 | Product page | gallery cross-fades between photos, zooms around the mouse pointer, swipes on touch (ready for several photos); Product details and Delivery are `<details>` that slide (`Disclosure`; Delivery reads the real shipping methods); the card photo grows into the gallery (a named view transition, set by CSS on the hovered or focused card, `.press-card` in `globals.css`) |
 | Cards | press feedback, the wishlist heart bursts when filled |
 | Listing and search | a changed filter keeps the old grid dimmed (no skeleton flash, no `key` on the Suspense boundary), the count counts, the filter and sort bar sticks under the header, the filter sheet closes by swiping its title; a scanning band crosses the photo being searched and results rise in |
@@ -165,7 +165,7 @@ New in large type, each line fading in after the one above, with the small accou
 Wishlist, Addresses) at the bottom. Departments drill down level by level inside the page. While it is open the bar turns
 solid, the page behind cannot scroll and is `inert`, Escape or the X or following a link closes it and focus returns to the
 button. The page is portalled to `<body>` and fetched on the first press. Its search field closes the page and opens the search
-panel through `useSearchPanel`; the bag opens the cart drawer. There is no bar along the bottom. Sign out, which lives in the
+panel through `useSearchPanel`; the bag opens the Bag panel. There is no bar along the bottom. Sign out, which lives in the
 desktop account dropdown (the account icon is in the bar from md up), is a button on the account page on a phone. A bottom
 tab bar (Instagram-style) was tried first and removed: it repeated what the header already offered.
 
@@ -214,9 +214,9 @@ Every page is being restyled after apple.com, one step at a time (each step is a
   48px outlined tiles whose chosen one gets a blue 2px outline (not an inverted black chip); one full-width blue **Add to Bag**
   pill (the label and the sticky phone bar say Bag; the header's accessible name moves with the rest of the Bag wording in step 7)
   with **Save** under it; "Find more like this with a photo" is a blue `link-more`; Details and Delivery use 17px headings.
-* **Bag, checkout, confirmation** (step 7): the shop says **Bag** like apple.com (header and drawer labels, "Add to Bag", "Your Bag is
+* **Bag, checkout, confirmation** (step 7): the shop says **Bag** like apple.com (header and panel labels, "Add to Bag", "Your Bag is
   empty", "View Bag", "Review your Bag."; URLs and the API keep `cart`). The Bag page is `type-display` over lines with a grey photo tile,
-  17px names and prices, and a grey `tile` summary with one full-width blue Checkout pill; the drawer's buttons are a blue Checkout and a
+  17px names and prices, and a grey `tile` summary with one full-width blue Checkout pill; the panel's buttons are a blue Check Out and a
   blue-outline View Bag. Checkout keeps its stepper with 24px headings, choice cards outlined 1px (blue 2px when chosen), a grey order
   summary tile and a 48px Pay now pill; the confirmation title is `type-display` over a grey "What happens next" tile.
 * **Account and sign-in** (step 8): the sign-in, sign-up and forgot-password pages are one centred 26rem column under a `type-title`
@@ -231,8 +231,7 @@ Every page is being restyled after apple.com, one step at a time (each step is a
   button's contrast on grey (fixed by using `--brand` #0066cc for its text and border) and the department tiles' text fading
   in at half opacity (the scroll-in effect is now scale only). Lighthouse (mobile, 5 runs, `docs/perf/lighthouse.json`): home **91**,
   listing 92, filtered 93, category 92, product 93, search 93, cart 96, login 94; accessibility 100 everywhere; first-load JS is
-  217 KB on home. The system font removed the web font download. Screenshots in `docs/screenshots` were refreshed for the home,
-  listing (light and dark), product, drawer, Bag, sign-in and the phone menu; the others are from earlier phases.
+  217 KB on home. The system font removed the web font download. The images in `docs/screenshots` show the home page, the category menu, a product, the Bag and the phone search.
 
 **Lessons**: an accessible name includes CSS generated content, so a decorative chevron in `::after` must be
 `content: "\203A" / ""` (alt text empty) or `link-more` links get a "›" in their name; text on a tile must never sit under a
@@ -256,7 +255,7 @@ How the pieces fit (API side: `docs/commerce.md`):
 * **Cart** (`features/cart`): server-side for guests (cookie) and accounts, so there is one code path; signing in merges the
   guest cart on the server. TanStack Query holds it; quantity changes and removals are optimistic and roll back with a toast
   when the API refuses (stock). Rapid taps overlap, so the server's answer is applied only after the last request finishes.
-  The header drawer (`next/dynamic`) is only downloaded when opened.
+  The header panels (`next/dynamic`) is only downloaded when opened.
 * **Wishlist** (`features/wishlist`): accounts only. Guests are sent to sign in and come back to the same page; they never
   trigger a request. Optimistic like the cart.
 * **Checkout** (`features/checkout`): address, shipping, then a card form that is labelled **"Demo payment, no real
@@ -308,8 +307,6 @@ Not done: cropping the photo before searching (SPEC §5 mentions "preview with c
   payment, login, admin, plus axe accessibility sweeps and keyboard checks. See `docs/e2e.md`; CI runs it on a seeded
   stack with a fake model.
 * `make lighthouse`: Lighthouse on the production build (below).
-* The screenshots in `docs/screenshots` are from the retired `browser-check` scripts (Phase 4 and 5); their flows are now
-  e2e specs.
 
 ## Accessibility
 
@@ -377,7 +374,7 @@ of effect:
    back; the arrow buttons scroll smoothly themselves (and respect `prefers-reduced-motion`).
 2. **First-load JavaScript 276 KB to 204 KB (home).** `env.ts` imported zod just to check two URLs, and the listing URL
    parser shared a module with browser code (about 29 KB on every page): both are plain TypeScript or their own module now.
-   Overlays that most visitors never open load on first use instead of with the page: cart drawer, mobile menu, account
+   Overlays that most visitors never open load on first use instead of with the page: Bag panel, mobile menu, account
    dropdown (all a plain button first, the real component on the first click, which opens it), phone filter sheet, camera
    dialog, desktop filter sidebar (phones never fetch it) and the toast renderer. The sort control is a native `<select>`
    (no Radix Select).

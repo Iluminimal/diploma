@@ -95,7 +95,7 @@ similar-product results (in-memory or Redis LRU).
 - Visual search page: drag-and-drop, paste from clipboard, camera capture (`getUserMedia`
   on desktop, `capture` attribute on mobile), preview with crop, skeleton loading,
   results grid with similarity badge, filter chips, text refinement input
-- Cart: persisted for guests, merged on login; mini-cart drawer; quantity updates; stock
+- Cart: persisted for guests, merged on login; Bag panel; quantity updates; stock
   validation
 - Checkout: address form, shipping method, summary, Stripe in TEST mode with idempotent
   webhook handling, confirmation page

@@ -1,4 +1,5 @@
 # OS / editor
+.claude/
 .DS_Store
 .idea/
 .vscode/
@@ -35,3 +36,6 @@ next-env.d.ts
 /data/
 /models/
 docs/openapi.json
+
+# local, non-repository material
+docs/thesis/

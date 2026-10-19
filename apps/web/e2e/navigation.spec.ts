@@ -176,7 +176,7 @@ test.describe("on a computer the bar stays, whatever is opened (apple.com's glob
     await expect(bar(page).getByRole("button", { name: /^Bag/ })).toBeVisible();
   }
 
-  test("the search fills the screen under the bar, and the bar is still there", async ({ page }) => {
+  test("the search is as tall as its content under the bar, the page below is veiled, and the bar is still there", async ({ page }) => {
     await page.goto("/");
 
     await bar(page).getByRole("button", { name: "Search", exact: true }).click();
@@ -184,10 +184,31 @@ test.describe("on a computer the bar stays, whatever is opened (apple.com's glob
     const panel = page.getByRole("dialog", { name: "Search" });
     await expect(panel).toBeVisible();
     await expectBarWhole(page);
+    await expect.poll(async () => (await panel.boundingBox())!.height).toBeGreaterThan(200);
     const box = await panel.boundingBox();
     expect(box!.y).toBeGreaterThanOrEqual(BAR_HEIGHT - 1);
-    expect(box!.y + box!.height).toBeGreaterThanOrEqual(899); // down to the bottom of the screen
+    expect(box!.height).toBeLessThan(600); // not the whole screen: the page shows below it, under the curtain
     expect(box!.width).toBeGreaterThanOrEqual(1439);
+    const curtain = page.locator(".bar-curtain");
+    await expect(curtain).toHaveCSS("opacity", "1");
+    expect(await curtain.evaluate((el) => getComputedStyle(el).backdropFilter)).toContain("blur(20px)");
+
+    // Pressing the curtain closes the flyout.
+    await page.mouse.click(720, 850);
+    await expect(panel).toBeHidden();
+    await expect(curtain).toHaveCSS("opacity", "0");
+  });
+
+  test("the links, the logo and the icons are spread evenly across the bar", async ({ page }) => {
+    await page.goto("/");
+    await expect(mainNav(page).getByRole("link", { name: "Women", exact: true })).toBeVisible();
+
+    const lefts = await bar(page).evaluate((header) => {
+      const items = [...header.querySelectorAll<HTMLElement>("a, button")].filter((e) => e.getBoundingClientRect().width > 0 && e.getBoundingClientRect().top < 50 && !e.closest(".mega-flyout"));
+      return items.map((e) => ({ left: e.getBoundingClientRect().left, right: e.getBoundingClientRect().right }));
+    });
+    const gaps = lefts.slice(1).map((item, i) => item.left - lefts[i]!.right);
+    expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(40); // about the same gap everywhere
   });
 
   test("the Bag opens under the bar too, and the bag button closes it again", async ({ page }) => {

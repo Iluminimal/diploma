@@ -47,31 +47,40 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 * **Product tiles** are `#f5f5f7` rounded squares. The catalogue photos have white backgrounds, so they are drawn with
   `mix-blend-multiply` and melt into the tile (in dark mode the tile is white and the photo is drawn normally). Do the same for
   any new product picture.
-* **Header** (`components/layout/site-header.tsx`): a 44px translucent bar (backdrop blur and saturation) with the logo on the left,
-  small centred department links, and search, account and cart on the right. A hairline fades in under it as the page scrolls
-  (a scroll-driven animation). The theme toggle lives in the footer.
+* **Header** (`components/layout/site-header.tsx`): a 44px translucent bar (backdrop blur and saturation), 1024px wide like
+  apple.com's, with the logo, the small department links, search, account and cart **spread evenly across it**
+  (`justify-content: space-between`; the menu's nav and list and the icon group are `display: contents` from md up, so every one
+  is an item of the same row). The links are 12px with 8px either side and as tall as the bar, as apple.com's are, and their focus
+  ring is a small rounded box hugging the text (outline inset 6px), not the whole bar. A hairline fades in under it as the page
+  scrolls (a scroll-driven animation). The theme toggle lives in the footer.
 * **Department menu** (`components/layout/mega-menu.tsx`) follows apple.com's global nav:
   * the entries in the bar are real links (they work before any script or data arrive);
   * hovering one opens **one shared flyout** after a short delay (120 ms); moving to another entry swaps the content at
-    once (a crossfade) while the flyout's height animates to fit it (a `ResizeObserver` on the active content);
+    once (a crossfade) while the flyout's height animates to fit it (a `ResizeObserver` on the active content). **The flyout is as
+    tall as its content** (about 450px), as apple.com's is, not the height of the screen; its panel colour is `--flyout`
+    (`#fafafc`). Inside: a first column of big 24px links (the popular article types) and a column of small 12px links per
+    group, each under a small grey heading; 36px above and 80px below, as on apple.com;
   * it closes 200 ms after the pointer leaves the bar and flyout, and at once-ish when the pointer goes to an entry
     without a flyout ("New");
-  * while open the bar turns solid (`has-[.mega-flyout[data-open=true]]` on the header) so bar and flyout read as one surface,
-    and the page behind is dimmed and blurred by `.mega-scrim` (it lets pointer events through, so moving down onto the page
-    closes the menu); the links fade in one after another (`--i` on `.mega-item`);
+  * while open the bar takes the flyout's colour (`data-bar-panel` on `<html>`) so bar and flyout read as one surface, and the
+    page below is veiled and blurred by the curtain (below); the links fade in one after another, 20 ms apart (`--i` on
+    `.mega-item`);
   * touch: the first tap on an entry opens its flyout, the second follows the link (a click with `detail > 0` after a
     non-mouse `pointerdown`; Enter on the keyboard is unaffected);
   * keyboard: ArrowLeft / ArrowRight / Home / End move along the bar (and, with a flyout open, switch it along; an entry
     without one closes it), ArrowDown opens an entry and moves into it, Escape closes it and returns to the entry, focus
     leaving the menu closes it. Content that is not shown is `visibility: hidden`, so only the open department is in the tab order
     and the accessibility tree.
-* **One flyout at a time, and the bar always stays** (from md up, checked against apple.com): the department menu, the search
-  and the Bag all open as a solid page under the bar that fills the rest of the screen (`top-[2.8125rem]`, height
-  `calc(100dvh - 2.8125rem)`), lined up with the bar's logo (`container-nav`), and the bar stays in view and usable. Opening one
-  closes the others (`announceFlyout` / `useCloseOnOtherFlyout` in `components/layout/bar-flyout.ts`: hovering a department
-  replaces the search, the magnifier closes the search and the bag button the Bag, Escape closes either). Nothing is dimmed:
-  the page is covered. While one is open the bar turns solid (`data-bar-panel` on `<html>`). On a phone the same pages cover the
-  whole screen instead and the bar fades down to the X (see Phone navigation).
+* **Flyouts under the bar** (from md up; measured on the live apple.com in a real browser): the department menu, the search and
+  the Bag each open as a panel **as tall as its content** under the bar (search about 350px, Bag about 380px, a department about
+  450px), lined up with the bar's logo (`container-nav`), colour `--flyout`. Timings are apple.com's: the panel grows over 240 ms
+  (`cubic-bezier(.4,0,.6,1)`), its lines fade in over 320 ms, 20 ms apart. The bar stays in view and usable. Opening one closes
+  the others (`announceFlyout` / `useCloseOnOtherFlyout` in `components/layout/bar-flyout.ts`: hovering a department replaces
+  the search, the magnifier closes the search and the bag button the Bag, Escape closes either).
+* **The curtain** (`components/layout/bar-curtain.tsx`, `.bar-curtain`): while any flyout is open (`data-bar-panel` on `<html>`,
+  set by `useBarPanel`) the rest of the page is veiled (`--curtain`, a 40% veil) and blurred (20px), fading over 320 ms after
+  80 ms, exactly as apple.com's `.globalnav-curtain`. Pressing it closes the flyout. Phones have full-screen pages instead and
+  no curtain (see Phone navigation).
 * **Search** (`components/layout/header-search.tsx`): the magnifier opens the flyout above with a large field (the
   `overlay` variant of `SearchBar`), live suggestions, recent searches and quick links. Escape closes it and
   returns focus to the magnifier, wherever focus is. **Pressing `/` anywhere opens it** with the cursor in the field (not while

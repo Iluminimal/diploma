@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { BarCurtain } from "@/components/layout/bar-curtain";
 import { ShopChrome } from "@/components/layout/shop-chrome";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
+        <BarCurtain />
         <Providers>
           <ShopChrome header={<SiteHeader />} footer={<SiteFooter />}>
             {children}

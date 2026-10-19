@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 /**
  * What every icon button in the bar shares, so search, account, bag and menu are one size: a 44px wide
  * cell as tall as the bar (48px on a phone, 44px from md), no background, the icon fading a little on
- * hover as on apple.com.
+ * hover as on apple.com. The focus ring is a small rounded box around the icon, not the whole cell.
  */
 export const HEADER_CELL =
-  "focus-visible:ring-ring/60 relative grid h-12 w-11 shrink-0 place-items-center rounded-full outline-none transition-opacity hover:opacity-70 focus-visible:ring-3 md:h-11";
+  "focus-visible:outline-ring relative grid h-12 w-11 shrink-0 place-items-center rounded-[5px] outline-none transition-opacity hover:opacity-70 focus-visible:outline-2 focus-visible:outline-solid focus-visible:-outline-offset-[7px] md:h-11";
 
 /**
  * A glyph drawn in the bar's two icon boxes: 17x48 on a phone, 14x44 from md up. Search and bag use apple.com's

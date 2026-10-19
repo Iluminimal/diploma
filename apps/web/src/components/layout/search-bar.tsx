@@ -174,7 +174,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
     <div ref={rootRef} className={cn("relative", className)}>
       <form
         role="search"
-        className="relative"
+        className={cn("relative", overlay && "flyout-item")}
         onSubmit={(e) => {
           e.preventDefault();
           if (active >= 0) go(active);
@@ -196,7 +196,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           aria-hidden
           className={cn(
             "text-muted-foreground pointer-events-none absolute top-1/2 -translate-y-1/2",
-            overlay ? "left-4 size-5" : "left-3.5 size-4",
+            overlay ? "left-4 size-5 md:left-0.5" : "left-3.5 size-4",
           )}
         />
         <input
@@ -210,7 +210,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           aria-activedescendant={active >= 0 ? `${listId}-opt-${active}` : undefined}
           autoComplete="off"
           enterKeyHint="search"
-          placeholder={dragging ? "Drop a photo to search" : "Search for “red floral dress”"}
+          placeholder={dragging ? "Drop a photo to search" : overlay ? "Search Angel" : "Search for “red floral dress”"}
           value={text}
           onChange={(e) => {
             setText(e.target.value);
@@ -241,7 +241,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           className={cn(
             "placeholder:text-muted-foreground w-full border outline-none transition-[background-color,box-shadow,border-color] duration-200 focus-visible:ring-3",
             overlay
-              ? "bg-secondary focus-visible:bg-background focus-visible:ring-ring/40 h-14 rounded-2xl border-transparent pr-14 pl-12 text-lg tracking-tight"
+              ? "bg-secondary focus-visible:bg-background focus-visible:ring-ring/40 h-14 rounded-2xl border-transparent pr-14 pl-12 text-lg tracking-tight md:h-10 md:rounded-none md:bg-transparent md:pr-12 md:pl-8 md:text-2xl md:font-semibold md:tracking-normal md:focus-visible:bg-transparent md:focus-visible:ring-0"
               : "bg-muted/70 focus-visible:ring-ring/50 focus-visible:bg-background border-border h-10 rounded-full pr-12 pl-10 text-sm",
             dragging && "border-brand bg-brand/5 ring-brand/30 ring-3",
           )}
@@ -255,7 +255,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           onClick={openPhotoSearch}
           className={cn(
             "text-muted-foreground hover:text-foreground hover:bg-foreground/8 focus-visible:ring-ring/60 absolute top-1/2 grid -translate-y-1/2 place-items-center rounded-full outline-none transition-colors duration-200 focus-visible:ring-3",
-            overlay ? "right-2.5 size-10" : "right-1.5 size-8",
+            overlay ? "right-2.5 size-10 md:right-0 md:size-8" : "right-1.5 size-8",
           )}
         >
           <Camera aria-hidden className={overlay ? "size-5" : "size-4"} />

@@ -51,13 +51,13 @@ describe("HeaderSearch", () => {
     expect(isOpen()).toBe(false);
   });
 
-  it("fills the screen under the bar from md up, so the bar stays in view", async () => {
+  it("grows from the bar down from md up, as tall as its content, so the bar stays in view", async () => {
     render(<HeaderSearch />);
 
     await userEvent.click(magnifier());
 
     const dialog = await screen.findByRole("dialog", { name: "Search" });
-    expect(dialog).toHaveClass("md:top-[2.8125rem]", "md:h-[calc(100dvh-2.8125rem)]");
+    expect(dialog).toHaveClass("md:top-[2.8125rem]", "md:h-auto", "md:max-h-[calc(100dvh-2.8125rem)]");
     expect(screen.queryByRole("button", { name: "Close search" })).toBeInTheDocument(); // the phone bar's X
   });
 

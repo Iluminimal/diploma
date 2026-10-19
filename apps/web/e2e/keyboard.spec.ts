@@ -129,8 +129,8 @@ test("the mini-cart keeps focus inside, closes with Escape and gives focus back"
   await page.keyboard.press("Escape");
 
   await expect(drawer).toBeHidden();
-  const restored = await page.evaluate(() => document.activeElement?.tagName.toLowerCase());
-  expect(restored).not.toBe("body");
+  // The dialog library hands focus back a tick after it unmounts the panel.
+  await expect.poll(() => page.evaluate(() => document.activeElement?.tagName.toLowerCase())).not.toBe("body");
 });
 
 test("category filters expand and collapse with the keyboard and announce their state", async ({ page }) => {

@@ -1,10 +1,10 @@
 "use client";
 
-import { X } from "lucide-react";
+import { ArrowRight, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { HEADER_CELL, SearchGlyph } from "@/components/layout/header-cell";
@@ -24,16 +24,18 @@ const QUICK_LINKS = [
 function QuickLinks({ onNavigate }: { onNavigate: () => void }) {
   return (
     <nav aria-label="Quick links" className="mt-8">
-      <p className="text-muted-foreground mb-3 text-xs font-medium">Quick links</p>
-      <ul className="space-y-1">
-        {QUICK_LINKS.map((link) => (
-          <li key={link.href}>
+      <p className="flyout-item text-muted-foreground mb-3 text-xs" style={{ "--i": 1 } as CSSProperties}>
+        Quick Links
+      </p>
+      <ul className="space-y-1 md:space-y-0">
+        {QUICK_LINKS.map((link, i) => (
+          <li key={link.href} className="flyout-item" style={{ "--i": i + 2 } as CSSProperties}>
             <Link
               href={link.href}
               onClick={onNavigate}
-              className="hover:text-brand focus-visible:ring-ring/60 -mx-2 inline-flex items-center gap-2 rounded-md px-2 py-1 text-lg font-semibold tracking-tight outline-none transition-colors focus-visible:ring-3"
+              className="hover:text-brand focus-visible:ring-ring/60 -mx-2 inline-flex items-center gap-3 rounded-md px-2 py-1 text-lg font-semibold tracking-tight outline-none transition-colors focus-visible:ring-3 md:py-1.5 md:text-xs md:leading-4 md:tracking-normal"
             >
-              <span aria-hidden className="text-muted-foreground">›</span>
+              <ArrowRight aria-hidden strokeWidth={1.5} className="text-muted-foreground size-4 shrink-0 md:size-3" />
               {link.label}
             </Link>
           </li>
@@ -127,7 +129,7 @@ export function HeaderSearch() {
               data-open={open}
               inert={!open}
               onKeyDown={onKeyDown}
-              className="search-panel bg-background fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto overscroll-contain pb-10 md:top-[2.8125rem] md:z-30 md:h-[calc(100dvh-2.8125rem)]"
+              className="search-panel bg-background fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto overscroll-contain pb-10 md:top-[2.8125rem] md:z-30 md:h-auto md:max-h-[calc(100dvh-2.8125rem)] md:bg-[var(--flyout)] md:pt-8 md:pb-20"
             >
               <div className="container-nav">
                 {/* On a phone, as on apple.com: the bar holds only the X, where the menu button was (the
@@ -138,8 +140,8 @@ export function HeaderSearch() {
                     <X className="size-[18px]" strokeWidth={1.25} />
                   </button>
                 </div>
-                <div className="pt-1 md:pt-6">
-                  <div className="mx-auto w-full max-w-2xl md:mx-0">
+                <div className="pt-1 md:pt-0">
+                  <div className="mx-auto w-full max-w-2xl md:mx-0 md:max-w-none">
                     <SearchBar variant="overlay" onNavigate={close} quickLinks={<QuickLinks onNavigate={close} />} />
                   </div>
                 </div>

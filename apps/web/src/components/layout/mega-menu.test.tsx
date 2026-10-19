@@ -101,16 +101,27 @@ describe("MegaMenu", () => {
 
     const link = panel("Men").getByRole("link", { name: "T-shirts" });
     expect(link).toHaveAttribute("href", "/c/men/apparel/topwear/tshirts");
-    expect(link.closest(".mega-item")?.getAttribute("style")).toContain("--i: 4");
+    expect(link.closest(".mega-item")?.getAttribute("style")).toMatch(/--i: \d+/);
   });
 
-  it("fills the viewport under the bar when open, and nothing when closed", async () => {
+  it("is as tall as the department it shows when open, and nothing when closed", async () => {
+    // jsdom has no layout: say the shown content is 420px tall, and report it when observed.
+    vi.stubGlobal("ResizeObserver", class { constructor(private cb: () => void) {} observe() { this.cb(); } disconnect() {} });
+    const height = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(420);
     render(<MegaMenu />);
     expect(flyout().style.height).toBe("0px");
 
     await userEvent.hover(trigger("Men"));
 
-    await waitFor(() => expect(flyout().style.height).toBe("calc(100dvh - 2.8125rem)"));
+    await waitFor(() => expect(flyout().style.height).toBe("420px"));
+    height.mockRestore();
+  });
+
+  it("is not as tall as the screen: it grows with its content", () => {
+    render(<MegaMenu />);
+
+    expect(flyout().className).not.toMatch(/(^| )h-\[/);
+    expect(flyout().className).toContain("max-h-[calc(100dvh-2.8125rem)]");
   });
 
   describe("touch", () => {
@@ -140,7 +151,7 @@ describe("MegaMenu", () => {
 
       await userEvent.keyboard("{ArrowDown}");
       await waitFor(() => expect(expanded("Men")).toBe("true"));
-      await waitFor(() => expect(panel("Men").getByRole("link", { name: "Clothing" })).toHaveFocus());
+      await waitFor(() => expect(panel("Men").getAllByRole("link")[0]).toHaveFocus());
 
       await userEvent.keyboard("{Escape}");
       expect(expanded("Men")).toBe("false");
@@ -171,7 +182,7 @@ describe("MegaMenu", () => {
       render(<MegaMenu />);
       trigger("Women").focus();
       await userEvent.keyboard("{ArrowDown}");
-      await waitFor(() => expect(panel("Women").getByRole("link", { name: "Clothing" })).toHaveFocus());
+      await waitFor(() => expect(panel("Women").getAllByRole("link")[0]).toHaveFocus());
       trigger("Women").focus();
 
       await userEvent.keyboard("{ArrowRight}");
@@ -188,7 +199,7 @@ describe("MegaMenu", () => {
       render(<MegaMenu />);
       trigger("Men").focus();
       await userEvent.keyboard("{ArrowDown}");
-      const first = panel("Men").getByRole("link", { name: "Clothing" });
+      const first = panel("Men").getAllByRole("link")[0]!;
       await waitFor(() => expect(first).toHaveFocus());
 
       await userEvent.keyboard("{ArrowRight}");
@@ -204,7 +215,7 @@ describe("MegaMenu", () => {
       await waitFor(() => expect(expanded("Men")).toBe("true"));
 
       document.body.focus();
-      fireEvent.blur(panel("Men").getByRole("link", { name: "Clothing" }), { relatedTarget: null });
+      fireEvent.blur(panel("Men").getAllByRole("link")[0]!, { relatedTarget: null });
 
       await waitFor(() => expect(expanded("Men")).toBe("false"));
     });

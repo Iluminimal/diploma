@@ -179,6 +179,9 @@
   --primary-active: #006edb;
   --radius: 0.75rem;
   --radius-tile: 1.125rem;
+  /* apple.com's flyouts: the page under the bar, and the veil over the rest of the page. */
+  --flyout: #fafafc;
+  --curtain: rgb(232 232 237 / 0.4);
 }
 
 .dark {
@@ -187,6 +190,8 @@
   --success: oklch(0.75 0.14 155);
   --elevation-soft: 0 1px 2px oklch(0 0 0 / 40%), 0 8px 24px -12px oklch(0 0 0 / 60%);
   --background: #000000;
+  --flyout: #161617;
+  --curtain: rgb(29 29 31 / 0.4);
   --foreground: #f5f5f7;
   --card: #1d1d1f;
   --card-foreground: #f5f5f7;
@@ -471,21 +476,25 @@
 }
 
 /*
- * The department flyout (components/mega-menu.tsx): ONE solid panel under the bar, as tall as the
- * viewport (the height is set from script), its contents swap with a quick crossfade, and the links
- * fade in one after another. It becomes visible at once when opening (so focus can move into it in
- * the same frame) and is hidden only after it has finished closing.
+ * The flyouts under the bar (department menu, search, Bag), timed as on apple.com: a panel as tall as
+ * its content that grows over 240 ms, links that fade in one after another 20 ms apart, and a curtain
+ * over the rest of the page (blurred, 40% veil, 320 ms). The department flyout (components/mega-menu.tsx)
+ * is ONE panel whose height is set from script (that of the department shown) and whose contents swap
+ * with a quick crossfade.
  */
+:root {
+  --flyout-ease: cubic-bezier(0.4, 0, 0.6, 1);
+}
 .mega-flyout {
   visibility: hidden;
   transition:
-    height 380ms var(--ease-out-expo),
-    visibility 0s linear 380ms;
+    height 240ms var(--flyout-ease),
+    visibility 0s linear 240ms;
 }
 .mega-flyout[data-open="true"] {
   visibility: visible;
   transition:
-    height 380ms var(--ease-out-expo),
+    height 240ms var(--flyout-ease),
     visibility 0s;
 }
 .mega-content {
@@ -504,41 +513,44 @@
   opacity: 1;
   pointer-events: auto;
   transition:
-    opacity 260ms ease-out 90ms,
+    opacity 240ms var(--flyout-ease) 80ms,
     visibility 0s;
 }
-.mega-item {
+/* One line of a flyout: hidden and 4px high until its flyout opens, then it settles in, each a little after the one above. */
+.mega-item,
+.flyout-item {
   opacity: 0;
-  translate: 0 -6px;
+  translate: 0 -4px;
   transition:
-    opacity 120ms ease-out,
-    translate 120ms ease-out;
+    opacity 160ms var(--flyout-ease),
+    translate 160ms var(--flyout-ease);
 }
-.mega-content[data-active="true"] .mega-item {
+.mega-content[data-active="true"] .mega-item,
+[data-open="true"] .flyout-item,
+[data-state="open"] .flyout-item {
   opacity: 1;
   translate: 0 0;
   transition:
-    opacity 380ms ease-out calc(80ms + var(--i, 0) * 28ms),
-    translate 520ms var(--ease-out-expo) calc(80ms + var(--i, 0) * 28ms);
+    opacity 320ms var(--flyout-ease) calc(80ms + var(--i, 0) * 20ms),
+    translate 320ms var(--flyout-ease) calc(80ms + var(--i, 0) * 20ms);
 }
 @media (prefers-reduced-motion: reduce) {
-  .mega-item {
+  .mega-item,
+  .flyout-item {
     opacity: 1;
     translate: none;
   }
 }
 
-/* The search panel, shown at once and hidden after it has faded. */
+/* The search panel: on a phone it fades in over the whole screen; from md up it grows down from the bar. */
 .search-panel {
   visibility: hidden;
   opacity: 0;
+  translate: 0 -0.75rem;
   transition:
     opacity 260ms var(--ease-out-expo),
     translate 260ms var(--ease-out-expo),
     visibility 0s linear 260ms;
-}
-.search-panel {
-  translate: 0 -0.75rem;
 }
 .search-panel[data-open="true"] {
   visibility: visible;
@@ -548,6 +560,69 @@
     opacity 260ms var(--ease-out-expo),
     translate 260ms var(--ease-out-expo),
     visibility 0s;
+}
+@media (min-width: 768px) {
+  .search-panel,
+  .search-panel[data-open="true"] {
+    opacity: 1;
+    translate: 0 0;
+  }
+  .search-panel {
+    clip-path: inset(0 0 100% 0);
+    transition:
+      clip-path 240ms var(--flyout-ease),
+      visibility 0s linear 240ms;
+  }
+  .search-panel[data-open="true"] {
+    clip-path: inset(0);
+    transition:
+      clip-path 240ms var(--flyout-ease),
+      visibility 0s;
+  }
+  /* The Bag (a Radix dialog) grows the same way. */
+  .bag-flyout[data-state="open"] {
+    animation: flyout-grow 240ms var(--flyout-ease) both;
+  }
+  .bag-flyout[data-state="closed"] {
+    animation: flyout-grow 240ms var(--flyout-ease) reverse both;
+  }
+}
+@keyframes flyout-grow {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+/*
+ * The curtain over the page while a flyout is open (apple.com's `.globalnav-curtain`): a 40% veil and a 20px
+ * blur. It sits under the bar and the flyouts and closes them when pressed. Phones have full-screen pages instead.
+ */
+.bar-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  visibility: hidden;
+  opacity: 0;
+  background: var(--curtain);
+  backdrop-filter: blur(20px);
+  transition:
+    opacity 320ms var(--flyout-ease) 80ms,
+    visibility 0s linear 400ms;
+}
+html[data-bar-panel] .bar-curtain {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity 320ms var(--flyout-ease) 80ms,
+    visibility 0s;
+}
+@media (max-width: 767px) {
+  .bar-curtain {
+    display: none;
+  }
 }
 
 /*
@@ -633,6 +708,12 @@
 html:has(#mobile-menu[data-open="true"]) .header-elevate,
 html[data-bar-panel] .header-elevate {
   background-color: var(--background);
+}
+/* From md up the bar takes the flyout's colour while one is open, so bar and flyout read as one surface. */
+@media (min-width: 768px) {
+  html[data-bar-panel] .header-elevate {
+    background-color: var(--flyout);
+  }
 }
 /*
  * As on apple.com's phone bar: while the menu, the search or the Bag page is open (`data-bar-panel`

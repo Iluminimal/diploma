@@ -71,7 +71,7 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
   typing in an input, textarea, select or dialog, not with Ctrl / Cmd / Alt held, and the slash is not typed into the field);
   the magnifier advertises it (`aria-keyshortcuts="/"`, tooltip "Search (press /)"). The panel is portalled to `<body>` because the header's backdrop blur would otherwise make
   it the containing block of anything `fixed` inside, and it loads on first click (so the header ships less JavaScript).
-* **Footer**: pale grey, 12px type, four quiet columns and one line of fine print. Account links there are `prefetch={false}`:
+* **Footer**: pale grey, 12px type, a directory of quiet columns. Account links there are `prefetch={false}`:
   prefetched while signed out they cache the redirect to /login, which then sends a customer back to the login page right after
   they sign in.
 
@@ -198,7 +198,7 @@ Every page is being restyled after apple.com, one step at a time (each step is a
 * **Controls**: buttons are pills with 15px regular text (`lg` 17px / 44px, `xl` 48px for hero calls to action, `bordered` is
   Apple's blue outline that fills on hover, no press scale); inputs, textareas and selects are 44px, 12px corners, 17px text on the
   card colour; the checkbox is 20px with 6px corners.
-* **Footer** (step 3, `site-footer.tsx`): apple.com's global footer: grey, 12px, the fine print first, a directory of three columns
+* **Footer** (step 3, `site-footer.tsx`): apple.com's global footer: grey, 12px, a directory of three columns
   (bold heading over a short list), a "More ways to shop" line and the copyright with the theme switch, hairlines between the parts.
   Columns stay open on a phone (two side by side) instead of collapsing. There is no breadcrumb row: the pages carry their own.
 * **Home** (step 4, `features/home`): the hero is apple.com's: a small eyebrow, `type-hero` headline, the 21px line and a blue pill with

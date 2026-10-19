@@ -34,19 +34,15 @@ const LINK =
   "text-foreground/80 hover:text-foreground focus-visible:ring-ring/60 rounded-sm transition-colors outline-none hover:underline focus-visible:ring-3";
 
 /**
- * Apple's global footer: pale grey, 12px type, the fine print first, then the directory (a small
- * bold heading over a short list of links, per column), a "more ways to shop" line and the
- * copyright. Rules between the parts are 1px hairlines. No columns collapse on a phone: two
- * columns side by side keep every link one tap away.
+ * Apple's global footer: pale grey, 12px type, the directory (a small bold heading over a short
+ * list of links, per column), a "more ways to shop" line and the copyright. Rules between the
+ * parts are 1px hairlines. No columns collapse on a phone: two columns side by side keep every
+ * link one tap away.
  */
 export function SiteFooter() {
   return (
     <footer className="bg-secondary text-muted-foreground type-fine mt-16">
       <div className="container-nav pt-4 pb-5 md:pt-5">
-        <p className="border-border border-b pb-4 text-pretty">
-          Photos are from the Kaggle Fashion Product Images dataset. Angel is a diploma project: checkout uses test
-          payments, so no card is ever charged, and prices and stock are generated for the demo.
-        </p>
         <div className="border-border grid grid-cols-2 gap-x-6 gap-y-8 border-b py-6 md:grid-cols-3 md:py-8">
           {COLUMNS.map((column) => (
             <nav key={column.title} aria-label={column.title}>

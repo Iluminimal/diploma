@@ -301,7 +301,7 @@ Not done: cropping the photo before searching (SPEC §5 mentions "preview with c
 
 ## Checks
 
-* `npm test`: Vitest + Testing Library, 623 tests (filters, product helpers, JSON-LD and sitemap, error mapping, image
+* `npm test`: Vitest + Testing Library, 642 tests (filters, product helpers, JSON-LD and sitemap, error mapping, image
   normalization, search, cart, checkout, account, orders, admin screens and their payload logic, forms, the access gate).
 * `make e2e`: Playwright, 52 end-to-end tests against a running stack: visual search, cart, checkout with the demo
   payment, login, admin, plus axe accessibility sweeps and keyboard checks. See `docs/e2e.md`; CI runs it on a seeded

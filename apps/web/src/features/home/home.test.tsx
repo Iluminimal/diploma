@@ -1,106 +1,142 @@
 import { render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { recordView } from "@/features/catalog/recently-viewed";
-import { catalogNav, makeProduct } from "@/test/fixtures";
+import { makeProduct } from "@/test/fixtures";
 import { renderWithQuery } from "@/test/render";
+import { Departments } from "./departments";
 import { Hero } from "./hero";
-import { HowItWorks } from "./how-it-works";
+import { PhotoTile } from "./photo-tile";
 import { RecentlyViewed } from "./recently-viewed";
-import { CategoryPills } from "./shelves";
+import { Services } from "./services";
+import { NewArrivals } from "./shelves";
+import { json, stubApi } from "@/test/api-mock";
 
 vi.mock("server-only", () => ({}));
 const newest = vi.fn();
 vi.mock("./home-data", () => ({ newest: (...args: unknown[]) => newest(...args) }));
-const getSimilarProducts = vi.fn();
-const getCatalogNav = vi.fn();
-vi.mock("@/features/catalog/api", () => ({
-  getSimilarProducts: (...args: unknown[]) => getSimilarProducts(...args),
-  getCatalogNav: () => getCatalogNav(),
-}));
 vi.mock("@/features/search/photo-search-trigger", () => ({
-  PhotoSearchTrigger: () => <button type="button">Search with a photo</button>,
+  PhotoSearchTrigger: ({ label = "Search with a photo" }: { label?: string }) => <button type="button">{label}</button>,
 }));
 
 beforeEach(() => {
   newest.mockReset();
-  getSimilarProducts.mockReset();
-  getCatalogNav.mockReset();
   window.localStorage.clear();
 });
 
 describe("Hero", () => {
-  it("leads with the headline and three ways in, even when the catalogue cannot be reached", async () => {
+  it("leads with the headline and two ways in, even when the catalogue cannot be reached", async () => {
     newest.mockResolvedValue([]);
 
     render(await Hero());
 
     expect(screen.getByRole("heading", { level: 1, name: "Shop by photo." })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Search with a photo" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Shop women" })).toHaveAttribute("href", "/c/women");
-    expect(screen.getByRole("link", { name: "Shop men" })).toHaveAttribute("href", "/c/men");
-    expect(document.querySelectorAll(".drift")).toHaveLength(0);
+    expect(screen.getByRole("link", { name: "Shop new arrivals" })).toHaveAttribute("href", "/products?sort=newest");
   });
 
-  it("shows a drifting collage of real products, hidden from assistive technology", async () => {
+  it("shows three real products under it, hidden from assistive technology", async () => {
     newest.mockImplementation(async (patch: { category: string }) => [makeProduct({ id: patch.category === "footwear" ? 1 : 2 })]);
 
     const { container } = render(await Hero());
 
-    expect(container.querySelectorAll(".drift")).toHaveLength(5);
-    expect(container.querySelector(".drift")?.closest("[aria-hidden]")).not.toBeNull();
+    expect(container.querySelectorAll("img")).toHaveLength(3);
+    expect(container.querySelector("img")?.closest("[aria-hidden]")).not.toBeNull();
+  });
+
+  it("never animates its headline (it is what the page is measured on), only lets the photos rise", async () => {
+    newest.mockResolvedValue([makeProduct({ id: 1 })]);
+
+    const { container } = render(await Hero());
+
+    expect(screen.getByRole("heading", { level: 1 }).closest(".tile-copy")).toBeNull();
+    expect(container.querySelectorAll(".photo-rise").length).toBeGreaterThan(0);
   });
 });
 
-describe("HowItWorks", () => {
-  it("renders nothing when there is no product to demonstrate", async () => {
+describe("Departments", () => {
+  it("has a tile and a way in for Women, Men and Kids", async () => {
+    newest.mockResolvedValue([makeProduct({ id: 1 }), makeProduct({ id: 2 })]);
+
+    render(await Departments());
+
+    for (const [name, href] of [["Women", "/c/women"], ["Men", "/c/men"], ["Kids", "/c/kids"]] as const) {
+      const tile = screen.getByRole("region", { name });
+      expect(within(tile).getByRole("heading", { name })).toBeInTheDocument();
+      expect(within(tile).getByRole("link", { name: `Shop ${name.toLowerCase()}` })).toHaveAttribute("href", href);
+    }
+  });
+
+  it("lets the words and the photo of each tile settle in as it scrolls into view", async () => {
+    newest.mockResolvedValue([makeProduct({ id: 1 }), makeProduct({ id: 2 })]);
+
+    const { container } = render(await Departments());
+
+    expect(container.querySelectorAll(".tile-copy")).toHaveLength(3);
+    expect(container.querySelectorAll(".tile-photo")).toHaveLength(3);
+  });
+
+  it("still shows the tiles when no product can be fetched", async () => {
     newest.mockResolvedValue([]);
 
-    expect(await HowItWorks()).toBeNull();
-  });
+    render(await Departments());
 
-  it("tells the three steps with a real photo, what was detected and its nearest matches", async () => {
-    newest.mockResolvedValue([makeProduct({ id: 10, name: "Navy Shirt", article_type: "Shirts", base_colour: "Navy Blue", gender: "Men" })]);
-    getSimilarProducts.mockResolvedValue({
-      results: [11, 12, 13].map((id) => ({ similarity: 0.9, product: makeProduct({ id, slug: `match-${id}`, name: `Match ${id}` }) })),
-    });
-
-    render(await HowItWorks());
-
-    expect(screen.getByRole("heading", { level: 2, name: /From a photo to your Bag/ })).toBeInTheDocument();
-    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Snap or upload", "We look", "Find it"]);
-    const detected = within(screen.getByRole("list", { name: "What we detected" }));
-    expect(detected.getAllByRole("listitem").map((li) => li.textContent)).toEqual(["Shirts", "Navy Blue", "Men"]);
-    const matches = within(screen.getByRole("list", { name: "Matching products" })).getAllByRole("link");
-    expect(matches.map((a) => a.getAttribute("href"))).toEqual(["/products/11/match-11", "/products/12/match-12", "/products/13/match-13"]);
-  });
-
-  it("is not shown when the model has no neighbours for it", async () => {
-    newest.mockResolvedValue([makeProduct()]);
-    getSimilarProducts.mockResolvedValue({ results: [] });
-
-    expect(await HowItWorks()).toBeNull();
+    expect(screen.getAllByRole("link", { name: /^Shop / })).toHaveLength(3);
   });
 });
 
-describe("CategoryPills", () => {
-  it("links the biggest categories of Women and Men, once per name, biggest first", async () => {
-    getCatalogNav.mockResolvedValue(catalogNav);
+describe("PhotoTile", () => {
+  it("offers the photo search, with a button to try it", () => {
+    render(<PhotoTile />);
 
-    render(await CategoryPills());
+    expect(screen.getByRole("heading", { name: "From a photo to your Bag." })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try it" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Open photo search" })).toHaveAttribute("href", "/search");
+  });
+});
 
-    const links = within(screen.getByRole("list")).getAllByRole("link");
-    expect(links.map((a) => a.getAttribute("href"))).toEqual([
-      "/c/men/apparel/topwear/tshirts",
-      "/c/men/apparel/topwear/shirts",
-    ]);
-    expect(links[0]).toHaveTextContent("T-shirts");
-    expect(links[0]).toHaveTextContent("Men");
+describe("NewArrivals", () => {
+  it("is one shelf of the newest products with a link to all of them", async () => {
+    newest.mockResolvedValue([makeProduct({ id: 1, name: "Blue Kurta" })]);
+
+    renderWithQuery((await NewArrivals())!);
+
+    expect(screen.getByRole("link", { name: "Shop all" })).toHaveAttribute("href", "/products?sort=newest");
+    expect(screen.getByText("Blue Kurta")).toBeInTheDocument();
   });
 
-  it("is absent when the menu data cannot be loaded", async () => {
-    getCatalogNav.mockRejectedValue(new Error("down"));
+  it("is absent when there is nothing to show", async () => {
+    newest.mockResolvedValue([]);
 
-    expect(await CategoryPills()).toBeNull();
+    expect(await NewArrivals()).toBeNull();
+  });
+});
+
+describe("Services", () => {
+  it("states what delivery costs and how fast it is, from the same endpoint as checkout", async () => {
+    stubApi({
+      "GET /api/v1/checkout/shipping-methods": json({
+        currency: "USD",
+        free_shipping_threshold_cents: 10000,
+        items: [
+          { id: "standard", label: "Standard", price_cents: 499, estimated_days: "3-5 days" },
+          { id: "express", label: "Express", price_cents: 1299, estimated_days: "1-2 days" },
+        ],
+      }),
+    });
+
+    renderWithQuery(<Services />);
+
+    expect(await screen.findByText(/On every order over/)).toHaveTextContent("$100");
+    expect(screen.getByText("Arrives in 1-2 days.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Secure checkout" })).toBeInTheDocument();
+  });
+
+  it("does not promise anything it cannot read", async () => {
+    stubApi({ "GET /api/v1/checkout/shipping-methods": new Response(null, { status: 500 }) });
+
+    renderWithQuery(<Services />);
+
+    expect(await screen.findByText("Delivery options are shown at checkout.")).toBeInTheDocument();
   });
 });
 

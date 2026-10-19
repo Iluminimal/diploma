@@ -8,7 +8,7 @@ import { CartButton } from "@/features/cart/cart-button";
 
 /**
  * Apple's global bar: slim, translucent, 44px high and 1024px wide, the logo, the small links, search,
- * account and cart spread evenly across it (`justify-content: space-between`, as on apple.com). A hairline appears under it once the page scrolls.
+ * bag and account spread evenly across it (`justify-content: space-between`, as on apple.com). A hairline appears under it once the page scrolls.
  * On a phone it is the same four things as apple.com: logo, search, bag and the menu button.
  */
 export function SiteHeader() {
@@ -28,10 +28,10 @@ export function SiteHeader() {
             it is spread evenly, as apple.com's bar is. */}
         <div className="flex items-center md:contents">
           <HeaderSearch />
+          <CartButton />
           <span className="hidden md:inline-flex">
             <AccountMenu />
           </span>
-          <CartButton />
         </div>
         <MobileNav />
       </div>

@@ -1,11 +1,11 @@
 import { test, expect } from "./fixtures";
 
-test("the first screen is a headline with three ways in", async ({ page }) => {
+test("the first tile is a headline with two ways in", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { level: 1, name: "Shop by photo." })).toBeVisible();
-  await page.getByRole("link", { name: "Shop women", exact: true }).click();
-  await expect(page).toHaveURL(/\/c\/women$/);
+  await page.getByRole("link", { name: "Shop new arrivals", exact: true }).click();
+  await expect(page).toHaveURL(/\/products\?sort=newest$/);
 });
 
 test("the photo button in the hero opens the photo picker", async ({ page }) => {
@@ -16,45 +16,37 @@ test("the photo button in the hero opens the photo picker", async ({ page }) => 
   await expect(page.getByRole("dialog", { name: "Search by photo" })).toBeVisible();
 });
 
-test("below the hero: the story, departments, category pills and shelves", async ({ page }) => {
+test("below it: the departments, the photo search, the new arrivals and what delivery is like", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { level: 2, name: /From a photo to your Bag/ })).toBeAttached();
-  const departments = page.getByRole("region", { name: "Departments" });
-  await expect(departments.getByRole("link")).toHaveCount(3);
-  await expect(departments.getByRole("link", { name: /Women/ })).toHaveAttribute("href", "/c/women");
-  const pills = page.getByRole("region", { name: "Shop by category" });
-  await expect(pills.getByRole("link").first()).toHaveAttribute("href", /^\/c\//);
-  await expect(page.getByRole("region", { name: "New arrivals" })).toBeAttached();
-  await expect(page.getByRole("list", { name: "Matching products" }).getByRole("link").first()).toHaveAttribute("href", /^\/products\//);
+  for (const [name, href] of [["Women", "/c/women"], ["Men", "/c/men"], ["Kids", "/c/kids"]] as const) {
+    await expect(page.getByRole("region", { name, exact: true }).getByRole("link", { name: `Shop ${name.toLowerCase()}` })).toHaveAttribute("href", href);
+  }
+  const photo = page.getByRole("region", { name: "Search with a photo" });
+  await expect(photo.getByRole("heading", { name: "From a photo to your Bag." })).toBeAttached();
+  await photo.getByRole("button", { name: "Try it" }).click();
+  await expect(page.getByRole("dialog", { name: "Search by photo" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("region", { name: "New arrivals" }).getByRole("link").first()).toHaveAttribute("href", /^\/(products|c)/);
+  await expect(page.getByRole("region", { name: "Delivery and payment" }).getByRole("heading")).toHaveText(["Free delivery", "Express delivery", "Secure checkout"]);
 });
 
-test("the story stays on screen while you scroll through it, and reads as a list when motion is reduced", async ({ page }) => {
-  await page.setViewportSize({ width: 1360, height: 860 });
+test("the tiles run edge to edge, 12px apart, and nothing else is on the page", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
-  const geometry = () =>
-    page.evaluate(() => {
-      const track = document.querySelector(".story-track")!.getBoundingClientRect();
-      const stage = document.querySelector(".story-stage")!;
-      return { trackHeight: track.height, viewport: innerHeight, position: getComputedStyle(stage).position, stageTop: stage.getBoundingClientRect().top };
-    });
 
-  const start = await geometry();
-  expect(start.position).toBe("sticky");
-  expect(start.trackHeight).toBeGreaterThan(start.viewport * 3);
-  await page.evaluate(() => {
-    const track = document.querySelector(".story-track")!;
-    window.scrollTo(0, track.getBoundingClientRect().top + scrollY + track.getBoundingClientRect().height * 0.5);
-  });
-  await page.waitForTimeout(300);
-  expect((await geometry()).stageTop).toBeCloseTo(0, 0);
-
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.reload();
-  const reduced = await geometry();
-  expect(reduced.position).toBe("static");
-  expect(reduced.trackHeight).toBeLessThan(reduced.viewport * 2);
-  await expect(page.getByRole("heading", { level: 3, name: "Find it" })).toBeVisible();
+  const boxes = await page.locator("main section").evaluateAll((sections) =>
+    sections.slice(0, 3).map((s) => {
+      const r = s.getBoundingClientRect();
+      return { left: Math.round(r.left), width: Math.round(r.width), top: Math.round(r.top + scrollY), height: Math.round(r.height) };
+    }),
+  );
+  expect(boxes[0]).toMatchObject({ left: 0, width: 1440 });
+  expect(boxes[0]!.height).toBeGreaterThanOrEqual(680);
+  // The next tile starts 12px below the first.
+  expect(boxes[1]!.top - (boxes[0]!.top + boxes[0]!.height)).toBe(12);
+  await expect(page.getByRole("heading", { name: /From a photo to your Bag/ })).toHaveCount(1);
+  await expect(page.getByRole("region", { name: "Shop by category" })).toHaveCount(0);
 });
 
 test("recently viewed appears after looking at a product", async ({ page, products }) => {

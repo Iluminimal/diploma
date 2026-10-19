@@ -1,7 +1,6 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Reveal } from "./reveal";
-import { ScrollFade } from "./scroll-fade";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -56,17 +55,5 @@ describe("Reveal", () => {
     );
 
     expect(screen.getByRole("listitem")).toHaveTextContent("One");
-  });
-});
-
-describe("ScrollFade", () => {
-  it("renders its children in a wrapper the scroll styles apply to", () => {
-    render(
-      <ScrollFade>
-        <h1>Headline</h1>
-      </ScrollFade>,
-    );
-
-    expect(screen.getByRole("heading", { name: "Headline" }).parentElement).toHaveClass("scroll-fade");
   });
 });

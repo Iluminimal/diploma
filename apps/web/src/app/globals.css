@@ -437,23 +437,53 @@
 }
 
 /*
- * The hero recedes as it scrolls away, driven by the scroll position (no script). Browsers
- * without scroll-driven animations leave it as it is.
+ * The home page's motion (features/home): all of it transform and opacity only, so it runs on the
+ * compositor and never moves layout; none of it needs script. The tiles' words and pictures settle in
+ * as they scroll into view (a scroll-driven `view()` timeline, in browsers that have one), the first
+ * tile's photos rise once on load, and nothing waits for any of it: without support, or with reduced
+ * motion, everything is simply there. The first tile's headline is never animated (it is what the
+ * page is measured on).
  */
+@keyframes tile-copy-in {
+  from {
+    opacity: 0;
+    translate: 0 1.75rem;
+  }
+}
+@keyframes tile-photo-in {
+  from {
+    translate: 0 3.5rem;
+    scale: 0.94;
+  }
+}
+@keyframes photo-rise {
+  from {
+    translate: 0 3rem;
+  }
+}
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
-    .scroll-fade {
-      animation: scroll-fade linear both;
+    .tile-copy {
+      animation: tile-copy-in linear both;
       animation-timeline: view();
-      animation-range: exit 0% exit 100%;
+      animation-range: entry 5% entry 55%;
+    }
+    .tile-photo {
+      animation: tile-photo-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 80%;
+    }
+    .view-rise {
+      animation: tile-copy-in linear both;
+      animation-timeline: view();
+      animation-range: entry calc(var(--i, 0) * 8%) entry calc(55% + var(--i, 0) * 8%);
     }
   }
-  @keyframes scroll-fade {
-    to {
-      opacity: 0.15;
-      scale: 0.95;
-      translate: 0 3rem;
-    }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .photo-rise {
+    animation: photo-rise 900ms var(--ease-out-expo) both;
+    animation-delay: calc(120ms + var(--i, 0) * 110ms);
   }
 }
 

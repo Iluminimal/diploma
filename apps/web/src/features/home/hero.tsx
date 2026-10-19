@@ -1,77 +1,66 @@
 import Image from "next/image";
-import "./story.css";
+import type { CSSProperties } from "react";
 import Link from "next/link";
-import { Reveal } from "@/components/motion/reveal";
-import { ScrollFade } from "@/components/motion/scroll-fade";
-import { categoryHref } from "@/features/catalog/nav";
+import { Button } from "@/components/ui/button";
 import type { Product } from "@/features/catalog/product";
 import { PhotoSearchTrigger } from "@/features/search/photo-search-trigger";
 import { newest } from "./home-data";
+import { Tile } from "./tile";
 
-// Left to right: where each photo comes from, how big it is, how far down it sits and how far it
-// drifts up while the page scrolls away. Alternating heights and speeds is what makes it feel deep.
+/** Where each of the three photos comes from. The middle one is the biggest, as the product is on apple.com's first tile. */
 const SLOTS = [
-  { patch: { category: "footwear" }, size: "w-[34%] md:w-[17%]", offset: "mt-16 md:mt-24", drift: "-30px", hide: "hidden md:block" },
-  { patch: { department: "women", category: "apparel" }, size: "w-[40%] md:w-[20%]", offset: "mt-6 md:mt-8", drift: "-90px", hide: "" },
-  { patch: { department: "men", category: "apparel" }, size: "w-[44%] md:w-[24%]", offset: "mt-0", drift: "-140px", hide: "" },
-  { patch: { department: "kids", category: "apparel" }, size: "w-[40%] md:w-[20%]", offset: "mt-10 md:mt-14", drift: "-60px", hide: "hidden md:block" },
-  { patch: { category: "accessories" }, size: "w-[34%] md:w-[17%]", offset: "mt-20 md:mt-28", drift: "-20px", hide: "hidden md:block" },
+  { patch: { category: "footwear" }, size: "w-[30%] md:w-[22%]", offset: "mt-10 md:mt-16", hide: "hidden sm:block" },
+  { patch: { department: "women", category: "apparel" }, size: "w-[46%] md:w-[28%]", offset: "mt-0", hide: "" },
+  { patch: { department: "men", category: "apparel" }, size: "w-[40%] md:w-[24%]", offset: "mt-6 md:mt-10", hide: "" },
 ] as const;
 
-async function collage(): Promise<(Product | undefined)[]> {
+/** What each picture on the first tile is of; the same pieces are not repeated in the department tiles. */
+async function heroPhotos(): Promise<(Product | undefined)[]> {
   return Promise.all(SLOTS.map(async (slot) => (await newest(slot.patch, 1))[0]));
 }
 
 /**
- * The first screen: a huge headline, two ways in, and a row of real photos that drift apart as you
- * scroll. The headline and buttons are plain (never hidden or animated from invisible), because
- * they are what the page is measured on.
+ * The first tile: the idea of the shop in one line, two ways in (the photo, or the new arrivals), and
+ * real products underneath. The headline and the buttons are plain (never hidden or animated from
+ * invisible), because they are what the page is measured on.
  */
 export async function Hero() {
-  const photos = await collage();
+  const photos = await heroPhotos();
   return (
-    <section aria-labelledby="hero-heading" className="relative overflow-hidden pb-8 md:pb-16">
-      <ScrollFade className="container-page pt-12 text-center md:pt-20">
-        <p className="type-heading text-muted-foreground mb-2">Visual search for fashion</p>
-        <h1 id="hero-heading" className="type-hero mx-auto max-w-4xl text-balance">
-          Shop by photo.
-        </h1>
-        <Reveal as="p" when="mount" delay={0.12} className="type-intro mx-auto mt-3 max-w-xl text-balance md:mt-4">
-          Show us a look you love. We&apos;ll find the pieces that match it, ready to buy.
-        </Reveal>
-        <Reveal when="mount" delay={0.24} className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 md:mt-8">
+    <Tile
+      size="hero"
+      as="h1"
+      animate={false}
+      label="Shop by photo"
+      heading="Shop by photo."
+      subtitle="Show us a look you love. We'll find the pieces that match it, ready to buy."
+      actions={
+        <>
           <PhotoSearchTrigger />
-          <Link href={categoryHref("women")} className="link-more">
-            Shop women
-          </Link>
-          <Link href={categoryHref("men")} className="link-more">
-            Shop men
-          </Link>
-        </Reveal>
-      </ScrollFade>
-
+          <Button asChild variant="bordered" size="xl">
+            <Link href="/products?sort=newest">Shop new arrivals</Link>
+          </Button>
+        </>
+      }
+    >
       {photos.some(Boolean) && (
-        <div aria-hidden className="container-page mt-12 flex items-start justify-center gap-3 md:mt-16 md:gap-5">
+        <div aria-hidden className="mt-10 flex w-full max-w-5xl flex-1 items-start justify-center gap-3 px-4 md:mt-12 md:gap-5">
           {SLOTS.map((slot, i) => {
             const product = photos[i];
             if (!product) return null;
             return (
-              <div
-                key={slot.patch.category + (("department" in slot.patch && slot.patch.department) || "")}
-                className={`drift ${slot.size} ${slot.offset} ${slot.hide}`}
-                style={{ "--drift": slot.drift } as React.CSSProperties}
-              >
-                <div className="tile aspect-3/4 dark:bg-white">
+              <div key={i} className={`photo-rise ${slot.size} ${slot.offset} ${slot.hide}`} style={{ "--i": i } as CSSProperties}>
+                <div className="aspect-3/4 overflow-hidden rounded-t-2xl bg-white">
                   <Image
                     src={product.image.thumb_800}
                     alt=""
                     width={800}
                     height={1067}
-                    sizes="(min-width: 768px) 24vw, 44vw"
-                    priority={i === 1 || i === 2}
+                    sizes="(min-width: 768px) 28vw, 46vw"
+                    priority={i === 1}
                     placeholder={product.image.blur_data_url ? "blur" : "empty"}
                     blurDataURL={product.image.blur_data_url ?? undefined}
-                    className="size-full object-cover mix-blend-multiply dark:mix-blend-normal"
+                    className="size-full object-cover object-top"
                   />
                 </div>
               </div>
@@ -79,6 +68,6 @@ export async function Hero() {
           })}
         </div>
       )}
-    </section>
+    </Tile>
   );
 }

@@ -7,7 +7,7 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 
 | Route | Rendering | Notes |
 | --- | --- | --- |
-| `/` | per request | storytelling home page, see "The home page" below |
+| `/` | per request | apple.com-style tile home page, see "The home page" below |
 | `/products` | per request | URL-synced filters, sort and pagination; everything in the query string; the place for free-text search results |
 | `/c/{department}[/{group}[/{sub}[/{type}]]]` | per request | category pages, e.g. `/c/men/apparel/topwear/tshirts`: breadcrumbs (+ `BreadcrumbList` JSON-LD), drill-down sidebar with counts, the same filters and grid as `/products`; an unknown or empty category is a real 404 |
 | `/products/{id}/{slug}` | per request | gallery, size selector, breadcrumbs, a star rating under the name, **customer reviews** (average, distribution, sort and paging; a form for people who bought it), similar-products rail, metadata, JSON-LD (Product with `aggregateRating` once rated, and BreadcrumbList) |
@@ -48,7 +48,7 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
   `mix-blend-multiply` and melt into the tile (in dark mode the tile is white and the photo is drawn normally). Do the same for
   any new product picture.
 * **Header** (`components/layout/site-header.tsx`): a 44px translucent bar (backdrop blur and saturation), 1024px wide like
-  apple.com's, with the logo, the small department links, search, account and cart **spread evenly across it**
+  apple.com's, with the logo, the small department links, search, bag and account **spread evenly across it**
   (`justify-content: space-between`; the menu's nav and list and the icon group are `display: contents` from md up, so every one
   is an item of the same row). The links are 12px with 8px either side and as tall as the bar, as apple.com's are, and their focus
   ring is a small rounded box hugging the text (outline inset 6px), not the whole bar. A hairline fades in under it as the page
@@ -93,22 +93,34 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 
 ## The home page
 
-Apple-style storytelling on top, Amazon-style shelves below. (There is no announcement bar above the header.) Nothing on it is invented: no discounts, ratings or
-"best sellers" (the dataset has none); every product, count and sentence is real.
+apple.com's home: tiles edge to edge, 12px apart, each a centred headline, a line of text, one or two pill buttons and a
+picture, in the sizes measured on the live site (56px headline and 692px on the first tile, 40px and 580px on the others). It
+holds what a shop needs and nothing more. (There is no announcement bar above the header.) Nothing on it is invented: no
+discounts, ratings or "best sellers" (the dataset has none); every product, figure and sentence is real.
 
-| Section | What it is |
+| Tile or section | What it is |
 | --- | --- |
-| Hero | huge headline, "Search with a photo" (opens the photo picker) and Shop women / men; below it five real photos (newest in stock per department) that drift at different speeds as you scroll (`.drift`). The headline is plain text, never hidden: it is what the page is measured on |
-| How it works | a pinned story. A 340vh track with a sticky full-screen stage; the track's scroll position (a named view timeline, `.story-*` in `globals.css`) plays the three steps: the photo appears, a scan line sweeps it and what was detected fades in, then its real nearest neighbours (`getSimilarProducts`) rise in. Phones, browsers without scroll-driven animation and reduced motion get the three captions and the finished result stacked |
-| Departments | three large cards (Women / Men / Kids) that grow into place (`.zoom-in`) |
-| Shelves | "Shop by category" pills (biggest article types from `GET /catalog/nav`), New arrivals, Under $25, three "<type> for <department>" rails, and **Recently viewed** |
-| Photo band | the full drop zone on a dark band |
-| Trust strip | free shipping over $100, photos are never stored, this is a demo store |
+| Hero (`hero.tsx`, a `Tile`) | "Shop by photo.", the "Search with a photo" button (opens the photo picker) and "Shop new arrivals"; under them three real photos (newest in stock footwear, women's and men's apparel). The headline is plain text, never hidden: it is what the page is measured on |
+| Departments (`departments.tsx`) | Women and Men side by side, Kids across the full width: the name, one line, "Shop women" and a photo that bleeds off the bottom (each department's second-newest piece, so the hero's photos are not repeated) |
+| Photo search (`photo-tile.tsx`) | the one black tile: what the shop does differently, and the button to try it |
+| New arrivals (`shelves.tsx`) | the one shelf of products: the newest in stock, with "Shop all" |
+| Delivery and payment (`services.tsx`) | three lines every shop has: free delivery over a figure, express delivery and how fast, secure checkout. The figures are read from the endpoint checkout charges by (`GET /checkout/shipping-methods`), and nothing is promised when it cannot be read |
+| Recently viewed | per browser, absent on a first visit (below) |
+
+**Motion** (all CSS, transform and opacity only, no script; measured: Lighthouse performance 93 on the home page, CLS 0, TBT 25 ms):
+the tiles' words and pictures settle in as they scroll into view (`.tile-copy`, `.tile-photo`, `.view-rise`: scroll-driven
+`view()` timelines, which run on the compositor), and the first tile's three photos rise once on load (`.photo-rise`, 900 ms,
+110 ms apart). The first tile's headline is never animated. Browsers without scroll-driven animations, and visitors with
+reduced motion, simply see everything in place.
+
+Removed as unnecessary: the pinned scroll story ("How it works"), the drifting collage, the category pills, the "Under $25"
+and "<type> for <department>" shelves, the drop zone on a dark band (the photo button opens the same picker) and the trust
+strip.
 
 * **Recently viewed** is per browser: product pages record the last 12 products they showed in `localStorage`
   (`features/catalog/recently-viewed.ts`, `RecordView`); the shelf reads it with `useSyncExternalStore` and is absent on a
   first visit. Entries keep the price seen at that visit; clicking opens the live page. Blocked storage means no shelf.
-* **All motion is CSS** (scroll-driven animations behind `@supports (animation-timeline: ...)` and
+* **Motion is CSS** (scroll-driven animations behind `@supports (animation-timeline: ...)` and
   `prefers-reduced-motion: no-preference`), so the page costs no animation script.
 * `ProductRail` lives in `features/catalog/product-rail.tsx`, apart from the server-only API module, because the client-side
   Recently viewed shelf renders it.

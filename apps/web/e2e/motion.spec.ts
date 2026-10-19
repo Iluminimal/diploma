@@ -109,7 +109,7 @@ test.describe("on a phone", () => {
     await expect(bar.getByRole("button", { name: "Search", exact: true })).toBeVisible();
     await expect(bar.getByRole("button", { name: /^Bag/ })).toBeVisible();
     await expect(bar.getByRole("button", { name: "Open menu" })).toBeVisible();
-    // The account is in the menu on a phone, not in the bar.
+    // The account is in the Bag page on a phone, not in the bar.
     await expect(bar.getByRole("button", { name: /^Account/ })).toBeHidden();
     await expect(bar.getByRole("link", { name: "Sign in" })).toBeHidden();
     await expect(page.getByRole("navigation", { name: "Quick navigation" })).toHaveCount(0);
@@ -127,18 +127,27 @@ test.describe("on a phone", () => {
     const box = await menu.boundingBox();
     expect(box!.width).toBeGreaterThanOrEqual(389);
     expect(box!.y + box!.height).toBeGreaterThanOrEqual(843); // down to the bottom of the screen
-    await expect(menu.getByRole("link", { name: "Sign in" })).toBeVisible();
+    // As on apple.com: the logo, search and bag fade out and only the X is left in the bar.
+    const bar = page.getByRole("banner");
+    await expect(bar.getByRole("link", { name: "Angel" })).toBeHidden();
+    await expect(bar.getByRole("button", { name: "Search", exact: true })).toBeHidden();
+    await expect(bar.getByRole("button", { name: /^Bag/ })).toBeHidden();
+    await expect(close).toBeVisible();
 
     await page.keyboard.press("Escape");
     await expect(menu).toBeHidden();
     await expect(page.getByRole("button", { name: "Open menu" })).toBeFocused();
+    await expect(bar.getByRole("link", { name: "Angel" })).toBeVisible();
+    await expect(bar.getByRole("button", { name: /^Bag/ })).toBeVisible();
   });
 
-  test("the menu's search field opens the search, and its links lead on", async ({ page }) => {
+  test("the search page has only its X, no logo, and the menu's links lead on", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: "Open menu" }).click();
-    await page.getByRole("dialog", { name: "Menu" }).getByRole("button", { name: "Search" }).click();
+    await page.getByRole("banner").getByRole("button", { name: "Search", exact: true }).click();
+    const search = page.getByRole("dialog", { name: "Search" });
     await expect(page.getByRole("combobox")).toBeVisible();
+    await expect(search.getByRole("link", { name: "Angel" })).toHaveCount(0);
+    await expect(search.getByRole("button", { name: "Close search" }).first()).toBeVisible();
     await page.keyboard.press("Escape");
 
     await page.getByRole("button", { name: "Open menu" }).click();
@@ -152,7 +161,11 @@ test.describe("on a phone", () => {
 
     await page.getByRole("banner").getByRole("button", { name: /^Bag/ }).click();
 
-    await expect(page.getByRole("dialog", { name: /^Bag/ })).toBeVisible();
+    const bag = page.getByRole("dialog", { name: /^Bag/ });
+    await expect(bag).toBeVisible();
+    await expect(bag.getByRole("link", { name: "Angel" })).toHaveCount(0);
+    // The account lives here on a phone, as under apple.com's Bag.
+    await expect(bag.getByRole("navigation", { name: "My profile" }).getByRole("link", { name: "Sign in" })).toBeVisible();
   });
 
   test("a signed-in customer finds Saved and Sign out on the account page", async ({ shopperPage: page }) => {

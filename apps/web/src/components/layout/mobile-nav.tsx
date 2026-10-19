@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
 import { HEADER_CELL } from "@/components/layout/header-cell";
 import { cn } from "@/lib/utils";
+import { useBarPanel } from "./bar-panel";
 
 // The menu panel (with the categories it fetches) is loaded the first time the button is pressed.
 const MobileMenuPanel = dynamic(() => import("./mobile-nav-menu").then((m) => m.MobileMenuPanel), { ssr: false });
@@ -22,8 +23,8 @@ function MenuIcon({ open }: { open: boolean }) {
 
 /**
  * The menu button of the phone header, last in the row (logo, search, bag, menu) as on apple.com.
- * Pressed, its lines become an X and a full page of links opens under the bar; pressed again (or
- * Escape, or following a link) it closes. After a navigation the menu counts as closed, without
+ * Pressed, its lines become an X, the rest of the bar fades out and a full page of links opens under
+ * it; pressed again (or Escape, or following a link) it closes. After a navigation the menu counts as closed, without
  * an effect: it remembers the page it was opened on.
  */
 export function MobileNav() {
@@ -34,6 +35,7 @@ export function MobileNav() {
   const open = openedAt !== null && openedAt === pathname;
   // Stable: the panel's effect depends on it and must not run again at every render.
   const close = useCallback(() => setOpenedAt(null), []);
+  useBarPanel(open);
 
   return (
     <>

@@ -29,7 +29,7 @@ export function CartButton() {
       <button
         ref={trigger}
         type="button"
-        className={HEADER_CELL}
+        className={cn(HEADER_CELL, "phone-bar-item")}
         data-cart-button
         aria-label={count ? `Bag, ${count} items` : "Bag"}
         aria-haspopup="dialog"

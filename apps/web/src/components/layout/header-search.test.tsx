@@ -21,6 +21,26 @@ describe("HeaderSearch", () => {
     await waitFor(() => expect(isOpen()).toBe(false));
   });
 
+  it("tells the page it is open, so the phone bar fades everything but the X, and clears it on closing", async () => {
+    render(<HeaderSearch />);
+
+    await userEvent.click(magnifier());
+    expect(document.documentElement).toHaveAttribute("data-bar-panel");
+    expect(magnifier()).toHaveClass("phone-bar-item");
+
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(document.documentElement).not.toHaveAttribute("data-bar-panel"));
+  });
+
+  it("has no logo in its phone bar: only the X is left of the bar", async () => {
+    render(<HeaderSearch />);
+
+    await userEvent.click(magnifier());
+
+    const dialog = await screen.findByRole("dialog", { name: "Search" });
+    expect(dialog.querySelector('a[href="/"]')).toBeNull();
+  });
+
   it("opens when another part of the page asks (the phone tab bar's Search tab)", async () => {
     render(<HeaderSearch />);
     expect(isOpen()).toBe(false);

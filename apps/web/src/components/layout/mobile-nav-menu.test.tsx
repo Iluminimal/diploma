@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -45,16 +45,26 @@ describe("the phone menu button and page", () => {
     expect(await screen.findByRole("dialog", { name: "Menu" })).toHaveAttribute("data-open", "true");
   });
 
-  it("holds a search field and the shop in large type, and only that: no cart or account icons", async () => {
+  it("holds the shop in large type, and only that: no search field, cart or account", async () => {
     await open();
 
     const dialog = screen.getByRole("dialog", { name: "Menu" });
-    expect(dialog).toHaveTextContent("Search");
     for (const name of ["Women", "Men", "Kids"]) {
       expect(screen.queryByRole("button", { name }) ?? screen.queryByRole("link", { name })).toBeInTheDocument();
     }
     expect(screen.getByRole("link", { name: "New" })).toHaveAttribute("href", "/products?sort=newest");
+    expect(within(dialog).queryByRole("button", { name: "Search" })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Bag/ })).not.toBeInTheDocument();
+  });
+
+  it("tells the page it is open, so the bar can fade everything but the X, and clears it on closing", async () => {
+    await open();
+    expect(document.documentElement).toHaveAttribute("data-bar-panel");
+
+    await userEvent.click(trigger());
+
+    expect(document.documentElement).not.toHaveAttribute("data-bar-panel");
   });
 
   it("drills from a department to an article type and back", async () => {
@@ -78,24 +88,6 @@ describe("the phone menu button and page", () => {
     expect(screen.getByRole("link", { name: "Kids" })).toHaveAttribute("href", "/c/kids");
   });
 
-  it("offers the account at the bottom: Sign in for a visitor, the account pages once signed in", async () => {
-    await open();
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
-    expect(screen.queryByRole("link", { name: "Orders" })).not.toBeInTheDocument();
-  });
-
-  it("lists the account pages for a signed-in customer", async () => {
-    useAuth.setState({
-      status: "signedIn",
-      accessToken: "t",
-      user: { id: 1, email: "a@b.co", phone: null, email_verified: false, phone_verified: false, full_name: "Ada", role: "customer", avatar_url: null, has_password: true, providers: [] },
-    });
-    await open();
-
-    expect(screen.getByRole("link", { name: "Orders" })).toHaveAttribute("href", "/account/orders");
-    expect(screen.queryByRole("link", { name: "Sign in" })).not.toBeInTheDocument();
-  });
-
   it("keeps the page behind out of reach while it is open, and gives it back on closing", async () => {
     await open();
     expect(document.getElementById("main")).toHaveAttribute("inert");
@@ -115,15 +107,6 @@ describe("the phone menu button and page", () => {
 
     expect(trigger()).toHaveAttribute("aria-expanded", "false");
     expect(trigger()).toHaveFocus();
-  });
-
-  it("closes and asks for the search panel when the search field is pressed", async () => {
-    await open();
-
-    await userEvent.click(screen.getByRole("button", { name: "Search" }));
-
-    expect(trigger()).toHaveAttribute("aria-expanded", "false");
-    expect(useSearchPanel.getState().requests).toBe(1);
   });
 
   it("closes by itself when the page changes", async () => {

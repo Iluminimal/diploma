@@ -8,8 +8,8 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { HEADER_CELL, SearchGlyph } from "@/components/layout/header-cell";
-import { AngelLogo } from "@/components/layout/logo";
 import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
+import { useBarPanel } from "./bar-panel";
 import { useSearchPanel } from "./search-ui-store";
 
 // The search field, its suggestions and the photo picker are fetched the first time search opens.
@@ -66,6 +66,7 @@ export function HeaderSearch() {
   }
 
   const close = () => setOpenedAt(null);
+  useBarPanel(open);
 
   // Escape closes the panel wherever focus is (the panel's own handler covers focus inside it).
   useEffect(() => {
@@ -106,7 +107,7 @@ export function HeaderSearch() {
       <button
         ref={button}
         type="button"
-        className={HEADER_CELL}
+        className={cn(HEADER_CELL, "phone-bar-item")}
         aria-label="Search"
         title="Search (press /)"
         aria-keyshortcuts="/"
@@ -134,13 +135,10 @@ export function HeaderSearch() {
               className="search-panel bg-background fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto overscroll-contain pb-10 md:h-auto md:max-h-dvh"
             >
               <div className="container-page">
-                {/* On a phone, as on apple.com: a row like the header with the logo and the X where the
-                    menu button was, and the field on a row of its own below. From md up the X sits
-                    beside the field. */}
-                <div className="flex h-12 items-center justify-between md:hidden">
-                  <Link href="/" onClick={close} className="focus-visible:ring-ring/60 rounded-md text-[1.0625rem] outline-none focus-visible:ring-3">
-                    <AngelLogo showName={false} markClassName="size-7" />
-                  </Link>
+                {/* On a phone, as on apple.com: the bar holds only the X, where the menu button was (the
+                    logo, search and bag are gone), and the field is on a row of its own below. From md up
+                    the X sits beside the field. */}
+                <div className="flex h-12 items-center justify-end md:hidden">
                   <button type="button" className={HEADER_CELL} aria-label="Close search" onClick={close}>
                     <X className="size-[18px]" strokeWidth={1.25} />
                   </button>

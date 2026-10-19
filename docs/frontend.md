@@ -158,16 +158,25 @@ final value at once in tests (a test of an animation stubs `matchMedia` itself).
 | Forms | an error fades in and the control shakes once |
 | Edge pages | one designed page for 404 and errors (`LostPage`: a floating mark, a search box, the way back), `global-error.tsx` |
 
-**Phone navigation** (apple.com's): on a phone the header is the same four things in apple.com's order: logo on the left, then
-search, bag and the menu button. The menu button (`MobileNav`) is two thin lines that turn into an X; pressed, a
-full page opens under the bar (`MobileMenuPanel`, `.menu-panel` in `globals.css`): a search field, then Women, Men, Kids and
-New in large type, each line fading in after the one above, with the small account links (Sign in, or Profile, Orders,
-Wishlist, Addresses) at the bottom. Departments drill down level by level inside the page. While it is open the bar turns
-solid, the page behind cannot scroll and is `inert`, Escape or the X or following a link closes it and focus returns to the
-button. The page is portalled to `<body>` and fetched on the first press. Its search field closes the page and opens the search
-panel through `useSearchPanel`; the bag opens the Bag panel. There is no bar along the bottom. Sign out, which lives in the
-desktop account dropdown (the account icon is in the bar from md up), is a button on the account page on a phone. A bottom
-tab bar (Instagram-style) was tried first and removed: it repeated what the header already offered.
+**Phone navigation** (apple.com's, checked against the live site in a real browser): on a phone the header is the same four
+things in apple.com's order: logo on the left, then search, bag and the menu button. The menu, the search and the Bag are
+each a full page that opens under or over the bar, and **while one is open only the X is left in the bar**: the logo, search
+and bag fade out (`.phone-bar-item`, 240 ms, driven by `data-bar-panel` on `<html>`, set by `useBarPanel` in
+`components/layout/bar-panel.ts` for as long as any of the three is open). From md up the bar keeps everything, as before.
+
+* The menu button (`MobileNav`) is two thin lines that turn into an X; pressed, the menu page opens under the bar
+  (`MobileMenuPanel`, `.menu-panel` in `globals.css`): Women, Men, Kids and New in large type, each line fading in after the one
+  above, and nothing else (no search field, no account links: those are the magnifier's and the Bag's pages). Departments
+  drill down level by level inside the page. While it is open the bar turns solid, the page behind cannot scroll and is
+  `inert`, Escape or the X or following a link closes it and focus returns to the button. Portalled to `<body>` and fetched
+  on the first press.
+* The search page (`HeaderSearch`) has the X and, below it, the field with its quick links; no logo.
+* The Bag page (`BagPanel`) has the X (the logo only from md up), the items, and under them **My profile**: the account
+  pages for a signed-in customer, or Sign in. The account is here, as under apple.com's Bag.
+
+There is no bar along the bottom. Sign out, which lives in the desktop account dropdown (the account icon is in the bar from
+md up), is a button on the account page on a phone. A bottom tab bar (Instagram-style) was tried first and removed: it
+repeated what the header already offered.
 
 **Lessons**: a `loading.tsx` above `/products/[id]` makes the product page stream, which turns its canonical-URL `permanentRedirect`
 into a client-side redirect (two session refreshes in a row, the second rejected as a replay); a server component can neither pass

@@ -1,12 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ACCOUNT_LINKS } from "@/features/auth/account-links";
-import { useAuth } from "@/features/auth/auth-store";
 import {
   DEPARTMENT_LINKS,
   categoryHref,
@@ -15,7 +13,6 @@ import {
 } from "@/features/catalog/nav";
 import { useCatalogNav } from "@/features/catalog/use-catalog-nav";
 import { cn } from "@/lib/utils";
-import { useSearchPanel } from "./search-ui-store";
 
 /** One step of the drill-down: where "Shop all" goes and what lies below it. */
 type Step = { name: string; href: string; children: Step[] };
@@ -42,10 +39,11 @@ function departments(nav: CatalogNav | undefined): Step[] {
 const row = (i: number) => ({ "--i": i }) as CSSProperties;
 
 /**
- * The page that opens under the phone header when the menu button is pressed, as on apple.com: a
- * search field, then the shop in large type, each line fading in after the one above. Departments
+ * The page that opens under the phone header when the menu button is pressed, as on apple.com: the
+ * shop in large type, each line fading in after the one above, and nothing else (the search and the
+ * account are the magnifier's and the Bag's pages). Departments
  * drill down level by level (Men > Clothing > Topwear). It covers the page below the bar (the bar
- * itself stays, its button now an X), the page behind it cannot scroll or be reached, and Escape
+ * itself stays, but only its button, now an X; the rest fades out), the page behind it cannot scroll or be reached, and Escape
  * closes it and returns focus to the button. Portalled to <body> because the header's backdrop
  * blur would otherwise be the containing block of anything `fixed` inside it.
  */
@@ -61,8 +59,6 @@ export function MobileMenuPanel({
   const panel = useRef<HTMLDivElement>(null);
   const [stack, setStack] = useState<Step[]>([]);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
-  const signedIn = useAuth((state) => state.status === "signedIn");
-  const requestSearch = useSearchPanel((state) => state.request);
   const { data, isPending } = useCatalogNav(open);
 
   // Closed: the next opening starts at the top.
@@ -106,19 +102,7 @@ export function MobileMenuPanel({
       className="menu-panel bg-background fixed inset-x-0 top-12 bottom-0 z-30 overflow-y-auto overscroll-contain md:hidden"
     >
       <div className="container-page pt-4 pb-16">
-        {top ? (
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              requestSearch();
-            }}
-            className="menu-row bg-secondary text-muted-foreground focus-visible:ring-ring/60 mb-6 flex h-11 w-full items-center gap-2.5 rounded-xl px-3.5 text-left text-base outline-none focus-visible:ring-3"
-            style={row(0)}
-          >
-            <Search aria-hidden className="size-4" /> Search
-          </button>
-        ) : (
+        {!top && (
           <button
             type="button"
             onClick={() => {
@@ -180,21 +164,6 @@ export function MobileMenuPanel({
           )}
         </nav>
 
-        {top && (
-          <nav aria-label="Your account" className="menu-row mt-8 flex flex-col gap-2.5" style={row(current.children.length + 3)}>
-            {signedIn ? (
-              ACCOUNT_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} onClick={onClose} prefetch={false} className="text-muted-foreground hover:text-foreground w-fit text-sm">
-                  {link.label}
-                </Link>
-              ))
-            ) : (
-              <Link href="/login" onClick={onClose} prefetch={false} className="text-muted-foreground hover:text-foreground w-fit text-sm">
-                Sign in
-              </Link>
-            )}
-          </nav>
-        )}
       </div>
     </div>,
     document.body,

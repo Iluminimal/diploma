@@ -26,7 +26,7 @@ export async function chooseSize(page: Page): Promise<string> {
   return size;
 }
 
-/** Picks a size and adds the product; leaves the mini-cart drawer open. Returns the size chosen. */
+/** Picks a size and adds the product; leaves the Bag panel open. Returns the size chosen. */
 export async function addToCartFromProductPage(page: Page, product: CatalogProduct): Promise<string> {
   await openProduct(page, product);
   const size = await chooseSize(page);

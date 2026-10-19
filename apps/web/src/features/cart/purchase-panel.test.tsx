@@ -6,7 +6,7 @@ import { sizesFor } from "@/features/catalog/sizes";
 import { makeCart, makeCartLine, makeProduct } from "@/test/fixtures";
 import { problem, stubApi } from "@/test/api-mock";
 import { renderWithQuery } from "@/test/render";
-import { useCartDrawer } from "./cart-ui-store";
+import { useBagPanel } from "./cart-ui-store";
 import { PurchasePanel } from "./purchase-panel";
 
 const toastError = vi.fn();
@@ -18,7 +18,7 @@ const withShirt = makeCart([makeCartLine({ quantity: 1 })]);
 
 beforeEach(() => {
   toastError.mockReset();
-  useCartDrawer.setState({ open: false });
+  useBagPanel.setState({ open: false });
   useAuth.setState({ status: "signedOut", accessToken: null, user: null });
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -38,7 +38,7 @@ describe("PurchasePanel", () => {
     expect(api.calls).toHaveLength(0);
   });
 
-  it("adds the chosen size and opens the cart drawer", async () => {
+  it("adds the chosen size and opens the Bag", async () => {
     const api = stubApi({
       "POST /api/v1/cart/items": { body: withShirt },
       "GET /api/v1/cart": { body: withShirt },
@@ -48,7 +48,7 @@ describe("PurchasePanel", () => {
     await userEvent.click(screen.getByLabelText("M"));
     await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
-    await waitFor(() => expect(useCartDrawer.getState().open).toBe(true));
+    await waitFor(() => expect(useBagPanel.getState().open).toBe(true));
     expect(api.calls.find((c) => c.method === "POST")?.body).toEqual({
       product_id: shirt.id,
       size: "M",
@@ -79,7 +79,7 @@ describe("PurchasePanel", () => {
 
     expect(await screen.findByRole("button", { name: "Added" })).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("was added to your Bag");
-    expect(useCartDrawer.getState().added).toEqual({ productId: shirt.id, size: "M" });
+    expect(useBagPanel.getState().added).toEqual({ productId: shirt.id, size: "M" });
     await waitFor(() => expect(screen.getByRole("button", { name: /add to bag/i })).toBeInTheDocument(), { timeout: 3000 });
   });
 
@@ -113,7 +113,7 @@ describe("PurchasePanel", () => {
     expect(screen.getByRole("button", { name: /sold out/i })).toBeDisabled();
   });
 
-  it("tells the shopper when there is not enough stock and keeps the drawer closed", async () => {
+  it("tells the shopper when there is not enough stock and keeps the Bag closed", async () => {
     stubApi({
       "POST /api/v1/cart/items": problem(409, "Not enough stock", {
         type: "urn:angel:problem:insufficient-stock",
@@ -128,7 +128,7 @@ describe("PurchasePanel", () => {
     await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
     await waitFor(() => expect(toastError).toHaveBeenCalledWith("Only 2 of Alma Women Blue Kurta can be added."));
-    expect(useCartDrawer.getState().open).toBe(false);
+    expect(useBagPanel.getState().open).toBe(false);
   });
 
   describe("sticky bar", () => {

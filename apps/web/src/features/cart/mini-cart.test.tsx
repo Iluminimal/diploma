@@ -33,7 +33,7 @@ describe("MiniCart", () => {
     expect(await screen.findByText("Blue Kurta")).toBeInTheDocument();
     expect(screen.getByText(/Size 9/)).toBeInTheDocument();
     expect(screen.getByText("$110")).toBeInTheDocument(); // 2 x 30 + 50
-    expect(screen.getByRole("link", { name: "Checkout" })).toHaveAttribute("href", "/checkout");
+    expect(screen.getByRole("link", { name: "Check Out" })).toHaveAttribute("href", "/checkout");
     expect(screen.getByRole("link", { name: "View Bag" })).toHaveAttribute("href", "/cart");
   });
 
@@ -140,12 +140,12 @@ describe("MiniCart", () => {
     await waitFor(() => expect(api.calls.find((c) => c.method === "PATCH")?.body).toEqual({ quantity: 2 }));
   });
 
-  it("calls onNavigate so the drawer can close when a link is followed", async () => {
+  it("calls onNavigate so the Bag can close when a link is followed", async () => {
     const onNavigate = vi.fn();
     stubApi({ "GET /api/v1/cart": { body: twoLines() } });
     renderWithQuery(<MiniCart onNavigate={onNavigate} />);
 
-    await userEvent.click(await screen.findByRole("link", { name: "Checkout" }));
+    await userEvent.click(await screen.findByRole("link", { name: "Check Out" }));
 
     expect(onNavigate).toHaveBeenCalled();
   });

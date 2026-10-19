@@ -138,7 +138,7 @@ test.describe("storefront", () => {
     await sweep(page, "/no-such-page", { ready: heading(page) });
   });
 
-  test("the mini-cart drawer", async ({ page, products }) => {
+  test("the Bag panel", async ({ page, products }) => {
     const [product] = products;
     const found = [];
     for (const variant of VARIANTS) {

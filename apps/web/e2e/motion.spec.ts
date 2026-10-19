@@ -65,7 +65,7 @@ test("checkout shows its steps done as they are chosen, then covers the page whi
   products,
 }, testInfo) => {
   await addToCartFromProductPage(page, pickProduct(products, testInfo.workerIndex + 4));
-  await page.getByRole("dialog").getByRole("link", { name: "Checkout" }).click();
+  await page.getByRole("dialog").getByRole("link", { name: "Check Out" }).click();
   await page.getByLabel("Full name").fill("Ada Lovelace");
   await page.getByLabel("Address", { exact: true }).fill("12 Analytical Way");
   await page.getByLabel("City").fill("Springfield");
@@ -152,7 +152,7 @@ test.describe("on a phone", () => {
 
     await page.getByRole("banner").getByRole("button", { name: /^Bag/ }).click();
 
-    await expect(page.getByRole("dialog", { name: "Your Bag" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /^Bag/ })).toBeVisible();
   });
 
   test("a signed-in customer finds Saved and Sign out on the account page", async ({ shopperPage: page }) => {
@@ -172,7 +172,7 @@ test("with reduced motion everything still works, without the flight", async ({ 
 
   await addToCartFromProductPage(page, product);
 
-  // No flight: the drawer is there at once, and nothing is left flying over the page.
+  // No flight: the Bag is there at once, and nothing is left flying over the page.
   await expect(page.getByRole("dialog").getByText(product.name)).toBeVisible();
   await expect(page.locator('body > img[aria-hidden="true"]')).toHaveCount(0);
 });

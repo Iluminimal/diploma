@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function MiniCartSkeleton() {
   return (
-    <div className="space-y-4 px-4" aria-hidden>
+    <div className="space-y-4" aria-hidden>
       {[0, 1].map((n) => (
         <div key={n} className="flex gap-3">
           <Skeleton className="aspect-[3/4] w-20 rounded-xl" />
@@ -27,14 +27,14 @@ export function MiniCartSkeleton() {
   );
 }
 
-/** The drawer's content. Loaded lazily (see cart-button.tsx) to keep it out of every page's JS. */
+/** The Bag's content. Loaded lazily (see cart-button.tsx) to keep it out of every page's JS. */
 export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
   const { data: cart, isPending, error, refetch } = useCart();
 
   if (isPending) return <MiniCartSkeleton />;
   if (error || !cart) {
     return (
-      <div className="space-y-3 px-4 text-sm">
+      <div className="space-y-3 text-sm">
         <p role="alert" className="text-destructive">
           {userMessage(error)}
         </p>
@@ -59,7 +59,7 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
           </Button>
         </EmptyState>
         {/* Taking out the last line leaves an empty cart: the way back is here. */}
-        <div className="px-4 pb-4 empty:hidden">
+        <div className="pb-4 empty:hidden">
           <UndoBar />
         </div>
       </>
@@ -68,10 +68,8 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
 
   return (
     <>
-      <div className="min-h-0 flex-1 overflow-y-auto px-4">
-        <CartLines cart={cart} onNavigate={onNavigate} />
-      </div>
-      <div className="border-border space-y-3 border-t p-4">
+      <CartLines cart={cart} onNavigate={onNavigate} />
+      <div className="border-border mt-8 space-y-3 border-t pt-6">
         <FreeShippingProgress subtotalCents={cart.subtotal_cents} />
         <div className="flex items-baseline justify-between">
           <span className="type-body font-semibold">Subtotal</span>
@@ -79,9 +77,9 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
         </div>
         <p className="text-muted-foreground text-xs">Shipping is calculated at checkout.</p>
         <Button asChild size="xl" className="w-full" onClick={onNavigate}>
-          <Link href="/checkout">Checkout</Link>
+          <Link href="/checkout">Check Out</Link>
         </Button>
-        <Button asChild variant="bordered" size="lg" className="w-full" onClick={onNavigate}>
+        <Button asChild variant="link" className="w-full" onClick={onNavigate}>
           <Link href="/cart">View Bag</Link>
         </Button>
       </div>

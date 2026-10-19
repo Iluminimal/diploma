@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/auth-store";
 import { json, stubApi } from "@/test/api-mock";
 import { makeCart, makeCartLine, makeProduct } from "@/test/fixtures";
 import { renderWithQuery } from "@/test/render";
-import { useCartDrawer } from "./cart-ui-store";
+import { useBagPanel } from "./cart-ui-store";
 import { MiniCart } from "./mini-cart";
 
 const notice = vi.fn();
@@ -24,7 +24,7 @@ const twoLines = () =>
 beforeEach(() => {
   notice.mockReset();
   push.mockReset();
-  useCartDrawer.setState({ open: false, added: null, removed: null });
+  useBagPanel.setState({ open: false, added: null, removed: null });
   useAuth.setState({ status: "signedOut", accessToken: null, user: null });
 });
 afterEach(() => vi.unstubAllGlobals());
@@ -90,7 +90,7 @@ describe("cart lines", () => {
   });
 
   it("highlights the line that was just added", async () => {
-    useCartDrawer.setState({ added: { productId: 2, size: "9" } });
+    useBagPanel.setState({ added: { productId: 2, size: "9" } });
     stubApi({ "GET /api/v1/cart": () => json(twoLines()) });
     renderWithQuery(<MiniCart onNavigate={vi.fn()} />);
 

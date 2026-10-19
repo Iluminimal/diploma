@@ -89,25 +89,13 @@ describe("MegaMenu", () => {
     expect(link.closest(".mega-item")?.getAttribute("style")).toContain("--i: 4");
   });
 
-  it("makes the flyout as tall as the department shown, and nothing when closed", async () => {
-    vi.stubGlobal(
-      "ResizeObserver",
-      class {
-        constructor(private callback: () => void) {}
-        observe() {
-          this.callback();
-        }
-        disconnect() {}
-      },
-    );
-    const height = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(312);
+  it("fills the viewport under the bar when open, and nothing when closed", async () => {
     render(<MegaMenu />);
     expect(flyout().style.height).toBe("0px");
 
     await userEvent.hover(trigger("Men"));
 
-    await waitFor(() => expect(flyout().style.height).toBe("312px"));
-    height.mockRestore();
+    await waitFor(() => expect(flyout().style.height).toBe("calc(100dvh - 2.8125rem)"));
   });
 
   describe("touch", () => {

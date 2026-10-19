@@ -18,7 +18,7 @@ function bounce(target: Element) {
 /**
  * "Add to cart" made visible: a copy of the product photo shrinks and flies from where the shopper
  * is looking to the cart icon in the header, which bounces as it lands. Resolves when it has
- * landed (the drawer opens then). With reduced motion, or when there is nowhere to fly from or to,
+ * landed (the Bag opens then). With reduced motion, or when there is nowhere to fly from or to,
  * it resolves at once. Web Animations, no library: this ships with the page.
  *
  * `source` is the photo the shopper added from; `fallback` (the button they pressed) is used when

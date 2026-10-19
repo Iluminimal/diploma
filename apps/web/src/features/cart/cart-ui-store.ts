@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-/** The line that was just added (shown highlighted in the drawer), identified by product and size. */
+/** The line that was just added (shown highlighted in the Bag), identified by product and size. */
 export type AddedLine = { productId: number; size: string };
 
 /** The last line taken out of the cart, so it can be put back. */
@@ -15,8 +15,8 @@ type CartUi = {
   setRemoved: (line: RemovedLine | null) => void;
 };
 
-/** Whether the mini-cart drawer is open, so "Add to cart" can show it from anywhere. */
-export const useCartDrawer = create<CartUi>((set) => ({
+/** Whether the Bag panel is open, so "Add to cart" can show it from anywhere. */
+export const useBagPanel = create<CartUi>((set) => ({
   open: false,
   setOpen: (open) => set(open ? { open } : { open, added: null }),
   added: null,

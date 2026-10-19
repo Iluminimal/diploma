@@ -10,7 +10,7 @@ import {
   signInThroughTheForm,
 } from "./support/ui";
 
-test("a guest adds to the cart: a size is required, the drawer shows the line, the badge counts it", async ({
+test("a guest adds to the cart: a size is required, the Bag shows the line, the badge counts it", async ({
   page,
   products,
 }, testInfo) => {

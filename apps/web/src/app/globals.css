@@ -8,7 +8,7 @@
 @theme {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
-  /* A spring that overshoots a little, sampled as a CSS easing: for things that land (a drawer, a badge). */
+  /* A spring that overshoots a little, sampled as a CSS easing: for things that land (a panel, a badge). */
   --ease-spring: linear(
     0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077,
     1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%,
@@ -471,8 +471,8 @@
 }
 
 /*
- * The department flyout (components/mega-menu.tsx): ONE panel under the bar. Its height follows
- * the department shown (set from script), its contents swap with a quick crossfade, and the links
+ * The department flyout (components/mega-menu.tsx): ONE solid panel under the bar, as tall as the
+ * viewport (the height is set from script), its contents swap with a quick crossfade, and the links
  * fade in one after another. It becomes visible at once when opening (so focus can move into it in
  * the same frame) and is hidden only after it has finished closing.
  */
@@ -528,32 +528,6 @@
   }
 }
 
-/*
- * Behind the flyout the page is dimmed and blurred, like apple.com. It lets pointer events through,
- * so moving the mouse down onto the page still closes the menu. While the flyout is open the bar
- * turns solid (see the header) so bar and flyout read as one surface.
- */
-.mega-scrim {
-  position: absolute;
-  inset: 100% 0 auto 0;
-  height: 100dvh;
-  background: color-mix(in oklab, var(--background) 55%, transparent);
-  backdrop-filter: blur(18px) saturate(1.4);
-  pointer-events: none;
-  visibility: hidden;
-  opacity: 0;
-  transition:
-    opacity 300ms ease-out,
-    visibility 0s linear 300ms;
-}
-.mega-scrim[data-open="true"] {
-  visibility: visible;
-  opacity: 1;
-  transition:
-    opacity 300ms ease-out,
-    visibility 0s;
-}
-
 /* The search panel and the dimmer behind it, shown at once and hidden after they fade. */
 .search-panel,
 .search-scrim {
@@ -566,6 +540,12 @@
 }
 .search-panel {
   translate: 0 -0.75rem;
+}
+/* On a phone the panel fills the screen, so there is nothing for the dimmer to show. */
+@media (max-width: 767px) {
+  .search-scrim {
+    display: none;
+  }
 }
 .search-scrim {
   background: color-mix(in oklab, var(--background) 55%, transparent);

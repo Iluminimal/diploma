@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { SizeSelector } from "@/features/catalog/size-selector";
 import type { Product } from "@/features/catalog/product";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
-import { useCartDrawer } from "./cart-ui-store";
+import { useBagPanel } from "./cart-ui-store";
 import { flyToCart } from "./fly-to-cart";
 import { useAddToCart } from "./use-cart";
 
@@ -26,8 +26,8 @@ export function PurchasePanel({ product, sizes }: Props) {
   const [shake, setShake] = useState(0);
   const [justAdded, setJustAdded] = useState(false);
   const add = useAddToCart();
-  const openDrawer = useCartDrawer((state) => state.setOpen);
-  const setAdded = useCartDrawer((state) => state.setAdded);
+  const openDrawer = useBagPanel((state) => state.setOpen);
+  const setAdded = useBagPanel((state) => state.setAdded);
   const buttonRow = useRef<HTMLDivElement>(null);
   const sizeBox = useRef<HTMLDivElement>(null);
   // On phones the page is long: once the main button has scrolled out of sight, a bar keeps it in reach.

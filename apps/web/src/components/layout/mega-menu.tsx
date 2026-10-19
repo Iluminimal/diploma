@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 const OPEN_DELAY_MS = 120;
 const CLOSE_DELAY_MS = 200;
 const SUBCATEGORIES_SHOWN = 8;
+// The flyout fills the viewport under the bar (the bar is 2.75rem plus its 1px border).
+const FLYOUT_HEIGHT = "calc(100dvh - 2.8125rem)";
 
 const TOP_LINK =
   "focus-visible:ring-ring/60 flex h-full items-center rounded-md px-1.5 text-xs outline-none transition-colors duration-200 focus-visible:ring-3 focus-visible:ring-inset";
@@ -25,10 +27,10 @@ const PANEL_LINK =
  *
  * - The entries in the bar are ordinary links (they work before any script or data arrive).
  * - Hovering one opens **one shared flyout** under the bar; moving to another entry swaps its
- *   content at once, and the flyout's height follows the content. Leaving the bar and flyout closes
- *   it a moment later; hovering an entry that has no flyout ("New") closes it.
- * - While it is open the bar turns solid, so bar and flyout read as one surface, and the page
- *   behind is dimmed (see `.mega-*` in globals.css). The links fade in one after another.
+ *   content at once. The flyout is a solid panel as tall as the viewport under the bar. Leaving the
+ *   bar and flyout, or moving onto the empty part below the links, closes it a moment later; hovering an entry that has no flyout ("New") closes it.
+ * - While it is open the bar turns solid, so bar and flyout read as one surface
+ *   (see `.mega-*` in globals.css). The links fade in one after another.
  * - Touch: the first tap on an entry opens its flyout, the second follows the link.
  * - Keyboard: ArrowLeft / ArrowRight / Home / End move between the entries in the bar (and, while a
  *   flyout is open, switch it along); ArrowDown on an entry opens its flyout and moves into it;
@@ -41,10 +43,8 @@ export function MegaMenu() {
   const [opened, setOpened] = useState<{ slug: string; pathname: string } | null>(null);
   const openSlug = opened && opened.pathname === pathname ? opened.slug : null;
   const open = openSlug !== null;
-  const [height, setHeight] = useState(0);
   const timer = useRef<number | undefined>(undefined);
   const lastPointer = useRef<string>("mouse");
-  const contents = useRef<Record<string, HTMLDivElement | null>>({});
   const { data } = useCatalogNav(wanted);
 
   function setOpenSlug(slug: string | null) {
@@ -57,15 +57,6 @@ export function MegaMenu() {
     return () => window.clearTimeout(id);
   }, []);
   useEffect(() => () => window.clearTimeout(timer.current), []);
-
-  // The flyout is as tall as the department it shows.
-  useEffect(() => {
-    const element = openSlug ? contents.current[openSlug] : null;
-    if (!element) return;
-    const observer = new ResizeObserver(() => setHeight(element.offsetHeight));
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [openSlug, data]);
 
   function schedule(next: string | null, delay: number) {
     window.clearTimeout(timer.current);
@@ -165,13 +156,19 @@ export function MegaMenu() {
         </li>
       </ul>
 
-      <div aria-hidden className="mega-scrim" data-open={open} />
       <div
-        className="mega-flyout bg-background absolute inset-x-0 top-full overflow-hidden"
+        className="mega-flyout bg-background absolute inset-x-0 top-full overflow-y-auto overscroll-contain"
         data-open={open}
-        style={{ height: open ? height : 0 }}
+        style={{ height: open ? FLYOUT_HEIGHT : 0 }}
         onPointerEnter={(event) => mouse(event) && window.clearTimeout(timer.current)}
       >
+        {/* The empty part below the links: moving onto it, or tapping it, closes the flyout. */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          onPointerEnter={(event) => mouse(event) && schedule(null, CLOSE_DELAY_MS)}
+          onClick={() => setOpenSlug(null)}
+        />
         <div className="relative">
           {DEPARTMENT_LINKS.map((link) => {
             const department = data?.departments.find((d) => d.slug === link.slug);
@@ -179,9 +176,6 @@ export function MegaMenu() {
               <div
                 key={link.slug}
                 id={`mega-${link.slug}`}
-                ref={(element) => {
-                  contents.current[link.slug] = element;
-                }}
                 role="region"
                 aria-label={`${link.label} categories`}
                 data-active={openSlug === link.slug}
@@ -211,7 +205,7 @@ function Panel({ department }: { department: NavDepartment }) {
             prefetch={false}
             data-mega-link
             style={step(column, 0)}
-            className="mega-item text-muted-foreground hover:text-foreground focus-visible:ring-ring/60 mb-4 inline-block rounded-md text-xs font-medium outline-none transition-colors focus-visible:ring-3"
+            className="mega-item text-muted-foreground hover:text-foreground focus-visible:ring-ring/60 mb-4 block w-fit rounded-md text-xs font-medium outline-none transition-colors focus-visible:ring-3"
           >
             {group.name}
           </Link>

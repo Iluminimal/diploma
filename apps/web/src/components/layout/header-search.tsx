@@ -131,7 +131,7 @@ export function HeaderSearch() {
               data-open={open}
               inert={!open}
               onKeyDown={onKeyDown}
-              className="search-panel bg-background fixed inset-x-0 top-0 z-50 max-h-dvh overflow-y-auto pb-10"
+              className="search-panel bg-background fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto overscroll-contain pb-10 md:h-auto md:max-h-dvh"
             >
               <div className="container-page">
                 {/* On a phone, as on apple.com: a row like the header with the logo and the X where the

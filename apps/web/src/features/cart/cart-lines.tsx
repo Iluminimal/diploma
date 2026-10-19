@@ -15,13 +15,13 @@ import { productPath, productSubtitle } from "@/features/catalog/product";
 import { useToggleWishlist } from "@/features/wishlist/use-wishlist";
 import { cn } from "@/lib/utils";
 import type { Cart, CartLine } from "./cart-api";
-import { useCartDrawer } from "./cart-ui-store";
+import { useBagPanel } from "./cart-ui-store";
 import { QuantityStepper } from "./quantity-stepper";
 import { useAddToCart, useCart, useRemoveItem, useSetQuantity } from "./use-cart";
 
 type Props = {
   cart: Cart;
-  /** Called when a product link is followed (the drawer closes itself). */
+  /** Called when a product link is followed (the Bag closes itself). */
   onNavigate?: () => void;
   className?: string;
 };
@@ -45,8 +45,8 @@ export function CartLines({ cart, onNavigate, className }: Props) {
 
 /** "Removed Blue Kurta. Undo": for a few seconds after a line is taken out, in the cart itself. */
 export function UndoBar() {
-  const removed = useCartDrawer((state) => state.removed);
-  const setRemoved = useCartDrawer((state) => state.setRemoved);
+  const removed = useBagPanel((state) => state.removed);
+  const setRemoved = useBagPanel((state) => state.setRemoved);
   const add = useAddToCart();
   const { data: cart } = useCart();
 
@@ -86,15 +86,15 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
   const setQuantity = useSetQuantity();
   const remove = useRemoveItem();
   const toggleWishlist = useToggleWishlist();
-  const added = useCartDrawer((state) => state.added);
+  const added = useBagPanel((state) => state.added);
   const { product } = line;
   const soldOut = line.issue === "out_of_stock";
-  // The line the shopper has just added glows once in the drawer.
+  // The line the shopper has just added glows once in the Bag.
   const isNew = added?.productId === product.id && added.size === line.size;
 
-  // The undo bar sits inside the cart (a toast would be outside the open drawer, out of reach of
+  // The undo bar sits inside the cart (a toast would be outside the open Bag, out of reach of
   // screen readers).
-  const setRemoved = useCartDrawer((state) => state.setRemoved);
+  const setRemoved = useBagPanel((state) => state.setRemoved);
   const removeWithUndo = () => {
     // Set now, not when the server answers: by then this row is gone and its callbacks never run.
     setRemoved({ productId: product.id, size: line.size, quantity: line.quantity, name: product.name });

@@ -4,18 +4,18 @@ import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import { BagGlyph, HEADER_CELL } from "@/components/layout/header-cell";
 import { cn } from "@/lib/utils";
-import { useCartDrawer } from "./cart-ui-store";
+import { useBagPanel } from "./cart-ui-store";
 import { useCart } from "./use-cart";
 
-// Not in the first load: most visits never open the cart, and the drawer drags a dialog library
+// Not in the first load: most visits never open the cart, and the panel drags a dialog library
 // with it. It is fetched the first time something opens it (this button, or "Add to cart").
-const CartDrawer = dynamic(
-  () => import("./cart-drawer").then((m) => m.CartDrawer),
+const BagPanel = dynamic(
+  () => import("./bag-panel").then((m) => m.BagPanel),
   { ssr: false },
 );
 
 export function CartButton() {
-  const { open, setOpen } = useCartDrawer();
+  const { open, setOpen } = useBagPanel();
   const { data } = useCart();
   const trigger = useRef<HTMLButtonElement>(null);
   const [wanted, setWanted] = useState(false);
@@ -61,7 +61,7 @@ export function CartButton() {
         </span>
       </button>
       {wanted && (
-        <CartDrawer
+        <BagPanel
           open={open}
           onOpenChange={setOpen}
           count={count}

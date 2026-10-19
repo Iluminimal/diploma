@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { announceFlyout } from "@/components/layout/bar-flyout";
 
 /** The line that was just added (shown highlighted in the Bag), identified by product and size. */
 export type AddedLine = { productId: number; size: string };
@@ -18,7 +19,11 @@ type CartUi = {
 /** Whether the Bag panel is open, so "Add to cart" can show it from anywhere. */
 export const useBagPanel = create<CartUi>((set) => ({
   open: false,
-  setOpen: (open) => set(open ? { open } : { open, added: null }),
+  setOpen: (open) => {
+    // The search or a department menu that is open under the bar makes way for the Bag.
+    if (open) announceFlyout("bag");
+    set(open ? { open } : { open, added: null });
+  },
   added: null,
   setAdded: (added) => set({ added }),
   removed: null,

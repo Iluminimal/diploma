@@ -1,7 +1,7 @@
 # End-to-end tests (Playwright)
 
 `apps/web/e2e`, run with `make e2e`. They drive a real browser (Chromium) against a running stack: API, web app, Postgres
-and Redis. 123 tests:
+and Redis. 126 tests:
 
 | File | Covers |
 | --- | --- |

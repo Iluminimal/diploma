@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useCloseOnOtherFlyout } from "@/components/layout/bar-flyout";
 import { BagGlyph, HEADER_CELL } from "@/components/layout/header-cell";
 import { cn } from "@/lib/utils";
 import { useBagPanel } from "./cart-ui-store";
@@ -17,6 +19,11 @@ const BagPanel = dynamic(
 export function CartButton() {
   const { open, setOpen } = useBagPanel();
   const { data } = useCart();
+  const pathname = usePathname();
+  // Another flyout opened under the bar (the search, a department menu), or the page changed.
+  const closeBag = useCallback(() => setOpen(false), [setOpen]);
+  useCloseOnOtherFlyout("bag", closeBag);
+  useEffect(() => closeBag(), [pathname, closeBag]);
   const trigger = useRef<HTMLButtonElement>(null);
   const [wanted, setWanted] = useState(false);
   if (open && !wanted) setWanted(true);
@@ -34,7 +41,7 @@ export function CartButton() {
         aria-label={count ? `Bag, ${count} items` : "Bag"}
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen(!open)}
       >
         {/* The icon box is the one the badge is placed against, as on apple.com: with items in it the
             bag steps left to make room, further for two and three characters. */}

@@ -1,7 +1,8 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { catalogNav } from "@/test/fixtures";
+import { announceFlyout } from "./bar-flyout";
 import { MegaMenu } from "./mega-menu";
 
 let data: typeof catalogNav | undefined = catalogNav;
@@ -58,6 +59,20 @@ describe("MegaMenu", () => {
     expect(flyout()).toHaveAttribute("data-open", "true");
     expect(region("Women")).toHaveAttribute("data-active", "true");
     expect(region("Men")).toHaveAttribute("data-active", "false");
+  });
+
+  it("makes way when the search or the Bag opens under the bar, and announces itself when it opens", async () => {
+    const heard: unknown[] = [];
+    window.addEventListener("bar-flyout", (event) => heard.push((event as CustomEvent).detail));
+    render(<MegaMenu />);
+
+    await userEvent.hover(trigger("Men"));
+    await waitFor(() => expect(flyout()).toHaveAttribute("data-open", "true"));
+    expect(heard).toContain("menu");
+
+    act(() => announceFlyout("search"));
+
+    await waitFor(() => expect(flyout()).toHaveAttribute("data-open", "false"));
   });
 
   it("closes when the pointer goes to an entry that has no flyout", async () => {

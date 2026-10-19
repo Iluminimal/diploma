@@ -162,3 +162,64 @@ test("the search box suggests categories and remembers searches", async ({ page,
   await openSearch(page);
   await expect(page.getByRole("option", { name: "blue shirt" })).toBeVisible();
 });
+
+test.describe("on a computer the bar stays, whatever is opened (apple.com's global nav)", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  const bar = (page: import("@playwright/test").Page) => page.getByRole("banner");
+  const BAR_HEIGHT = 45; // 2.75rem and its hairline
+
+  async function expectBarWhole(page: import("@playwright/test").Page) {
+    await expect(bar(page).getByRole("link", { name: "Angel" })).toBeVisible();
+    await expect(mainNav(page).getByRole("link", { name: "Women", exact: true })).toBeVisible();
+    await expect(bar(page).getByRole("button", { name: "Search", exact: true })).toBeVisible();
+    await expect(bar(page).getByRole("button", { name: /^Bag/ })).toBeVisible();
+  }
+
+  test("the search fills the screen under the bar, and the bar is still there", async ({ page }) => {
+    await page.goto("/");
+
+    await bar(page).getByRole("button", { name: "Search", exact: true }).click();
+
+    const panel = page.getByRole("dialog", { name: "Search" });
+    await expect(panel).toBeVisible();
+    await expectBarWhole(page);
+    const box = await panel.boundingBox();
+    expect(box!.y).toBeGreaterThanOrEqual(BAR_HEIGHT - 1);
+    expect(box!.y + box!.height).toBeGreaterThanOrEqual(899); // down to the bottom of the screen
+    expect(box!.width).toBeGreaterThanOrEqual(1439);
+  });
+
+  test("the Bag opens under the bar too, and the bag button closes it again", async ({ page }) => {
+    await page.goto("/");
+    const bag = bar(page).getByRole("button", { name: /^Bag/ });
+
+    await bag.click();
+    await expect(page.getByRole("dialog", { name: /^Bag/ })).toBeVisible();
+    await expectBarWhole(page);
+
+    await bag.click();
+    await expect(page.getByRole("dialog", { name: /^Bag/ })).toBeHidden();
+  });
+
+  test("one flyout at a time: the search, the Bag and a department replace each other", async ({ page }) => {
+    await page.goto("/");
+    const search = bar(page).getByRole("button", { name: "Search", exact: true });
+    const bag = bar(page).getByRole("button", { name: /^Bag/ });
+
+    await search.click();
+    await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+    await bag.click();
+    await expect(page.getByRole("dialog", { name: /^Bag/ })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Search" })).toBeHidden();
+
+    await mainNav(page).getByRole("link", { name: "Women", exact: true }).hover();
+    await expect(mainNav(page).getByRole("link", { name: "Women", exact: true })).toHaveAttribute("aria-expanded", "true");
+    await expect(page.getByRole("dialog", { name: /^Bag/ })).toBeHidden();
+
+    await search.click();
+    await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+    await expect(mainNav(page).getByRole("link", { name: "Women", exact: true })).toHaveAttribute("aria-expanded", "false");
+    await expectBarWhole(page);
+  });
+});

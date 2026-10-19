@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuth } from "@/features/auth/auth-store";
 import { catalogNav } from "@/test/fixtures";
 import { MobileNav } from "./mobile-nav";
-import { useSearchPanel } from "./search-ui-store";
 
 vi.mock("@/features/catalog/use-catalog-nav", () => ({ useCatalogNav: () => ({ data: catalogNav, isPending: false }) }));
 let pathname = "/";
@@ -17,7 +16,6 @@ const menu = () => screen.getByRole("dialog", { name: "Menu", hidden: true });
 beforeEach(() => {
   pathname = "/";
   useAuth.setState({ status: "signedOut", accessToken: null, user: null });
-  useSearchPanel.setState({ requests: 0 });
   document.documentElement.style.overflow = "";
 });
 

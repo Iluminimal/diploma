@@ -528,9 +528,8 @@
   }
 }
 
-/* The search panel and the dimmer behind it, shown at once and hidden after they fade. */
-.search-panel,
-.search-scrim {
+/* The search panel, shown at once and hidden after it has faded. */
+.search-panel {
   visibility: hidden;
   opacity: 0;
   transition:
@@ -541,18 +540,7 @@
 .search-panel {
   translate: 0 -0.75rem;
 }
-/* On a phone the panel fills the screen, so there is nothing for the dimmer to show. */
-@media (max-width: 767px) {
-  .search-scrim {
-    display: none;
-  }
-}
-.search-scrim {
-  background: color-mix(in oklab, var(--background) 55%, transparent);
-  backdrop-filter: blur(18px) saturate(1.4);
-}
-.search-panel[data-open="true"],
-.search-scrim[data-open="true"] {
+.search-panel[data-open="true"] {
   visibility: visible;
   opacity: 1;
   translate: 0 0;
@@ -642,7 +630,8 @@
     translate: 0 -10px;
   }
 }
-html:has(#mobile-menu[data-open="true"]) .header-elevate {
+html:has(#mobile-menu[data-open="true"]) .header-elevate,
+html[data-bar-panel] .header-elevate {
   background-color: var(--background);
 }
 /*

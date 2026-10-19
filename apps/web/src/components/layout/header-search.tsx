@@ -9,8 +9,8 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { HEADER_CELL, SearchGlyph } from "@/components/layout/header-cell";
 import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
+import { announceFlyout, useCloseOnOtherFlyout } from "./bar-flyout";
 import { useBarPanel } from "./bar-panel";
-import { useSearchPanel } from "./search-ui-store";
 
 // The search field, its suggestions and the photo picker are fetched the first time search opens.
 const SearchBar = dynamic(() => import("./search-bar").then((m) => m.SearchBar), { ssr: false });
@@ -44,9 +44,11 @@ function QuickLinks({ onNavigate }: { onNavigate: () => void }) {
 }
 
 /**
- * Apple's way of searching: a magnifier in the bar opens a full-width panel over it, with a large
- * field and quick links, and dims the page behind. The panel is portalled to <body>: the header's
- * backdrop blur would otherwise become the containing block of anything `fixed` inside it.
+ * Apple's way of searching: a magnifier in the bar opens a panel with a large field and quick links.
+ * From md up it fills the screen under the bar and the bar stays (the magnifier closes it again, as
+ * do Escape and any other flyout opening); on a phone it covers the bar too, and only its X is left.
+ * The panel is portalled to <body>: the header's backdrop blur would otherwise become the
+ * containing block of anything `fixed` inside it.
  */
 export function HeaderSearch() {
   const pathname = usePathname();
@@ -56,17 +58,9 @@ export function HeaderSearch() {
   const button = useRef<HTMLButtonElement>(null);
   const open = openedAt !== null && openedAt === pathname;
 
-  // Another part of the page (the phone tab bar) asked for the panel.
-  const requests = useSearchPanel((state) => state.requests);
-  const [handled, setHandled] = useState(requests);
-  if (requests !== handled) {
-    setHandled(requests);
-    setRequested(true);
-    setOpenedAt(pathname);
-  }
-
   const close = () => setOpenedAt(null);
   useBarPanel(open);
+  useCloseOnOtherFlyout("search", close);
 
   // Escape closes the panel wherever focus is (the panel's own handler covers focus inside it).
   useEffect(() => {
@@ -90,6 +84,7 @@ export function HeaderSearch() {
       event.preventDefault();
       setRequested(true);
       setOpenedAt(pathname);
+      announceFlyout("search");
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -117,6 +112,7 @@ export function HeaderSearch() {
         onClick={() => {
           setRequested(true);
           setOpenedAt(open ? null : pathname);
+          if (!open) announceFlyout("search");
         }}
       >
         <SearchGlyph />
@@ -124,7 +120,6 @@ export function HeaderSearch() {
       {requested &&
         createPortal(
           <>
-            <div aria-hidden data-open={open} onClick={close} className="search-scrim fixed inset-0 z-40" />
             <div
               id="search-panel"
               role="dialog"
@@ -132,24 +127,21 @@ export function HeaderSearch() {
               data-open={open}
               inert={!open}
               onKeyDown={onKeyDown}
-              className="search-panel bg-background fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto overscroll-contain pb-10 md:h-auto md:max-h-dvh"
+              className="search-panel bg-background fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto overscroll-contain pb-10 md:top-[2.8125rem] md:z-30 md:h-[calc(100dvh-2.8125rem)]"
             >
-              <div className="container-page">
+              <div className="container-nav">
                 {/* On a phone, as on apple.com: the bar holds only the X, where the menu button was (the
-                    logo, search and bag are gone), and the field is on a row of its own below. From md up
-                    the X sits beside the field. */}
+                    logo, search and bag are gone), and the field is on a row of its own below. From md up there
+                    is no X: the bar stays and its magnifier closes the panel. */}
                 <div className="flex h-12 items-center justify-end md:hidden">
                   <button type="button" className={HEADER_CELL} aria-label="Close search" onClick={close}>
                     <X className="size-[18px]" strokeWidth={1.25} />
                   </button>
                 </div>
-                <div className="flex items-start gap-3 pt-1 md:pt-4">
-                  <div className="mx-auto w-full max-w-2xl flex-1 md:pl-12">
+                <div className="pt-1 md:pt-6">
+                  <div className="mx-auto w-full max-w-2xl md:mx-0">
                     <SearchBar variant="overlay" onNavigate={close} quickLinks={<QuickLinks onNavigate={close} />} />
                   </div>
-                  <button type="button" className={cn(HEADER_CELL, "hidden md:grid")} aria-label="Close search" onClick={close}>
-                    <X className="size-[18px]" strokeWidth={1.25} />
-                  </button>
                 </div>
               </div>
             </div>

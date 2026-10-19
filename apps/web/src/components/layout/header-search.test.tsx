@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { announceFlyout } from "./bar-flyout";
 import { HeaderSearch } from "./header-search";
-import { useSearchPanel } from "./search-ui-store";
 
 vi.mock("./search-bar", () => ({ SearchBar: () => <input role="combobox" aria-label="Search products" aria-expanded={false} aria-controls="list" /> }));
 
@@ -41,14 +41,44 @@ describe("HeaderSearch", () => {
     expect(dialog.querySelector('a[href="/"]')).toBeNull();
   });
 
-  it("opens when another part of the page asks (the phone tab bar's Search tab)", async () => {
+  it("closes again when the magnifier is pressed, and the bar stays", async () => {
     render(<HeaderSearch />);
+
+    await userEvent.click(magnifier());
+    expect(isOpen()).toBe(true);
+    await userEvent.click(magnifier());
+
     expect(isOpen()).toBe(false);
+  });
 
-    act(() => useSearchPanel.getState().request());
+  it("fills the screen under the bar from md up, so the bar stays in view", async () => {
+    render(<HeaderSearch />);
 
-    await waitFor(() => expect(isOpen()).toBe(true));
-    expect(await screen.findByRole("combobox")).toBeInTheDocument();
+    await userEvent.click(magnifier());
+
+    const dialog = await screen.findByRole("dialog", { name: "Search" });
+    expect(dialog).toHaveClass("md:top-[2.8125rem]", "md:h-[calc(100dvh-2.8125rem)]");
+    expect(screen.queryByRole("button", { name: "Close search" })).toBeInTheDocument(); // the phone bar's X
+  });
+
+  it("makes way when another flyout opens under the bar (a department menu or the Bag)", async () => {
+    render(<HeaderSearch />);
+    await userEvent.click(magnifier());
+    expect(isOpen()).toBe(true);
+
+    act(() => announceFlyout("menu"));
+
+    await waitFor(() => expect(isOpen()).toBe(false));
+  });
+
+  it("announces itself when it opens, so the others close", async () => {
+    const heard = vi.fn();
+    window.addEventListener("bar-flyout", (event) => heard((event as CustomEvent).detail));
+    render(<HeaderSearch />);
+
+    await userEvent.click(magnifier());
+
+    expect(heard).toHaveBeenCalledWith("search");
   });
 
   it("advertises the / shortcut", () => {

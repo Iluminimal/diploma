@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { DEPARTMENT_LINKS, categoryHref, popularTypes, type NavDepartment } from "@/features/catalog/nav";
 import { useCatalogNav } from "@/features/catalog/use-catalog-nav";
 import { cn } from "@/lib/utils";
+import { announceFlyout, useCloseOnOtherFlyout } from "./bar-flyout";
 
 // Timings in the spirit of apple.com's global nav: a flyout opens after a short hover, switching
 // from one department to another is immediate, and it closes a beat after the pointer has left.
@@ -49,7 +50,10 @@ export function MegaMenu() {
 
   function setOpenSlug(slug: string | null) {
     setOpened(slug ? { slug, pathname } : null);
+    // The search or the Bag that was open under the bar makes way.
+    if (slug) announceFlyout("menu");
   }
+  useCloseOnOtherFlyout("menu", () => setOpened(null));
 
   // Warm the data shortly after the page settles, so the first hover is instant.
   useEffect(() => {
@@ -179,7 +183,7 @@ export function MegaMenu() {
                 role="region"
                 aria-label={`${link.label} categories`}
                 data-active={openSlug === link.slug}
-                className="mega-content container-page"
+                className="mega-content container-nav"
               >
                 <div className="pt-6 pb-12">{department ? <Panel department={department} /> : <PanelSkeleton />}</div>
               </div>

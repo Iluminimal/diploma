@@ -65,8 +65,15 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
     without one closes it), ArrowDown opens an entry and moves into it, Escape closes it and returns to the entry, focus
     leaving the menu closes it. Content that is not shown is `visibility: hidden`, so only the open department is in the tab order
     and the accessibility tree.
-* **Search** (`components/layout/header-search.tsx`): the magnifier opens a full-width panel over the bar with a large field (the
-  `overlay` variant of `SearchBar`), live suggestions, recent searches and quick links, and dims the page. Escape closes it and
+* **One flyout at a time, and the bar always stays** (from md up, checked against apple.com): the department menu, the search
+  and the Bag all open as a solid page under the bar that fills the rest of the screen (`top-[2.8125rem]`, height
+  `calc(100dvh - 2.8125rem)`), lined up with the bar's logo (`container-nav`), and the bar stays in view and usable. Opening one
+  closes the others (`announceFlyout` / `useCloseOnOtherFlyout` in `components/layout/bar-flyout.ts`: hovering a department
+  replaces the search, the magnifier closes the search and the bag button the Bag, Escape closes either). Nothing is dimmed:
+  the page is covered. While one is open the bar turns solid (`data-bar-panel` on `<html>`). On a phone the same pages cover the
+  whole screen instead and the bar fades down to the X (see Phone navigation).
+* **Search** (`components/layout/header-search.tsx`): the magnifier opens the flyout above with a large field (the
+  `overlay` variant of `SearchBar`), live suggestions, recent searches and quick links. Escape closes it and
   returns focus to the magnifier, wherever focus is. **Pressing `/` anywhere opens it** with the cursor in the field (not while
   typing in an input, textarea, select or dialog, not with Ctrl / Cmd / Alt held, and the slash is not typed into the field);
   the magnifier advertises it (`aria-keyshortcuts="/"`, tooltip "Search (press /)"). The panel is portalled to `<body>` because the header's backdrop blur would otherwise make
@@ -150,7 +157,7 @@ final value at once in tests (a test of an animation stubs `matchMedia` itself).
 | Where | What |
 | --- | --- |
 | Add to cart (`features/cart`) | the button becomes a check mark (`Added`), a copy of the photo flies to the cart icon (`fly-to-cart.ts`, Web Animations, no library) which bounces, then the Bag opens; a missing size shakes and takes focus |
-| Bag panel and `/cart` | a solid full-height page that drops in from the top like apple.com's Bag (`features/cart/bag-panel.tsx`), closes with the X or Escape, the new line glows, free-shipping progress from `GET /checkout/shipping-methods`, totals and quantities count (`AnimatedNumber`, `AnimatedPrice`), **Undo** (an in-cart bar, not a toast: a toast is outside the open modal and out of reach of screen readers), **Save for later** moves a line to the wishlist |
+| Bag panel and `/cart` | a solid full-height page like apple.com's Bag (`features/cart/bag-panel.tsx`), under the bar from md up (a dialog that is not modal there, so the bar stays usable; modal and full-screen on a phone), closes with the bag button, Escape or, on a phone, the X; with a My profile list under the items, the new line glows, free-shipping progress from `GET /checkout/shipping-methods`, totals and quantities count (`AnimatedNumber`, `AnimatedPrice`), **Undo** (an in-cart bar, not a toast: a toast is outside the open modal and out of reach of screen readers), **Save for later** moves a line to the wishlist |
 | Product page | gallery cross-fades between photos, zooms around the mouse pointer, swipes on touch (ready for several photos); Product details and Delivery are `<details>` that slide (`Disclosure`; Delivery reads the real shipping methods); the card photo grows into the gallery (a named view transition, set by CSS on the hovered or focused card, `.press-card` in `globals.css`) |
 | Cards | press feedback, the wishlist heart bursts when filled |
 | Listing and search | a changed filter keeps the old grid dimmed (no skeleton flash, no `key` on the Suspense boundary), the count counts, the filter and sort bar sticks under the header, the filter sheet closes by swiping its title; a scanning band crosses the photo being searched and results rise in |

@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState, type ComponentProps } from "react";
 import { Input } from "@/components/ui/input";
 import { selectClass } from "@/components/forms/form-field";
 import { cn } from "@/lib/utils";
+import { useHydrated } from "@/lib/use-hydrated";
 
 function flag(code: string) {
   return String.fromCodePoint(...[...code].map((c) => 0x1f1a5 + c.charCodeAt(0)));
@@ -48,12 +49,17 @@ export function PhoneInput({
   invalid?: boolean;
 } & Omit<ComponentProps<typeof Input>, "value" | "onChange" | "type">) {
   const [touched, setTouched] = useState(false);
+  // Country names and their order come from the browser's locale data, which is not the server's:
+  // the full list is rendered after hydration, and until then only the selected country.
+  const hydrated = useHydrated();
   const countries = useMemo(() => {
     const names = new Intl.DisplayNames(["en"], { type: "region" });
+    const collator = new Intl.Collator("en");
     return getCountries()
       .map((code) => ({ code, name: names.of(code) ?? code, dial: getCountryCallingCode(code) }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => collator.compare(a.name, b.name) || collator.compare(a.code, b.code));
   }, []);
+  const listed = hydrated ? countries : countries.filter(({ code }) => code === value.region);
 
   // The visitor's own country, unless they already picked one.
   useEffect(() => {
@@ -80,7 +86,7 @@ export function PhoneInput({
         }}
         className={cn(selectClass, "w-[8.5rem] shrink-0 px-2")}
       >
-        {countries.map(({ code, name, dial }) => (
+        {listed.map(({ code, name, dial }) => (
           <option key={code} value={code} aria-label={`${name} +${dial}`}>
             {flag(code)} {code} +{dial}
           </option>

@@ -33,5 +33,5 @@ make lighthouse     # Lighthouse on the production build (results and method: do
 - `src/lib/env.ts` validated environment (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`, see `.env.example`); plain
   TypeScript on purpose, because browser code imports it.
 - `e2e/` Playwright specs, `scripts/lighthouse.mjs`.
-- Dark mode: class strategy via `next-themes`, defaults to the system preference.
+- Dark mode: class strategy (`components/theme`), defaults to the system preference.
 - Tailwind runs through the PostCSS plugin (`postcss.config.mjs`).

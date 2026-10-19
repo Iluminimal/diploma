@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { ShopChrome } from "@/components/layout/shop-chrome";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { ThemeScript } from "@/components/theme/theme-script";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { Providers } from "./providers";
 import "./globals.css";
@@ -30,6 +31,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
       className="h-full antialiased"
     >
+      <head>
+        <ThemeScript />
+      </head>
       <body className="flex min-h-full flex-col">
         <a
           href="#main"

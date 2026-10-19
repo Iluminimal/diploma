@@ -1,40 +1,53 @@
 import { test, expect } from "./fixtures";
 import { API_URL } from "./support/env";
 
-test("the register page speaks of signing up, shows a password strength and lets you see the password", async ({ page, api }) => {
+test("the sign in page is one field for an email or a phone number, then Google", async ({ page, api }) => {
   const providers = await (await api.get(`${API_URL}/api/v1/auth/providers`)).json();
-  await page.goto("/register");
-
-  const password = page.getByLabel("Password", { exact: true });
-  await expect(password).toHaveAttribute("type", "password");
-  await password.fill("short");
-  await expect(page.getByText("5 more characters needed")).toBeVisible();
-  await password.fill("a long enough passphrase");
-  await expect(page.getByText("Excellent")).toBeVisible();
-  await page.getByRole("button", { name: "Show password" }).click();
-  await expect(password).toHaveAttribute("type", "text");
-  if (providers.google) {
-    await expect(page.getByRole("link", { name: "Sign up with Google" })).toBeVisible();
-    await expect(page.getByText(/create your account from your Google name and email/)).toBeVisible();
-  }
-});
-
-test("the sign in page points people who used Google to the Google button when a password fails", async ({ page }) => {
   await page.goto("/login");
 
-  await page.getByRole("tab", { name: "Email" }).click();
-  await page.getByLabel("Email").fill("nobody-here@example.com");
+  await expect(page.getByRole("heading", { name: "Sign in or create account" })).toBeVisible();
+  await expect(page.getByRole("tab")).toHaveCount(0);
+  const field = page.getByLabel("Email or phone number");
+  await expect(field).toBeFocused();
+  await field.fill("4155552671");
+  await expect(page.getByRole("combobox", { name: "Country" })).toBeVisible();
+  await field.fill("someone@example.com");
+  await expect(page.getByRole("combobox", { name: "Country" })).toHaveCount(0);
+  if (providers.google) await expect(page.getByRole("link", { name: "Continue with Google" })).toBeVisible();
+});
+
+test("an email goes on to the password, and Edit goes back with the email kept", async ({ page }) => {
+  await page.goto("/login");
+
+  await page.getByLabel("Email or phone number").fill("someone@example.com");
+  await page.getByRole("button", { name: "Continue" }).click();
+  const password = page.getByLabel("Password", { exact: true });
+  await expect(page.getByRole("heading", { name: "Enter your password" })).toBeVisible();
+  await expect(password).toBeFocused();
+  await expect(password).toHaveAttribute("type", "password");
+  await page.getByRole("button", { name: "Show password" }).click();
+  await expect(password).toHaveAttribute("type", "text");
+  await page.getByRole("button", { name: /^Change / }).click();
+
+  await expect(page.getByLabel("Email or phone number")).toHaveValue("someone@example.com");
+});
+
+test("a wrong password points people who used Google or a code to the other ways in", async ({ page }) => {
+  await page.goto("/login");
+
+  await page.getByLabel("Email or phone number").fill("nobody-here@example.com");
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Password", { exact: true }).fill("wrong password");
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await expect(page.locator('form p[role="alert"]')).toContainText("Signed up with Google? Use “Continue with Google” instead.");
+  const alert = page.locator('p[role="alert"]');
+  await expect(alert).toContainText("Get a code by email instead");
+  await expect(alert).toContainText("Continue with Google");
 });
 
-test("the two pages keep where you were going", async ({ page }) => {
-  await page.goto("/login?next=/account/orders");
-  await page.getByRole("tab", { name: "Email" }).click();
-  await page.getByRole("link", { name: "Create an account" }).click();
+test("the old register address leads to the sign in page and keeps where you were going", async ({ page }) => {
+  await page.goto("/register?next=/account/orders");
 
-  await expect(page).toHaveURL(/\/register\?next=%2Faccount%2Forders$/);
-  await expect(page.getByRole("link", { name: "Sign in", exact: true }).last()).toHaveAttribute("href", /next=%2Faccount%2Forders/);
+  await expect(page).toHaveURL(/\/login\?next=%2Faccount%2Forders$/);
+  await expect(page.getByRole("heading", { name: "Sign in or create account" })).toBeVisible();
 });

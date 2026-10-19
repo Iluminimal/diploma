@@ -17,8 +17,8 @@ async function typeCodeInDialog(page: Page) {
 
 async function askForCode(page: Page, phone: string) {
   await page.goto("/login");
-  await page.getByLabel("Phone number").fill(national(phone));
-  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel("Email or phone number").fill(national(phone));
+  await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByText(/We sent a 6-digit code to/)).toBeVisible();
 }
 
@@ -58,8 +58,8 @@ test("a wrong code is refused and the boxes are cleared", async ({ page }) => {
 
 test("a number that cannot be right is caught before anything is sent", async ({ page }) => {
   await page.goto("/login");
-  await page.getByLabel("Phone number").fill("12");
-  await page.getByRole("button", { name: "Send code" }).click();
+  await page.getByLabel("Email or phone number").fill("12");
+  await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByText("Enter a valid phone number.")).toBeVisible();
 });
@@ -107,6 +107,8 @@ test("a phone customer adds an email, changes the number and signs out the other
 
 test("a forgotten password is replaced with a code", async ({ page, account }) => {
   await page.goto("/login");
+  await page.getByLabel("Email or phone number").fill(account.email);
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("link", { name: "Forgot your password?" }).click();
   await expect(page).toHaveURL(/\/forgot-password/);
 

@@ -25,7 +25,7 @@ test("a signed-in shopper pays with the demo card and sees the order afterwards"
 }, testInfo) => {
   const product = pickProduct(products, testInfo.workerIndex + 1);
   await addToCartFromProductPage(page, product);
-  await page.getByRole("dialog").getByRole("link", { name: "Checkout" }).click();
+  await page.getByRole("dialog").getByRole("link", { name: "Check Out" }).click();
   await expect(page).toHaveURL(/\/checkout$/);
 
   // A new address, saved and selected.

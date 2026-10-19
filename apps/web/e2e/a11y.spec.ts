@@ -123,11 +123,19 @@ test.describe("storefront", () => {
     expectNoViolations(found, "/search with results");
   });
 
-  test("sign in and register", async ({ page }) => {
+  test("sign in and password reset", async ({ page }) => {
     await sweep(page, "/login", { ready: heading(page) });
-    await sweep(page, "/login?method=email", { ready: heading(page) });
     await sweep(page, "/forgot-password", { ready: heading(page) });
-    await sweep(page, "/register", { ready: heading(page) });
+  });
+
+  test("sign in, the password step", async ({ page }) => {
+    await sweep(page, "/login", {
+      ready: async () => {
+        await page.getByLabel("Email or phone number").fill("someone@example.com");
+        await page.getByRole("button", { name: "Continue" }).click();
+        await expect(page.getByRole("heading", { name: "Enter your password" })).toBeVisible();
+      },
+    });
   });
 
   test("an empty cart", async ({ page }) => {

@@ -17,7 +17,7 @@ function flag(code: string) {
   return String.fromCodePoint(...[...code].map((c) => 0x1f1a5 + c.charCodeAt(0)));
 }
 
-function regionOfBrowser(): CountryCode | undefined {
+export function regionOfBrowser(): CountryCode | undefined {
   try {
     const region = new Intl.Locale(navigator.language).region;
     return getCountries().find((country) => country === region);
@@ -38,6 +38,58 @@ export type PhoneValue = { text: string; region: CountryCode };
  * A phone number field: a country picker and the number, formatted as it is typed. Pasting a
  * full "+976 ..." number works whatever the picker says. Use `toE164` for what to send.
  */
+/**
+ * A country picker (flag, code and dial code per option). Country names and their order come from
+ * the browser's locale data, which is not the server's: the full list is rendered after hydration,
+ * and until then only the selected country.
+ */
+export function CountrySelect({
+  value,
+  onChange,
+  className,
+}: {
+  value: CountryCode;
+  onChange: (region: CountryCode) => void;
+  className?: string;
+}) {
+  const hydrated = useHydrated();
+  const countries = useMemo(() => {
+    const names = new Intl.DisplayNames(["en"], { type: "region" });
+    const collator = new Intl.Collator("en");
+    return getCountries()
+      .map((code) => ({ code, name: names.of(code) ?? code, dial: getCountryCallingCode(code) }))
+      .sort((a, b) => collator.compare(a.name, b.name) || collator.compare(a.code, b.code));
+  }, []);
+  const listed = hydrated ? countries : countries.filter(({ code }) => code === value);
+
+  return (
+    <select
+      aria-label="Country"
+      value={value}
+      onChange={(event) => onChange(event.target.value as CountryCode)}
+      className={className}
+    >
+      {listed.map(({ code, name, dial }) => (
+        <option key={code} value={code} aria-label={`${name} +${dial}`}>
+          {flag(code)} {code} +{dial}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/** What a phone field makes of the text typed into it: formatted as typed, and a "+" number picks its country. */
+export function typePhone(raw: string, region: CountryCode): PhoneValue {
+  const typed = new AsYouType(region);
+  const text = typed.input(raw);
+  const country = typed.getCountry();
+  return { text, region: raw.trim().startsWith("+") && country ? country : region };
+}
+
+/**
+ * A phone number field: a country picker and the number, formatted as it is typed. Pasting a
+ * full "+976 ..." number works whatever the picker says. Use `toE164` for what to send.
+ */
 export function PhoneInput({
   value,
   onChange,
@@ -49,17 +101,6 @@ export function PhoneInput({
   invalid?: boolean;
 } & Omit<ComponentProps<typeof Input>, "value" | "onChange" | "type">) {
   const [touched, setTouched] = useState(false);
-  // Country names and their order come from the browser's locale data, which is not the server's:
-  // the full list is rendered after hydration, and until then only the selected country.
-  const hydrated = useHydrated();
-  const countries = useMemo(() => {
-    const names = new Intl.DisplayNames(["en"], { type: "region" });
-    const collator = new Intl.Collator("en");
-    return getCountries()
-      .map((code) => ({ code, name: names.of(code) ?? code, dial: getCountryCallingCode(code) }))
-      .sort((a, b) => collator.compare(a.name, b.name) || collator.compare(a.code, b.code));
-  }, []);
-  const listed = hydrated ? countries : countries.filter(({ code }) => code === value.region);
 
   // The visitor's own country, unless they already picked one.
   useEffect(() => {
@@ -68,30 +109,16 @@ export function PhoneInput({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only once, after mount
   }, []);
 
-  function type(raw: string) {
-    const typed = new AsYouType(value.region);
-    const text = typed.input(raw);
-    const country = typed.getCountry();
-    onChange({ text, region: raw.trim().startsWith("+") && country ? country : value.region });
-  }
-
   return (
     <div className="flex gap-2">
-      <select
-        aria-label="Country"
+      <CountrySelect
         value={value.region}
-        onChange={(event) => {
+        onChange={(region) => {
           setTouched(true);
-          onChange({ text: value.text, region: event.target.value as CountryCode });
+          onChange({ text: value.text, region });
         }}
         className={cn(selectClass, "w-[8.5rem] shrink-0 px-2")}
-      >
-        {listed.map(({ code, name, dial }) => (
-          <option key={code} value={code} aria-label={`${name} +${dial}`}>
-            {flag(code)} {code} +{dial}
-          </option>
-        ))}
-      </select>
+      />
       <Input
         type="tel"
         inputMode="tel"
@@ -99,7 +126,7 @@ export function PhoneInput({
         placeholder="Phone number"
         value={value.text}
         aria-invalid={invalid}
-        onChange={(event) => type(event.target.value)}
+        onChange={(event) => onChange(typePhone(event.target.value, value.region))}
         className="h-11 min-w-0 flex-1 rounded-xl"
         {...props}
       />

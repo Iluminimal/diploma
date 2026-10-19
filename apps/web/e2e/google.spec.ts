@@ -26,7 +26,7 @@ async function signInAs(page: Page, email: string) {
 
 // Next adds its own role="alert" (the route announcer): ours is the paragraph.
 const problem = (page: Page) => page.locator('p[role="alert"]');
-const google = (page: Page) => page.getByRole("link", { name: /^(Continue|Sign up) with Google$/ });
+const google = (page: Page) => page.getByRole("link", { name: /^Continue with Google$/ });
 
 async function whoAmI(page: Page) {
   // The page restores its own session on load, rotating the refresh token: let that finish, or
@@ -49,7 +49,7 @@ test("Continue with Google signs a new customer in and returns to the page they 
   expect((await whoAmI(page)).email).toBe(email);
 });
 
-test("the register page offers it too", async ({ page }) => {
+test("the old register address leads to the same page, and it offers Google too", async ({ page }) => {
   await signInAs(page, uniqueEmail("google"));
   await page.goto("/register");
 
@@ -94,7 +94,7 @@ test("cancelling at Google ends on the login page with a message", async ({ page
 
   await expect(page).toHaveURL(/\/login\?error=google_denied$/);
   await expect(problem(page)).toContainText("cancelled");
-  await expect(page.getByRole("tab", { name: "Phone" })).toBeVisible();
+  await expect(page.getByLabel("Email or phone number")).toBeVisible();
 });
 
 test("an unverified Google email is refused", async ({ page }) => {

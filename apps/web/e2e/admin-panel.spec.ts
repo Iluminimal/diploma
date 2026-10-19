@@ -13,8 +13,8 @@ import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL, PASSWORD } from "./support/env";
 /** Sign in through the form, as a person would. */
 async function signInThroughTheForm(page: Page, email: string, password: string, next?: string) {
   await page.goto(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
-  await page.getByRole("tab", { name: "Email" }).click();
-  await page.getByLabel("Email").fill(email);
+  await page.getByLabel("Email or phone number").fill(email);
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
 }

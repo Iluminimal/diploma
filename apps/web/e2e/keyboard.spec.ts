@@ -81,8 +81,7 @@ test("pressing / opens the search panel with the cursor in the field, and Escape
 
 test("a slash typed in a form field is just a slash", async ({ page }) => {
   await page.goto("/login");
-  await page.getByRole("tab", { name: "Email" }).click();
-  const email = page.getByLabel("Email");
+  const email = page.getByLabel("Email or phone number");
   await email.focus();
 
   await page.keyboard.type("a/b");
@@ -155,10 +154,9 @@ test("category filters expand and collapse with the keyboard and announce their 
 
 test("a form says what is wrong and moves nothing out of reach", async ({ page }) => {
   await page.goto("/login");
-  await page.getByRole("tab", { name: "Email" }).click();
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
 
-  const email = page.getByLabel("Email");
+  const email = page.getByLabel("Email or phone number");
   await expect(email).toHaveAttribute("aria-invalid", "true");
   await expect(page.getByRole("alert").first()).toBeVisible();
   const describedBy = await email.getAttribute("aria-describedby");

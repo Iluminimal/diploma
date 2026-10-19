@@ -30,31 +30,27 @@ export function googleStartHref(next: string): string {
 }
 
 /**
- * "Continue with Google" and the divider under it, only when the API has Google configured. A
- * plain link: signing in is a whole-page trip to Google and back, so it works without scripts.
+ * The divider and "Continue with Google" under the sign-in field, only when the API has Google
+ * configured. A plain link: signing in is a whole-page trip to Google and back, so it works
+ * without scripts. Google creates the account for somebody new.
  */
-export async function GoogleSignIn({ next, mode = "signin" }: { next: string; mode?: "signin" | "signup" }) {
+export async function GoogleSignIn({ next }: { next: string }) {
   const { google } = await getAuthProviders();
   if (!google) return null;
   return (
     <div className="space-y-5">
-      <Button asChild variant="outline" size="lg" className="w-full">
-        {/* A navigation to the API, not a page of this app: <Link> would try to prefetch and route it. */}
-        <a href={googleStartHref(next)}>
-          <GoogleMark />
-          {mode === "signup" ? "Sign up with Google" : "Continue with Google"}
-        </a>
-      </Button>
-      <p className="text-muted-foreground -mt-2 text-center text-xs">
-        {mode === "signup"
-          ? "We'll create your account from your Google name and email."
-          : "New here? Signing in with Google creates your account."}
-      </p>
       <div className="text-muted-foreground flex items-center gap-3 text-xs" role="separator">
         <span className="bg-border h-px flex-1" />
         or
         <span className="bg-border h-px flex-1" />
       </div>
+      <Button asChild variant="outline" size="lg" className="w-full">
+        {/* A navigation to the API, not a page of this app: <Link> would try to prefetch and route it. */}
+        <a href={googleStartHref(next)}>
+          <GoogleMark />
+          Continue with Google
+        </a>
+      </Button>
     </div>
   );
 }

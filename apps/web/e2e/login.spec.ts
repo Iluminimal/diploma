@@ -1,41 +1,29 @@
 import { test, expect } from "./fixtures";
-import { PASSWORD } from "./support/env";
-import { uniqueEmail } from "./support/api";
+import { uniqueEmail, OTP_CODE } from "./support/api";
 import { cartButton, signInThroughTheForm } from "./support/ui";
 
 const accountMenu = (page: import("@playwright/test").Page) => page.getByRole("button", { name: /^Account: / });
 
-test("registering signs the new customer in", async ({ page }) => {
-  await page.goto("/register");
+test("a new email gets a code by email, which creates the account and asks for a name", async ({ page }) => {
+  await page.goto("/login");
 
+  await page.getByLabel("Email or phone number").fill(uniqueEmail("register"));
+  await page.getByRole("button", { name: "Continue" }).click();
+  await page.getByRole("button", { name: "Email me a code instead" }).click();
+  await expect(page.getByText(/We sent a 6-digit code to/)).toBeVisible();
+  await page.keyboard.type(OTP_CODE);
   await page.getByLabel("Full name").fill("E2E Newcomer");
-  await page.getByLabel("Email").fill(uniqueEmail("register"));
-  await page.getByLabel("Password", { exact: true }).fill("short");
-  await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page.getByText("Use at least 10 characters")).toBeVisible();
-  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
-  await page.getByRole("button", { name: "Create account" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page).toHaveURL("/");
-  await expect(accountMenu(page)).toBeVisible();
-});
-
-test("an email that is already registered is refused", async ({ page, account }) => {
-  await page.goto("/register");
-
-  await page.getByLabel("Full name").fill("Someone Else");
-  await page.getByLabel("Email").fill(account.email);
-  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
-  await page.getByRole("button", { name: "Create account" }).click();
-
-  await expect(page.getByRole("alert").getByText(/already exists/)).toBeVisible();
+  await expect(accountMenu(page)).toHaveAccessibleName(/E2E Newcomer/);
 });
 
 test("signing in with the right password, and a wrong one", async ({ page, account }) => {
   await page.goto("/login");
 
-  await page.getByRole("tab", { name: "Email" }).click();
-  await page.getByLabel("Email").fill(account.email);
+  await page.getByLabel("Email or phone number").fill(account.email);
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByLabel("Password", { exact: true }).fill("not the password");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(page.getByRole("alert").getByText(/don't match/)).toBeVisible();

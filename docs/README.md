@@ -5,6 +5,7 @@ Start with [`architecture.md`](architecture.md): where everything is and how a r
 | Document | What it covers |
 | --- | --- |
 | [`SPEC.md`](SPEC.md) | The product and technical requirements |
+| [`development.md`](development.md) | All commands, configuration, API conventions, troubleshooting, CI |
 | [`architecture.md`](architecture.md) | Repository map, the backend layers and domains, the frontend structure, where to add things |
 | [`accounts.md`](accounts.md) | Phone and email sign-in with one-time codes, changing them, forgot password, your devices |
 | [`commerce.md`](commerce.md) | Sessions, Google sign-in, cart, checkout, payments, the life of an order, reviews |

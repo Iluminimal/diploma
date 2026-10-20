@@ -1,10 +1,10 @@
-# Development infrastructure only (Postgres + pgvector, Redis). The API and web run natively
-# (`make api`, `make web`) so PyTorch can use Apple MPS. Full-stack compose is for deployment.
+# Зөвхөн хөгжүүлэлтийн үйлчилгээ (Postgres + pgvector, Redis). API болон web-ийг шууд (`make api`, `make web`)
+# ажиллуулдаг тул PyTorch Apple MPS ашиглаж чадна. Бүрэн stack compose нь deploy хийхэд зориулагдсан.
 name: angel
 
 services:
   postgres:
-    # Multi-arch image (linux/amd64 + linux/arm64). pgvector >= 0.8 for hnsw.iterative_scan.
+    # Олон архитектурын image (linux/amd64 + linux/arm64). hnsw.iterative_scan-д pgvector >= 0.8 хэрэгтэй.
     image: pgvector/pgvector:pg18
     restart: unless-stopped
     environment:
@@ -14,7 +14,7 @@ services:
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
     volumes:
-      # Postgres 18+ images keep PGDATA in a versioned subdirectory of /var/lib/postgresql.
+      # Postgres 18+ image нь PGDATA-г /var/lib/postgresql доторх хувилбарын дэд фолдерт хадгалдаг.
       - postgres-data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -26,7 +26,7 @@ services:
   redis:
     image: redis:8-alpine
     restart: unless-stopped
-    # Cache and rate-limit data only: no persistence needed in development.
+    # Зөвхөн cache болон rate limit-ийн өгөгдөл: хөгжүүлэлтэд хадгалах шаардлагагүй.
     command: ["redis-server", "--save", "", "--appendonly", "no"]
     ports:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"

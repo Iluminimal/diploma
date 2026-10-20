@@ -1,10 +1,10 @@
 # Angel web
 
 Next.js 16 (App Router) + React 19 + TypeScript (strict) + Tailwind v4 + shadcn/ui.
-See the [root README](../../README.md) for setup; from the repository root use `make web`.
+Суулгах заавар үндсэн [README](../../README.md)-д байна. Repository-ийн root-оос `make web` гэж ажиллуулна.
 
 ```bash
-npm run dev         # dev server on :3000
+npm run dev         # хөгжүүлэлтийн server :3000
 npm run lint
 npm run typecheck   # next typegen && tsc --noEmit
 npm test            # Vitest + Testing Library
@@ -12,26 +12,31 @@ npm run build
 ```
 
 ```bash
-make api-types      # regenerate src/lib/api/schema.d.ts from the API's OpenAPI schema (committed)
-make web-prod       # production build served on :3000: what e2e tests and Lighthouse measure
-make e2e            # Playwright end-to-end tests (docs/e2e.md)
-make lighthouse     # Lighthouse on the production build (results and method: docs/frontend.md)
+make api-types      # API-ийн OpenAPI-аас src/lib/api/schema.d.ts-ийг дахин үүсгэнэ (commit хийгддэг)
+make web-prod       # production build-ийг :3000 дээр ажиллуулна (e2e, Lighthouse үүнийг хэмждэг)
+make e2e            # Playwright end-to-end тест (docs/e2e.md)
+make lighthouse     # production build дээрх Lighthouse (үр дүн, арга: docs/frontend.md)
 ```
 
-- `src/app` routes and layout; Server Components by default, `providers.tsx` is the client boundary.
-  storefront, account and checkout pages, `/admin/*` (administrators only, `docs/admin.md`), `sitemap.ts` and
-  `robots.ts`; the home and search pages render per request because they read the API, which does not exist at build time.
-- `src/features/<feature>` feature-based code (components, API calls, tests together):
-  `catalog` (listing, filters, product page parts), `search` (visual search), `home`, `cart`, `checkout`, `account`,
+## Folder бүтэц
+
+- `src/app` — route-ууд ба layout. Анхдагчаар Server Component; `providers.tsx` нь client хил.
+  Дэлгүүр, бүртгэл, checkout хуудсууд, `/admin/*` (зөвхөн админ, `docs/admin.md`), `sitemap.ts`, `robots.ts`.
+  Нүүр болон хайлтын хуудас хүсэлт болгонд шинээр үүсдэг, учир нь API-аас уншдаг бөгөөд build хийх үед API байдаггүй.
+- `src/features/<нэр>` — үйлдэл бүрийн код (component, API дуудлага, тест нэг дор):
+  `catalog` (жагсаалт, шүүлтүүр, барааны хуудас), `search` (зургаар хайх), `home`, `cart`, `checkout`, `account`,
   `orders`, `wishlist`, `auth`, `admin`, `seo`.
-- `src/lib/api` generated OpenAPI types (`schema.d.ts`), the typed `openapi-fetch` client and RFC 7807 error handling.
-- `src/lib/image-loader.ts` picks the API's pre-generated 400/800 px WebP and serves it through this site's `/media`
-  route, so Next's optimizer is not used.
-- Overlays (dialogs, sheets, dropdowns) load on first use behind `next/dynamic`; do not add `scroll-smooth` to a
-  scroll-snap container. Both are explained in `docs/frontend.md` (Performance).
-- `src/components/ui` shadcn/ui primitives (add more with `npx shadcn@latest add <name>`).
-- `src/lib/env.ts` validated environment (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`, see `.env.example`); plain
-  TypeScript on purpose, because browser code imports it.
-- `e2e/` Playwright specs, `scripts/lighthouse.mjs`.
-- Dark mode: class strategy (`components/theme`), defaults to the system preference.
-- Tailwind runs through the PostCSS plugin (`postcss.config.mjs`).
+- `src/components/ui` — shadcn/ui-ийн суурь хэсгүүд (шинэ нэмэх: `npx shadcn@latest add <нэр>`).
+- `src/lib/api` — OpenAPI-аас үүссэн төрлүүд (`schema.d.ts`), төрөлтэй `openapi-fetch` клиент, RFC 7807 алдааны боловсруулалт.
+- `src/lib/image-loader.ts` — API-ийн урьдчилан үүсгэсэн 400/800 px WebP-г сонгож, энэ сайтын `/media` route-оор дамжуулна.
+  Тиймээс Next-ийн зургийн optimizer ашиглагддаггүй.
+- `src/lib/env.ts` — шалгагдсан орчны хувьсагчид (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`, `.env.example`-ийг харна).
+  Browser код импортлодог тул зориудаар энгийн TypeScript.
+- `e2e/` — Playwright тестүүд, `scripts/lighthouse.mjs` — Lighthouse скрипт.
+
+## Анхаарах зүйл
+
+- Dialog, sheet, dropdown зэрэг давхарга хэсгүүд анх ашиглах үедээ `next/dynamic`-аар ачаалагддаг. Scroll-snap
+  container-д `scroll-smooth` нэмж болохгүй. Хоёулангийнх нь шалтгаан `docs/frontend.md` (Performance) хэсэгт бий.
+- Dark mode: class стратеги (`components/theme`), анхдагчаар системийн тохиргоог дагана.
+- Tailwind нь PostCSS plugin-оор (`postcss.config.mjs`) ажиллана.

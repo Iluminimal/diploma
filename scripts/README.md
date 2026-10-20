@@ -1,15 +1,15 @@
 # scripts
 
-Command-line entry points. They are thin: each imports the real code from the `angel` package, so run them through `make`
-(or from `apps/api` with `uv run python ../../scripts/<name>.py`).
+Командын мөрөөс ажиллуулах скриптүүд. Тэд нимгэн: жинхэнэ код нь `angel` багцад байх ба скрипт зөвхөн дуудна.
+`make`-ээр эсвэл `apps/api` фолдероос `uv run python ../../scripts/<нэр>.py` гэж ажиллуулна.
 
-| Script | Make target | What it does |
+| Скрипт | Make команд | Юу хийдэг вэ |
 | --- | --- | --- |
-| `ingest.py` | `make ingest` | Load the Kaggle dataset: clean, thumbnails, embeddings, prices and stock |
-| `seed_demo.py` | `make seed-demo` (`seed-demo-clean`) | Demo customers, orders in every state and reviews, for the admin dashboard (development only) |
-| `seed_e2e.py` | `make seed-e2e` | A synthetic 60-product catalogue for the end-to-end tests (no dataset, no model) |
-| `e2e_clean.py` | `make e2e-clean` | Remove what the end-to-end tests created in the dev database |
-| `check_recall.py` | | Compare the HNSW index with exact search (recall) |
-| `evaluate_map.py` | | Retrieval quality: mAP@K, P@K, recall, hit rate and nDCG against the dataset's labels, with a random baseline (`docs/ml-pipeline.md`, results in `docs/perf/map*.json`) |
-| `measure_latency.py`, `measure_api_latency.py` | | Latency of the search query and of the whole endpoint |
-| `benchmark_ml.py` | | Speed of image preprocessing and the embedding model |
+| `ingest.py` | `make ingest` | Kaggle датасетийг ачаална: цэвэрлэх, thumbnail, embedding, үнэ, нөөц |
+| `seed_demo.py` | `make seed-demo` (`seed-demo-clean`) | Админ самбарт зориулсан demo хэрэглэгч, бүх төлөвтэй захиалга, сэтгэгдэл (зөвхөн хөгжүүлэлтэд) |
+| `seed_e2e.py` | `make seed-e2e` | End-to-end тестэд зориулсан 60 барааны хиймэл каталог (датасет, загвар хэрэггүй) |
+| `e2e_clean.py` | `make e2e-clean` | End-to-end тестийн үлдээсэн өгөгдлийг dev өгөгдлийн сангаас цэвэрлэнэ |
+| `check_recall.py` | | HNSW индексийг яг (exact) хайлттай харьцуулна (recall) |
+| `evaluate_map.py` | | Хайлтын чанар: mAP@K, P@K, recall, hit rate, nDCG; санамсаргүй эрэмбэтэй харьцуулна (`docs/ml-pipeline.md`, үр дүн `docs/perf/map*.json`) |
+| `measure_latency.py`, `measure_api_latency.py` | | Хайлтын query болон бүтэн endpoint-ийн хугацаа |
+| `benchmark_ml.py` | | Зураг боловсруулалт болон embedding загварын хурд |

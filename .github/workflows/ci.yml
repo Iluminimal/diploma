@@ -115,17 +115,17 @@ jobs:
           --health-timeout 3s
           --health-retries 10
     env:
-      # The API runs with a deterministic stand-in for FashionCLIP (no model download in CI), the
-      # offline payment gateway and no rate limits (every test registers its own customer).
+      # API нь FashionCLIP-ийн тогтмол хиймэл хувилбар (CI-д загвар татахгүй), offline төлбөрийн gateway,
+      # rate limit-гүйгээр ажиллана (тест бүр өөрийн хэрэглэгчийг бүртгэдэг).
       APP_ENV: test
       DATABASE_URL: postgresql+asyncpg://angel:angel@localhost:5432/angel
       REDIS_URL: redis://localhost:6379/0
       EMBEDDER: fake
       PAYMENTS_MODE: offline
-      # Sign in with Google without Google: the API's stand-in runs the real flow minus the consent screen.
+      # Google-гүйгээр Google нэвтрэлт: API-ийн хиймэл хувилбар зөвшөөрлийн дэлгэцээс бусад жинхэнэ урсгалыг ажиллуулна.
       OAUTH_MODE: fake
       OTP_DEV_CODE: "000000"
-      # Tests sign the same phone in twice within a minute.
+      # Тестүүд нэг утсаар минутын дотор хоёр удаа нэвтэрдэг.
       OTP_RESEND_SECONDS: "0"
       RATE_LIMIT_ENABLED: "false"
       JWT_SECRET: ci-only-jwt-secret-0123456789-0123456789

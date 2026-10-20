@@ -1,13 +1,13 @@
 # infra
 
-`docker-compose.dev.yml` runs the development data services only: PostgreSQL 18 with pgvector and Redis. The API and the web
-app run natively (`make api`, `make web`) so PyTorch can use Apple's GPU.
+`docker-compose.dev.yml` нь хөгжүүлэлтэд хэрэгтэй өгөгдлийн үйлчилгээг л асаана: pgvector-тэй PostgreSQL 18 болон Redis.
+API болон web-ийг Docker-оор биш шууд (`make api`, `make web`) ажиллуулдаг. Ингэснээр PyTorch Apple-ийн GPU-г ашиглаж чадна.
 
 ```bash
-make infra         # start and wait until healthy
-make infra-down    # stop (data is kept in the angel_postgres-data volume)
-make infra-reset   # stop and DELETE the data
+make infra         # асааж, бэлэн болтол хүлээнэ
+make infra-down    # зогсооно (өгөгдөл angel_postgres-data volume-д хадгалагдана)
+make infra-reset   # зогсоож, өгөгдлийг УСТГАНА
 ```
 
-Postgres listens on `127.0.0.1:5433`, Redis on `127.0.0.1:6379`. Credentials and the database name come from `.env`
-(copied from `.env.example` by `make infra`).
+Postgres `127.0.0.1:5433`, Redis `127.0.0.1:6379` порт дээр сонсоно. Нэвтрэх мэдээлэл, өгөгдлийн сангийн нэр `.env`-ээс
+ирнэ (`make infra` анх удаа `.env.example`-ээс хуулж үүсгэнэ).

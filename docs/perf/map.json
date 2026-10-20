@@ -1,0 +1,214 @@
+{
+  "mode": "stored",
+  "phone_sized_uploads": false,
+  "queries": 41885,
+  "catalogue_size": 41885,
+  "seed": 42,
+  "ks": [
+    5,
+    10,
+    20
+  ],
+  "relevance": {
+    "category": "same article type",
+    "colour": "same article type and base colour",
+    "strict": "same article type, base colour and gender"
+  },
+  "map_normalisation": "sum of P@i * rel_i over the top K, divided by min(K, relevant products in the catalogue)",
+  "system": {
+    "category": {
+      "5": {
+        "mAP": 0.8568840299996286,
+        "mAP_retrieved_norm": 0.9279659055335361,
+        "P": 0.8818251277398405,
+        "recall": 0.008748599152938158,
+        "hit_rate": 0.9786543145026503,
+        "nDCG": 0.8887129429669907,
+        "queries_scored": 41882,
+        "queries_skipped": 3
+      },
+      "10": {
+        "mAP": 0.8298685770171048,
+        "mAP_retrieved_norm": 0.9132479455847162,
+        "P": 0.865579485220381,
+        "recall": 0.015690576810348883,
+        "hit_rate": 0.9881333269662385,
+        "nDCG": 0.875296159565435,
+        "queries_scored": 41882,
+        "queries_skipped": 3
+      },
+      "20": {
+        "mAP": 0.8033233599466896,
+        "mAP_retrieved_norm": 0.8950464630233164,
+        "P": 0.8481591137003963,
+        "recall": 0.02754026361081943,
+        "hit_rate": 0.9934816866434267,
+        "nDCG": 0.8604845492732658,
+        "queries_scored": 41882,
+        "queries_skipped": 3
+      }
+    },
+    "colour": {
+      "5": {
+        "mAP": 0.32552705161390594,
+        "mAP_retrieved_norm": 0.5485562133903547,
+        "P": 0.406545121304201,
+        "recall": 0.027315849134451866,
+        "hit_rate": 0.774514059711571,
+        "nDCG": 0.41686344431607364,
+        "queries_scored": 41466,
+        "queries_skipped": 419
+      },
+      "10": {
+        "mAP": 0.2810228756665647,
+        "mAP_retrieved_norm": 0.525886966111028,
+        "P": 0.3814570973809868,
+        "recall": 0.04522253861834735,
+        "hit_rate": 0.8618386147687261,
+        "nDCG": 0.39966193722918497,
+        "queries_scored": 41466,
+        "queries_skipped": 419
+      },
+      "20": {
+        "mAP": 0.24248462782252286,
+        "mAP_retrieved_norm": 0.48618982847129194,
+        "P": 0.3509972025273718,
+        "recall": 0.07264276252788236,
+        "hit_rate": 0.9169681184584961,
+        "nDCG": 0.3798743111687626,
+        "queries_scored": 41466,
+        "queries_skipped": 419
+      }
+    },
+    "strict": {
+      "5": {
+        "mAP": 0.2991864559052059,
+        "mAP_retrieved_norm": 0.5247663264590348,
+        "P": 0.3753059440559441,
+        "recall": 0.038472087662817366,
+        "hit_rate": 0.7501942501942502,
+        "nDCG": 0.3893749776128787,
+        "queries_scored": 41184,
+        "queries_skipped": 701
+      },
+      "10": {
+        "mAP": 0.25590747247100587,
+        "mAP_retrieved_norm": 0.5029324793303588,
+        "P": 0.34827845765345766,
+        "recall": 0.0612196438678991,
+        "hit_rate": 0.842778749028749,
+        "nDCG": 0.37234025849808383,
+        "queries_scored": 41184,
+        "queries_skipped": 701
+      },
+      "20": {
+        "mAP": 0.22031709189363932,
+        "mAP_retrieved_norm": 0.46323700012468655,
+        "P": 0.31702845765345766,
+        "recall": 0.09544714575977747,
+        "hit_rate": 0.9028263403263403,
+        "nDCG": 0.35492789793857493,
+        "queries_scored": 41184,
+        "queries_skipped": 701
+      }
+    }
+  },
+  "random_baseline": {
+    "category": {
+      "5": {
+        "mAP": 0.029166547283638156,
+        "mAP_retrieved_norm": 0.11130179233720133,
+        "P": 0.05666873597249415,
+        "recall": 0.00011824055951352676,
+        "hit_rate": 0.22835585693137864,
+        "nDCG": 0.056496714178162884,
+        "queries_scored": 41882,
+        "queries_skipped": 3
+      },
+      "10": {
+        "mAP": 0.0209096569879245,
+        "mAP_retrieved_norm": 0.12271969335490061,
+        "P": 0.05646100950288906,
+        "recall": 0.00023998044844094135,
+        "hit_rate": 0.3667924167900291,
+        "nDCG": 0.05640814235804601,
+        "queries_scored": 41882,
+        "queries_skipped": 3
+      },
+      "20": {
+        "mAP": 0.015318090836778864,
+        "mAP_retrieved_norm": 0.12106580054160965,
+        "P": 0.05675707941359056,
+        "recall": 0.00047923141862533296,
+        "hit_rate": 0.5301083997898859,
+        "nDCG": 0.05665578254221433,
+        "queries_scored": 41882,
+        "queries_skipped": 3
+      }
+    },
+    "colour": {
+      "5": {
+        "mAP": 0.0036952362578176502,
+        "mAP_retrieved_norm": 0.01760177012492162,
+        "P": 0.007977620218974581,
+        "recall": 0.0001213630978808535,
+        "hit_rate": 0.03841701635074519,
+        "nDCG": 0.007938889032176906,
+        "queries_scored": 41466,
+        "queries_skipped": 419
+      },
+      "10": {
+        "mAP": 0.002390570128596463,
+        "mAP_retrieved_norm": 0.021875064596812533,
+        "P": 0.007803983986880819,
+        "recall": 0.0002304182208128736,
+        "hit_rate": 0.07283075290599528,
+        "nDCG": 0.007833357129514391,
+        "queries_scored": 41466,
+        "queries_skipped": 419
+      },
+      "20": {
+        "mAP": 0.0015137896766632911,
+        "mAP_retrieved_norm": 0.02513571342746438,
+        "P": 0.007691843920320264,
+        "recall": 0.00047371472110448214,
+        "hit_rate": 0.13254232383157286,
+        "nDCG": 0.007760716187411816,
+        "queries_scored": 41466,
+        "queries_skipped": 419
+      }
+    },
+    "strict": {
+      "5": {
+        "mAP": 0.002467058404558405,
+        "mAP_retrieved_norm": 0.011850678256928256,
+        "P": 0.0054050116550116555,
+        "recall": 0.00012102000567697568,
+        "hit_rate": 0.026199494949494948,
+        "nDCG": 0.005347365605015826,
+        "queries_scored": 41184,
+        "queries_skipped": 701
+      },
+      "10": {
+        "mAP": 0.0015985523928232263,
+        "mAP_retrieved_norm": 0.01484066666358333,
+        "P": 0.0052957459207459215,
+        "recall": 0.00022705578827998037,
+        "hit_rate": 0.050043706293706296,
+        "nDCG": 0.005298025359634328,
+        "queries_scored": 41184,
+        "queries_skipped": 701
+      },
+      "20": {
+        "mAP": 0.0010038876919875443,
+        "mAP_retrieved_norm": 0.017336924139861095,
+        "P": 0.005202263014763015,
+        "recall": 0.0004639028802860817,
+        "hit_rate": 0.09324009324009325,
+        "nDCG": 0.005248564400181687,
+        "queries_scored": 41184,
+        "queries_skipped": 701
+      }
+    }
+  }
+}

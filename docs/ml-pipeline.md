@@ -85,6 +85,42 @@ running alongside. WebP `method=2` instead of 4 halves encoding time for ~4% lar
 of which the HNSW index is 107 MB. Money is integer cents (`price_cents`, USD); prices and stock are
 generated from `sha256(seed:source_id)` so they do not depend on row order or `--limit`.
 
+## Retrieval quality (mAP)
+
+`scripts/evaluate_map.py` measures how *relevant* the results are, which the recall above (index versus exact scan) does not.
+Metrics live in `angel/ml/metrics.py` (unit-tested with hand-worked cases in `tests/ml/test_metrics.py`).
+
+**Protocol.** A query is one catalogue product. The search returns its K nearest products; the query itself is left out (it
+would always be rank 1). A returned product is *relevant* when it has the same Kaggle labels as the query, at three levels:
+**category** (same article type), **colour** (article type and base colour) and **strict** (article type, base colour and gender).
+Per query, `AP@K = (1 / min(K, R)) * sum over i <= K of P@i * rel_i`, where `R` is the number of relevant products in the whole
+catalogue; `mAP@K` is the mean over queries. Queries with no relevant product anywhere (`R = 0`) are undefined and skipped
+(3, 419 and 701 of 41,885 at the three levels). The other common normalisation (divide by the relevant products *found*) is in the
+JSON as `mAP_retrieved_norm`. P@K, recall@K, hit rate@K and nDCG@K are reported alongside, and a random ranking is the baseline.
+
+| Run | Queries | Level | mAP@5 | mAP@10 | mAP@20 | P@10 | Hit@10 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Exact, stored embeddings (`docs/perf/map.json`) | all 41,885 | category | **0.857** | **0.830** | **0.803** | 0.866 | 0.988 |
+| | | colour | 0.326 | 0.281 | 0.243 | 0.382 | 0.862 |
+| | | strict | 0.299 | 0.256 | 0.220 | 0.348 | 0.843 |
+| Real upload path + HNSW (`map-image.json`) | 500, seed 42 | category | 0.854 | 0.823 | 0.797 | 0.860 | 0.988 |
+| | | colour | 0.319 | 0.269 | 0.230 | 0.368 | 0.849 |
+| | | strict | 0.293 | 0.244 | 0.209 | 0.335 | 0.836 |
+| Same, photos shrunk to 1280 px (`map-image-phone.json`) | 500, seed 42 | category | 0.853 | 0.823 | 0.797 | 0.860 | 0.988 |
+| Random ranking (baseline) | all 41,885 | category | 0.029 | 0.021 | 0.015 | 0.057 | 0.367 |
+| | | colour / strict | 0.004 / 0.003 | 0.002 / 0.002 | 0.002 / 0.001 | 0.008 / 0.005 | 0.073 / 0.050 |
+
+How to read it: on average 87% of the top 10 are the same kind of garment (P@10 0.87; mAP@10 0.83 against 0.02 for chance), and
+a same-type garment is somewhere in the top 10 for 98.8% of queries. The colour and strict levels are much lower because the model matches
+*style and shape* first and the dataset's colour names are fine-grained and noisy ("Navy Blue" is not "Blue", "Grey" is not
+"Charcoal"); this is a limit of the labels rather than of the retrieval. Phone-sized uploads cost nothing measurable.
+
+**Limits to state in the thesis.** The labels are coarse and the catalogue has near-duplicate photos (both raise some scores);
+relevance by label is a proxy for what a person finds similar, so the numbers are a lower bound on perceived quality; the
+relevant products per class are very uneven (`R` runs from 1 to thousands), which is why the random baseline is reported.
+Reproduce: `cd apps/api && uv run python ../../scripts/evaluate_map.py --out ../../docs/perf/map.json`
+(`--mode image --dataset <path to the Kaggle folder> [--phone]` for the real pipeline).
+
 ## Search settings
 
 **HNSW** `vector_cosine_ops`, `m=16`, `ef_construction=128`. Recall of the approximate index against

@@ -1,8 +1,8 @@
-"""Remove what the end-to-end tests leave behind in a development database.
+"""End-to-end тестийн хөгжүүлэлтийн database-д үлдээсэн өгөгдлийг цэвэрлэнэ.
 
-The tests register customers (`e2e-...@example.com`), place orders and create products named
-"E2E ..."; the API can withdraw a product but never delete it. This deletes exactly those rows
-and the product photos they wrote, nothing else, and refuses to run when APP_ENV=prod.
+Тестүүд customer (`e2e-...@example.com`) бүртгэж, захиалга өгч, "E2E ..." нэртэй бүтээгдэхүүн
+үүсгэдэг; API бүтээгдэхүүнийг хасаж чадах ч хэзээ ч устгадаггүй. Энэ нь зөвхөн тэдгээр мөр,
+бичсэн зургийг устгана, өөр юм хөндөхгүй, APP_ENV=prod үед ажиллахаас татгалзана.
 
 cd apps/api && uv run python ../../scripts/e2e_clean.py
 make e2e-clean
@@ -18,7 +18,7 @@ from angel.ingestion.images import THUMBNAIL_SIZES, thumbnail_key
 from angel.storage import LocalStorage
 
 E2E_EMAIL = r"^e2e-.*@example\.com$"
-# The phone tests sign up with numbers in this range (see apps/web/e2e/support/api.ts).
+# Утасны тестүүд энэ мужийн дугаараар бүртгүүлдэг (apps/web/e2e/support/api.ts-г үз).
 E2E_PHONE = r"^\+1415555[0-9]{4}$"
 
 

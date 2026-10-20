@@ -4,11 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Motion tokens: Motion uses the same out-expo curve (components/motion/easing.ts). */
+/* Motion token: Motion мөн ижил out-expo муруйг ашигладаг (components/motion/easing.ts). */
 @theme {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
-  /* A spring that overshoots a little, sampled as a CSS easing: for things that land (a panel, a badge). */
+  /* Бага зэрэг хэтэрдэг spring, CSS easing болгон дээжилсэн: газардах зүйлд (panel, badge). */
   --ease-spring: linear(
     0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077,
     1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%,
@@ -52,7 +52,7 @@
       translate: 0 -10px;
     }
   }
-  /* A progress connector fills from its left end. */
+  /* Progress холбогч зүүн үзүүрээсээ дүүрнэ. */
   @keyframes grow-x {
     from {
       transform: scaleX(0);
@@ -61,7 +61,7 @@
       transform: scaleX(1);
     }
   }
-  /* Strokes that draw themselves (the confirmation check mark). */
+  /* Өөрсдөө зурагддаг шугам (захиалгын баталгаажуулалтын тик). */
   @keyframes draw {
     from {
       stroke-dashoffset: var(--len, 100);
@@ -70,7 +70,7 @@
       stroke-dashoffset: 0;
     }
   }
-  /* A soft band sweeps down a photo while it is being searched. */
+  /* Зургаар хайж байх үед зөөлөн зурвас зургийн дээгүүр доош сэлгэнэ. */
   @keyframes scan {
     0% {
       transform: translateY(-110%);
@@ -79,7 +79,7 @@
       transform: translateY(210%);
     }
   }
-  /* The little particles that fly out of a heart when it is filled. */
+  /* Зүрх дүүрэх үед түүнээс нисэх жижиг тоосонцор. */
   @keyframes burst {
     0% {
       opacity: 1;
@@ -90,7 +90,7 @@
       transform: rotate(var(--a)) translateY(-19px) scale(0.2);
     }
   }
-  /* A line that was just added glows once and settles. */
+  /* Дөнгөж нэмсэн мөр нэг удаа гэрэлтэж тогтоно. */
   @keyframes highlight {
     0% {
       background-color: color-mix(in oklab, var(--brand) 16%, transparent);
@@ -115,7 +115,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  /* The system fonts: SF Pro on Apple devices (the optical size follows the text size), nothing to download. */
+  /*
+   * Системийн фонт: Apple төхөөрөмж дээр SF Pro (optical size нь текстийн хэмжээг дагана), татах
+   * зүйлгүй.
+   */
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   --font-heading: var(--font-sans);
@@ -179,7 +182,7 @@
   --primary-active: #006edb;
   --radius: 0.75rem;
   --radius-tile: 1.125rem;
-  /* apple.com's flyouts: the page under the bar, and the veil over the rest of the page. */
+  /* apple.com-ийн flyout-ууд: bar-ын доорх хуудас, хуудасны үлдсэнийг бүрхэх хөшиг. */
   --flyout: #fafafc;
   --curtain: rgb(232 232 237 / 0.4);
 }
@@ -256,9 +259,9 @@
 }
 
 /*
- * Apple's type scale (sizes, line heights and tracking read from apple.com), one utility per step so pages
- * do not repeat strings. Sizes step down at 1068px and 734px as apple.com's do. Pair with a weight
- * (the headlines are 600, body copy 400).
+ * Apple-ийн үсгийн хэмжээний хуваарь (хэмжээ, мөрийн өндөр, tracking-ийг apple.com-оос уншсан),
+ * алхам бүрт нэг utility, ингэснээр хуудсууд string давтахгүй. Хэмжээ apple.com-ийнх шиг 1068px,
+ * 734px дээр багасна. Жинтэй хамт хэрэглэ (гарчиг 600, үндсэн текст 400).
  */
 @utility type-hero {
   font-size: 2.5rem;
@@ -340,7 +343,10 @@
   letter-spacing: -0.01em;
 }
 
-/* Apple's grey tile: promo cards, product cards, option boxes. 18px corners on a phone, 28px from 734px. */
+/*
+ * Apple-ийн саарал tile: promo карт, барааны карт, сонголтын хайрцаг. Утсан дээр 18px булан,
+ * 734px-ээс 28px.
+ */
 @utility tile {
   background-color: var(--secondary);
   border-radius: var(--radius-tile);
@@ -350,7 +356,7 @@
   }
 }
 
-/* The blue text link with a chevron ("Learn more >", "Shop >"). */
+/* Chevron-тэй цэнхэр текст холбоос ("Learn more >", "Shop >"). */
 @utility link-more {
   color: var(--brand);
   font-size: 1.0625rem;
@@ -371,7 +377,7 @@
   }
 }
 
-/* The global bar's inner width on apple.com: 1024px, 22px of padding. */
+/* apple.com-ийн global bar-ын дотоод өргөн: 1024px, 22px padding. */
 @utility container-nav {
   margin-inline: auto;
   width: 100%;
@@ -396,10 +402,10 @@
 }
 
 /*
- * Content far below the fold is not laid out, painted or (for lazy images) fetched until it is
- * near the viewport. Without this a short mobile page loads every "lazy" photo up front, which
- * is most of the bytes of the first load. It stays in the accessibility tree and in find-in-page;
- * `auto` remembers the real height once it has been shown, so the scrollbar does not jump.
+ * Fold-оос хол доорх агуулга viewport-д ойртох хүртэл layout, paint хийгдэхгүй (lazy зургийн хувьд
+ * татагдахгүй). Үгүй бол богино утасны хуудас "lazy" зураг бүрийг эхнээс нь татаж, эхний ачааллын
+ * byte-ийн ихэнхийг эзэлнэ. Accessibility tree болон find-in-page-д байсаар. `auto` нэг удаа
+ * харагдсаны дараа жинхэнэ өндрийг санадаг тул scrollbar үсрэхгүй.
  */
 @utility defer-render {
   content-visibility: auto;
@@ -414,8 +420,8 @@
 }
 
 /*
- * Scroll reveal (components/motion/reveal.tsx adds `data-in` when the element is on screen).
- * Without scripting, or for visitors who asked for less motion, content is simply there.
+ * Scroll reveal (components/motion/reveal.tsx элемент дэлгэц дээр гарахад `data-in` нэмнэ).
+ * Script-гүй эсвэл бага motion хүссэн хэрэглэгчид агуулга зүгээр л харагдана.
  */
 [data-reveal] {
   opacity: 0;
@@ -437,12 +443,11 @@
 }
 
 /*
- * The home page's motion (features/home): all of it transform and opacity only, so it runs on the
- * compositor and never moves layout; none of it needs script. The tiles' words and pictures settle in
- * as they scroll into view (a scroll-driven `view()` timeline, in browsers that have one), the first
- * tile's photos rise once on load, and nothing waits for any of it: without support, or with reduced
- * motion, everything is simply there. The first tile's headline is never animated (it is what the
- * page is measured on).
+ * Нүүр хуудасны motion (features/home): бүгд зөвхөн transform ба opacity тул compositor дээр
+ * ажиллаж layout-ыг хөдөлгөхгүй; script шаардахгүй. Tile-уудын үг, зураг дэлгэцэд орох үед тогтоно
+ * (scroll-driven `view()` timeline, дэмждэг browser-т), эхний tile-ийн зургууд ачаалахад нэг удаа
+ * дээш гарна, юу ч үүнийг хүлээхгүй: дэмжлэггүй эсвэл reduced motion үед бүх зүйл зүгээр л байна.
+ * Эхний tile-ийн гарчгийг хэзээ ч animation хийдэггүй (хуудас үүгээр хэмжигддэг).
  */
 @keyframes tile-copy-in {
   from {
@@ -488,9 +493,9 @@
 }
 
 /*
- * The header gains a hairline shadow as the page scrolls away from the top. Pure CSS, driven by
- * the scroll position, so it costs no script; browsers without scroll-driven animations keep the
- * plain border.
+ * Хуудас дээрээс доош scroll хийхэд header нарийн hairline сүүдэртэй болно. Цэвэр CSS, scroll
+ * байрлалаар удирдагдах тул script шаардахгүй; scroll-driven animation дэмждэггүй browser энгийн
+ * border-ыг хадгална.
  */
 @supports (animation-timeline: scroll()) {
   .header-elevate {
@@ -506,11 +511,11 @@
 }
 
 /*
- * The flyouts under the bar (department menu, search, Bag), timed as on apple.com: a panel as tall as
- * its content that grows over 240 ms, links that fade in one after another 20 ms apart, and a curtain
- * over the rest of the page (blurred, 40% veil, 320 ms). The department flyout (components/mega-menu.tsx)
- * is ONE panel whose height is set from script (that of the department shown) and whose contents swap
- * with a quick crossfade.
+ * Bar-ын доорх flyout-ууд (department цэс, хайлт, Bag), apple.com шиг хугацаатай: агуулгынхаа
+ * өндөртэй panel 240 ms-д томорч, холбоосууд бие биеэсээ 20 ms зайтай нэг нэгээр гарч, хуудасны
+ * үлдсэн хэсгийг curtain (бүдэгрүүлсэн, 40% хөшиг, 320 ms) бүрхэнэ. Department flyout
+ * (components/mega-menu.tsx) нь НЭГ panel бөгөөд өндрийг script тохируулна (харуулж буй
+ * department-ийнх), агуулга нь хурдан crossfade-ээр солигдоно.
  */
 :root {
   --flyout-ease: cubic-bezier(0.4, 0, 0.6, 1);
@@ -546,7 +551,10 @@
     opacity 240ms var(--flyout-ease) 80ms,
     visibility 0s;
 }
-/* One line of a flyout: hidden and 4px high until its flyout opens, then it settles in, each a little after the one above. */
+/*
+ * Flyout-ын нэг мөр: flyout нээгдэх хүртэл нуугдсан, 4px доор; дараа нь дээрхийнхээ дараа бага
+ * зэрэг хойноос тогтоно.
+ */
 .mega-item,
 .flyout-item {
   opacity: 0;
@@ -572,7 +580,9 @@
   }
 }
 
-/* The search panel: on a phone it fades in over the whole screen; from md up it grows down from the bar. */
+/*
+ * Хайлтын panel: утсан дээр бүх дэлгэц дээр бүдэг байдлаас гарна; md-ээс дээш bar-аас доош томорно.
+ */
 .search-panel {
   visibility: hidden;
   opacity: 0;
@@ -609,7 +619,7 @@
       clip-path 240ms var(--flyout-ease),
       visibility 0s;
   }
-  /* The Bag (a Radix dialog) grows the same way. */
+  /* Bag (Radix dialog) мөн адил томорно. */
   .bag-flyout[data-state="open"] {
     animation: flyout-grow 240ms var(--flyout-ease) both;
   }
@@ -627,8 +637,9 @@
 }
 
 /*
- * The curtain over the page while a flyout is open (apple.com's `.globalnav-curtain`): a 40% veil and a 20px
- * blur. It sits under the bar and the flyouts and closes them when pressed. Phones have full-screen pages instead.
+ * Flyout нээлттэй байхад хуудасны дээрх curtain (apple.com-ийн `.globalnav-curtain`): 40% хөшиг ба
+ * 20px blur. Bar ба flyout-ын доор байх бөгөөд дарахад тэдгээрийг хаана. Утсанд оронд нь бүтэн
+ * дэлгэцийн хуудас байна.
  */
 .bar-curtain {
   position: fixed;
@@ -656,8 +667,8 @@ html[data-bar-panel] .bar-curtain {
 }
 
 /*
- * Page transitions (React <ViewTransition> in app/template.tsx): the new page rises in while the
- * old one fades out. The header is anchored so only the content appears to move.
+ * Хуудасны шилжилт (app/template.tsx дахь React <ViewTransition>): шинэ хуудас дээш гарч, хуучин нь
+ * бүдгэрнэ. Header тогтоогдсон тул зөвхөн агуулга хөдөлж харагдана.
  */
 ::view-transition {
   pointer-events: none;
@@ -706,10 +717,10 @@ html[data-bar-panel] .bar-curtain {
 }
 
 /*
- * The phone menu (components/layout/mobile-nav-menu.tsx): a page that opens under the header. It is
- * visible at once when opening and hidden only after it has faded, so focus can move into it in
- * the same frame; the lines of the menu rise in one after another. While it is open the header
- * turns solid, so bar and page read as one surface.
+ * Утасны цэс (components/layout/mobile-nav-menu.tsx): header-ийн доор нээгддэг хуудас. Нээгдэхэд
+ * шууд харагдаж, бүдгэрсний дараа л нуугдана, ингэснээр focus нэг frame-д дотор нь орно; цэсний
+ * мөрүүд нэг нэгээр дээш гарна. Нээлттэй үед header тод болж, bar ба хуудас нэг гадаргуу шиг
+ * харагдана.
  */
 .menu-panel {
   visibility: hidden;
@@ -739,16 +750,19 @@ html:has(#mobile-menu[data-open="true"]) .header-elevate,
 html[data-bar-panel] .header-elevate {
   background-color: var(--background);
 }
-/* From md up the bar takes the flyout's colour while one is open, so bar and flyout read as one surface. */
+/*
+ * Md-ээс дээш flyout нээлттэй үед bar flyout-ын өнгийг авч, bar ба flyout нэг гадаргуу шиг
+ * харагдана.
+ */
 @media (min-width: 768px) {
   html[data-bar-panel] .header-elevate {
     background-color: var(--flyout);
   }
 }
 /*
- * As on apple.com's phone bar: while the menu, the search or the Bag page is open (`data-bar-panel`
- * on <html>, see components/layout/bar-panel.ts), the logo, search and bag fade out and only the X
- * that closes it stays. From md up the bar keeps everything.
+ * apple.com-ийн утасны bar шиг: цэс, хайлт, Bag хуудас нээлттэй үед (<html> дээр `data-bar-panel`,
+ * components/layout/bar-panel.ts-ыг үз) logo, хайлт, bag бүдгэрч, хаадаг X л үлдэнэ. Md-ээс дээш
+ * bar бүгдээрээ үлдэнэ.
  */
 @media (max-width: 767px) {
   html[data-bar-panel] .phone-bar-item {
@@ -762,9 +776,9 @@ html[data-bar-panel] .header-elevate {
 }
 
 /*
- * The loading skeleton: a soft highlight sweeps across (transform only, so it costs no layout or
- * paint). A class rather than utilities because the page carries dozens of skeletons in its HTML.
- * In the components layer, so `rounded-2xl` and friends on the element still win.
+ * Ачаалах skeleton: зөөлөн гэрэл дундуур сэлгэнэ (зөвхөн transform, layout, paint шаардахгүй).
+ * Utility биш class, учир нь хуудас HTML-дээ олон арван skeleton агуулдаг. Components layer-д,
+ * ингэснээр элемент дээрх `rounded-2xl` зэрэг ялсаар байна.
  */
 @layer components {
   .skeleton {
@@ -788,12 +802,11 @@ html[data-bar-panel] .header-elevate {
 }
 
 /*
- * A product card gives a little under the finger (short name: it is repeated on every card), and
- * the card under the pointer (or focused) names its photo for the page transition, so the photo
- * grows into the product page's gallery. One card at a time can be hovered or focused, and then
- * the page's own hero (the gallery, when navigating between products) gives its name up: two
- * elements with one name would cancel the whole transition. No script, so no client component
- * per card.
+ * Барааны карт хуруун дор бага зэрэг шахагдана (богино нэр: карт бүр дээр давтагддаг), pointer-ын
+ * доорх (эсвэл focus-тай) карт зургаа page transition-д нэрлэж, зураг барааны хуудасны gallery
+ * болон өргөжнө. Нэг удаад нэг карт hover/focus авна; тэгэхэд хуудасны өөрийн hero (барааны хооронд
+ * шилжих үеийн gallery) нэрээ өгнө: нэг нэртэй хоёр элемент бүх transition-ыг цуцална. Script-гүй
+ * тул карт бүр client component биш.
  */
 .press-card:is(:hover, :focus-visible) [data-card-photo] {
   view-transition-name: product-hero;

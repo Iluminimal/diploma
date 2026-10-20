@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
 
 /**
- * The shared look of the pages for when something is missing or broken: a large soft mark that
- * floats, a headline, a search box and the way back into the shop. Server-renderable (no script).
+ * Ямар нэг зүйл алга эсвэл эвдэрсэн үеийн хуудсуудын нийтлэг дүр: хөвөх том зөөлөн тэмдэг, гарчиг,
+ * хайлтын хайрцаг, дэлгүүр рүү буцах зам. Server дээр render хийж болно (script-гүй).
  */
 export function LostPage({
   mark,
@@ -14,7 +14,7 @@ export function LostPage({
   children,
   actions,
 }: {
-  /** The big figure: "404", or a symbol for errors. */
+  /** Том дүрс: "404", эсвэл алдаанд зориулсан тэмдэг. */
   mark: string;
   title: string;
   children: ReactNode;

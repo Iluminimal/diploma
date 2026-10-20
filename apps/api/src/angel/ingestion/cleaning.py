@@ -1,4 +1,4 @@
-"""Turn the raw Kaggle `styles.csv` into validated products that have an image on disk."""
+"""Kaggle-ийн анхны `styles.csv`-ийг шалгасан, диск дээр зурагтай бүтээгдэхүүн болгоно."""
 
 import csv
 import re
@@ -77,10 +77,10 @@ def load_catalog(
     *,
     master_categories: Collection[str] = DEFAULT_MASTER_CATEGORIES,
 ) -> tuple[list[CleanProduct], CleaningReport]:
-    """Parse, validate and filter the dataset. Result is sorted by id (deterministic order)."""
+    """Dataset-ийг parse, validate, шүүнэ. Үр дүн id-аар эрэмбэлэгдсэн (тогтмол дараалал)."""
     report = CleaningReport(csv_records=_count_csv_records(styles_csv))
-    # The file has rows with unquoted commas (too many fields). `skip` drops those; rows with
-    # too few fields are padded with NaN and caught by the required-field check below.
+    # Файлд хашилтгүй таслалтай (талбар хэт олон) мөр байдаг. `skip` тэдгээрийг хасна; талбар нь
+    # дутуу мөр NaN-аар дүүргэгдэж, доорх шаардлагатай талбарын шалгалтад баригдана.
     frame = pd.read_csv(styles_csv, dtype=str, on_bad_lines="skip", keep_default_na=False)
     if (malformed := report.csv_records - len(frame)) > 0:
         report.dropped["malformed_row"] = malformed

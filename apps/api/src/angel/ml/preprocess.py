@@ -1,7 +1,7 @@
-"""Image decoding and CLIP input preparation.
+"""Зургийг decode хийж, CLIP-ийн оролт болгон бэлтгэнэ.
 
-This is the ONE place images are turned into model input, shared by ingestion and (later)
-query-time search, so catalogue and query embeddings always see identical preprocessing.
+Зураг model-ийн оролт болох ЯГ НЭГ газар. Ingestion болон хайлт хоёул ашигладаг тул каталог ба
+query-ийн embedding үргэлж ижил preprocessing-ээр гарна.
 """
 
 from __future__ import annotations
@@ -16,9 +16,9 @@ from numpy.typing import NDArray
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 CLIP_SIZE = 224
-# Reject anything bigger than this before decoding it fully (decompression-bomb guard).
+# Бүтнээр decode хийхээс өмнө үүнээс том зургийг татгалзана (decompression bomb-оос хамгаална).
 MAX_PIXELS = 50_000_000
-# White matches the catalogue's studio backgrounds, so padding and transparency blend in.
+# Каталогийн studio дэвсгэр цагаан тул padding, ил тод хэсэг байгалийн харагдана.
 BACKGROUND = (255, 255, 255)
 
 ResizeMode = Literal["crop", "pad"]
@@ -26,7 +26,7 @@ ImageSource = str | Path | bytes | BinaryIO
 
 
 class InvalidImageError(ValueError):
-    """The input is not a decodable, acceptably sized image."""
+    """Оролт decode хийгдэхгүй эсвэл хэмжээ нь зөвшөөрөгдөхгүй зураг."""
 
 
 def load_image(
@@ -36,12 +36,12 @@ def load_image(
     formats: Sequence[str] | None = None,
     max_pixels: int = MAX_PIXELS,
 ) -> Image.Image:
-    """Decode to an upright RGB image with EXIF metadata dropped.
+    """Зургийг зөв чиглэлтэй RGB болгон decode хийж, EXIF metadata-г хасна.
 
-    `min_side` lets the JPEG decoder skip work: it decodes at 1/2, 1/4 or 1/8 scale as long as
-    both dimensions stay >= `min_side`. Other formats ignore it. Untrusted input (uploads)
-    passes `formats` (Pillow format names; anything else is rejected from its magic bytes, not
-    its filename or declared type) and a lower `max_pixels`. Only the first frame is decoded.
+    `min_side` өгвөл JPEG decoder хоёр тал нь >= `min_side` хэвээр байх 1/2, 1/4, 1/8 масштабаар
+    decode хийж хурдасгана; бусад формат үүнийг үл тооно. Найдваргүй оролт (upload) `formats`
+    (Pillow-ийн формат нэр; бусад нь файлын нэр, төрлөөр биш magic bytes-аар татгалзагдана) болон
+    бага `max_pixels` дамжуулна. Зөвхөн эхний frame-ийг decode хийнэ.
     """
     file: str | Path | BinaryIO = io.BytesIO(source) if isinstance(source, bytes) else source
     try:
@@ -66,8 +66,8 @@ def load_image(
 
 
 def _strip_metadata(image: Image.Image) -> Image.Image:
-    """Drop EXIF (camera, GPS, ...), ICC profile and comments. The orientation was already
-    applied, and nothing downstream needs them: the decoded image is never re-encoded."""
+    """EXIF (камер, GPS ...), ICC profile, comment-ийг хасна. Чиглэл аль хэдийн засагдсан,
+    цаашид эдгээр хэрэггүй: decode хийсэн зургийг дахин encode хийхгүй."""
     image.getexif().clear()
     image.info.clear()
     return image
@@ -85,10 +85,10 @@ def _to_rgb(image: Image.Image) -> Image.Image:
 
 
 def to_clip_array(image: Image.Image, mode: ResizeMode = "pad") -> NDArray[np.uint8]:
-    """Resize to a 224x224 uint8 HWC array.
+    """224x224 uint8 HWC array болгон жижигрүүлнэ.
 
-    `crop` is CLIP's stock recipe (shortest side to 224, center crop), which cuts the top and
-    bottom off portrait garments. `pad` keeps the whole garment and pads to a square.
+    `crop` нь CLIP-ийн стандарт арга (богино тал 224, голыг таслах): босоо хувцасны дээд, доод
+    хэсгийг тасалдаг. `pad` бүх хувцсыг хадгалж, дөрвөлжин болтол дэвсгэр нэмнэ.
     """
     width, height = image.size
     if mode == "crop":

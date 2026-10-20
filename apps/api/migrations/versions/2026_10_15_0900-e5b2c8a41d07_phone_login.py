@@ -1,4 +1,4 @@
-"""phone login: users.phone, otp challenges, session metadata
+"""утасны нэвтрэлт: users.phone, otp challenge, session metadata
 
 Revision ID: e5b2c8a41d07
 Revises: d7e3b9a4f518
@@ -19,7 +19,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    """Schema-г шинэчилнэ."""
     op.create_table(
         "otp_challenges",
         sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
@@ -72,7 +72,7 @@ def upgrade() -> None:
     op.create_check_constraint(
         op.f("ck_users_contact_present"), "users", "email IS NOT NULL OR phone IS NOT NULL"
     )
-    # Google vouches for the address it signs people in with.
+    # Google өөрөөр нэвтрүүлсэн имэйл хаягийг баталгаажсан гэж үзнэ.
     op.execute(
         "UPDATE users SET email_verified_at = now() "
         "WHERE id IN (SELECT user_id FROM oauth_identities WHERE provider = 'google')"
@@ -80,7 +80,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Downgrade schema. Fails if an account without an email exists: those cannot be kept."""
+    """Schema-г буцаана. Имэйлгүй account байвал алдаа өгнө: тэднийг хадгалах боломжгүй."""
     op.drop_constraint(op.f("ck_users_contact_present"), "users", type_="check")
     op.drop_constraint(op.f("ck_users_phone_e164"), "users", type_="check")
     op.drop_constraint(op.f("uq_users_phone"), "users", type_="unique")

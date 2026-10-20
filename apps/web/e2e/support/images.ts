@@ -21,14 +21,14 @@ function chunk(type: string, data: Buffer): Buffer {
   return out;
 }
 
-/** A valid PNG of coloured blocks that depend on `seed`: different seeds look different to the model. */
+/** Өнгөт блокуудтай зөв PNG, `seed`-ээс хамаарна: өөр seed загварт өөр харагдана. */
 export function makePng(seed: number, width = 240, height = 320): Buffer {
-  // 32-bit arithmetic throughout: plain multiplication overflows the exact-integer range of a double
-  // and makes neighbouring seeds produce the same picture.
+  // 32 битийн арифметик тасралтгүй: энгийн үржвэр double-ийн бүхэл тооны мужаас халж, зэргэлдээ
+  // seed-ээс ижил зураг гаргана.
   let state = (Math.imul(seed + 1, 2654435761) + 1) >>> 0;
   const next = () => {
     state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-    return state >>> 8; // the low bits of this generator are the least random
+    return state >>> 8; // энэ generator-ын доод битүүд хамгийн бага санамсаргүй
   };
   const block = 24;
   const cols = Math.ceil(width / block);

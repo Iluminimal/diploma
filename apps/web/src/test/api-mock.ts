@@ -5,7 +5,7 @@ type Call = {
   path: string;
   search: string;
   body: unknown;
-  /** Set for multipart requests (uploads) instead of `body`. */
+  /** Multipart хүсэлтэд (upload) `body`-ийн оронд тавина. */
   form?: FormData;
   headers: Headers;
 };
@@ -18,14 +18,20 @@ export const json = (body: unknown, status = 200) =>
     headers: { "content-type": status >= 400 ? "application/problem+json" : "application/json" },
   });
 
-/** A handler that answers every call with a fresh response (a `Response` can only be read once, and a refetch is a second call). */
+/**
+ * Дуудлага бүрт шинэ response өгдөг handler (`Response`-ыг нэг л удаа унших боломжтой, refetch бол
+ * хоёр дахь дуудлага).
+ */
 export const respond = (body: unknown, status = 200) => () => json(body, status);
 
 export function problem(status: number, title: string, extra: Record<string, unknown> = {}) {
   return json({ title, status, ...extra }, status);
 }
 
-/** The fields of a multipart body. (undici's own parser rejects jsdom `File`s, hence this one.) */
+/**
+ * Multipart body-ийн талбарууд. (undici-ийн өөрийн parser jsdom `File`-ыг татгалздаг тул энэ
+ * байна.)
+ */
 function parseMultipart(raw: string, contentType: string): FormData {
   const boundary = /boundary=([^;]+)/.exec(contentType)?.[1];
   const form = new FormData();
@@ -43,8 +49,9 @@ function parseMultipart(raw: string, contentType: string): FormData {
 }
 
 /**
- * Replaces `fetch` with a router keyed by "METHOD /path" (query string ignored). Handles both
- * `Request` objects (openapi-fetch) and plain URL strings. Unknown routes fail the test loudly.
+ * `fetch`-ийг "METHOD /path" түлхүүртэй router-оор солино (query string үл тооно). `Request` объект
+ * (openapi-fetch) болон энгийн URL string хоёуланг боловсруулна. Үл мэдэгдэх route тестийг чангаар
+ * унагана.
  */
 export function stubApi(routes: Record<string, Handler>) {
   const calls: Call[] = [];

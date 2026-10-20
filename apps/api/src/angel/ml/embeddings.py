@@ -10,24 +10,25 @@ ImageArrays = NDArray[np.uint8]
 
 
 class EmbeddingService(Protocol):
-    """Seam between the application and the model, so the model can be swapped.
+    """Апп ба model-ийн хоорондох зааг, ингэснээр model-ийг солих боломжтой.
 
-    Every method returns L2-normalized float32 rows of length `dimension`. The sync methods
-    block and are for scripts; the async ones run inference off the event loop.
+    Метод бүр урт нь `dimension`, L2-normalize хийсэн float32 мөрүүд буцаана. Sync метод
+    блоклодог тул script-д; async метод inference-ийг event loop-оос гадуур ажиллуулна.
     """
 
     dimension: int
-    # Identifies everything that makes vectors comparable (model revision + preprocessing).
-    # Stored with each product so stale embeddings can be detected after a model change.
+    # Vector-уудыг харьцуулах боломжтой болгодог бүхнийг (model revision + preprocessing)
+    # тодорхойлно. Бүтээгдэхүүн бүртэй хамт хадгалдаг тул model солигдсоны дараа хуучирсан
+    # embedding-ийг илрүүлнэ.
     version: str
-    # CLIP's learned temperature: softmax(logit_scale * cosine) turns similarities into
-    # probabilities (zero-shot classification).
+    # CLIP-ийн сурсан temperature: softmax(logit_scale * cosine) нь ижил төстэй байдлыг
+    # магадлал болгоно (zero-shot classification).
     logit_scale: float
 
     def is_loaded(self) -> bool: ...
 
     def embed_arrays(self, arrays: ImageArrays) -> Embeddings:
-        """Embed already-preprocessed images: uint8 array of shape (n, 224, 224, 3)."""
+        """Preprocess хийж дууссан зургуудыг embed хийнэ: (n, 224, 224, 3) хэлбэртэй uint8 array."""
         ...
 
     def embed_images(self, images: Sequence[Image.Image]) -> Embeddings: ...

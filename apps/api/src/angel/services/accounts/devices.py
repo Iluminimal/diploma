@@ -1,6 +1,6 @@
-"""A short, human label for a browser, from its User-Agent header: "Chrome on macOS"."""
+"""User-Agent header-ээс browser-ийн богино, хүнд ойлгомжтой нэр: "Chrome on macOS"."""
 
-# Order matters: Edge and Opera also say "Chrome", and Chrome also says "Safari".
+# Дараалал чухал: Edge, Opera ч "Chrome" гэж бичдэг, Chrome ч "Safari" гэж бичдэг.
 _BROWSERS = (
     ("Edg", "Edge"),
     ("OPR", "Opera"),
@@ -10,7 +10,7 @@ _BROWSERS = (
     ("Chrome", "Chrome"),
     ("Safari", "Safari"),
 )
-# iPhone and iPad user agents also say "like Mac OS X": test them first.
+# iPhone, iPad-ийн user agent "like Mac OS X" гэж бас бичдэг: тэдгээрийг түрүүлж шалга.
 _SYSTEMS = (
     ("iPhone", "iPhone"),
     ("iPad", "iPad"),

@@ -12,7 +12,7 @@ SEEDED = range(1, 41)
 
 
 def seeded(*, genders: tuple[str, ...] = GENDERS, article: str | None = None) -> int:
-    """How many of the 40 seeded products match (gender and article type cycle with n)."""
+    """Seed хийсэн 40 барааны хэд нь таарах вэ (хүйс ба article type n-ээр эргэлдэнэ)."""
     return sum(
         1
         for n in SEEDED
@@ -34,7 +34,7 @@ async def test_the_nav_lists_women_and_men_with_counts_and_readable_names(api: A
     body = response.json()
     assert response.status_code == 200
     assert response.headers["cache-control"] == "public, max-age=300"
-    # The seed has no Boys or Girls, so there is no Kids department.
+    # Seed-д Boys, Girls байхгүй тул Kids хэлтэс байхгүй.
     assert [d["slug"] for d in body["departments"]] == ["women", "men"]
     men = body["departments"][1]
     assert men["product_count"] == seeded(genders=("Men", "Unisex"))

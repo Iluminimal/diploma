@@ -1,12 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * End-to-end tests drive a running stack: the API, the web app and Postgres/Redis (see
- * docs/e2e.md). They never start servers themselves, so the same suite runs against a local
- * `make api` + `make web-prod`, or against the CI stack.
+ * End-to-end тестүүд ажиллаж буй stack (API, web, Postgres/Redis)-ийг удирдана (docs/e2e.md).
+ * Тест өөрөө server асаадаггүй тул нэг тест локал `make api` + `make web-prod` дээр ч, CI stack дээр ч ажиллана.
  *
- *   E2E_BASE_URL   where the web app is served (default http://localhost:3000)
- *   E2E_API_URL    where the API is served (default http://localhost:8000)
+ *   E2E_BASE_URL   web ажиллаж буй хаяг (анхдагч http://localhost:3000)
+ *   E2E_API_URL    API ажиллаж буй хаяг (анхдагч http://localhost:8000)
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -22,7 +21,7 @@ export default defineConfig({
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
-    // A synthetic camera, so "Take a photo" can be tested; nothing else touches it.
+    // Хиймэл камер: "Зураг авах" товчийг тестлэхэд хэрэгтэй, өөр юу ч үүнийг ашигладаггүй.
     launchOptions: { args: ["--use-fake-device-for-media-stream", "--use-fake-ui-for-media-stream"] },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],

@@ -1,4 +1,4 @@
-"""Upload edge cases for the image endpoints (`/search/image` and `/search/hybrid`)."""
+"""Зургийн endpoint-ын (`/search/image`, `/search/hybrid`) upload-ын захын тохиолдлууд."""
 
 import io
 import tempfile
@@ -33,7 +33,7 @@ def files(data: bytes, content_type: str = "image/jpeg", name: str = "photo.jpg"
 
 
 def padded_jpeg(size_bytes: int) -> bytes:
-    """A valid JPEG followed by padding (decoders stop at the end-of-image marker)."""
+    """Хүчинтэй JPEG ба араас нь padding (decoder end-of-image тэмдэгт дээр зогсдог)."""
     base = make_jpeg(1)
     return base + b"\0" * max(0, size_bytes - len(base))
 
@@ -100,7 +100,7 @@ async def test_undecodable_or_spoofed_files_are_422(
     assert response.status_code == 422, label
     assert response.json()["type"] == INVALID_IMAGE
     assert response.headers["content-type"] == "application/problem+json"
-    # The message never echoes file content or library internals.
+    # Алдааны мессеж файлын агуулга, сангийн дотоод мэдээллийг дахин харуулахгүй.
     assert "Traceback" not in response.text
     assert "PIL" not in response.text
 
@@ -152,7 +152,7 @@ async def test_streamed_body_without_content_length_is_still_limited(small_api: 
 
     async def body() -> AsyncIterator[bytes]:
         yield head
-        for _ in range(12):  # 12 MB in 1 MB chunks, size never announced
+        for _ in range(12):  # 1 MB-ийн 12 хэсэг (12 MB), нийт хэмжээг хэзээ ч зарлаагүй
             yield b"0" * MB
         yield tail
 
@@ -180,7 +180,7 @@ async def test_lying_content_length_cannot_smuggle_a_big_body(small_api: Any) ->
         content=payload,
         headers={
             "content-type": f"multipart/form-data; boundary={boundary}",
-            "content-length": "1000",  # announces 1 KB, sends 10 MB
+            "content-length": "1000",  # 1 KB гэж зарлаад 10 MB илгээнэ
         },
     )
 
@@ -188,7 +188,7 @@ async def test_lying_content_length_cannot_smuggle_a_big_body(small_api: Any) ->
 
 
 async def test_decompression_bomb_is_rejected_from_its_header(small_api: Any) -> None:
-    # 30000 x 30000 pixels (900 MP, ~900 MB as 8-bit RGB) that compresses to ~100 KB.
+    # 30000 x 30000 пиксель (900 MP, 8-bit RGB-ээр ~900 MB), ~100 KB болтол шахагддаг.
     bomb = encode(Image.new("1", (30000, 30000)), "PNG")
     assert len(bomb) < 2 * MB
 
@@ -198,7 +198,7 @@ async def test_decompression_bomb_is_rejected_from_its_header(small_api: Any) ->
 
     assert response.status_code == 422
     assert response.json()["type"] == INVALID_IMAGE
-    assert elapsed < 2.0  # refused without decoding the pixels
+    assert elapsed < 2.0  # пикселийг decode хийхгүйгээр татгалзсан
 
 
 async def test_pixel_limit_boundary(api_factory: ApiFactory) -> None:
@@ -222,7 +222,7 @@ async def test_hybrid_endpoint_enforces_the_same_rules(small_api: Any) -> None:
 
 
 async def test_uploads_stay_in_memory(small_api: Any, monkeypatch: pytest.MonkeyPatch) -> None:
-    """User photos must never be spooled to a temporary file on disk."""
+    """Хэрэглэгчийн зургийг хэзээ ч диск дээрх түр файлд бичихгүй."""
 
     def forbidden(self: object, *args: object, **kwargs: object) -> None:
         raise AssertionError("upload was written to a temporary file")
@@ -236,11 +236,11 @@ async def test_uploads_stay_in_memory(small_api: Any, monkeypatch: pytest.Monkey
 
 
 async def test_exif_orientation_is_applied_and_metadata_never_leaves(small_api: Any) -> None:
-    """An EXIF-rotated photo is searched upright, with GPS data and all, never stored."""
+    """EXIF-ээр эргүүлсэн зургийг босоо болгож хайна, GPS мэдээлэлтэй ч хадгалахгүй."""
     entry = small_api.entries[0]
     original = Image.open(io.BytesIO(entry.jpeg))
     exif = Image.Exif()
-    exif[0x0112] = 1  # orientation: normal
+    exif[0x0112] = 1  # orientation: хэвийн
     exif[0x010F] = "SecretCameraMaker"
     plain = await small_api.client.post(
         IMAGE, files=files(encode(original, "JPEG", quality=90, exif=exif.tobytes()))

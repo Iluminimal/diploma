@@ -1,4 +1,4 @@
-"""oauth identities and optional passwords
+"""OAuth бүртгэл ба заавал биш нууц үг
 
 Revision ID: 9d4c1e7a3b55
 Revises: b117bee0c2f5
@@ -19,7 +19,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    """Schema-г шинэчилнэ."""
     op.create_table(
         "oauth_identities",
         sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
@@ -53,8 +53,8 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
-    # Accounts without a password get a value no password can match (it is not an argon2 hash).
+    """Schema-г өмнөх төлөвт буцаана."""
+    # Нууц үггүй account-д ямар ч нууц үгтэй таарахгүй утга өгнө (argon2 hash биш).
     op.execute("UPDATE users SET password_hash = '!' WHERE password_hash IS NULL")
     op.alter_column("users", "password_hash", existing_type=sa.String(length=255), nullable=False)
     op.drop_index("ix_oauth_identities_user_id", table_name="oauth_identities")

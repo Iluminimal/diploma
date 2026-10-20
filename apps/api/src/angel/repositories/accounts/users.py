@@ -86,7 +86,7 @@ class RefreshTokenRepository:
         user_agent: str | None = None,
         ip: str | None = None,
     ) -> RefreshToken:
-        """`last_used_at` is the database clock, like `created_at`, so the two never disagree."""
+        """`last_used_at` нь `created_at`-тай адил database-ийн цаг: хоёр цаг зөрөхгүй."""
         token = RefreshToken(
             user_id=user_id,
             family_id=family_id,
@@ -101,7 +101,7 @@ class RefreshTokenRepository:
         return token
 
     async def get_for_update(self, token_hash: str) -> RefreshToken | None:
-        """Locked, so two refreshes with the same token are decided one after the other."""
+        """Түгжинэ: нэг token-оор зэрэг хийсэн хоёр refresh-ийг нэг нэгээр нь шийднэ."""
         result = await self._session.execute(
             select(RefreshToken).where(RefreshToken.token_hash == token_hash).with_for_update()
         )
@@ -116,7 +116,7 @@ class RefreshTokenRepository:
     async def active_sessions(
         self, user_id: int, now: datetime
     ) -> list[tuple[RefreshToken, datetime]]:
-        """One row per login still open: its newest token, and when the login began."""
+        """Нээлттэй нэвтрэлт бүрт нэг мөр: хамгийн сүүлийн token болон нэвтрэлт эхэлсэн цаг."""
         began = (
             select(RefreshToken.family_id, func.min(RefreshToken.created_at).label("began"))
             .where(RefreshToken.user_id == user_id)
@@ -139,7 +139,7 @@ class RefreshTokenRepository:
     async def revoke_family_of_user(
         self, user_id: int, family_id: uuid.UUID, now: datetime
     ) -> bool:
-        """Ends one login, but only if it is this user's. False: there was no such open login."""
+        """Нэг нэвтрэлтийг дуусгана (зөвхөн өөрийнх бол). False: нээлттэй нэвтрэлт олдсонгүй."""
         result = await self._session.execute(
             update(RefreshToken)
             .where(
@@ -163,7 +163,7 @@ class RefreshTokenRepository:
         )
 
     async def revoke_all_for_user(self, user_id: int, now: datetime) -> None:
-        """Every login of this user ends: used when the password changes."""
+        """Хэрэглэгчийн бүх нэвтрэлтийг дуусгана: нууц үг солигдоход хэрэглэнэ."""
         await self._session.execute(
             update(RefreshToken)
             .where(RefreshToken.user_id == user_id, RefreshToken.revoked_at.is_(None))
@@ -194,7 +194,7 @@ class AddressRepository:
         return list(result.scalars())
 
     async def get(self, user_id: int, address_id: int) -> Address | None:
-        """Scoped to the owner: someone else's id is indistinguishable from a missing one."""
+        """Эзэмшигчээр хязгаарлана: өөр хүний id нь байхгүй id-аас ялгагдахгүй."""
         result = await self._session.execute(
             select(Address).where(Address.id == address_id, Address.user_id == user_id)
         )

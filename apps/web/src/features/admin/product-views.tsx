@@ -110,7 +110,7 @@ export function EditProductView({ id }: { id: number }) {
       toast.success("Photo replaced. Visual search now uses the new one.");
       if (fileInput.current) fileInput.current.value = "";
     } catch {
-      // The mutation hook already showed the reason.
+      // Алдааны шалтгааныг mutation hook аль хэдийн харуулсан.
     }
   };
 

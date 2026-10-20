@@ -6,9 +6,9 @@ from angel.models.mixins import TimestampMixin
 
 
 class Category(TimestampMixin, Base):
-    """Catalogue tree: master category > sub category > article type (levels 1-3).
+    """Каталогийн мод: master category > sub category > article type (1-3 түвшин).
 
-    Products point at the leaf (article type); ancestors are reached through `parent_id`.
+    Бараа навч (article type)-ийг зааж, өвөг эцгийг `parent_id`-ээр олно.
     """
 
     __tablename__ = "categories"
@@ -21,5 +21,5 @@ class Category(TimestampMixin, Base):
     level: Mapped[int] = mapped_column(SmallInteger)
     name: Mapped[str] = mapped_column(String(100))
     slug: Mapped[str] = mapped_column(String(120))
-    # Full slug path, e.g. "apparel/topwear/shirts". Unique across the whole tree.
+    # Бүтэн slug зам, жишээ нь "apparel/topwear/shirts". Бүх модонд давтагдашгүй.
     path: Mapped[str] = mapped_column(String(400), unique=True)

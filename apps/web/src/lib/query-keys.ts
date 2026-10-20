@@ -1,4 +1,7 @@
-/** One place for TanStack Query keys, so mutations can invalidate what they changed. */
+/**
+ * TanStack Query түлхүүрүүдийн нэг газар, ингэснээр mutation өөрийн өөрчилсөн зүйлийг invalidate
+ * хийж чадна.
+ */
 export const queryKeys = {
   cart: ["cart"] as const,
   wishlist: ["wishlist"] as const,
@@ -22,7 +25,7 @@ export const queryKeys = {
   },
 };
 
-/** Everything tied to the signed-in account (not the public catalogue). */
+/** Нэвтэрсэн account-тай холбоотой бүх зүйл (нийтийн каталог биш). */
 export const accountKeys = [
   queryKeys.cart,
   queryKeys.wishlist,

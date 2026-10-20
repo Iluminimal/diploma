@@ -27,7 +27,7 @@ def bearer(token: str) -> dict[str, str]:
 
 
 async def google_session(client: AsyncClient, email: str) -> str:
-    """Signs in with the fake Google through the whole flow; returns an access token."""
+    """Fake Google-ээр бүтэн урсгалыг дамжин нэвтэрч, access token буцаана."""
     start = await client.get("/api/v1/auth/google/start", params={"login_hint": email})
     assert start.status_code == 302
     location = start.headers["location"].split("localhost:3000", 1)[1]
@@ -43,7 +43,7 @@ async def scalar(api: Api, sql: str, **params: object) -> object:
         return (await connection.execute(text(sql), params)).scalar_one()
 
 
-# --- name --------------------------------------------------------------------------------------
+# --- Нэр ---------------------------------------------------------------------------------------
 
 
 async def test_a_person_can_rename_their_account(api_factory: ApiFactory) -> None:
@@ -78,7 +78,7 @@ async def test_renaming_needs_a_session(api_factory: ApiFactory) -> None:
         assert (await api.client.patch(ME, json={"full_name": "x"})).status_code == 401
 
 
-# --- password ----------------------------------------------------------------------------------
+# --- Нууц үг -----------------------------------------------------------------------------------
 
 
 async def test_changing_the_password_ends_every_other_login(api_factory: ApiFactory) -> None:
@@ -100,10 +100,10 @@ async def test_changing_the_password_ends_every_other_login(api_factory: ApiFact
             assert changed.status_code == 200
             body = changed.json()
             assert body["user"]["email"] == email
-            # This browser carries on with a new session...
+            # Энэ browser шинэ session-ээр үргэлжилнэ...
             assert (await laptop.get(ME, headers=bearer(body["access_token"]))).status_code == 200
             assert (await laptop.post(REFRESH)).status_code == 200
-        # ... the phone's login is over, and so is the old password.
+        # ... утасны нэвтрэлт болон хуучин нууц үг хүчингүй болно.
         async with another_client(api, refresh_token=phone_cookie) as phone_again:
             assert (await phone_again.post(REFRESH)).status_code == 401
         assert (
@@ -129,7 +129,7 @@ async def test_the_current_password_must_be_right_and_that_is_not_a_401(
             PASSWORD_URL, json={"new_password": NEW_PASSWORD}, headers=shopper.auth
         )
 
-        # 403: they are signed in. A 401 would make the web app think the session expired.
+        # 403: хэрэглэгч нэвтэрсэн байна. 401 бол web апп session дууссан гэж ойлгоно.
         assert wrong.status_code == missing.status_code == 403
         assert wrong.json()["title"] == "Incorrect password"
         assert (
@@ -185,7 +185,7 @@ async def test_a_google_account_can_add_a_password_and_then_use_it(api_factory: 
         assert login.status_code == 200
 
 
-# --- Google details ----------------------------------------------------------------------------
+# --- Google-ийн мэдээлэл -----------------------------------------------------------------------
 
 
 async def test_the_google_photo_is_kept_and_follows_the_latest_one(api_factory: ApiFactory) -> None:
@@ -210,7 +210,7 @@ async def test_no_photo_means_no_avatar(api_factory: ApiFactory) -> None:
         assert (await api.client.get(ME, headers=bearer(token))).json()["avatar_url"] is None
 
 
-# --- deletion ----------------------------------------------------------------------------------
+# --- Устгах ------------------------------------------------------------------------------------
 
 
 async def delete(client: AsyncClient, token: str, **body: str) -> Response:
@@ -249,7 +249,7 @@ async def test_deleting_an_account_anonymizes_it_and_keeps_the_orders(
             assert (
                 await scalar(
                     api,
-                    f"SELECT count(*) FROM {table} WHERE user_id = :i",  # noqa: S608 - fixed table names
+                    f"SELECT count(*) FROM {table} WHERE user_id = :i",  # noqa: S608 - тогтмол нэр
                     i=shopper.user_id,
                 )
                 == 0
@@ -258,7 +258,7 @@ async def test_deleting_an_account_anonymizes_it_and_keeps_the_orders(
             await scalar(api, "SELECT count(*) FROM orders WHERE user_id = :i", i=shopper.user_id)
             == 1
         )
-        # Nobody can use the account any more, and the address can be registered afresh.
+        # Хэн ч энэ account-ыг ашиглаж чадахгүй, имэйлээр дахин бүртгүүлж болно.
         assert (
             await api.client.post(LOGIN, json={"email": shopper.email, "password": PASSWORD})
         ).status_code == 401

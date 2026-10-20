@@ -11,7 +11,7 @@ from angel.storage import Storage
 
 
 class AdminOrderService:
-    """Read-only view of every customer's orders (changes are `OrderFulfillmentService`)."""
+    """Бүх хэрэглэгчийн захиалгыг зөвхөн унших харагдац (өөрчлөлт: `OrderFulfillmentService`)."""
 
     def __init__(self, session: AsyncSession, storage: Storage) -> None:
         self._session = session

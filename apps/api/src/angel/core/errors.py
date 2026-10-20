@@ -52,10 +52,10 @@ log = get_logger(__name__)
 
 
 class ProblemError(StarletteHTTPException):
-    """Raise from services to produce an RFC 7807 response. Routes never build errors by hand.
+    """Service-үүдээс шиднэ, RFC 7807 хариу үүсгэнэ. Route алдааг гараар бүтээхгүй.
 
-    It is an HTTPException on purpose: FastAPI turns every other exception raised while it
-    parses a request body into a generic 400, and it must not do that to "413 too large".
+    Зориуд HTTPException: FastAPI хүсэлтийн body задлах үед гарсан бусад exception бүрийг ерөнхий
+    400 болгодог, харин "413 too large"-д ингэж болохгүй.
     """
 
     def __init__(
@@ -70,7 +70,7 @@ class ProblemError(StarletteHTTPException):
     ) -> None:
         super().__init__(status_code, detail or title, headers or {})
         self.title = title
-        self.detail = detail  # type: ignore[assignment]  # None = omit from the response
+        self.detail = detail  # type: ignore[assignment]  # None = хариунд оруулахгүй
         self.type = type_
         self.extensions = extensions or {}
 
@@ -83,7 +83,7 @@ def problem_response(
     problem.request_id = request_id
     response_headers = dict(headers or {})
     if request_id:
-        # The 500 handler runs outside RequestContextMiddleware, so set the header here too.
+        # 500 handler нь RequestContextMiddleware-ийн гадна ажилладаг тул header-ийг эндээс тавина.
         response_headers[REQUEST_ID_HEADER] = request_id
     return JSONResponse(
         problem.model_dump(exclude_none=True),
@@ -116,7 +116,8 @@ async def _handle_http_exception(request: Request, exc: StarletteHTTPException) 
 
 
 async def _handle_validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
-    # Deliberately drop `input` and `ctx`: they can echo user data or be unserializable.
+    # `input`, `ctx`-г зориуд хасна: хэрэглэгчийн өгөгдлийг буцааж болзошгүй, эсвэл serialize
+    # хийгдэхгүй байж болно.
     errors = [
         FieldError(loc=[str(part) for part in err["loc"]], msg=err["msg"], type=err["type"])
         for err in exc.errors()

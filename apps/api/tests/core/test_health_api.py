@@ -38,7 +38,7 @@ async def test_readyz_503_problem_when_dependency_is_down(
     assert ready.headers["content-type"] == "application/problem+json"
     assert body["checks"][failing] == "fail"
     assert body["request_id"] == ready.headers["x-request-id"]
-    # Liveness must not depend on dependencies, or orchestrators restart-loop the pod.
+    # Liveness бусад үйлчилгээнээс хамаарах ёсгүй, эс бөгөөс pod дахин дахин restart болно.
     assert live.status_code == 200
 
 

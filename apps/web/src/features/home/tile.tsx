@@ -10,10 +10,9 @@ const HEIGHT: Record<Size, string> = {
 };
 
 /**
- * One of apple.com's home tiles: edge to edge, a centred headline and line of text, one or two pill
- * buttons, and a picture sitting under them. Light tiles are the grey `#f5f5f7`, dark ones black.
- * The sizes are those measured on apple.com: 56px headlines on the first tile, 40px on the others,
- * 692px and 580px high.
+ * apple.com-ын нүүр хуудасны tile: захаас захад, төвлөрсөн гарчиг ба текстийн мөр, нэг юмуу хоёр
+ * pill товч, доор нь зураг. Цайвар tile нь саарал `#f5f5f7`, хар нь хар. Хэмжээ нь apple.com дээр
+ * хэмжсэнтэй ижил: эхний tile-д 56px, бусдад 40px гарчиг, 692px ба 580px өндөр.
  */
 export function Tile({
   tone = "light",
@@ -29,13 +28,16 @@ export function Tile({
 }: {
   tone?: "light" | "dark";
   size: Size;
-  /** Names the region for assistive technology. */
+  /** Бүс нутгийг туслах технологид (a11y) нэрлэнэ. */
   label: string;
   heading: ReactNode;
   as?: "h1" | "h2";
   subtitle?: ReactNode;
   actions?: ReactNode;
-  /** Words settle in as the tile scrolls into view. Off for the first tile, whose headline is never animated. */
+  /**
+   * Tile дэлгэцэнд орох үед үгс тогтож гарна. Эхний tile-д унтраана, учир нь түүний гарчиг хэзээ ч
+   * animation хийгддэггүй.
+   */
   animate?: boolean;
   className?: string;
   children?: ReactNode;
@@ -46,7 +48,8 @@ export function Tile({
       aria-label={label}
       className={cn(
         "relative flex flex-col items-center overflow-hidden text-center",
-        // A black tile is a dark-mode island: the blue of its links is the lighter one, which reads on black.
+        // Хар tile бол dark-mode арал: холбоосын цэнхэр нь хар дэвсгэр дээр харагдах цайвар
+        // хувилбар.
         dark ? "dark bg-black text-white" : "bg-secondary text-foreground",
         HEIGHT[size],
         className,

@@ -46,7 +46,7 @@ function SheetContent({
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
-  // No sheet opens from the top, and its utilities would cost every page a little CSS.
+  // Дээрээс нээгддэг sheet байхгүй, түүний utility-ууд хуудас бүрт бага зэрэг CSS нэмнэ.
   side?: "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {

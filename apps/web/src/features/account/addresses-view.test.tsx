@@ -117,6 +117,6 @@ describe("AddressesView", () => {
 
     expect(await screen.findByText("No saved addresses")).toBeInTheDocument();
     expect(screen.getByRole("form", { name: "Address details" })).toBeInTheDocument();
-    expect(screen.queryByLabelText("Use as my default address")).not.toBeInTheDocument(); // the first one is the default
+    expect(screen.queryByLabelText("Use as my default address")).not.toBeInTheDocument(); // анхных нь үндсэн хаяг
   });
 });

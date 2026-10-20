@@ -1,4 +1,4 @@
-"""Command line for dataset ingestion (`make ingest`, `scripts/ingest.py`)."""
+"""Dataset ingestion-ы command line (`make ingest`, `scripts/ingest.py`)."""
 
 import argparse
 import asyncio
@@ -180,6 +180,6 @@ def _embed(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv or argv[0].startswith("-"):
-        argv = ["run", *argv]  # `run` is the default command
+        argv = ["run", *argv]  # `run` нь default command
     args = build_parser().parse_args(argv)
     return _run(args) if args.command == "run" else _embed(args)

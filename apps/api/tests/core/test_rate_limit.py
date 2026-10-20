@@ -104,7 +104,7 @@ async def test_endpoints_have_independent_limits(api_factory: ApiFactory) -> Non
     assert (text_1.status_code, text_2.status_code) == (200, 429)
     assert image.status_code == 200
     assert (similar_1.status_code, similar_2.status_code) == (200, 429)
-    assert [r.status_code for r in listing] == [200, 200, 200]  # browsing is not limited
+    assert [r.status_code for r in listing] == [200, 200, 200]  # үзэхэд хязгаар байхгүй
 
 
 async def test_rejected_uploads_count_against_the_limit(api_factory: ApiFactory) -> None:
@@ -128,7 +128,10 @@ async def test_forwarded_header_is_ignored_unless_the_proxy_is_trusted(
         b = await api.client.post(TEXT, json=BODY, headers={"x-forwarded-for": "9.9.9.2"})
         a_again = await api.client.post(TEXT, json=BODY, headers={"x-forwarded-for": "9.9.9.1"})
 
-    assert (first.status_code, spoofed.status_code) == (200, 429)  # cannot dodge by lying
+    assert (first.status_code, spoofed.status_code) == (
+        200,
+        429,
+    )  # худал хэлээд хязгаараас мултарч чадахгүй
     assert (a.status_code, b.status_code, a_again.status_code) == (200, 200, 429)
 
 

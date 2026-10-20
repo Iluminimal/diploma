@@ -23,7 +23,7 @@ export function useAddresses() {
   });
 }
 
-/** Mutations report their own failures with a toast, so callers only handle success. */
+/** Mutation алдаагаа өөрөө toast-оор мэдээлдэг тул дуудагч зөвхөн амжилтыг боловсруулна. */
 function useAddressMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();
   return useMutation({

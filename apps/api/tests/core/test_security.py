@@ -21,7 +21,7 @@ def test_password_round_trip_and_salting() -> None:
 
     assert verify_password("hunter2-hunter2", first)
     assert not verify_password("hunter2-hunter3", first)
-    assert first != second  # random salt
+    assert first != second  # санамсаргүй salt
     assert first.startswith("$argon2id$")
     assert not needs_rehash(first)
 

@@ -4,7 +4,7 @@ export const alt = "Angel: shop by photo";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/** The card shown when a link to the site is shared and the page has no photo of its own. */
+/** Сайтын холбоосыг хуваалцахад гарах карт, хуудас өөрийн зураггүй үед. */
 export default function OpenGraphImage() {
   return new ImageResponse(
     (

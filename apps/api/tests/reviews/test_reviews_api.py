@@ -1,4 +1,4 @@
-"""Product reviews: who may write one, the average that follows them, and moderation."""
+"""Бүтээгдэхүүний сэтгэгдэл: хэн бичиж болох, дундаж үнэлгээ, moderation."""
 
 import asyncio
 from collections.abc import AsyncIterator
@@ -31,7 +31,7 @@ class Store:
         return f"/api/v1/products/{self.product_id}/reviews"
 
     async def buyer(self) -> Shopper:
-        """A customer with a paid order for the product."""
+        """Тухайн бараагаар төлбөртэй захиалга хийсэн худалдан авагч."""
         product = next(e for e in self.api.entries if e.product_id == self.product_id)
         shopper, _ = await place_order(self.api, product, pay=True)
         return shopper
@@ -71,7 +71,7 @@ async def store(
         yield Store(api, await administrator(api, db_engine), product_id)
 
 
-# --- who may review ---------------------------------------------------------------------------
+# --- Хэн сэтгэгдэл бичиж болох ----------------------------------------------------------------
 
 
 async def test_a_buyer_can_review_and_it_shows_on_the_product(store: Store) -> None:
@@ -190,7 +190,7 @@ async def test_blank_text_is_stored_as_nothing(store: Store) -> None:
     assert (body["title"], body["body"]) == (None, None)
 
 
-# --- the average ------------------------------------------------------------------------------
+# --- Дундаж үнэлгээ ---------------------------------------------------------------------------
 
 
 async def test_the_average_count_and_distribution_follow_the_reviews(store: Store) -> None:
@@ -242,7 +242,7 @@ async def test_reviews_can_be_sorted_and_paged(store: Store) -> None:
     assert (newest["total"], newest["pages"]) == (3, 2)
 
 
-# --- the viewer's own -------------------------------------------------------------------------
+# --- Хэрэглэгчийн өөрийн сэтгэгдэл ------------------------------------------------------------
 
 
 async def test_the_page_tells_a_visitor_what_they_can_do(store: Store) -> None:
@@ -270,7 +270,7 @@ async def test_personal_pages_are_not_cached(store: Store) -> None:
     assert signed_in.headers["cache-control"] == "no-store"
 
 
-# --- changing and deleting your own -----------------------------------------------------------
+# --- Өөрийнхөө сэтгэгдлийг өөрчлөх, устгах ----------------------------------------------------
 
 
 async def test_you_can_change_your_review_and_the_average_follows(store: Store) -> None:
@@ -345,7 +345,7 @@ async def test_nobody_else_can_touch_your_review(store: Store, method: str) -> N
     assert (await store.page())["summary"]["average"] == 5.0
 
 
-# --- moderation -------------------------------------------------------------------------------
+# --- Хянан шалгах -------------------------------------------------------------------------------
 
 
 async def test_a_hidden_review_leaves_the_page_and_the_average_and_comes_back(store: Store) -> None:
@@ -361,7 +361,7 @@ async def test_a_hidden_review_leaves_the_page_and_the_average_and_comes_back(st
     assert [r["rating"] for r in page["items"]] == [5]
     assert page["summary"]["average"] == 5.0
     assert (await store.product())["rating_count"] == 1
-    # The author still sees theirs, marked hidden, and cannot post a second one.
+    # Зохиогч өөрийнхөө сэтгэгдлийг далд тэмдэглэгээтэй харна, хоёр дахийг бичиж чадахгүй.
     own = (await store.page(rude))["viewer"]
     assert own["review"]["status"] == "hidden"
     assert own["can_review"] is False
@@ -441,7 +441,7 @@ async def test_moderating_an_unknown_review_is_a_404(store: Store) -> None:
     assert response.json()["type"] == "urn:angel:problem:review-not-found"
 
 
-# --- names ------------------------------------------------------------------------------------
+# --- Нэр --------------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(

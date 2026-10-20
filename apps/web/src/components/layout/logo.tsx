@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Angel's mark: the letter A, drawn as two strokes and a crossbar, with a halo above its peak.
- * It uses `currentColor`, so it follows the text colour in light and dark mode. Decorative: the
- * name is always next to it, visible or for screen readers only.
+ * Angel-ийн тэмдэг: A үсэг, хоёр шугам ба хөндлөн зураас, оройн дээр halo. `currentColor` ашигладаг
+ * тул гэрэл, харанхуй горимд текстийн өнгөтэй хамт өөрчлөгдөнө. Чимэглэл: нэр нь үргэлж хажууд
+ * байдаг (харагддаг эсвэл зөвхөн screen reader-д).
  */
 export function AngelMark({ className }: { className?: string }) {
   return (
@@ -23,7 +23,7 @@ export function AngelMark({ className }: { className?: string }) {
   );
 }
 
-/** The mark and the name. `showName={false}` is the mark alone (the header), the name kept for screen readers. */
+/** Тэмдэг ба нэр. `showName={false}` бол зөвхөн тэмдэг (header), нэрийг screen reader-д үлдээнэ. */
 export function AngelLogo({
   className,
   markClassName,

@@ -1,4 +1,4 @@
-"""Customers: who has an account, what they bought, and suspending or reinstating them."""
+"""Customer: хэн account-тай, юу худалдаж авсан, түр түдгэлзүүлэх ба сэргээх."""
 
 from typing import Annotated, Any
 
@@ -15,7 +15,7 @@ from angel.schemas.admin.dashboard import (
 )
 from angel.schemas.problem import ProblemDetail
 
-# Rate limit first so guessing tokens against the admin area is throttled; then the role check.
+# Rate limit, role шалгалт нь __init__.py дахь router-т нэг дор хийгддэг (эхлээд rate limit).
 
 router = APIRouter()
 

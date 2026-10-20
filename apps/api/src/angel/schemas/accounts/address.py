@@ -6,7 +6,7 @@ Line = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max
 Short = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
 OptionalLine = Annotated[
     str | None, StringConstraints(strip_whitespace=True, max_length=200)
-]  # "" means "none"
+]  # "" гэдэг нь "байхгүй" гэсэн утга
 Phone = Annotated[str, StringConstraints(strip_whitespace=True, pattern=r"^[0-9+()\-. ]{5,30}$")]
 
 
@@ -37,7 +37,7 @@ class AddressIn(AddressBase):
 
 
 class AddressUpdate(BaseModel):
-    """PATCH: only the fields that are sent change."""
+    """PATCH: зөвхөн илгээсэн талбарууд өөрчлөгдөнө."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -79,7 +79,7 @@ class AddressOut(BaseModel):
 
 
 class AddressSnapshot(BaseModel):
-    """An address as it was when the order was placed."""
+    """Захиалга өгөх үеийн хаяг (дараа нь өөрчлөгдсөн ч хэвээр)."""
 
     full_name: str
     line1: str

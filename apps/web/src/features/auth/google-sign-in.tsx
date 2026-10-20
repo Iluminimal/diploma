@@ -24,15 +24,15 @@ function GoogleMark() {
   );
 }
 
-/** `/api/v1/auth/google/start`, where the API sends the browser on to Google. */
+/** `/api/v1/auth/google/start`: API browser-ийг Google руу шилжүүлэх хаяг. */
 export function googleStartHref(next: string): string {
   return next === "/" ? "/api/v1/auth/google/start" : `/api/v1/auth/google/start?next=${encodeURIComponent(next)}`;
 }
 
 /**
- * The divider and "Continue with Google" under the sign-in field, only when the API has Google
- * configured. A plain link: signing in is a whole-page trip to Google and back, so it works
- * without scripts. Google creates the account for somebody new.
+ * Нэвтрэх талбарын доорх тусгаарлагч ба "Continue with Google"; API-д Google тохируулсан үед л
+ * гарна. Энгийн холбоос: нэвтрэх нь Google руу бүтэн хуудсаар очиж буцдаг тул script-гүйгээр
+ * ажиллана. Шинэ хэрэглэгчийн бүртгэлийг Google үүсгэнэ.
  */
 export async function GoogleSignIn({ next }: { next: string }) {
   const { google } = await getAuthProviders();
@@ -45,7 +45,8 @@ export async function GoogleSignIn({ next }: { next: string }) {
         <span className="bg-border h-px flex-1" />
       </div>
       <Button asChild variant="outline" size="lg" className="w-full">
-        {/* A navigation to the API, not a page of this app: <Link> would try to prefetch and route it. */}
+        {/* API руу шилжих navigation, энэ апп-ын хуудас биш: <Link> prefetch хийж, route-лэх гэж
+           оролдох байсан. */}
         <a href={googleStartHref(next)}>
           <GoogleMark />
           Continue with Google

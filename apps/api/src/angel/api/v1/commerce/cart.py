@@ -7,7 +7,7 @@ from angel.core.deps import CartOwnerDep, CartServiceDep, CartWriterDep, no_stor
 from angel.schemas.commerce.cart import CartItemIn, CartItemUpdate, CartOut
 from angel.schemas.problem import ProblemDetail
 
-# The guest cart is addressed by a cookie, so changes are origin-checked (see core/csrf.py).
+# Зочны сагсыг cookie-ээр таньдаг тул өөрчлөлтийн origin-ийг шалгана (core/csrf.py-г үз).
 router = APIRouter(
     prefix="/cart",
     tags=["cart"],

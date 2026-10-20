@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 from angel.schemas.commerce.order import OrderEventOut, OrderOut, OrderStatus
 
-# --- orders (read-only) -----------------------------------------------------------------------
+# --- захиалгууд (зөвхөн унших) ---
 
 AdminOrderStatusFilter = Literal[
     "all", "pending", "paid", "shipped", "delivered", "cancelled", "refunded"
@@ -38,7 +38,8 @@ class AdminOrderSummary(BaseModel):
 
 class AdminOrderPage(BaseModel):
     items: list[AdminOrderSummary]
-    # Orders per status for the search in `q` (the tabs show these), whatever `status` is.
+    # `q` хайлтад таарах захиалгын төлөв бүрийн тоо (tab-ууд үүнийг харуулна), `status`-аас үл
+    # хамаарна.
     status_counts: dict[str, int]
     total: int
     page: int
@@ -47,7 +48,7 @@ class AdminOrderPage(BaseModel):
 
 
 class AdminPaymentOut(BaseModel):
-    """The payment record. The client secret never leaves the server."""
+    """Төлбөрийн бичлэг. Client secret server-ээс хэзээ ч гадагш гарахгүй."""
 
     provider: str
     provider_payment_id: str
@@ -59,7 +60,7 @@ class AdminPaymentOut(BaseModel):
 
 
 class AdminOrderEventOut(OrderEventOut):
-    """The same step with everything an administrator may see: notes and who did it."""
+    """Ижил алхам, гэхдээ administrator харж болох бүх зүйлтэй: тэмдэглэл, хэн хийсэн."""
 
     type: Literal["placed", "paid", "shipped", "delivered", "cancelled", "refunded", "note"]  # type: ignore[assignment]
     data: dict[str, Any]
@@ -73,7 +74,7 @@ class AdminOrderOut(OrderOut):
     events: list[AdminOrderEventOut]  # type: ignore[assignment]
 
 
-# --- order actions ----------------------------------------------------------------------------
+# --- захиалгын үйлдлүүд ---
 
 Carrier = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=40)]
 TrackingNumber = Annotated[
@@ -96,12 +97,12 @@ class CancelRequest(BaseModel):
 
 
 class RefundRequest(BaseModel):
-    """Always the full amount (what the payment gateway supports)."""
+    """Үргэлж бүтэн дүн (төлбөрийн gateway-ийн дэмждэг зүйл)."""
 
     model_config = ConfigDict(extra="forbid")
 
     reason: Reason
-    # Put the items back on the shelf: yes for an order that never left, not for one already sent.
+    # Бараа нөөцөд буцаана: хэзээ ч явагдаагүй захиалгад тийм, аль хэдийн илгээсэнд үгүй.
     restock: bool
 
 

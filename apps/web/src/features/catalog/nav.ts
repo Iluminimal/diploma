@@ -5,8 +5,8 @@ export type NavDepartment = components["schemas"]["NavDepartment"];
 export type NavNode = components["schemas"]["NavNode"];
 
 /**
- * The departments in the header. Known without a request, so the links render (and crawl) with
- * the page itself; the category panels behind them arrive from `GET /catalog/nav`.
+ * Header дахь department-ууд. Хүсэлтгүйгээр мэдэгдэх тул холбоосууд хуудастайгаа хамт render (мөн
+ * crawl) хийгдэнэ; ард нь байх ангиллын самбар `GET /catalog/nav`-аас ирнэ.
  */
 export const DEPARTMENT_LINKS = [
   { slug: "women", label: "Women" },
@@ -14,20 +14,22 @@ export const DEPARTMENT_LINKS = [
   { slug: "kids", label: "Kids" },
 ] as const;
 
-/** `/c/men`, `/c/men/apparel/topwear/tshirts`. A node's `path` is exactly what follows the department. */
+/**
+ * `/c/men`, `/c/men/apparel/topwear/tshirts`. Node-ын `path` нь department-ийн дараах хэсэг яг тэр.
+ */
 export function categoryHref(department: string, path?: string): string {
   return path ? `/c/${department}/${path}` : `/c/${department}`;
 }
 
 export type CategoryTrail = {
   department: NavDepartment;
-  /** Group, sub-category, article type: as deep as the URL goes. */
+  /** Бүлэг, дэд ангилал, article type: URL хэр гүн явна тэр хэмжээнд. */
   nodes: NavNode[];
 };
 
 /**
- * Resolve URL segments against the nav. `null` for anything that is not in it, which includes
- * categories with no products, so a stale link is a 404 and never an empty page.
+ * URL segment-үүдийг nav-тай тулгана. Nav-д байхгүй (бүтээгдэхүүнгүй ангиллыг оруулаад) бол `null`,
+ * ингэснээр хуучирсан холбоос 404 болно, хоосон хуудас биш.
  */
 export function findTrail(nav: CatalogNav, departmentSlug: string, segments: string[] = []): CategoryTrail | null {
   const department = nav.departments.find((d) => d.slug === departmentSlug);
@@ -43,7 +45,7 @@ export function findTrail(nav: CatalogNav, departmentSlug: string, segments: str
   return { department, nodes };
 }
 
-/** Every URL worth listing in a sitemap: departments and all nodes below them. */
+/** Sitemap-д оруулах бүх URL: department болон доорх бүх node. */
 export function categoryPaths(nav: CatalogNav): string[] {
   const out: string[] = [];
   const walk = (department: string, nodes: NavNode[]) => {
@@ -59,7 +61,7 @@ export function categoryPaths(nav: CatalogNav): string[] {
   return out;
 }
 
-/** Most popular article types across a department's groups, for quick links in the menu. */
+/** Department-ийн бүлгүүдийн хамгийн алдартай article type-ууд, цэсний шуурхай холбоосод. */
 export function popularTypes(department: NavDepartment, limit = 8): NavNode[] {
   return department.groups
     .flatMap((group) => group.children.flatMap((sub) => sub.children))
@@ -68,8 +70,8 @@ export function popularTypes(department: NavDepartment, limit = 8): NavNode[] {
 }
 
 /**
- * What a category page lets you step into next. On a leaf there is nothing below, so the
- * siblings are offered instead (and the leaf itself drops out of `ancestors`).
+ * Ангиллын хуудаснаас дараа нь хаашаа орж болох вэ. Навч (leaf) дээр доор нь юу ч байхгүй тул ах
+ * дүү ангиллыг санал болгоно (навч өөрөө `ancestors`-оос хасагдана).
  */
 export function drilldown(department: NavDepartment, nodes: NavNode[]) {
   const current = nodes.at(-1);
@@ -80,8 +82,8 @@ export function drilldown(department: NavDepartment, nodes: NavNode[]) {
 }
 
 /**
- * Sub-categories and article types whose name contains the text, biggest first. The same name
- * can sit in several departments ("T-shirts" for Men and for Women); each is its own result.
+ * Нэр нь текстийг агуулсан дэд ангилал, article type, том нь түрүүнд. Нэг нэр хэд хэдэн
+ * department-д байж болно (Men, Women хоёрт "T-shirts"); тус бүр өөр үр дүн.
  */
 export function matchCategories(nav: CatalogNav, text: string, limit: number): { department: NavDepartment; node: NavNode }[] {
   const needle = text.trim().toLowerCase();

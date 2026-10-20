@@ -189,7 +189,7 @@ def get_catalog_service(
 CatalogServiceDep = Annotated[CatalogService, Depends(get_catalog_service)]
 
 
-# --- authentication ---------------------------------------------------------------------------
+# --- нэвтрэлт ---------------------------------------------------------------------------------
 
 _bearer = HTTPBearer(auto_error=False, description="Access token from /auth/login or /auth/refresh")
 BearerDep = Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
@@ -206,8 +206,8 @@ def _unauthenticated(detail: str) -> ProblemError:
 
 
 def get_optional_user_id(request: Request, credentials: BearerDep) -> int | None:
-    """The signed-in user's id, None for a visitor. A token that is present but bad or expired
-    is a 401, never silently "a guest": the client must refresh, not lose its cart."""
+    """Нэвтэрсэн хэрэглэгчийн id, зочин бол None. Token байгаа ч буруу/хугацаа дууссан бол 401,
+    "зочин" гэж чимээгүй тооцохгүй: клиент refresh хийх ёстой, сагсаа алдах ёсгүй."""
     if credentials is None:
         return None
     user_id = decode_access_token(credentials.credentials, request.app.state.jwt_secret)
@@ -227,8 +227,8 @@ CurrentUserDep = Annotated[int, Depends(get_current_user_id)]
 
 
 async def get_current_admin(user_id: CurrentUserDep, session: SessionDep) -> User:
-    """The signed-in administrator. The role is read from the database on every request (it is
-    not in the token), so demoting or deactivating someone takes effect at once."""
+    """Нэвтэрсэн администратор. Role-ийг хүсэлт бүрт database-аас уншдаг (token-д байхгүй) тул
+    эрхийг хураах, хэрэглэгчийг идэвхгүй болгох нь тэр дороо хүчинтэй болно."""
     async with session.begin():
         user = await UserRepository(session).get(user_id)
         if user is None or not user.is_active:
@@ -247,14 +247,15 @@ AdminDep = Annotated[User, Depends(get_current_admin)]
 
 
 def get_cart_owner(request: Request, user_id: OptionalUserDep) -> CartOwner:
-    """Whose cart this request reads: the user's, else the guest cookie's (may be absent)."""
+    """Энэ хүсэлт хэний сагсыг уншихыг тодорхойлно: хэрэглэгчийнх, үгүй бол зочны cookie-ийнх
+    (байхгүй байж болно)."""
     return CartOwner(user_id=user_id, guest_token=request.cookies.get(CART_COOKIE))
 
 
 def get_cart_writer(
     request: Request, response: Response, settings: SettingsDep, user_id: OptionalUserDep
 ) -> CartOwner:
-    """Like `get_cart_owner`, but a first-time guest is given a cart cookie."""
+    """`get_cart_owner`-тэй адил, гэхдээ анх удаа ирсэн зочинд сагсны cookie өгнө."""
     token = request.cookies.get(CART_COOKIE)
     if user_id is None and not token:
         token = new_opaque_token()
@@ -267,11 +268,11 @@ CartWriterDep = Annotated[CartOwner, Depends(get_cart_writer)]
 
 
 def no_store(response: Response) -> None:
-    """Personal data must never sit in a shared cache."""
+    """Хувийн мэдээлэл хуваалцсан cache-д хэзээ ч үлдэж болохгүй."""
     response.headers["Cache-Control"] = "no-store"
 
 
-# --- commerce services ------------------------------------------------------------------------
+# --- commerce service-үүд ---------------------------------------------------------------------
 
 
 def get_mailer(request: Request) -> Mailer:
@@ -379,7 +380,7 @@ def get_oauth_service(
     return OAuthService(session, settings, request.app.state.jwt_secret, provider, auth, mailer)
 
 
-# None when sign-in with Google is not configured.
+# Google-ээр нэвтрэх тохируулаагүй бол None.
 OAuthServiceDep = Annotated[OAuthService | None, Depends(get_oauth_service)]
 
 

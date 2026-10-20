@@ -23,7 +23,7 @@ describe("AccountNav", () => {
       const pill = container.querySelector("nav > span[aria-hidden]") as HTMLElement;
       expect(pill.style.left).toBe("120px");
       expect(pill.style.width).toBe("96px");
-      // The tab itself is transparent over the pill, so only one thing carries the colour.
+      // Tab өөрөө pill дээр тунгалаг тул зөвхөн нэг элемент өнгө авч явна.
       expect(screen.getByRole("link", { name: "Orders" })).not.toHaveClass("bg-foreground");
     } finally {
       Object.defineProperty(HTMLElement.prototype, "offsetLeft", original.offsetLeft ?? { value: 0, configurable: true });

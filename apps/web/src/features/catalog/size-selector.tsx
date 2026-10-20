@@ -6,14 +6,14 @@ import { cn } from "@/lib/utils";
 type Props = {
   label: string;
   sizes: string[];
-  /** Sold-out products show the sizes but cannot be selected. */
+  /** Дууссан бүтээгдэхүүн размеруудыг харуулах боловч сонгох боломжгүй. */
   disabled?: boolean;
-  /** Controlled use: the parent owns the selection (needed to add the chosen size to the cart). */
+  /** Controlled хэрэглээ: сонголтыг эцэг эзэмшинэ (сонгосон размерыг cart-д нэмэхэд хэрэгтэй). */
   value?: string | null;
   onChange?: (size: string) => void;
-  /** No size was chosen when one was needed: the options turn red until one is picked. */
+  /** Размер хэрэгтэй үед сонгоогүй бол сонгох хүртэл сонголтууд улаан болно. */
   invalid?: boolean;
-  /** Id of the message that explains it. */
+  /** Үүнийг тайлбарласан мессежийн id. */
   describedBy?: string;
 };
 
@@ -53,7 +53,7 @@ export function SizeSelector({ label, sizes, disabled, value, onChange, invalid,
                 className={cn(
                   invalid ? "border-destructive/60" : "border-field",
                   "bg-card flex h-12 min-w-14 cursor-pointer items-center justify-center rounded-xl border px-4 text-[1.0625rem] transition-[border-color,box-shadow] select-none",
-                  // Apple's option tiles: the chosen one gets a blue 2px outline.
+                  // Apple-ийн сонголтын tile: сонгосон нь 2px цэнхэр хүрээтэй.
                   "hover:border-foreground peer-checked:border-primary peer-checked:shadow-[0_0_0_1px_var(--primary)]",
                   "peer-focus-visible:ring-ring/60 peer-focus-visible:ring-3 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 peer-disabled:hover:border-input",
                 )}

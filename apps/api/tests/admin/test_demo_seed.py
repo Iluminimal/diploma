@@ -1,4 +1,4 @@
-"""The demo data: complete, consistent with the rest of the shop, and removable."""
+"""Demo өгөгдөл: бүрэн, дэлгүүрийн бусад хэсэгтэй нийцтэй, устгах боломжтой."""
 
 from pathlib import Path
 
@@ -23,7 +23,7 @@ async def scalar(engine: AsyncEngine, sql: str, **params: object) -> int:
         return int((await connection.execute(text(sql), params)).scalar_one())
 
 
-# Each query counts rows that break a rule; the demo data must have none.
+# Query бүр дүрэм зөрчсөн мөрийг тоолно; demo өгөгдөлд тийм мөр байх ёсгүй.
 BROKEN = {
     "totals add up": (
         "SELECT COUNT(*) FROM orders WHERE total_cents <> subtotal_cents + shipping_cents"

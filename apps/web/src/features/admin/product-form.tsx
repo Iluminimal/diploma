@@ -22,7 +22,7 @@ import {
 
 type Props = {
   categories: AdminCategory[];
-  /** Present when editing; a new product also needs its photo. */
+  /** Засах үед л байна; шинэ бүтээгдэхүүнд зураг заавал хэрэгтэй. */
   product?: AdminProduct;
   submitLabel: string;
   onSubmit: (payload: ProductPayload, photo: File | null) => Promise<unknown>;
@@ -30,7 +30,7 @@ type Props = {
 
 const input = "h-11 rounded-xl";
 
-/** Categories grouped as "Apparel › Topwear", the way the storefront's filters nest them. */
+/** Ангиллыг "Apparel › Topwear" хэлбэрээр бүлэглэнэ, дэлгүүрийн шүүлтүүрийн үүрлэлттэй адил. */
 function groupCategories(categories: AdminCategory[]) {
   const groups = new Map<string, AdminCategory[]>();
   for (const category of categories) {
@@ -82,10 +82,11 @@ export function ProductForm({ categories, product, submitLabel, onSubmit }: Prop
       try {
         await onSubmit(toPayload(values), photo?.file ?? null);
       } catch {
-        // The mutation hook already showed the reason; keep the form so nothing typed is lost.
+        // Алдааны шалтгааныг mutation hook аль хэдийн харуулсан; бичсэн зүйл алдагдахгүйн тулд
+        // form-ыг хэвээр үлдээнэ.
       }
     },
-    // Every problem at once, the missing photo included, not one per attempt.
+    // Бүх алдааг нэг дор харуулна (зураггүй байгааг оруулаад), оролдлого бүрд нэгээр нь биш.
     () => void missingPhoto(),
   );
 
@@ -108,7 +109,7 @@ export function ProductForm({ categories, product, submitLabel, onSubmit }: Prop
             />
           </Field>
           {photo ? (
-            // eslint-disable-next-line @next/next/no-img-element -- a local blob preview, nothing to optimise
+            // eslint-disable-next-line @next/next/no-img-element -- локал blob preview, optimize хийх зүйлгүй
             <img src={photo.url} alt="Preview of the chosen photo" className="bg-muted h-40 w-32 rounded-xl object-cover" />
           ) : (
             <p className="text-muted-foreground flex items-center gap-2 text-xs">
@@ -184,7 +185,7 @@ export function ProductForm({ categories, product, submitLabel, onSubmit }: Prop
   );
 }
 
-/** Used by the edit screen: the current photo with a way to replace it. */
+/** Засах дэлгэц ашиглана: одоогийн зураг ба солих боломж. */
 export function CurrentPhoto({ product }: { product: AdminProduct }) {
   return (
     <Image

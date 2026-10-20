@@ -61,7 +61,7 @@ async def list_reviews(
     response: Response,
 ) -> ReviewPage:
     if user_id is not None:
-        # The viewer's own review is in it.
+        # Хариунд харагч өөрийн review орсон тул cache хийхгүй.
         response.headers["Cache-Control"] = "no-store"
     return await service.list(product_id, query, user_id)
 

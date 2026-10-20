@@ -4,9 +4,9 @@ from starlette.types import Scope
 
 
 class MediaFiles(StaticFiles):
-    """Static files for product images: browsers and CDNs may cache them for a day.
+    """Барааны зургийн static файл: browser, CDN нэг өдөр cache хийж болно.
 
-    Only used in development; production serves the same keys from object storage/CDN.
+    Зөвхөн хөгжүүлэлтэд; production-д ижил key-үүдийг object storage/CDN-ээс үйлчилнэ.
     """
 
     async def get_response(self, path: str, scope: Scope) -> Response:

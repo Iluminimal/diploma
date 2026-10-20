@@ -1,4 +1,4 @@
-/** Swatch colours for the dataset's `base_colour` values. Unknown names fall back to a neutral grey. */
+/** Dataset-ийн `base_colour` утгуудын өнгөний жишээ. Үл мэдэгдэх нэр саарал өнгө рүү шилжинэ. */
 const SWATCHES: Record<string, string> = {
   Beige: "#e0cda9",
   Black: "#111111",
@@ -52,13 +52,13 @@ export function swatchFor(color: string): string {
   return SWATCHES[color] ?? "#cbd5e1";
 }
 
-/** True when a white check mark would be hard to see on this swatch (light solid colours). */
+/** Цагаан check mark энэ өнгөн дээр харагдахгүй (цайвар цул өнгө) бол true. */
 export function isLightSwatch(color: string): boolean {
   const value = swatchFor(color);
   const m = /^#([0-9a-f]{6})$/i.exec(value);
   if (!m) return false;
   const n = parseInt(m[1]!, 16);
   const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  // Perceived brightness (ITU-R BT.601).
+  // Хүний харааны гэрэлтэлт (ITU-R BT.601).
   return (r * 299 + g * 587 + b * 114) / 1000 > 160;
 }

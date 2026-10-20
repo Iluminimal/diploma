@@ -5,17 +5,17 @@ import { API_URL } from "./support/env";
 import { addToCartFromProductPage, cartButton } from "./support/ui";
 
 /**
- * Sign in with Google against the API's built-in stand-in (OAUTH_MODE=fake), which skips Google's
- * consent screen but runs the real flow: start, state cookie, callback, session, cart merge.
- * Without the fake there is no button to click (or Google keys and a real Google account), so
- * these tests skip.
+ * API-ийн суулгасан хуурамч Google-ээр (OAUTH_MODE=fake) нэвтрэх: Google-ийн зөвшөөрлийн дэлгэцийг
+ * алгасдаг ч жинхэнэ урсгал (эхлэх, state cookie, callback, session, сагс нэгтгэх) ажиллана. Fake
+ * байхгүй бол дарах товч байхгүй (эсвэл Google key болон жинхэнэ Google account хэрэгтэй) тул
+ * эдгээр тест skip болно.
  */
 test.beforeEach(async ({ api }) => {
   const providers = await (await api.get(`${API_URL}/api/v1/auth/providers`)).json();
   test.skip(!providers.google, "needs the API to run with OAUTH_MODE=fake");
 });
 
-/** The button cannot say who is signing in; the fake takes that from `login_hint`. */
+/** Товч хэн нэвтэрч байгааг мэдэхгүй; fake үүнийг `login_hint`-ээс авна. */
 async function signInAs(page: Page, email: string) {
   await page.route("**/api/v1/auth/google/start*", (route) => {
     const url = new URL(route.request().url());
@@ -24,13 +24,13 @@ async function signInAs(page: Page, email: string) {
   });
 }
 
-// Next adds its own role="alert" (the route announcer): ours is the paragraph.
+// Next өөрийн role="alert"-ийг нэмдэг (route announcer): манайх нь догол мөр.
 const problem = (page: Page) => page.locator('p[role="alert"]');
 const google = (page: Page) => page.getByRole("link", { name: /^Continue with Google$/ });
 
 async function whoAmI(page: Page) {
-  // The page restores its own session on load, rotating the refresh token: let that finish, or
-  // this call would be the loser of a refresh race (which the API refuses, by design).
+  // Хуудас ачаалахдаа өөрийн session-ийг сэргээж, refresh token-ыг сольдог: үүнийг дуустал хүлээ,
+  // эс бөгөөс энэ дуудлага refresh race-д ялагдана (API зориудаар татгалздаг).
   await page.waitForLoadState("networkidle");
   const response = await page.request.post("/api/v1/auth/refresh");
   expect(response.ok()).toBe(true);

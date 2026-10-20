@@ -45,7 +45,7 @@ async def test_register_signs_the_user_in(api_factory: ApiFactory) -> None:
         }
         assert body["token_type"] == "bearer"
         assert body["expires_in"] == api.settings.access_token_ttl_seconds
-        # Neither the password nor its hash comes back (`has_password` is only a flag).
+        # Нууц үг ч, hash ч буцахгүй (`has_password` нь зөвхөн тэмдэг).
         assert PASSWORD not in response.text
         assert "password_hash" not in response.text
         me = await api.client.get(ME, headers={"Authorization": f"Bearer {body['access_token']}"})
@@ -68,9 +68,9 @@ async def test_refresh_token_is_an_httponly_scoped_cookie_never_in_the_body(
         assert "samesite=lax" in refresh
         assert "path=/api/v1/auth" in refresh
         assert "max-age=" in refresh
-        assert "httponly" not in cookies["lk_session"].lower()  # readable by the edge proxy
+        assert "httponly" not in cookies["lk_session"].lower()  # edge proxy уншиж чадна
         assert "refresh" not in response.json()
-        assert "secure" not in refresh  # plain http in tests; forced on in prod (see config tests)
+        assert "secure" not in refresh  # тестэд http; prod дээр secure заавал (config тестийг үз)
 
 
 async def test_register_rejects_duplicates_weak_passwords_and_bad_emails(
@@ -134,7 +134,7 @@ async def test_login_succeeds_and_fails_with_the_same_error_for_unknown_and_wron
         assert ok.status_code == 200
         assert wrong.status_code == unknown.status_code == 401
         assert wrong.json()["type"] == "urn:angel:problem:invalid-credentials"
-        # Not even the request id differs between "no such user" and "wrong password".
+        # "Ийм хэрэглэгч байхгүй" ба "нууц үг буруу" хоёрын request id ч ялгаагүй.
         assert without_request_id(wrong) == without_request_id(unknown)
 
 
@@ -165,7 +165,7 @@ async def test_failed_logins_for_one_email_are_limited_and_success_resets_the_co
             assert (
                 await browser.post(LOGIN, json={"email": email, "password": PASSWORD})
             ).status_code == 200
-            for _ in range(2):  # the counter started again from zero
+            for _ in range(2):  # тоолуур дахин 0-ээс эхэлсэн
                 assert (
                     await browser.post(LOGIN, json={"email": email, "password": "nope-nope-nope"})
                 ).status_code == 401
@@ -206,9 +206,9 @@ async def test_replaying_a_used_refresh_token_revokes_the_whole_session(
     async with api_factory(seed_count=0) as api:
         await register(api.client)
         stolen = api.client.cookies.get("lk_refresh")
-        await api.client.post(REFRESH)  # the legitimate rotation
+        await api.client.post(REFRESH)  # зөв ротаци
         assert stolen is not None
-        # Beyond the grace window a reused token is theft, not a double click.
+        # Хугацааны зөвшөөрлөөс хойш давтан ашигласан token бол хулгай, давхар дарсан биш.
         async with api.app.state.engine.begin() as connection:
             await connection.execute(
                 text(
@@ -219,7 +219,7 @@ async def test_replaying_a_used_refresh_token_revokes_the_whole_session(
 
         async with another_client(api, refresh_token=stolen) as thief:
             replay = await thief.post(REFRESH)
-        rotated = await api.client.post(REFRESH)  # the victim's newest token is dead too
+        rotated = await api.client.post(REFRESH)  # хохирогчийн сүүлийн token ч идэвхгүй
 
         assert replay.status_code == 401
         assert rotated.status_code == 401
@@ -246,11 +246,11 @@ async def test_a_double_refresh_within_the_grace_window_is_not_treated_as_theft(
         ):
             first = await first_tab.post(REFRESH)
             second = await second_tab.post(REFRESH)
-            # The winner holds the rotated token: the session is alive.
+            # Ялсан хүсэлт шинэ token-той тул session амьд.
             still_signed_in = await first_tab.post(REFRESH)
 
         assert first.status_code == 200
-        assert second.status_code == 401  # rejected, but not treated as theft
+        assert second.status_code == 401  # татгалзсан боловч хулгай гэж үзээгүй
         assert still_signed_in.status_code == 200
 
 
@@ -304,7 +304,7 @@ async def test_logout_ends_the_session_and_clears_cookies(api_factory: ApiFactor
         assert "max-age=0" in cleared
         async with another_client(api, refresh_token=token) as browser:
             assert (await browser.post(REFRESH)).status_code == 401
-        assert (await api.client.post(LOGOUT)).status_code == 204  # idempotent
+        assert (await api.client.post(LOGOUT)).status_code == 204  # давтан дуудахад ч хэвээр
 
 
 async def test_protected_endpoints_need_a_valid_unexpired_token(api_factory: ApiFactory) -> None:

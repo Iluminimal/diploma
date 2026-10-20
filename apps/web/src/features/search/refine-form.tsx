@@ -11,12 +11,15 @@ const schema = z.object({ text: z.string().trim().max(200, "Keep it under 200 ch
 type Values = z.infer<typeof schema>;
 
 type Props = {
-  /** The refinement currently applied to the results. */
+  /** Үр дүнд одоо хэрэглэгдэж буй нарийсгалт. */
   applied: string;
   onSubmit: (text: string) => void;
 };
 
-/** "Like this but in blue": adds words to the photo (hybrid search). Empty text goes back to photo-only. */
+/**
+ * "Like this but in blue": зурагт үг нэмнэ (hybrid search). Хоосон текст зөвхөн зургийн хайлт руу
+ * буцна.
+ */
 export function RefineForm({ applied, onSubmit }: Props) {
   const {
     register,

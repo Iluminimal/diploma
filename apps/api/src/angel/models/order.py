@@ -22,10 +22,10 @@ from angel.models.mixins import TimestampMixin
 
 
 class Order(TimestampMixin, Base):
-    """pending -> paid -> shipped -> delivered; pending -> cancelled; paid, shipped or delivered
-    -> refunded. A paid order is never "cancelled": its money goes back and it becomes
-    `refunded`. A payment that arrives for an already cancelled order is refunded instead.
-    Every change is recorded as an `OrderEvent`."""
+    """pending -> paid -> shipped -> delivered; pending -> cancelled; paid, shipped, delivered
+    -> refunded. Төлөгдсөн захиалга хэзээ ч "cancelled" болохгүй: мөнгө нь буцаж `refunded` болно.
+    Аль хэдийн цуцлагдсан захиалгад ирсэн төлбөрийг буцаан олгоно. Өөрчлөлт бүрийг `OrderEvent`
+    болгон бүртгэнэ."""
 
     __tablename__ = "orders"
     __table_args__ = (
@@ -37,7 +37,7 @@ class Order(TimestampMixin, Base):
         CheckConstraint("total_cents = subtotal_cents + shipping_cents", name="total_matches"),
         UniqueConstraint("user_id", "idempotency_key"),
         Index("ix_orders_user_id_created_at", "user_id", "created_at"),
-        # The expiry sweeper only looks at pending orders.
+        # Хугацаа дууссаныг цэвэрлэгч зөвхөн pending захиалгыг харна.
         Index(
             "ix_orders_pending_created_at",
             "created_at",
@@ -57,13 +57,13 @@ class Order(TimestampMixin, Base):
     shipping_cents: Mapped[int] = mapped_column(Integer)
     total_cents: Mapped[int] = mapped_column(Integer)
     shipping_method: Mapped[str] = mapped_column(String(20))
-    # Copied, not referenced: editing or deleting a saved address must not change a past order.
+    # Заагаагүй, хуулсан: хадгалсан хаягийг засах/устгах нь өмнөх захиалгыг өөрчилж болохгүй.
     shipping_address: Mapped[dict[str, Any]] = mapped_column(JSONB)
     contact_email: Mapped[str] = mapped_column(String(320))
 
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cancelled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # Fulfilment: set by an administrator when the parcel leaves and when it arrives.
+    # Хүргэлт: илгээмж явах, хүрэх үед администратор тохируулна.
     carrier: Mapped[str | None] = mapped_column(String(40))
     tracking_number: Mapped[str | None] = mapped_column(String(100))
     shipped_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -82,9 +82,9 @@ class Order(TimestampMixin, Base):
 
 
 class OrderEvent(TimestampMixin, Base):
-    """What happened to an order and when: placed, paid, shipped, delivered, cancelled, refunded,
-    or an administrator's internal note. `data` carries the details (carrier and tracking number,
-    the reason, who did it); `actor_id` is empty for things the system did."""
+    """Захиалгад юу, хэзээ болсон: үүссэн, төлөгдсөн, илгээгдсэн, хүргэгдсэн, цуцлагдсан,
+    буцаагдсан, эсвэл администраторын дотоод тэмдэглэл. `data` дэлгэрэнгүйг (carrier, tracking
+    number, шалтгаан, хэн хийсэн) агуулна; `actor_id` нь системийн хийсэн зүйлд хоосон."""
 
     __tablename__ = "order_events"
     __table_args__ = (Index("ix_order_events_order_id", "order_id"),)
@@ -99,7 +99,7 @@ class OrderEvent(TimestampMixin, Base):
 
 
 class OrderItem(TimestampMixin, Base):
-    """Price snapshot: what the customer was charged stays fixed when the catalogue changes."""
+    """Үнийн snapshot: каталог өөрчлөгдөхөд худалдан авагчаас авсан үнэ өөрчлөгдөхгүй."""
 
     __tablename__ = "order_items"
     __table_args__ = (
@@ -135,10 +135,10 @@ class Payment(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"), unique=True)
     provider: Mapped[str] = mapped_column(String(20))
-    # The Stripe PaymentIntent id (`pi_...`): what webhooks refer to.
+    # Stripe PaymentIntent id (`pi_...`): webhook-ууд үүнийг заадаг.
     provider_payment_id: Mapped[str] = mapped_column(String(100), unique=True)
-    # Needed to hand the same PaymentIntent back when a checkout request is replayed. Cleared
-    # once the payment is settled: it has no further use.
+    # Checkout хүсэлт давтагдахад ижил PaymentIntent буцаахад хэрэгтэй. Төлбөр шийдэгдсэний дараа
+    # цэвэрлэнэ: цаашид хэрэггүй.
     client_secret: Mapped[str | None] = mapped_column(String(200))
     status: Mapped[str] = mapped_column(String(20))
     amount_cents: Mapped[int] = mapped_column(Integer)
@@ -150,8 +150,8 @@ class Payment(TimestampMixin, Base):
 
 
 class StripeEvent(TimestampMixin, Base):
-    """Every webhook event id we have processed. Inserted in the same transaction as the state
-    change it caused, so an event is applied exactly once however often Stripe redelivers it."""
+    """Боловсруулсан webhook event бүрийн id. Төлөв өөрчилсөн transaction-д нь хамт бичдэг тул
+    Stripe хэдэн ч удаа дахин илгээсэн event яг нэг л удаа хэрэгжинэ."""
 
     __tablename__ = "stripe_events"
 

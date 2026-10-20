@@ -1,4 +1,4 @@
-/** Filter dimensions that accept several values (`?gender=Men&gender=Unisex`). */
+/** Олон утга авдаг шүүлтүүрийн хэмжигдэхүүнүүд (`?gender=Men&gender=Unisex`). */
 export const MULTI_KEYS = [
   "gender",
   "master_category",
@@ -16,7 +16,7 @@ export type Sort = (typeof SORTS)[number];
 export const MAX_VALUES_PER_KEY = 12;
 export const MAX_PRICE_CENTS = 10_000_000;
 
-/** Filters shared by listing, similar and every search endpoint. Prices are integer cents. */
+/** Жагсаалт, төстэй бүтээгдэхүүн, бүх хайлтын endpoint-ын хуваалцдаг шүүлтүүр. Үнэ бүхэл cent. */
 export type CatalogFilters = Record<MultiKey, string[]> & {
   min_price?: number;
   max_price?: number;
@@ -25,7 +25,7 @@ export type CatalogFilters = Record<MultiKey, string[]> & {
 
 export type ListingQuery = CatalogFilters & {
   q?: string;
-  /** Set by the /c/... pages from the URL path (never serialized into the query string). */
+  /** /c/... хуудас URL зам-аас тохируулна (query string-д хэзээ ч serialize хийхгүй). */
   department?: string;
   category?: string;
   sort?: Sort;
@@ -47,7 +47,10 @@ export function emptyFilters(): CatalogFilters {
   };
 }
 
-/** Serialize to the shortest URL: defaults (page 1, no sort, empty lists) are omitted. */
+/**
+ * Хамгийн богино URL болгон serialize хийнэ: default утгууд (1-р хуудас, эрэмбэгүй, хоосон
+ * жагсаалт) орхигдоно.
+ */
 export function toSearchParams(query: Partial<ListingQuery>): URLSearchParams {
   const out = new URLSearchParams();
   for (const key of MULTI_KEYS) {
@@ -67,7 +70,7 @@ export function toHref(path: string, query: Partial<ListingQuery>): string {
   return qs ? `${path}?${qs}` : path;
 }
 
-/** Number of active filters (not counting q, sort or page). */
+/** Идэвхтэй шүүлтүүрийн тоо (q, sort, page-ийг тооцохгүй). */
 export function activeFilterCount(f: CatalogFilters): number {
   return (
     MULTI_KEYS.reduce((n, k) => n + f[k].length, 0) +
@@ -76,7 +79,7 @@ export function activeFilterCount(f: CatalogFilters): number {
   );
 }
 
-/** Toggle one value of a multi-value filter, returning a new object. */
+/** Олон утгатай шүүлтүүрийн нэг утгыг асаах/унтраана, шинэ объект буцаана. */
 export function toggleValue<T extends CatalogFilters>(filters: T, key: MultiKey, value: string): T {
   const current = filters[key];
   const next = current.includes(value)
@@ -85,7 +88,7 @@ export function toggleValue<T extends CatalogFilters>(filters: T, key: MultiKey,
   return { ...filters, [key]: next };
 }
 
-/** Fields of `CatalogFilters` as the flat form/query structure the API takes. */
+/** `CatalogFilters`-ийн талбарууд API-ийн авдаг хавтгай form/query бүтэцтэй. */
 export function toApiFilters(f: CatalogFilters) {
   return {
     gender: f.gender,

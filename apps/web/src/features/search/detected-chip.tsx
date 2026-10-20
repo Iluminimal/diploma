@@ -10,9 +10,9 @@ type Detected = components["schemas"]["DetectedCategory"];
 
 type Props = {
   detected: Detected[];
-  /** The category the user picked (null = any). */
+  /** Хэрэглэгчийн сонгосон ангилал (null = аль ч). */
   value: string | null;
-  /** Every article type in the catalogue, for "another category". */
+  /** Catalogue дахь бүх article type, "өөр ангилал" сонголтод. */
   allTypes: string[];
   onChange: (articleType: string | null) => void;
 };
@@ -32,7 +32,7 @@ function Option({ selected, onClick, children }: { selected: boolean; onClick: (
   );
 }
 
-/** "Detected: Shirts" chip. The guess is only a suggestion: picking a category applies it as a filter. */
+/** "Detected: Shirts" chip. Таамаг нь зөвхөн санал: ангилал сонговол шүүлтүүр болж хэрэгжинэ. */
 export function DetectedChip({ detected, value, allTypes, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const selectId = useId();

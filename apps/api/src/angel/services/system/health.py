@@ -32,5 +32,5 @@ class HealthService:
         return ReadinessResponse(checks=checks)
 
     def _model_status(self) -> CheckStatus:
-        # Search cannot work without the model, so the pod must not receive traffic until it is.
+        # Model-гүйгээр хайлт ажиллахгүй, тиймээс model бэлэн болтол pod ачаалал хүлээн авах ёсгүй.
         return "ok" if self._embeddings is not None and self._embeddings.is_loaded() else "fail"

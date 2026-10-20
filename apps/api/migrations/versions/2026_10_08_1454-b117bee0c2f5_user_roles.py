@@ -1,4 +1,4 @@
-"""user roles
+"""хэрэглэгчийн role
 
 Revision ID: b117bee0c2f5
 Revises: fb91c6bdf945
@@ -19,17 +19,17 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    """Schema-г шинэчилнэ."""
     op.add_column(
         "users", sa.Column("role", sa.String(length=20), server_default="customer", nullable=False)
     )
-    # Alembic does not detect CHECK constraints, so this one is written by hand.
+    # Alembic CHECK constraint-ийг илрүүлдэггүй тул үүнийг гараар бичсэн.
     op.create_check_constraint(
         op.f("ck_users_role_valid"), "users", "role IN ('customer', 'admin')"
     )
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
+    """Schema-г өмнөх төлөвт буцаана."""
     op.drop_constraint(op.f("ck_users_role_valid"), "users", type_="check")
     op.drop_column("users", "role")

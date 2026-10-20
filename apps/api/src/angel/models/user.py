@@ -28,35 +28,35 @@ ROLE_ADMIN = "admin"
 class User(TimestampMixin, Base):
     __tablename__ = "users"
     __table_args__ = (
-        # Emails are stored lower-cased; the constraint makes a missed normalisation a loud error
-        # instead of two accounts that differ only by case.
+        # Email жижиг үсгээр хадгалагдана; constraint нь normalize мартсан тохиолдолд зөвхөн том
+        # жижиг үсгээр ялгагдах хоёр бүртгэл үүсэхийн оронд ил алдаа гаргана.
         CheckConstraint("email = lower(email)", name="email_lowercase"),
-        # Phones are stored in E.164 (`+` and 8 to 15 digits, no leading zero): one spelling per
-        # number, so the unique index really means "one account per phone".
+        # Утсыг E.164 (`+` ба 8-15 цифр, тэгээр эхлэхгүй) хэлбэрээр хадгална: нэг дугаар нэг
+        # хэлбэртэй тул unique index үнэхээр "нэг утас нэг бүртгэл" гэсэн утгатай.
         CheckConstraint(r"phone ~ '^\+[1-9][0-9]{7,14}$'", name="phone_e164"),
-        # Phone or email, either can be removed later, but never both.
+        # Утас эсвэл email, аль нэгийг дараа нь хасаж болно, гэхдээ хоёуланг нь хэзээ ч биш.
         CheckConstraint("email IS NOT NULL OR phone IS NOT NULL", name="contact_present"),
         CheckConstraint(f"role IN ('{ROLE_CUSTOMER}', '{ROLE_ADMIN}')", name="role_valid"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
-    # None for an account created with a phone number alone (it may add an email later).
+    # Зөвхөн утсаар үүсгэсэн бүртгэлд None (email-ийг дараа нэмж болно).
     email: Mapped[str | None] = mapped_column(String(320), unique=True)
-    # E.164, e.g. "+14155550123". None for an account that signs in with an email only.
+    # E.164, жишээ нь "+14155550123". Зөвхөн email-ээр нэвтэрдэг бүртгэлд None.
     phone: Mapped[str | None] = mapped_column(String(16), unique=True)
-    # When a one-time code sent to the address / number was confirmed. Set for Google accounts
-    # (Google vouches for the address). None: not verified; sign-in by password still works.
+    # Хаяг/дугаарт илгээсэн нэг удаагийн кодыг баталгаажуулсан хугацаа. Google бүртгэлд
+    # тохируулагдана (Google хаягийг баталдаг). None: баталгаажаагүй; нууц үгээр нэвтэрч болно.
     email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     phone_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # None for accounts that only sign in with Google (and for ones whose password was removed
-    # when Google was linked): password login never succeeds for them.
+    # Зөвхөн Google-ээр нэвтэрдэг (мөн Google холбохдоо нууц үгээ хассан) бүртгэлд None: нууц үгээр
+    # нэвтрэх нь тэдэнд хэзээ ч амжилтгүй.
     password_hash: Mapped[str | None] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(120))
-    # Google's profile photo (an https URL), kept so the header can show it. None: initials.
+    # Google профайл зураг (https URL), header-т харуулахаар хадгална. None бол нэрийн үсэг.
     avatar_url: Mapped[str | None] = mapped_column(String(500))
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
-    # Read from the database on every admin request, never copied into the access token, so
-    # demoting someone takes effect at once.
+    # Админ хүсэлт бүрт database-аас уншина, access token-д хэзээ ч хуулахгүй, тиймээс эрхийг
+    # хураах нь тэр дороо хүчинтэй болно.
     role: Mapped[str] = mapped_column(String(20), server_default=ROLE_CUSTOMER)
 
     @property
@@ -65,14 +65,14 @@ class User(TimestampMixin, Base):
 
     @property
     def identifier(self) -> str:
-        """What names the account where a single string is needed (log lines, failure counters,
-        the "who" of an order event): the email, else the phone number."""
+        """Нэг мөр текст хэрэгтэй газар (log, алдааны тоолуур, захиалгын event-ийн "хэн") бүртгэлийг
+        нэрлэх утга: email, байхгүй бол утасны дугаар."""
         return self.email or self.phone or f"user-{self.id}"
 
 
 class OAuthIdentity(TimestampMixin, Base):
-    """A login at an identity provider, e.g. ("google", Google's stable `sub`) -> a user. The
-    subject, not the email, identifies the person: Google accounts can change their address."""
+    """Identity provider дахь нэвтрэлт, жишээ нь ("google", Google-ийн тогтвортой `sub`) ->
+    хэрэглэгч. Хүнийг email биш subject тодорхойлно: Google бүртгэл хаягаа солиж болно."""
 
     __tablename__ = "oauth_identities"
     __table_args__ = (
@@ -88,8 +88,9 @@ class OAuthIdentity(TimestampMixin, Base):
 
 
 class RefreshToken(TimestampMixin, Base):
-    """One row per issued refresh token. Tokens rotate on every use and belong to a family (one
-    login). Presenting a token that was already used means it leaked: the family is revoked."""
+    """Олгосон refresh token бүрт нэг мөр. Token хэрэглэх бүрт rotate хийгдэж, family (нэг
+    login)-д харьяалагдана. Аль хэдийн ашигласан token ирвэл алдагдсан гэсэн үг: family-г
+    бүхэлд нь цуцална."""
 
     __tablename__ = "refresh_tokens"
     __table_args__ = (
@@ -104,16 +105,16 @@ class RefreshToken(TimestampMixin, Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # What the "your devices" list shows. Copied from the login to every token of its family.
+    # "Таны төхөөрөмжүүд" жагсаалтад харагдана. Login-оос family-ийн token бүрт хуулагдана.
     user_agent: Mapped[str | None] = mapped_column(String(300))
     ip: Mapped[str | None] = mapped_column(String(45))
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class OtpChallenge(Base):
-    """A one-time code that was sent to a phone number or an email address. Only an HMAC of the
-    code is stored. A challenge is good for one purpose, expires, allows a few wrong guesses and
-    is consumed by the first correct one."""
+    """Утасны дугаар эсвэл email рүү илгээсэн нэг удаагийн код. Зөвхөн кодын HMAC-г хадгална.
+    Challenge нэг зорилготой, хугацаатай, цөөн удаа буруу таалтыг зөвшөөрч, эхний зөв оролдлогоор
+    ашиглагдаж дуусна."""
 
     __tablename__ = "otp_challenges"
     __table_args__ = (
@@ -127,10 +128,10 @@ class OtpChallenge(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
     purpose: Mapped[str] = mapped_column(String(20))
-    # The E.164 number or the lower-cased email the code was sent to.
+    # Код илгээсэн E.164 дугаар эсвэл жижиг үсгээр бичсэн email.
     destination: Mapped[str] = mapped_column(String(320))
-    # Whose account asked (change / verify flows); None for login and password reset, where the
-    # person is not signed in and the account is found by the destination.
+    # Хэний бүртгэл хүссэн (солих/баталгаажуулах урсгал); login, нууц үг сэргээхэд None: хүн
+    # нэвтрээгүй тул бүртгэлийг destination-аар олно.
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     code_hash: Mapped[str] = mapped_column(String(64))
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -144,7 +145,7 @@ class Address(TimestampMixin, Base):
     __table_args__ = (
         CheckConstraint("char_length(country) = 2", name="country_iso_length"),
         Index("ix_addresses_user_id", "user_id"),
-        # At most one default address per user, enforced by the database.
+        # Хэрэглэгч бүрт default хаяг дээд тал нь нэг, database өөрөө хангана.
         Index(
             "uq_addresses_one_default_per_user",
             "user_id",

@@ -33,7 +33,7 @@ class CartRepository:
         cart = await self.find(user_id=user_id, guest_token_hash=guest_token_hash)
         if cart is not None:
             return cart
-        # Two requests creating the same user's cart at once: the loser's insert is a no-op.
+        # Нэг хэрэглэгчийн cart-ыг зэрэг үүсгэх хоёр хүсэлт: хожигдогчийн insert юу ч хийхгүй.
         await self._session.execute(
             insert(Cart)
             .values(user_id=user_id, guest_token_hash=guest_token_hash)
@@ -52,8 +52,8 @@ class CartRepository:
     async def add_quantity(
         self, *, cart_id: int, product_id: int, size: str, quantity: int, cap: int
     ) -> None:
-        """Atomic add-or-increase: concurrent "add to cart" taps cannot create duplicate lines
-        or lose an increment, and the line never exceeds `cap`."""
+        """Atomic нэмэх эсвэл өсгөх: зэрэг хийсэн "cart-д нэмэх" дарлт давхар мөр үүсгэхгүй,
+        өсгөлт алдагдахгүй, мөр хэзээ ч `cap`-аас хэтрэхгүй."""
         statement = insert(CartItem).values(
             cart_id=cart_id, product_id=product_id, size=size, quantity=min(quantity, cap)
         )

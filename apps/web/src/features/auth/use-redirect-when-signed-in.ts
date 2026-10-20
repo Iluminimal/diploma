@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { useAuth } from "./auth-store";
 import { landingPath } from "./landing";
 
-/** Someone who is already signed in has no business on the login or register page. */
+/** Аль хэдийн нэвтэрсэн хүн login, register хуудсанд байх шаардлагагүй. */
 export function useRedirectWhenSignedIn(destination: string, enabled = true) {
   const router = useRouter();
   const status = useAuth((state) => state.status);

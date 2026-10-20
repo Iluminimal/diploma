@@ -2,15 +2,15 @@
 
 import { useRef, type PointerEvent } from "react";
 
-const THRESHOLD = 110; // px
-const FLICK = 0.6; // px per ms
+const THRESHOLD = 110; // пиксель
+const FLICK = 0.6; // пиксель/мс
 
 /**
- * Drag a panel away to close it: a drawer to the right, a bottom sheet down. Touch only (a mouse
- * has the close button), and only when the finger moves along `axis` more than across it, so the
- * list inside still scrolls. The panel follows the finger; let go past a distance or with a flick
- * and `onDismiss` runs, otherwise it springs back. With `handle` (a CSS selector) only a drag that
- * starts on that part moves the panel, so the scrolling content below it is left alone.
+ * Panel-ийг чирж хаах: баруун талын drawer, доод sheet. Зөвхөн touch (mouse-д хаах товч бий), хуруу
+ * `axis` дагуу хөндлөнгөөс илүү хөдөлсөн үед л ажиллана, ингэснээр доторх жагсаалт scroll хийсээр
+ * байна. Panel хурууг дагана; тодорхой зайнаас цааш эсвэл хурдан шудрахад `onDismiss` ажиллана,
+ * үгүй бол буцаж оршино. `handle` (CSS selector) өгвөл зөвхөн тэр хэсгээс эхэлсэн чирэлт panel-ийг
+ * хөдөлгөнө, доорх scroll хийдэг агуулгад хүрэхгүй.
  */
 export function useSwipeDismiss(axis: "x" | "y", onDismiss: () => void, handle?: string) {
   const drag = useRef<{ x: number; y: number; at: number; active: boolean; last: number } | null>(null);
@@ -33,7 +33,7 @@ export function useSwipeDismiss(axis: "x" | "y", onDismiss: () => void, handle?:
       const across = axis === "x" ? event.clientY - start.y : event.clientX - start.x;
       if (!start.active) {
         if (Math.abs(across) > Math.abs(along) && Math.abs(across) > 8) {
-          drag.current = null; // scrolling the other way
+          drag.current = null; // нөгөө чиглэлд scroll хийж байна
           return;
         }
         if (along < 8) return;

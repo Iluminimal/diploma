@@ -1,4 +1,4 @@
-"""order fulfilment: statuses, tracking, events
+"""захиалга биелүүлэлт: төлөв, tracking, event
 
 Revision ID: c4a1d7e92b30
 Revises: 5b8e2f61c0aa
@@ -23,7 +23,7 @@ NEW_STATUSES = "status IN ('pending', 'paid', 'shipped', 'delivered', 'cancelled
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    """Schema-г шинэчилнэ."""
     op.drop_constraint(op.f("ck_orders_status_valid"), "orders", type_="check")
     op.create_check_constraint(op.f("ck_orders_status_valid"), "orders", NEW_STATUSES)
     op.add_column("orders", sa.Column("carrier", sa.String(length=40), nullable=True))
@@ -70,7 +70,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_order_events")),
     )
     op.create_index("ix_order_events_order_id", "order_events", ["order_id"], unique=False)
-    # Existing orders get the history they would have had.
+    # Одоо байгаа захиалгад байх ёстой түүхийг нөхөж өгнө.
     op.execute(
         """
         INSERT INTO order_events (order_id, type, data, created_at, updated_at)
@@ -86,11 +86,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
+    """Schema-г өмнөх төлөвт буцаана."""
     op.drop_index("ix_order_events_order_id", table_name="order_events")
     op.drop_table("order_events")
-    # The older schema has no fulfilment: shipped and delivered orders were paid, a refund
-    # means the order never happened.
+    # Хуучин schema-д биелүүлэлт байхгүй: илгээсэн, хүргэсэн захиалга төлөгдсөн байсан,
+    # буцаан олгосон захиалга хэзээ ч үүсээгүй гэсэн үг.
     op.execute("UPDATE orders SET status = 'paid' WHERE status IN ('shipped', 'delivered')")
     op.execute(
         "UPDATE orders SET status = 'cancelled', "

@@ -11,8 +11,8 @@ log = get_logger(__name__)
 
 
 class HealthRepository:
-    """Connectivity probes. Each returns False instead of raising so a dead dependency is
-    reported, not turned into a 500."""
+    """Холболтын шалгалт. Тус бүр exception шиддэггүй, False буцаана: ингэвэл унасан dependency
+    500 болохын оронд мэдээлэгдэнэ."""
 
     def __init__(self, engine: AsyncEngine, redis: Redis, timeout: float) -> None:
         self._engine = engine

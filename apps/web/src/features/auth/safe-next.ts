@@ -1,6 +1,6 @@
 /**
- * Where to go after signing in. Only same-site paths are allowed: `?next=https://evil.example`
- * or `//evil.example` must never turn the login page into an open redirect.
+ * Нэвтэрсний дараа хаашаа очих вэ. Зөвхөн ижил сайтын зам зөвшөөрнө: `?next=https://evil.example`
+ * эсвэл `//evil.example` нь login хуудсыг open redirect болгож болохгүй.
  */
 export function safeNext(
   raw: string | string[] | undefined,

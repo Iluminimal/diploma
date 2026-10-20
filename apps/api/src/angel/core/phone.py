@@ -1,5 +1,5 @@
-"""Phone numbers. They are stored and compared in E.164 ("+14155550123"): one spelling per
-number, whatever the person typed."""
+"""Утасны дугаар. E.164 ("+14155550123") хэлбэрээр хадгалж, харьцуулна: хүн яаж бичсэн ч нэг
+дугаар нэг л хэлбэртэй байна."""
 
 import phonenumbers
 from phonenumbers import NumberParseException, PhoneNumberFormat
@@ -10,8 +10,8 @@ class InvalidPhoneError(ValueError):
 
 
 def normalize_phone(raw: str, default_region: str) -> str:
-    """The E.164 form of `raw`. A number typed without a country code is read in
-    `default_region` (an ISO 3166 code such as "US"). Raises `InvalidPhoneError`."""
+    """`raw`-ийн E.164 хэлбэр. Улсын кодгүй бичсэн дугаарыг `default_region` (ISO 3166 код,
+    жишээ нь "US")-оор тайлна. Буруу бол `InvalidPhoneError` шиднэ."""
     try:
         number = phonenumbers.parse(raw.strip(), default_region.upper())
     except NumberParseException as error:
@@ -22,8 +22,8 @@ def normalize_phone(raw: str, default_region: str) -> str:
 
 
 def mask_phone(e164: str) -> str:
-    """ "+14155550123" -> "+1•••••••0123": enough for the person to recognise their number, not
-    enough to reuse it. Used in logs and in screens that show a number back."""
+    """ "+14155550123" -> "+1•••••••0123": эзэн нь дугаараа таних хангалттай, гэхдээ дахин ашиглахад
+    хүрэлцэхгүй. Log болон дугаарыг буцааж харуулдаг дэлгэцэнд хэрэглэнэ."""
     if len(e164) <= 5:
         return "•" * len(e164)
     return f"{e164[:2]}{'•' * (len(e164) - 6)}{e164[-4:]}"

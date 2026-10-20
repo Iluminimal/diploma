@@ -12,10 +12,10 @@ from angel.ml.embeddings import Embeddings, ImageArrays
 from angel.ml.preprocess import CLIP_SIZE, ResizeMode, to_clip_array
 
 MODEL_ID = "patrickjohncyh/fashion-clip"
-# Pinned so every machine (and Colab) produces identical embeddings.
+# Бүх машин (Colab ч гэсэн) ижил embedding гаргахын тулд revision-ийг түгжсэн.
 MODEL_REVISION = "7e3ba62ce16b379a1ab479346b66f192e76f51b7"
 DIMENSION = 512
-# CLIP's training-time channel statistics (see the model's preprocessor_config.json).
+# CLIP-ийг сургах үеийн суваг бүрийн статистик (model-ийн preprocessor_config.json-оос).
 _MEAN = (0.48145466, 0.4578275, 0.40821073)
 _STD = (0.26862954, 0.26130258, 0.27577711)
 
@@ -24,7 +24,7 @@ _T = TypeVar("_T")
 
 
 def select_device(preference: DevicePreference = "auto") -> torch.device:
-    """`auto` prefers CUDA, then Apple MPS, then CPU."""
+    """`auto` үед эхлээд CUDA, дараа нь Apple MPS, эцэст нь CPU сонгоно."""
     if preference == "auto":
         if torch.cuda.is_available():
             return torch.device("cuda")
@@ -43,14 +43,14 @@ def embedding_version(resize_mode: ResizeMode) -> str:
 
 
 class FashionClipEmbedder:
-    """FashionCLIP (ViT-B/32) image and text embeddings, L2-normalized.
+    """FashionCLIP (ViT-B/32)-ийн зураг, текстийн embedding, L2-normalize хийсэн.
 
-    MPS must not be driven from several threads at once, so all inference is serialized on one
-    dedicated worker thread. The async methods hand work to it, keeping the event loop free.
+    MPS-ийг нэг дор олон thread-ээс ажиллуулж болохгүй тул бүх inference нэг тусгай worker
+    thread дээр дарааллаар явна. Async метод ажлыг түүнд өгч, event loop-ийг чөлөөтэй үлдээнэ.
     """
 
     dimension = DIMENSION
-    logit_scale = 100.0  # replaced by the model's learned value in load()
+    logit_scale = 100.0  # load() дээр model-ийн сурсан утгаар солигдоно
 
     def __init__(
         self,
@@ -131,7 +131,7 @@ class FashionClipEmbedder:
 
     @staticmethod
     def _normalize(features: torch.Tensor) -> Embeddings:
-        # Normalize in fp32 even when the forward pass ran in fp16.
+        # Forward pass fp16 байсан ч normalize-ийг fp32-оор хийнэ.
         features = features.float()
         features = features / features.norm(dim=-1, keepdim=True).clamp_min(1e-12)
         return features.cpu().numpy().astype(np.float32, copy=False)

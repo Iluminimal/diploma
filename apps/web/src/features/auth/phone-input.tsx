@@ -6,13 +6,12 @@ import { Input } from "@/components/ui/input";
 import { selectClass } from "@/components/forms/form-field";
 import { cn } from "@/lib/utils";
 
-/** The country every phone field starts on. */
+/** Утасны талбар бүр эхэлдэг улс. */
 export const DEFAULT_REGION: CountryCode = "MN";
 
 /**
- * The countries on offer: a short list of the main ones, Mongolia first, instead of every country
- * there is. Numbers from anywhere else still work when typed in full ("+39 ..."): the picker then
- * shows that country too.
+ * Санал болгох улсууд: бүх улсын оронд гол улсуудын богино жагсаалт, Монгол нэгдүгээрт. Өөр улсын
+ * дугаарыг бүтнээр нь ("+39 ...") бичихэд бас ажиллана: сонгогч тэр улсыг бас харуулна.
  */
 const MAIN_COUNTRIES: { code: CountryCode; name: string }[] = [
   { code: "MN", name: "Mongolia" },
@@ -33,7 +32,7 @@ function flag(code: string) {
   return String.fromCodePoint(...[...code].map((c) => 0x1f1a5 + c.charCodeAt(0)));
 }
 
-/** The number in international format ("+97688112233") if it looks valid, else null. */
+/** Хүчинтэй харагдаж байвал олон улсын форматтай дугаар ("+97688112233"), үгүй бол null. */
 export function toE164(text: string, region: CountryCode): string | null {
   const parsed = parsePhoneNumberFromString(text, region);
   return parsed?.isValid() ? parsed.number : null;
@@ -41,7 +40,7 @@ export function toE164(text: string, region: CountryCode): string | null {
 
 export type PhoneValue = { text: string; region: CountryCode };
 
-/** A country picker (flag, code and dial code per option). */
+/** Улс сонгогч (сонголт бүрд тугны, кодын, утасны код). */
 export function CountrySelect({
   value,
   onChange,
@@ -51,7 +50,7 @@ export function CountrySelect({
   onChange: (region: CountryCode) => void;
   className?: string;
 }) {
-  // A country typed in full ("+39 ...") that is not on the short list still has to be selectable.
+  // Богино жагсаалтад байхгүй ч бүтнээр нь ("+39 ...") бичсэн улсыг сонгох боломжтой байх ёстой.
   const countries = MAIN_COUNTRIES.some(({ code }) => code === value)
     ? MAIN_COUNTRIES
     : [...MAIN_COUNTRIES, { code: value, name: value }];
@@ -66,7 +65,9 @@ export function CountrySelect({
   );
 }
 
-/** What a phone field makes of the text typed into it: formatted as typed, and a "+" number picks its country. */
+/**
+ * Утасны талбарт бичсэн текстээс юу гарах: бичихийн хэрээр форматлагдаж, "+" дугаар улсаа сонгоно.
+ */
 export function typePhone(raw: string, region: CountryCode): PhoneValue {
   const typed = new AsYouType(region);
   const text = typed.input(raw);
@@ -75,8 +76,8 @@ export function typePhone(raw: string, region: CountryCode): PhoneValue {
 }
 
 /**
- * A phone number field: a country picker and the number, formatted as it is typed. Pasting a
- * full "+976 ..." number works whatever the picker says. Use `toE164` for what to send.
+ * Утасны дугаарын талбар: улс сонгогч ба дугаар, бичихийн хэрээр форматлагдана. Бүтэн "+976 ..."
+ * дугаар буулгавал сонгогч юу ч байсан ажиллана. Илгээх утгыг `toE164`-өөр авна.
  */
 export function PhoneInput({
   value,

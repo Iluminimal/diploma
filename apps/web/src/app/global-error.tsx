@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import "./globals.css";
 
 /**
- * The last resort: it replaces the whole page, root layout included, when the layout itself
- * fails. So it brings its own <html> and <body> and uses nothing that lives in the layout.
+ * Сүүлчийн арга: layout өөрөө алдаа гарвал root layout-ийг оруулаад бүх хуудсыг орлоно. Тиймээс
+ * өөрийн <html> ба <body>-тэй, layout-д байдаг юуг ч ашигладаггүй.
  */
 export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {

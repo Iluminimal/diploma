@@ -34,10 +34,10 @@ def test_sizes_follow_the_category_like_the_web_app() -> None:
     [
         ("standard", 0, 499),
         ("standard", 9_999, 499),
-        ("standard", 10_000, 0),  # free from the threshold
+        ("standard", 10_000, 0),  # босгоос эхлэн үнэгүй
         ("standard", 250_000, 0),
         ("express", 0, 1299),
-        ("express", 250_000, 1299),  # express is never free
+        ("express", 250_000, 1299),  # express хэзээ ч үнэгүй биш
     ],
 )
 def test_shipping_cost(method: str, subtotal: int, expected: int) -> None:
@@ -57,12 +57,12 @@ class TestProductionSettings:
     PROD: ClassVar[dict[str, object]] = {
         "app_env": "prod",
         "jwt_secret": "x" * 40,
-        # .env may run the fake Google; prod is checked as itself.
+        # .env дээр fake Google байж болно; prod-ыг өөрийнх нь тохиргоогоор шалгана.
         "oauth_mode": "google",
         "payments_mode": "stripe",
         "stripe_secret_key": "sk_test_x",
         "stripe_webhook_secret": "whsec_x",
-        # .env may use the console SMS and a fixed code; prod is checked as itself.
+        # .env дээр console SMS, тогтмол код байж болно; prod-ыг өөрийнх нь тохиргоогоор шалгана.
         "sms_mode": "twilio",
         "otp_dev_code": "",
         "twilio_account_sid": "AC1",

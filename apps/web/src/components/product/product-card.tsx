@@ -11,9 +11,11 @@ type Props = {
   product: Product;
   sizes?: string;
   priority?: boolean;
-  /** Overlay in the image's top-left corner (e.g. similarity badge). */
+  /** Зургийн зүүн дээд буланд давхарласан элемент (жишээ нь төстэй байдлын badge). */
   badge?: ReactNode;
-  /** Heading level of the product name: 2 directly under the page's h1, 3 under a section heading. */
+  /**
+   * Барааны нэрийн heading түвшин: хуудасны h1-ийн шууд доор бол 2, section heading-ийн доор бол 3.
+   */
   headingLevel?: 2 | 3;
   className?: string;
 };
@@ -28,8 +30,8 @@ export function ProductCard({ product, sizes = GRID_SIZES, priority, badge, head
         href={productPath(product)}
         className="tile press-card focus-visible:ring-ring/60 flex h-full flex-col outline-none focus-visible:ring-3"
       >
-        {/* The catalogue photos have white backgrounds: multiplied onto the grey tile they melt into it,
-            the way Apple's product shots sit on their tiles. In dark mode the tile is white instead. */}
+        {/* Каталогийн зургууд цагаан дэвсгэртэй: саарал tile дээр үржүүлбэл tile-тэй нийлнэ,
+           Apple-ийн барааны зураг tile дээр байдагтай адил. Харанхуй горимд tile нь цагаан. */}
         <div data-card-photo className="relative aspect-3/4 overflow-hidden dark:bg-white">
           <ProductImage
             product={product}

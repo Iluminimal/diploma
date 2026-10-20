@@ -1,4 +1,4 @@
-/** Helpers for the demo card form: grouping what is typed and naming the card from its first digits. */
+/** Demo картын form-ын туслахууд: бичсэнийг бүлэглэх, эхний цифрээс картын нэрийг тодорхойлох. */
 
 export type CardBrand = "Visa" | "Mastercard" | "American Express" | "Discover";
 
@@ -11,7 +11,7 @@ export function cardBrand(number: string): CardBrand | null {
   return null;
 }
 
-/** "4242424242424242" -> "4242 4242 4242 4242" (Amex: 4-6-5), at most 19 digits. */
+/** "4242424242424242" -> "4242 4242 4242 4242" (Amex: 4-6-5), хамгийн ихдээ 19 цифр. */
 export function formatCardNumber(raw: string): string {
   const digits = raw.replace(/\D/g, "").slice(0, 19);
   const groups = cardBrand(digits) === "American Express" ? [4, 6, 5] : [4, 4, 4, 4, 3];
@@ -26,9 +26,9 @@ export function formatCardNumber(raw: string): string {
 }
 
 /**
- * "1234" -> "12/34"; a first digit above 1 can only be a month, so "5" becomes "05/".
- * `previous` is what the field held before this keystroke: deleting back over the slash must
- * leave "12", not put the slash straight back.
+ * "1234" -> "12/34"; 1-ээс их эхний цифр зөвхөн сар байж болох тул "5" нь "05/" болно. `previous`
+ * нь энэ товчлолтоос өмнө талбарт байсан утга: slash дээгүүр устгахад "12" үлдэх ёстой, slash шууд
+ * буцаж орох ёсгүй.
  */
 export function formatExpiry(raw: string, previous = ""): string {
   const digits = raw.replace(/\D/g, "").slice(0, 4);

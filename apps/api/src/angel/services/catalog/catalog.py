@@ -76,8 +76,8 @@ class CatalogService:
         )
 
     async def _navigation_filters(self, query: ProductListQuery) -> SearchFilters | None:
-        """The query's filters with `department` and `category` resolved, or None when they
-        exclude every product (a department and an explicit gender that do not overlap)."""
+        """Query-ийн filter-үүд, `department` болон `category`-г тодорхойлсон байдлаар, эсвэл бүх
+        барааг хасвал None (department болон давхцахгүй gender-ийг зэрэг заасан үед)."""
         filters = to_search_filters(query)
         if query.department is not None:
             department = DEPARTMENT_BY_SLUG.get(query.department)
@@ -125,8 +125,8 @@ class CatalogService:
         )
 
     async def filters(self) -> CatalogFilters:
-        """Changes only when products are added or recoloured, so a few minutes of caching is
-        invisible to users and saves several DISTINCT scans per page view."""
+        """Зөвхөн бараа нэмэгдэх эсвэл өнгө нь солигдоход өөрчлөгддөг, тиймээс хэдэн минутын
+        cache хэрэглэгчид мэдэгдэхгүй бөгөөд хуудас бүрт хэд хэдэн DISTINCT scan хэмнэнэ."""
         cached = await self._cache.get_catalog_filters()
         if cached is not None:
             return cached
@@ -148,8 +148,8 @@ class CatalogService:
         return result
 
     async def taxonomy(self) -> TaxonomySnapshot:
-        """Departments with counts plus the ids behind every node. Counts only move when the
-        catalogue does, so it is cached together with the filter options."""
+        """Тоотой department-ууд болон зангилаа бүрийн ард буй id-нууд. Тоо нь зөвхөн catalogue
+        өөрчлөгдөхөд өөрчлөгддөг тул filter сонголттой хамт cache хийнэ."""
         cached = await self._cache.get_taxonomy()
         if cached is not None:
             return cached

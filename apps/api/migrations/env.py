@@ -5,14 +5,14 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from angel import models  # noqa: F401  (registers tables on Base.metadata)
+from angel import models  # noqa: F401  (table-уудыг Base.metadata-д бүртгэнэ)
 from angel.core.config import get_settings
 from angel.db.base import Base
 
 config = context.config
 target_metadata = Base.metadata
 
-# Single source of truth for the URL is the application settings (DATABASE_URL).
+# URL-ийн цорын ганц эх сурвалж нь аппын тохиргоо (DATABASE_URL).
 database_url = get_settings().database_url
 
 

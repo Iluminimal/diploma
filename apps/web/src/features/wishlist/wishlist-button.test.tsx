@@ -31,7 +31,7 @@ describe("WishlistButton", () => {
     expect(push).toHaveBeenCalledWith(
       "/login?next=%2Fproducts%2F41885%2Falma-women-blue-kurta-60000",
     );
-    expect(api.calls).toHaveLength(0); // guests never hit the wishlist API
+    expect(api.calls).toHaveLength(0); // зочин wishlist API-д хандахгүй
   });
 
   it("bursts when the heart is filled, but not for one that was already saved", async () => {

@@ -17,7 +17,7 @@ import { withoutLine, withQuantity } from "./cart-math";
 
 const mutationKey = ["cart", "mutation"] as const;
 
-/** The cart belongs to the user or, for a guest, to the browser: separate cache entries. */
+/** Cart нь хэрэглэгчийнх, эсвэл зочинд browser-ийнх: тусдаа cache entry. */
 function useCartKey() {
   const userId = useAuth((state) => state.user?.id);
   return [...queryKeys.cart, userId ?? "guest"] as const;
@@ -28,15 +28,15 @@ export function useCart() {
   return useQuery({
     queryKey: useCartKey(),
     queryFn: fetchCart,
-    // Until the session is restored a request would be answered with the guest cart.
+    // Session сэргэтэл хүсэлтэд зочны cart-аар хариулна.
     enabled: status !== "unknown",
     staleTime: 15_000,
   });
 }
 
 /**
- * A cart mutation with an optimistic local change, rolled back with a toast if the server says no.
- * Rapid taps overlap, so the server's answer is only trusted once the last request has finished.
+ * Optimistic локал өөрчлөлттэй cart mutation; сервер татгалзвал toast-тойгоор буцаана. Хурдан
+ * товшилтууд давхцдаг тул серверийн хариуг сүүлийн хүсэлт дууссаны дараа л итгэнэ.
  */
 function useCartMutation<Variables>(
   mutationFn: (variables: Variables) => Promise<Cart>,
@@ -71,7 +71,7 @@ function useCartMutation<Variables>(
 export function useAddToCart() {
   return useCartMutation(addCartItem, (cart, item: NewCartItem) => ({
     ...cart,
-    item_count: cart.item_count + (item.quantity ?? 1), // the badge moves at once; lines come from the server
+    item_count: cart.item_count + (item.quantity ?? 1), // badge шууд хөдөлнэ; мөрүүд серверээс ирнэ
   }));
 }
 

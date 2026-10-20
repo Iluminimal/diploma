@@ -4,7 +4,7 @@ from angel.core.deps import HealthServiceDep
 from angel.schemas.problem import ProblemDetail
 from angel.schemas.system.health import LivenessResponse, ReadinessResponse
 
-# Unversioned on purpose: orchestrators probe these, clients do not.
+# Зориуд version-гүй: orchestrator-ууд шалгадаг, client-ууд ашигладаггүй.
 router = APIRouter(tags=["health"])
 
 

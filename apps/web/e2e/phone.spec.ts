@@ -3,13 +3,17 @@ import { test, expect } from "./fixtures";
 import { API_URL, PASSWORD } from "./support/env";
 import { OTP_CODE, signInAccount, signUpWithPhone, uniquePhone } from "./support/api";
 
-// These need the API to run with OTP_DEV_CODE=000000 (docs/e2e.md): every code is then 000000.
+// Эдгээр тест API-г OTP_DEV_CODE=000000-тэй ажиллуулахыг шаарддаг (docs/e2e.md): тэгвэл код болгон
+// 000000 байна.
 
 const accountMenu = (page: Page) => page.getByRole("button", { name: /^Account: / });
-/** "+14155550123" -> "+1 415 555 0123": a number typed in full picks its own country, whatever the picker says. */
+/**
+ * "+14155550123" -> "+1 415 555 0123": бүтнээр нь бичсэн дугаар сонгогчийн утгаас үл хамааран
+ * өөрийн улсыг сонгоно.
+ */
 const national = (phone: string) => phone.replace(/^\+1(\d{3})(\d{3})(\d{4})$/, "+1 $1 $2 $3");
 
-/** The second step of a dialog: the six boxes appear after the code was sent. */
+/** Dialog-ийн хоёр дахь алхам: код илгээснээс хойш зургаан нүд гарна. */
 async function typeCodeInDialog(page: Page) {
   await page.getByLabel("Digit 1 of 6").click();
   await page.keyboard.type(OTP_CODE);
@@ -72,7 +76,7 @@ test("a phone customer adds an email, changes the number and signs out the other
   await expect(page.getByRole("heading", { level: 2, name: "Profile" })).toBeVisible();
   await expect(page.getByText(phone).first()).toBeVisible();
 
-  // Add an email: a code goes to the new address; a phone account has no password to prove.
+  // Имэйл нэмэх: шинэ хаяг руу код очно; утасны account-д нотлох нууц үг байхгүй.
   await page.getByRole("button", { name: /Add an email/ }).click();
   const email = `e2e-phone-${Date.now().toString(36)}@example.com`;
   await page.getByRole("dialog").getByLabel("Email").fill(email);
@@ -82,7 +86,7 @@ test("a phone customer adds an email, changes the number and signs out the other
   await expect(page.getByText(email).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Remove phone" })).toBeVisible();
 
-  // Change the number: the code goes to the new one.
+  // Дугаар солих: код шинэ дугаар руу очно.
   const replacement = uniquePhone();
   await page.getByRole("button", { name: "Change phone" }).click();
   await page.getByRole("dialog").getByLabel("Phone number").fill(national(replacement));
@@ -91,7 +95,7 @@ test("a phone customer adds an email, changes the number and signs out the other
   await expect(page.getByRole("dialog")).toBeHidden();
   await expect(page.getByText(replacement).first()).toBeVisible();
 
-  // A second device signs in; the first signs it out again.
+  // Хоёр дахь төхөөрөмж нэвтэрч, эхнийхийг нь гаргана.
   const other = await browser.newContext();
   const otherApi = other.request;
   await otherApi.post(`${API_URL}/api/v1/auth/otp/request`, { data: { destination: replacement } });

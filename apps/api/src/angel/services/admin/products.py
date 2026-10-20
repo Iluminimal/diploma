@@ -38,9 +38,10 @@ from angel.storage import Storage
 
 log = get_logger(__name__)
 
-# Photos of products made here live apart from the dataset's `products/NNN/<id>` keys.
+# Эндээс үүсгэсэн барааны зураг нь dataset-ийн `products/NNN/<id>` key-үүдээс тусдаа байрлана.
 ADMIN_IMAGE_PREFIX = "products/admin/"
-# Same decode size as the search pipeline and ingestion, so the stored vector is comparable.
+# Хайлтын pipeline болон ingestion-тэй ижил decode хэмжээ: хадгалсан vector харьцуулах боломжтой
+# байхын тулд.
 DECODE_MIN_SIDE = 800
 
 
@@ -81,7 +82,7 @@ class AdminProductService:
         self._products = ProductRepository(session)
         self._categories = CategoryRepository(session)
 
-    # --- reads -----------------------------------------------------------------------------
+    # --- унших ---
 
     async def categories(self) -> list[AdminCategory]:
         async with self._session.begin():
@@ -124,13 +125,13 @@ class AdminProductService:
             raise _not_found(product_id)
         return to_admin_product_out(product, self._storage)
 
-    # --- writes ----------------------------------------------------------------------------
+    # --- бичих ---
 
     async def create(
         self, data: bytes, fields: ProductFields, *, is_active: bool
     ) -> AdminProductOut:
-        """A new product from its photo: thumbnails, blur placeholder and FashionCLIP embedding
-        are computed from the upload, so it is immediately findable by visual search."""
+        """Зургаас шинэ бараа: thumbnail, blur placeholder, FashionCLIP embedding-ийг upload-аас
+        тооцоолно, тиймээс visual search-ээр тэр даруй олдоно."""
         async with self._session.begin():
             category = await self._leaf(fields.category_id)
         prepared = await self._prepare(data)
@@ -200,8 +201,8 @@ class AdminProductService:
         return to_admin_product_out(product, self._storage)
 
     async def replace_image(self, product_id: int, data: bytes) -> AdminProductOut:
-        """New photo, new embedding. The files get a new key so browsers and caches never keep
-        showing the old picture."""
+        """Шинэ зураг, шинэ embedding. Файлууд шинэ key авна, ингэвэл browser болон cache хуучин
+        зургийг хэзээ ч үзүүлсээр байхгүй."""
         async with self._session.begin():
             if await self._products.get_any(product_id) is None:
                 raise _not_found(product_id)
@@ -227,7 +228,7 @@ class AdminProductService:
         return to_admin_product_out(product, self._storage)
 
     async def set_active(self, product_id: int, *, active: bool) -> AdminProductOut:
-        """Withdraw or restore a product. Products are never deleted: orders refer to them."""
+        """Барааг татах эсвэл сэргээх. Бараа хэзээ ч устгагдахгүй: захиалгууд түүнийг заадаг."""
         async with self._session.begin():
             product = await self._products.get_any(product_id, for_update=True)
             if product is None:
@@ -240,8 +241,9 @@ class AdminProductService:
         return to_admin_product_out(product, self._storage)
 
     async def set_stock(self, product_id: int, quantity: int) -> AdminProductOut:
-        """Set the number on the shelf. The row is locked, like checkout locks it to reserve
-        stock, so a recount cannot be lost to (or lose) a sale happening at the same moment."""
+        """Тавиур дээрх тоог тохируулна. Мөрийг түгжинэ (checkout нөөц нөөцлөхдөө түгжихтэй
+        адил), ингэвэл тооллого зэрэг явагдаж буй борлуулалтад алдагдахгүй, борлуулалтыг ч
+        алдахгүй."""
         async with self._session.begin():
             product = await self._products.get_any(product_id, for_update=True)
             if product is None:
@@ -253,7 +255,7 @@ class AdminProductService:
         log.info("admin_stock_set", product_id=product_id, previous=previous, quantity=quantity)
         return to_admin_product_out(product, self._storage)
 
-    # --- steps -----------------------------------------------------------------------------
+    # --- алхмууд ---
 
     async def _leaf(self, category_id: int) -> LeafCategory:
         leaves = await self._categories.leaf_categories(category_id)
@@ -295,9 +297,9 @@ class AdminProductService:
         return key
 
     async def _discard(self, key: str) -> None:
-        """Remove the files of an image that did not make it into the database."""
+        """Database-д орж амжаагүй зургийн файлуудыг устгана."""
         for size in THUMBNAIL_SIZES:
             try:
                 await asyncio.to_thread(self._storage.delete, thumbnail_key(key, size))
-            except Exception as exc:  # cleanup must not hide the error that caused it
+            except Exception as exc:  # цэвэрлэгээ нь түүнийг үүсгэсэн алдааг нуух ёсгүй
                 log.warning("image_cleanup_failed", key=key, error=type(exc).__name__)

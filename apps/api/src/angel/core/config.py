@@ -7,8 +7,8 @@ from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # The API is always started from apps/api (see Makefile); the repo-root .env is shared
-    # with docker compose, apps/api/.env is an optional local override.
+    # API-г үргэлж apps/api-аас эхлүүлнэ (Makefile-ийг хар); repo-ийн үндсэн .env нь docker
+    # compose-той хуваалцдаг, apps/api/.env нь заавал биш локал давхарлалт.
     model_config = SettingsConfigDict(
         env_file=("../../.env", ".env"),
         env_file_encoding="utf-8",
@@ -20,60 +20,60 @@ class Settings(BaseSettings):
     log_json: bool = True
 
     api_v1_prefix: str = "/api/v1"
-    # Comma-separated in the environment: CORS_ORIGINS=http://localhost:3000,https://shop.example
+    # Орчны хувьсагчид таслалаар тусгаарлана: CORS_ORIGINS=http://localhost:3000,https://shop.example
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:3000"]
 
     database_url: str = "postgresql+asyncpg://angel:angel@localhost:5433/angel"
     redis_url: str = "redis://localhost:6379/0"
 
-    # Product images (thumbnails). LocalStorage writes here; the API serves it at
-    # `media_url_path`. Relative paths resolve against apps/api (where the API always runs).
+    # Барааны зураг (thumbnail). LocalStorage эндээ бичнэ; API `media_url_path`-аар үйлчилнэ.
+    # Харьцангуй зам нь apps/api-д (API үргэлж ажилладаг газар) тулгуурлана.
     media_dir: Path = Path("../../data/media")
     media_url_path: str = "/media"
     media_base_url: str = "http://localhost:8000/media"
 
-    # FashionCLIP. `embedding_resize_mode` and the model revision define what an embedding
-    # means: changing either requires re-embedding the catalogue (ingest detects this).
-    # `fake` is a deterministic stand-in for the end-to-end tests in CI (no model download); it
-    # knows nothing about clothes, so production refuses it.
+    # FashionCLIP. `embedding_resize_mode` ба model revision нь embedding-ийн утгыг тодорхойлно:
+    # аль нэгийг солбил каталогийг дахин embed хийх ёстой (ingest үүнийг илрүүлнэ).
+    # `fake` нь CI-н end-to-end тестэд зориулсан тогтмол орлуулагч (model татахгүй); хувцасны
+    # талаар юу ч мэдэхгүй тул production хүлээн авахгүй.
     embedder: Literal["fashion-clip", "fake"] = "fashion-clip"
     embedding_device: Literal["auto", "mps", "cpu", "cuda"] = "auto"
     embedding_fp16: bool = False
     embedding_resize_mode: Literal["crop", "pad"] = "pad"
 
-    # --- search ---------------------------------------------------------------------------
-    # Uploads: validated by size, declared type, real format and pixel count (decompression bombs).
+    # --- хайлт ----------------------------------------------------------------------------
+    # Upload: хэмжээ, зарласан төрөл, жинхэнэ формат, pixel тоогоор шалгана (decompression bomb).
     max_upload_bytes: int = 8 * 1024 * 1024
     max_upload_pixels: int = 25_000_000
-    # Number of results when the client does not ask for a specific `limit`.
+    # Клиент `limit` зааж өгөөгүй үед буцаах үр дүнгийн тоо.
     search_default_limit: int = 24
-    # Weight of the text embedding in hybrid search (the image gets 1 - weight). Measured in
-    # docs/search-api.md: 0.5 barely changes colour, above ~0.75 the garment type gets lost.
+    # Hybrid хайлт дахь текст embedding-ийн жин (зураг 1 - жин авна). docs/search-api.md-д
+    # хэмжсэн: 0.5 өнгийг бараг өөрчилдөггүй, ~0.75-аас дээш бол хувцасны төрөл алдагдана.
     hybrid_text_weight: float = 0.65
-    # How many zero-shot category predictions are returned with an image search.
+    # Зургаар хайхад хэдэн zero-shot ангиллын таамаг буцаах вэ.
     detected_categories: int = 3
 
-    # Redis caches. The embedding version is part of every key, so a re-embed invalidates them.
+    # Redis cache. Embedding version нь key бүрийн нэг хэсэг тул дахин embed хийхэд хүчингүй болно.
     text_embedding_cache_ttl_seconds: int = 24 * 3600
     similar_cache_ttl_seconds: int = 300
     catalog_filters_cache_ttl_seconds: int = 600
 
-    # Rate limits: "<requests>/<window seconds>" per client, fixed window, in Redis.
+    # Rate limit: клиент бүрт "<хүсэлтийн тоо>/<цонхны секунд>", тогтмол цонх, Redis-д.
     rate_limit_enabled: bool = True
     rate_limit_prefix: str = "rl"
     rate_limit_image: str = "20/60"
     rate_limit_text: str = "60/60"
     rate_limit_similar: str = "120/60"
-    # Behind a trusted reverse proxy the client address is the first X-Forwarded-For entry.
+    # Итгэмжлэгдсэн reverse proxy-ийн ард клиентийн хаяг нь X-Forwarded-For-ийн эхний утга.
     trust_proxy_headers: bool = False
 
-    # --- auth -----------------------------------------------------------------------------
-    # HS256 signing key for access tokens. Required (>= 32 chars) in prod; elsewhere an empty
-    # value means "generate one per process", which logs everyone out on restart.
+    # --- нэвтрэлт -------------------------------------------------------------------------
+    # Access token-ы HS256 гарын үсгийн түлхүүр. Prod-д заавал (>= 32 тэмдэгт); бусад үед хоосон
+    # бол процесс бүрт шинээр үүсгэнэ, restart хийхэд хүн бүр гарна.
     jwt_secret: str = ""
     access_token_ttl_seconds: int = 15 * 60
     refresh_token_ttl_days: int = 30
-    # Refresh and guest-cart cookies. Secure is forced on in prod; dev runs on plain http.
+    # Refresh, guest-cart cookie. Prod-д Secure заавал асна; dev энгийн http дээр ажиллана.
     cookie_secure: bool = False
     rate_limit_register: str = "5/3600"
     rate_limit_login: str = "10/300"
@@ -82,67 +82,67 @@ class Settings(BaseSettings):
     rate_limit_admin: str = "120/60"
     rate_limit_oauth: str = "30/300"
     rate_limit_review: str = "20/3600"
-    # Asking for a one-time code / trying one, per client address. Per phone number or email the
-    # limits are `otp_resend_seconds`, `otp_max_sends_per_hour` and `otp_max_attempts`.
+    # Нэг удаагийн код авах/оруулах оролдлого, клиентийн хаяг тутамд. Утасны дугаар, email тутмын
+    # хязгаар нь `otp_resend_seconds`, `otp_max_sends_per_hour`, `otp_max_attempts`.
     rate_limit_otp_send: str = "10/600"
     rate_limit_otp_verify: str = "30/600"
 
-    # --- one-time codes (sign in by phone or email, verify, change, reset password) -------
+    # --- нэг удаагийн код (утас/email-ээр нэвтрэх, баталгаажуулах, солих, нууц үг сэргээх) -
     otp_ttl_seconds: int = 300
     otp_max_attempts: int = 5
     otp_resend_seconds: int = 60
     otp_max_sends_per_hour: int = 5
-    # A fixed code for end-to-end tests and demos: every challenge then has this code. Refused
-    # in prod. Empty = random codes.
+    # End-to-end тест, demo-д зориулсан тогтмол код: challenge бүр энэ кодтой болно. Prod хүлээн
+    # авахгүй. Хоосон бол санамсаргүй код.
     otp_dev_code: str = ""
-    # Numbers typed without a country code are read in this region (ISO 3166 alpha-2).
+    # Улсын кодгүй бичсэн дугаарыг энэ бүс (ISO 3166 alpha-2)-ээр тайлна.
     default_phone_region: str = "US"
-    # `console`: the SMS is written to the API log (development). `twilio`: sent through Twilio.
+    # `console`: SMS-г API log-д бичнэ (хөгжүүлэлт). `twilio`: Twilio-оор илгээнэ.
     sms_mode: Literal["console", "twilio"] = "console"
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
     twilio_from_number: str = ""
 
-    # --- sign in with Google --------------------------------------------------------------
-    # `google`: the real flow (needs the client id and secret). `fake`: an in-process stand-in
-    # that signs in whoever `login_hint` names, for tests and CI; refused in prod.
+    # --- Google-ээр нэвтрэх ---------------------------------------------------------------
+    # `google`: жинхэнэ урсгал (client id, secret хэрэгтэй). `fake`: `login_hint`-ээр заасан хүнийг
+    # нэвтрүүлдэг процесс доторх орлуулагч, тест/CI-д; prod хүлээн авахгүй.
     oauth_mode: Literal["google", "fake"] = "google"
     google_client_id: str = ""
     google_client_secret: str = ""
-    # Registered in the Google console. It is on the web origin (Next proxies /api/v1 to the API)
-    # so the session cookies the callback sets are first-party.
+    # Google console-д бүртгэсэн. Вэб origin дээр байгаа (Next /api/v1-г API руу proxy хийнэ) тул
+    # callback-ийн тавьсан session cookie first-party болно.
     google_redirect_uri: str = "http://localhost:3000/api/v1/auth/google/callback"
-    # Where the callback sends the browser afterwards (and on failure, to /login).
+    # Callback дараа нь browser-ийг хаана илгээх вэ (амжилтгүй бол /login руу).
     web_base_url: str = "http://localhost:3000"
 
-    # --- cart and checkout ----------------------------------------------------------------
+    # --- сагс ба checkout -----------------------------------------------------------------
     cart_max_quantity: int = 10
     cart_max_lines: int = 50
     cart_guest_ttl_days: int = 30
     currency: str = "USD"
     shipping_standard_cents: int = 499
     shipping_express_cents: int = 1299
-    # Standard shipping is free from this subtotal.
+    # Энэ дүнгээс дээш бол энгийн хүргэлт үнэгүй.
     free_shipping_threshold_cents: int = 10_000
-    # Stock is reserved when an order is created; unpaid orders give it back after this long.
+    # Захиалга үүсэхэд нөөцийг нөөцөлнэ; төлөгдөөгүй захиалга энэ хугацааны дараа нөөцийг буцаана.
     order_pending_ttl_minutes: int = 30
     order_sweep_interval_seconds: int = 60
-    # At or below this many units a product counts as low on stock (dashboard and inventory).
+    # Энэ тоо ба түүнээс доош ширхэгтэй бараа "нөөц багатай" гэж тооцогдоно (dashboard, inventory).
     low_stock_threshold: int = 5
 
-    # --- payments -------------------------------------------------------------------------
-    # `stripe`: real PaymentIntents (test keys in dev). `offline`: an in-process gateway so the
-    # whole flow can be exercised without Stripe keys; refused in prod.
+    # --- төлбөр ---------------------------------------------------------------------------
+    # `stripe`: жинхэнэ PaymentIntent (dev-д test key). `offline`: Stripe key-гүйгээр бүх урсгалыг
+    # турших процесс доторх gateway; prod хүлээн авахгүй.
     payments_mode: Literal["stripe", "offline"] = "stripe"
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
 
-    # Where the Kaggle dataset lives (styles.csv + images/). Only ingestion needs it.
+    # Kaggle dataset-ийн байрлал (styles.csv + images/). Зөвхөн ingestion-д хэрэгтэй.
     dataset_dir: Path | None = None
 
-    # Upper bound for a single dependency probe in /readyz.
+    # /readyz дахь нэг dependency шалгалтын дээд хугацаа.
     readiness_timeout_seconds: float = 2.0
-    # Cache and rate-limit calls give up quickly: a slow Redis must not slow searches down.
+    # Cache, rate-limit дуудлага хурдан бууж өгнө: удаан Redis хайлтыг удаашруулж болохгүй.
     redis_op_timeout_seconds: float = 0.5
 
     @property

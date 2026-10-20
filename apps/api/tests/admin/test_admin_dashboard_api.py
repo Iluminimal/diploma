@@ -1,4 +1,4 @@
-"""The dashboard's figures, the customer list and suspending customers, and stock counts."""
+"""Dashboard-ийн тоо, хэрэглэгчдийн жагсаалт, хэрэглэгчийг түдгэлзүүлэх, нөөцийн тоо."""
 
 from pathlib import Path
 from typing import Any
@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 
 ADMIN = "/api/v1/admin"
 SHIP = {"carrier": "DHL", "tracking_number": "JD0146"}
-ORDER_TOTAL = 2699  # two items at 1100 plus 499 standard shipping
+ORDER_TOTAL = 2699  # 1100-ийн хоёр бараа ба 499 энгийн хүргэлт
 
 
 async def stats(api: Api, admin: Shopper, **params: Any) -> dict[str, Any]:
@@ -44,7 +44,7 @@ async def backdate_payment(engine: AsyncEngine, number: str, days: int) -> None:
         )
 
 
-# --- access -----------------------------------------------------------------------------------
+# --- Хандалт ----------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -72,7 +72,7 @@ async def test_only_administrators_get_in(
         assert (anonymous.status_code, as_customer.status_code) == (401, 403)
 
 
-# --- the dashboard ----------------------------------------------------------------------------
+# --- Самбар --------------------------------------------------------------------------------
 
 
 async def test_the_figures_count_what_was_paid_and_leave_out_refunds(
@@ -186,7 +186,7 @@ async def test_low_and_out_of_stock_products_are_listed_for_the_dashboard(
         assert body["out_of_stock_total"] >= 1
 
 
-# --- stock ------------------------------------------------------------------------------------
+# --- Нөөц -------------------------------------------------------------------------------------
 
 
 async def test_stock_is_set_and_shows_in_the_product_and_the_stock_filters(
@@ -243,7 +243,7 @@ async def test_stock_of_an_unknown_product_is_a_404(
         assert response.status_code == 404
 
 
-# --- customers --------------------------------------------------------------------------------
+# --- Хэрэглэгчид ------------------------------------------------------------------------------
 
 
 async def test_customers_show_what_they_have_bought(
@@ -269,7 +269,7 @@ async def test_customers_show_what_they_have_bought(
         assert rows[buyer.user_id]["total_spent_cents"] == ORDER_TOTAL
         assert rows[browser.user_id]["orders_count"] == 0
         assert rows[browser.user_id]["last_order_at"] is None
-        # A refunded order was bought, but the money is not spent.
+        # Буцаан олгосон захиалга худалдан авагдсан ч мөнгө нь зарцуулагдаагүй.
         assert rows[refunded_buyer.user_id]["orders_count"] == 1
         assert rows[refunded_buyer.user_id]["total_spent_cents"] == 0
         assert number

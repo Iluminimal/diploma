@@ -1,9 +1,9 @@
-"""The short-lived cookie that carries a sign-in across the trip to Google and back.
+"""Google руу явж буцах нэвтрэлтийн үед ашиглах богино настай cookie.
 
-It holds what only this browser may present when it returns: the `state` (so a callback that
-someone else started is refused), the `nonce` (bound into the ID token), the PKCE verifier and
-where to go afterwards. It is a signed token, so nothing is stored on the server, and httpOnly,
-so scripts never see the verifier.
+Буцаж ирэхдээ зөвхөн энэ browser үзүүлж чадах зүйлийг агуулна: `state` (өөр хүний эхлүүлсэн
+callback-ийг татгалзахын тулд), `nonce` (ID token-д уяагдана), PKCE verifier, мөн дараа очих
+газар. Гарын үсэгтэй token тул server дээр юу ч хадгалахгүй; httpOnly тул script verifier-ийг
+хэзээ ч харахгүй.
 """
 
 import base64
@@ -38,7 +38,7 @@ def new_flow(next_path: str) -> OAuthFlow:
 
 
 def code_challenge(verifier: str) -> str:
-    """PKCE S256: the base64url SHA-256 of the verifier, no padding."""
+    """PKCE S256: verifier-ийн SHA-256-г base64url болгосон, padding-гүй."""
     digest = hashlib.sha256(verifier.encode()).digest()
     return base64.urlsafe_b64encode(digest).decode().rstrip("=")
 
@@ -61,7 +61,7 @@ def sign_flow(flow: OAuthFlow, secret: str) -> str:
 
 
 def read_flow(token: str | None, secret: str) -> OAuthFlow | None:
-    """None for anything missing, forged, expired or of another kind."""
+    """Байхгүй, хуурамч, хугацаа дууссан, эсвэл өөр төрлийн token бол None."""
     if not token:
         return None
     try:
@@ -86,8 +86,8 @@ def states_match(expected: str, presented: str | None) -> bool:
 
 
 def safe_next(value: str | None) -> str:
-    """Where to go after signing in: only paths on this site, so `?next=//evil.example` can never
-    make the login an open redirect. Mirrors `safeNext` in the web app."""
+    """Нэвтэрсний дараах очих газар: зөвхөн энэ сайтын зам, ингэснээр `?next=//evil.example` нь
+    login-ийг open redirect болгож чадахгүй. Вэб апп дахь `safeNext`-тэй адил."""
     if (
         not value
         or len(value) > 500

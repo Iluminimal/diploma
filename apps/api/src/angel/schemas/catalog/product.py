@@ -30,15 +30,15 @@ class ProductOut(BaseModel):
     currency: str
     in_stock: bool
     image: ProductImage
-    # From the published reviews; no average until there is one.
+    # Нийтлэгдсэн сэтгэгдлүүдээс; сэтгэгдэл гарах хүртэл дундаж байхгүй.
     rating_average: float | None
     rating_count: int
 
 
 class FilterParams(BaseModel):
-    """Catalogue filters, shared by listing (query string), image search (form fields) and text
-    search (JSON). Repeat a parameter to allow several values: `?gender=Men&gender=Unisex`.
-    Prices are integer cents, like everywhere else in the API."""
+    """Catalogue-ийн filter-үүд, жагсаалт (query string), зургаар хайлт (form field), текстээр
+    хайлт (JSON) гурвын хооронд хуваалцдаг. Хэд хэдэн утга өгөхийн тулд параметрийг давтана:
+    `?gender=Men&gender=Unisex`. Үнэ нь бусад API шиг бүхэл cent-ээр."""
 
     gender: FilterValues = []
     master_category: FilterValues = []
@@ -69,11 +69,11 @@ class ProductListQuery(FilterParams):
     model_config = ConfigDict(extra="forbid")
 
     q: Annotated[str | None, Field(min_length=1, max_length=200)] = None
-    # Shopper-facing navigation (GET /catalog/nav): a department slug such as "men" and a node
-    # path such as "apparel/topwear/tshirts". Both narrow the other filters further.
+    # Худалдан авагчийн навигаци (GET /catalog/nav): "men" мэт department slug болон
+    # "apparel/topwear/tshirts" мэт зангилааны path. Хоёулаа бусад filter-ийг цаашид нарийсгана.
     department: Annotated[str | None, Field(min_length=1, max_length=40)] = None
     category: Annotated[str | None, Field(min_length=1, max_length=400)] = None
-    # Defaults to "relevance" when `q` is given, otherwise "newest".
+    # `q` өгөгдсөн бол "relevance", үгүй бол "newest" гэж үзнэ.
     sort: ProductSortKey | None = None
     page: Annotated[int, Field(ge=1, le=10_000)] = 1
     page_size: Annotated[int, Field(ge=1, le=60)] = 24

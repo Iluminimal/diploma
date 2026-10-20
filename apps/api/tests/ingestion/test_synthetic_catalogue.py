@@ -1,4 +1,4 @@
-"""The synthetic catalogue the end-to-end tests run on, and the fake-embedder switch."""
+"""End-to-end тестүүдийн ажилладаг синтетик каталог ба fake embedder-ийн сэлгүүр."""
 
 import io
 from pathlib import Path
@@ -59,7 +59,7 @@ async def test_seeding_is_repeatable_and_leaves_what_the_shop_changed_alone(
 async def test_a_product_photo_found_in_media_finds_that_product_first(
     api_factory: ApiFactory, db_engine: AsyncEngine, tmp_path: Path
 ) -> None:
-    """The e2e visual-search test uploads a product's own thumbnail: it must rank first."""
+    """E2E тест бараа өөрийнхөө thumbnail-ийг upload хийвэл эхэнд ранк хийгдэх ёстой."""
     storage = LocalStorage(tmp_path, "/media")
     embedder = FakeEmbedder(version="fake@e2e")
     await seed_catalogue(db_engine, storage, embedder, 20)

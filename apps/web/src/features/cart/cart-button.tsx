@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils";
 import { useBagPanel } from "./cart-ui-store";
 import { useCart } from "./use-cart";
 
-// Not in the first load: most visits never open the cart, and the panel drags a dialog library
-// with it. It is fetched the first time something opens it (this button, or "Add to cart").
+// Эхний ачаалалд оруулахгүй: ихэнх зочин cart нээдэггүй, самбар dialog library-г дагуулна.
+// Хамгийн анх нээгдэх үед (энэ товч эсвэл "Add to cart") татагдана.
 const BagPanel = dynamic(
   () => import("./bag-panel").then((m) => m.BagPanel),
   { ssr: false },
@@ -20,7 +20,7 @@ export function CartButton() {
   const { open, setOpen } = useBagPanel();
   const { data } = useCart();
   const pathname = usePathname();
-  // Another flyout opened under the bar (the search, a department menu), or the page changed.
+  // Bar-ын доор өөр flyout (search, department цэс) нээгдэх, эсвэл хуудас солигдоход Bag хаагдана.
   const closeBag = useCallback(() => setOpen(false), [setOpen]);
   useCloseOnOtherFlyout("bag", closeBag);
   useEffect(() => closeBag(), [pathname, closeBag]);
@@ -43,8 +43,8 @@ export function CartButton() {
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        {/* The icon box is the one the badge is placed against, as on apple.com: with items in it the
-            bag steps left to make room, further for two and three characters. */}
+        {/* Badge-ийг энэ icon хайрцагт байрлуулдаг, apple.com шиг: бараатай үед bag зүүн тийш зай
+            гаргана, хоёр, гурван тэмдэгтэд цаашаа. */}
         <span
           aria-hidden
           className={cn(
@@ -57,7 +57,7 @@ export function CartButton() {
           <BagGlyph />
           {count > 0 && (
             <span
-              // Remounts when the count changes, which replays the pop.
+              // Тоо өөрчлөгдөхөд дахин mount хийж, pop animation-ыг дахин тоглуулна.
               key={count}
               className="animate-pop bg-foreground text-background absolute bottom-[13px] left-[22px] block h-[1.3em] min-w-[1.3em] rounded-full text-center text-[10px] leading-[1.3] tracking-[-0.008em] tabular-nums md:bottom-[11px] md:left-[15px]"
               style={width > 1 ? { paddingInline: "0.325em" } : undefined}

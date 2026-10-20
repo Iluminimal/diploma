@@ -1,4 +1,4 @@
-"""Adding, changing, confirming and removing the phone number and email; forgot password."""
+"""Утас, имэйл нэмэх, солих, баталгаажуулах, устгах; нууц үгээ мартсан тохиолдол."""
 
 import re
 
@@ -47,7 +47,7 @@ async def scalar(api: Api, sql: str, **params: object) -> object:
         return (await connection.execute(text(sql), params)).scalar_one_or_none()
 
 
-# --- phone ----------------------------------------------------------------------------------
+# --- Утас -----------------------------------------------------------------------------------
 
 
 async def test_an_email_account_adds_a_phone_number_and_can_then_sign_in_with_it(
@@ -108,7 +108,7 @@ async def test_a_number_that_belongs_to_another_account_is_refused(
 
         assert response.status_code == 409
         assert response.json()["type"] == "urn:angel:problem:phone-taken"
-        assert len(sms.sent) == 1  # only the owner's own sign-in code
+        assert len(sms.sent) == 1  # зөвхөн эзэмшигчийн өөрийн нэвтрэх код очсон
 
 
 async def test_changing_the_phone_needs_the_code_sent_to_the_new_number(
@@ -126,7 +126,7 @@ async def test_changing_the_phone_needs_the_code_sent_to_the_new_number(
         bad = await shopper.client.post(
             PHONE_CONFIRM, json={"phone": new, "code": wrong}, headers=shopper.auth
         )
-        # The code belongs to the new number, not to some other one.
+        # Код нь шинэ дугаарынх болохоос өөр дугаарынх биш.
         elsewhere = await shopper.client.post(
             PHONE_CONFIRM, json={"phone": unique_phone(), "code": code}, headers=shopper.auth
         )
@@ -196,7 +196,7 @@ async def test_the_phone_can_be_removed_only_while_another_way_to_sign_in_remain
         assert (only_email.status_code, only_email.json()["type"]) == (409, LAST_METHOD)
 
 
-# --- email ----------------------------------------------------------------------------------
+# --- Имэйл ----------------------------------------------------------------------------------
 
 
 async def test_a_phone_account_adds_an_email_that_is_then_verified(api_factory: ApiFactory) -> None:
@@ -253,7 +253,7 @@ async def test_a_registered_email_is_confirmed_with_a_code(api_factory: ApiFacto
         assert mailer.sent[0].to == shopper.email
         assert confirmed.json()["email_verified"] is True
         assert again.status_code == 202
-        assert len(mailer.sent) == 1  # nothing more to send
+        assert len(mailer.sent) == 1  # өөр илгээх зүйл байхгүй
 
 
 async def test_removing_the_email_also_drops_the_password_that_needed_it(
@@ -278,7 +278,7 @@ async def test_removing_the_email_also_drops_the_password_that_needed_it(
         assert (body["email"], body["has_password"], body["phone"]) == (None, False, phone)
 
 
-# --- forgot password ------------------------------------------------------------------------
+# --- Нууц үгээ мартсан ----------------------------------------------------------------------
 
 
 async def test_a_forgotten_password_is_replaced_with_a_code_and_ends_other_logins(
@@ -335,7 +335,7 @@ async def test_forgot_password_answers_the_same_for_an_unknown_account(
 
         assert known.status_code == unknown.status_code == unknown_phone.status_code == 202
         assert known.content == unknown.content == unknown_phone.content
-        assert len(mailer.sent) == 1  # only the real account got a message
+        assert len(mailer.sent) == 1  # зөвхөн бодит хэрэглэгч мессеж авсан
         assert sms.sent == []
 
 

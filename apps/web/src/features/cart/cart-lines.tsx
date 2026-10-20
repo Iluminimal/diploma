@@ -21,7 +21,7 @@ import { useAddToCart, useCart, useRemoveItem, useSetQuantity } from "./use-cart
 
 type Props = {
   cart: Cart;
-  /** Called when a product link is followed (the Bag closes itself). */
+  /** Бүтээгдэхүүний холбоос дагахад дуудна (Bag өөрөө хаагдана). */
   onNavigate?: () => void;
   className?: string;
 };
@@ -43,7 +43,7 @@ export function CartLines({ cart, onNavigate, className }: Props) {
   );
 }
 
-/** "Removed Blue Kurta. Undo": for a few seconds after a line is taken out, in the cart itself. */
+/** "Removed Blue Kurta. Undo": мөрийг хасснаас хойш хэдэн секунд, cart дотроо. */
 export function UndoBar() {
   const removed = useBagPanel((state) => state.removed);
   const setRemoved = useBagPanel((state) => state.setRemoved);
@@ -57,7 +57,7 @@ export function UndoBar() {
   }, [removed, setRemoved]);
 
   if (!removed) return null;
-  // If the removal failed the line is back in the cart: there is nothing to undo.
+  // Хасалт амжилтгүй болбол мөр cart-даа буцсан тул буцаах зүйл байхгүй.
   if (cart?.lines.some((line) => line.product.id === removed.productId && line.size === removed.size)) return null;
   return (
     <div
@@ -89,14 +89,13 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
   const added = useBagPanel((state) => state.added);
   const { product } = line;
   const soldOut = line.issue === "out_of_stock";
-  // The line the shopper has just added glows once in the Bag.
+  // Дөнгөж нэмсэн мөр Bag-д нэг удаа гэрэлтэнэ.
   const isNew = added?.productId === product.id && added.size === line.size;
 
-  // The undo bar sits inside the cart (a toast would be outside the open Bag, out of reach of
-  // screen readers).
+  // Буцаах мөр cart дотор байна (toast нээлттэй Bag-ийн гадна байх тул screen reader хүрэхгүй).
   const setRemoved = useBagPanel((state) => state.setRemoved);
   const removeWithUndo = () => {
-    // Set now, not when the server answers: by then this row is gone and its callbacks never run.
+    // Одоо тавина, сервер хариулахад биш: тэр үед энэ мөр алга болсон, callback-ууд ажиллахгүй.
     setRemoved({ productId: product.id, size: line.size, quantity: line.quantity, name: product.name });
     remove.mutate(line.id);
   };
@@ -120,7 +119,7 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
 
   return (
     <m.li
-      // Lines slide closed when removed instead of snapping away.
+      // Хасагдах мөр огцом алга болохын оронд гулсан хаагдана.
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}

@@ -24,15 +24,15 @@ from angel.storage import Storage
 
 @dataclass(frozen=True)
 class CartOwner:
-    """Whose cart a request is about: a signed-in user, or a guest identified by the raw value
-    of the `lk_cart` cookie (only its hash is stored)."""
+    """Хүсэлт хэний cart-ын тухай вэ: нэвтэрсэн хэрэглэгч, эсвэл `lk_cart` cookie-ийн түүхий
+    утгаар тодорхойлогдох зочин (зөвхөн hash нь хадгалагдана)."""
 
     user_id: int | None = None
     guest_token: str | None = None
 
 
 def sellable_quantity(product: Product | None, max_per_line: int) -> int:
-    """How many of a product can be bought right now: stock, bounded by the per-line limit."""
+    """Бараанаас яг одоо хэдийг авч болох вэ: нөөц, мөрийн хязгаараар хязгаарлагдсан."""
     if product is None or not product.is_active:
         return 0
     return max(0, min(product.stock_quantity, max_per_line))
@@ -63,7 +63,7 @@ def build_cart(
     lines: list[CartLineOut] = []
     for item in cart.items if cart else []:
         product = products.get(item.product_id)
-        if product is None:  # cannot happen (FK), but a cart must never fail to render
+        if product is None:  # боломжгүй (FK), гэхдээ cart хэзээ ч харагдахдаа унах ёсгүй
             continue
         ceiling = sellable_quantity(product, settings.cart_max_quantity)
         issue: CartIssue | None = None
@@ -100,12 +100,12 @@ async def merge_guest_cart(
     guest_token: str | None,
     max_per_line: int,
 ) -> None:
-    """Fold the guest's cart into the user's, then delete it. Runs inside the caller's
-    transaction (login and registration), so a failed login never half-merges a cart.
+    """Зочны cart-ыг хэрэглэгчийнхтэй нэгтгээд устгана. Дуудагчийн transaction дотор (нэвтрэх,
+    бүртгүүлэх) ажиллана, тиймээс амжилтгүй нэвтрэлт cart-ыг хагас нэгтгэхгүй.
 
-    The same product and size adds up, but never beyond the stock or the per-line limit. A line
-    that is already over a limit (stock dropped since) is kept as it is, not silently reduced:
-    the cart shows the problem and the shopper decides."""
+    Ижил бараа, размер нийлнэ, гэхдээ нөөц эсвэл мөрийн хязгаараас хэзээ ч хэтрэхгүй.
+    Хязгаараас аль хэдийн хэтэрсэн мөр (нөөц хасагдсан) өөрчлөгдөхгүй, чимээгүй багасгахгүй:
+    cart асуудлыг харууулж, худалдан авагч шийднэ."""
     if not guest_token:
         return
     guest = await carts.find(guest_token_hash=hash_token(guest_token))
@@ -115,7 +115,7 @@ async def merge_guest_cart(
     stock = await products.get_many([item.product_id for item in guest.items])
     current = {(item.product_id, item.size): item.quantity for item in user_cart.items}
     for item in guest.items:
-        # A sold-out line is still carried over (quantity 1): the cart flags it.
+        # Дууссан мөр ч шилжинэ (тоо 1): cart үүнийг тэмдэглэнэ.
         ceiling = max(1, sellable_quantity(stock.get(item.product_id), max_per_line))
         already = current.get((item.product_id, item.size), 0)
         merged = max(already, min(already + item.quantity, ceiling))
@@ -205,7 +205,7 @@ class CartService:
                 await self._carts.clear(cart.id)
             return await self._render(await self._find(owner))
 
-    # --- helpers --------------------------------------------------------------------------
+    # --- туслах функцууд ---
 
     async def _get_or_create(self, owner: CartOwner) -> Cart:
         if owner.user_id is not None:

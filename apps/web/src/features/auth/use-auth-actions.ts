@@ -9,7 +9,10 @@ import { endSession } from "./session";
 type Credentials = { email: string; password: string };
 type Registration = Credentials & { full_name: string };
 
-/** Sign in / up / out. Each also refreshes the account data, since the guest cart is merged on the server. */
+/**
+ * Нэвтрэх / бүртгүүлэх / гарах. Тус бүр бүртгэлийн өгөгдлийг шинэчилнэ, учир нь зочны cart сервер
+ * дээр нийлдэг.
+ */
 export function useAuthActions() {
   const queryClient = useQueryClient();
   const refreshAccountData = () =>
@@ -27,15 +30,17 @@ export function useAuthActions() {
       useAuth.getState().setSession(session);
       await refreshAccountData();
     },
-    /** Send a one-time code to a phone number or an email address (signing in and up are one step). */
+    /**
+     * Утасны дугаар эсвэл имэйл рүү нэг удаагийн код илгээнэ (нэвтрэх, бүртгүүлэх нь нэг алхам).
+     */
     async requestCode(destination: string) {
       await call(
         browserApi().POST("/api/v1/auth/otp/request", { body: { destination } }),
       );
     },
     /**
-     * Sign in (or up) with the code. `onNewUser` runs before the session is stored, so a page can
-     * decide to ask for a name first instead of leaving at once. Resolves to `is_new_user`.
+     * Кодоор нэвтэрнэ (эсвэл бүртгүүлнэ). `onNewUser` нь session хадгалахаас өмнө ажиллана,
+     * ингэснээр хуудас шууд гарахын оронд эхлээд нэр асууж болно. `is_new_user`-ийг буцаана.
      */
     async signInWithCode(
       body: { destination: string; code: string },
@@ -72,7 +77,7 @@ export function useAuthActions() {
       try {
         await endSession();
       } finally {
-        // The next visitor of this browser must not see this account's cart or orders.
+        // Энэ browser-ийн дараагийн зочин энэ бүртгэлийн cart, захиалгыг харж болохгүй.
         for (const queryKey of accountKeys)
           queryClient.removeQueries({ queryKey });
         await queryClient.invalidateQueries({ queryKey: ["cart"] });

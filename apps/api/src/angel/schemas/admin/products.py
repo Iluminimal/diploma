@@ -10,14 +10,15 @@ Gender = Literal["Men", "Women", "Boys", "Girls", "Unisex"]
 Season = Literal["Fall", "Spring", "Summer", "Winter"]
 ProductName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=300)]
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
-# $100,000.00: far above anything the store sells, low enough to catch a slipped decimal point.
+# $100,000.00: дэлгүүрийн зардаг ямар ч зүйлээс хамаагүй их, харин таслалын алдааг барих хэмжээний
+# бага.
 PriceCents = Annotated[int, Field(ge=0, le=10_000_000, description="Price in cents.")]
 StockQuantity = Annotated[int, Field(ge=0, le=100_000)]
 Year = Annotated[int, Field(ge=1900, le=2100)]
 
 
 class AdminCategory(BaseModel):
-    """An article type; products are filed under one of these."""
+    """Article type; бараа эдгээрийн аль нэгэнд ангилагдана."""
 
     id: int
     path: str
@@ -39,15 +40,15 @@ class ProductFields(BaseModel):
 
 
 class AdminProductCreateForm(ProductFields):
-    """Multipart form: the product photo plus its details. The photo becomes the thumbnails and
-    the embedding that visual search ranks against."""
+    """Multipart form: барааны зураг болон дэлгэрэнгүй мэдээлэл. Зургаас thumbnail-ууд болон
+    visual search-ийн эрэмбэлэх embedding гарна."""
 
     file: Annotated[UploadFile, Field(description="JPEG, PNG or WebP, up to 8 MB")]
     is_active: bool = True
 
 
 class AdminProductUpdate(BaseModel):
-    """Only the fields that are sent change. Sending `null` clears an optional field."""
+    """Зөвхөн илгээсэн талбарууд өөрчлөгдөнө. `null` илгээвэл заавал биш талбар цэвэрлэгдэнэ."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -76,7 +77,7 @@ class AdminProductListQuery(BaseModel):
 
     q: Annotated[str | None, Field(min_length=1, max_length=200, description="Name or id")] = None
     status: AdminStatusFilter = "all"
-    # "low": on the shelf but running out (see LOW_STOCK_THRESHOLD); "out": none left.
+    # "low": нөөцөд байгаа ч дуусах дөхсөн (LOW_STOCK_THRESHOLD-ийг үз); "out": огт үлдээгүй.
     stock: AdminStockFilter = "all"
     category_id: int | None = None
     sort: AdminSortKey = "newest"
@@ -101,7 +102,7 @@ class AdminProductOut(BaseModel):
     currency: str
     stock_quantity: int
     is_active: bool
-    # NULL for products created in the admin area; the dataset id for imported ones.
+    # Admin хэсэгт үүсгэсэн бараанд NULL; импортолсонд dataset-ийн id.
     source_id: int | None
     embedding_version: str
     image: ProductImage

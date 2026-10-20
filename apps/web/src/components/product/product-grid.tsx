@@ -23,11 +23,11 @@ export function ProductGrid({
     <ul className={cn(GRID, columns === 4 && "lg:grid-cols-4", className)}>
       {products.map((product, i) => {
         const card = <ProductCard product={product} priority={i < priorityCount} headingLevel={headingLevel} />;
-        // The first row is what the page is measured on: it is there from the first paint.
+        // Эхний мөр хуудасны хэмжигдэх хэсэг: анхны paint-аас эхлэн байна.
         if (i < priorityCount) return <li key={product.id}>{card}</li>;
         return (
-          // Rows below the first screen are not rendered (or their photos fetched) until needed,
-          // and rise into place as they arrive.
+          // Эхний дэлгэцээс доорх мөрүүд хэрэгтэй болтол render хийгдэхгүй (зургийг нь ч татахгүй),
+          // орж ирэхдээ дээш гарна.
           <Reveal
             key={product.id}
             as="li"

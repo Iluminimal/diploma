@@ -16,11 +16,11 @@ export function AccountNav() {
   const pathname = usePathname();
   const nav = useRef<HTMLElement>(null);
   const [thumb, setThumb] = useState<Thumb | null>(null);
-  // The first placement is instant; later ones (after a click) slide.
+  // Анхны байрлуулалт шууд хийгдэнэ; дараагийнх (товшсоны дараа) гулсана.
   const [placed, setPlaced] = useState(false);
 
-  // The pill behind the current tab is one element that slides between tabs. Measured from the
-  // link itself, so it follows whatever the tabs' widths are.
+  // Идэвхтэй tab-ын ард байх pill нь tab хооронд гулсдаг ганц элемент. Холбоосоос өөрөөс нь хэмждэг
+  // тул tab-ын өргөн хэд ч байсан таарна.
   useLayoutEffect(() => {
     const active = nav.current?.querySelector<HTMLElement>("[aria-current=page]");
     if (!active) return setThumb(null);
@@ -51,7 +51,7 @@ export function AccountNav() {
             className={cn(
               "focus-visible:ring-ring/60 relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors outline-none focus-visible:ring-3",
               current
-                ? // Until the sliding pill is measured the link paints its own background.
+                ? // Гулсах pill хэмжигдтэл холбоос өөрийн дэвсгэрээ зурна.
                   cn("text-background", !thumb && "bg-foreground")
                 : "text-muted-foreground hover:bg-muted hover:text-foreground",
             )}
@@ -74,8 +74,8 @@ export function AccountGreeting() {
 }
 
 /**
- * Sign out, on phones only: the account dropdown that holds it on a computer is not in the phone's
- * bars (the bottom bar's last tab goes straight to the profile).
+ * Зөвхөн утсан дээр гарах товч: компьютер дээрх account dropdown утасны bar-д байхгүй (доод bar-ын
+ * сүүлийн tab шууд профайл руу орно).
  */
 export function AccountSignOut() {
   const leave = useSignOut();

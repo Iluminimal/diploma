@@ -6,8 +6,8 @@ const ROW =
   "focus-visible:ring-ring/60 flex items-center justify-between gap-3 rounded-lg py-1.5 pr-2 text-[0.9375rem] outline-none transition-colors duration-200 focus-visible:ring-3";
 
 /**
- * Amazon-style drill-down in the sidebar: the way back up, then the next level down with counts.
- * Plain links, so it costs no script and every step is a crawlable page.
+ * Sidebar дахь Amazon маягийн drill-down: дээш буцах зам, дараа нь тоотой дараагийн түвшин. Энгийн
+ * холбоос тул script шаардахгүй, алхам бүр crawl хийгдэх хуудас.
  */
 export function CategoryTree({ trail }: { trail: CategoryTrail }) {
   const { department, nodes } = trail;

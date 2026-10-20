@@ -1,21 +1,21 @@
-"""Retrieval quality of the visual search: mean average precision (mAP) and friends.
+"""Visual search-ийн хайлтын чанар: mean average precision (mAP) болон бусад metric.
 
-    cd apps/api && uv run python ../../scripts/evaluate_map.py              # whole catalogue, exact
-    cd apps/api && uv run python ../../scripts/evaluate_map.py --mode image  # the real upload path
+    cd apps/api && uv run python ../../scripts/evaluate_map.py              # бүх каталог, exact
+    cd apps/api && uv run python ../../scripts/evaluate_map.py --mode image  # жинхэнэ upload зам
 
-A query is a catalogue product; the search returns its nearest products (the query itself is left
-out, or it would always be rank 1). A returned product is *relevant* when it has the same labels as
-the query, at three levels of strictness taken from the Kaggle dataset's own labels:
+Query нь каталогийн нэг бүтээгдэхүүн; хайлт түүнд хамгийн ойр бүтээгдэхүүнүүдийг буцаана (query
+өөрийгөө оруулахгүй, эс бөгөөс үргэлж rank 1 болно). Буцсан бүтээгдэхүүн query-тэй ижил label-тэй
+бол *relevant*. Kaggle dataset-ийн label-аас гурван түвшний хатуу байдал авна:
 
-    category   same article type                       (Tshirts, Heels, ...)
-    colour     same article type and base colour
-    strict     same article type, base colour and gender
+    category   ижил article type                       (Tshirts, Heels, ...)
+    colour     ижил article type, base colour
+    strict     ижил article type, base colour, gender
 
-`--mode stored` (default) uses the embeddings already in the database as queries and finds the exact
-nearest products with a matrix product, so with `--n 0` (all products) the numbers are exact and
-need no sampling. `--mode image` sends each query's original photo through the real pipeline
-(decode, preprocess, FashionCLIP) and the real HNSW search, as an upload would (`--phone` first
-shrinks the photo to a phone's 1280 px). A random ranking is reported as the baseline.
+`--mode stored` (default) нь database-д байгаа embedding-ийг query болгож, матрицын үржвэрээр яг
+ойр бүтээгдэхүүнийг олно. Тиймээс `--n 0` (бүх бүтээгдэхүүн) үед тоо нарийн, түүвэрлэх хэрэггүй.
+`--mode image` нь query бүрийн эх зургийг жинхэнэ pipeline (decode, preprocess, FashionCLIP) болон
+жинхэнэ HNSW хайлтаар upload шиг явуулна (`--phone` нь эхлээд зургийг утасны 1280 px болгоно).
+Baseline болгож санамсаргүй эрэмбийг мөн харуулна.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ LEVELS = ("category", "colour", "strict")
 
 
 class Catalogue:
-    """Every product's id, labels and embedding, read once."""
+    """Бүтээгдэхүүн бүрийн id, label, embedding. Нэг л удаа уншина."""
 
     def __init__(self, rows: list[Any]) -> None:
         self.ids = np.array([r.id for r in rows], dtype=np.int64)
@@ -81,7 +81,7 @@ async def load_catalogue(engine: Any) -> Catalogue:
 def exact_neighbours(
     catalogue: Catalogue, queries: NDArray[np.int64], k: int, batch: int = 1000
 ) -> NDArray[np.int64]:
-    """Rows of the k nearest products (cosine) to each query row, itself excluded."""
+    """Query мөр бүрт хамгийн ойр k бүтээгдэхүүний мөр (cosine), өөрийг нь оруулахгүй."""
     ranked = np.empty((len(queries), k), dtype=np.int64)
     for start in range(0, len(queries), batch):
         rows = queries[start : start + batch]
@@ -96,7 +96,7 @@ def exact_neighbours(
 def random_neighbours(
     catalogue: Catalogue, queries: NDArray[np.int64], k: int, seed: int
 ) -> NDArray[np.int64]:
-    """The baseline: k products drawn at random (never the query)."""
+    """Baseline: санамсаргүй сонгосон k бүтээгдэхүүн (query-г хэзээ ч оруулахгүй)."""
     rng = np.random.default_rng(seed)
     size = len(catalogue.ids)
     draws = rng.integers(0, size - 1, size=(len(queries), k))
@@ -106,7 +106,7 @@ def random_neighbours(
 async def hnsw_neighbours(
     catalogue: Catalogue, args: argparse.Namespace, queries: NDArray[np.int64]
 ) -> NDArray[np.int64]:
-    """The real path: the query's own photo, through the pipeline, and the real HNSW search."""
+    """Жинхэнэ зам: query-ийн өөрийн зураг pipeline-аар орж, жинхэнэ HNSW хайлт хийгдэнэ."""
     settings = get_settings()
     dataset = (args.dataset or settings.dataset_dir or Path()).expanduser()
     engine = create_engine(settings.database_url)
@@ -145,7 +145,7 @@ async def hnsw_neighbours(
 def score(
     catalogue: Catalogue, queries: NDArray[np.int64], ranked: NDArray[np.int64], ks: list[int]
 ) -> dict[str, dict[str, dict[str, float | int]]]:
-    """Every metric at every K, for each relevance level."""
+    """Relevance түвшин бүрийн, K бүрийн бүх metric."""
     results: dict[str, dict[str, dict[str, float | int]]] = {}
     for level in LEVELS:
         codes = catalogue.codes[level]

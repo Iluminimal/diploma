@@ -1,4 +1,4 @@
-"""Test doubles and image helpers for the ML/ingestion tests."""
+"""ML/ingestion тестүүдийн test double ба зургийн туслахууд."""
 
 import re
 from pathlib import Path
@@ -14,7 +14,7 @@ from angel.payments.offline import OfflineGateway
 
 
 def write_jpeg(path: Path, seed: int, size: tuple[int, int] = (300, 400)) -> None:
-    """A distinct, deterministic JPEG per seed (random noise blocks on a coloured field)."""
+    """Seed бүрт өөр, тогтмол JPEG (өнгөт дэвсгэр дээрх санамсаргүй блокууд)."""
     rng = np.random.default_rng(seed)
     pixels = rng.integers(0, 256, size=(size[1], size[0], 3), dtype=np.uint8)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -22,8 +22,9 @@ def write_jpeg(path: Path, seed: int, size: tuple[int, int] = (300, 400)) -> Non
 
 
 class RecordingGateway(OfflineGateway):
-    """The offline gateway plus a record of what the shop asked of it, and switches to make it
-    fail the way a real provider does."""
+    """Offline gateway ба shop түүнээс юу хүссэнийг бичдэг бүртгэл; жинхэнэ provider-ийн адил
+    алдаа гаргах сэлгүүртэй.
+    """
 
     def __init__(self, webhook_secret: str = "") -> None:
         super().__init__(webhook_secret)
@@ -33,7 +34,7 @@ class RecordingGateway(OfflineGateway):
         self.fail_create = False
         self.fail_cancel = False
         self.fail_refund = False
-        # What cancel_intent reports: "succeeded" means the shopper paid in the meantime.
+        # cancel_intent юу буцаахыг заана: "succeeded" бол худалдан авагч завсарт төлсөн гэсэн үг.
         self.cancel_outcome: Literal["canceled", "succeeded"] = "canceled"
 
     async def create_intent(
@@ -71,7 +72,7 @@ class RecordingMailer:
 
 
 class RecordingSmsSender:
-    """Keeps every text message so a test can read the one-time code from it."""
+    """Бүх мессежийг хадгалдаг тул тест нэг удаагийн кодыг эндээс уншина."""
 
     def __init__(self) -> None:
         self.sent: list[Sms] = []

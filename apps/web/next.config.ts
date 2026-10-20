@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
-// The browser calls the API through this site (same origin), so the httpOnly refresh cookie is
-// first-party. Server-side code reaches the API directly via API_INTERNAL_URL.
+// Browser API-г энэ сайтаар (нэг origin) дамжуулан дууддаг тул httpOnly refresh cookie нь сайтынх нь өөрийнх болно.
+// Server талын код API-д API_INTERNAL_URL-ээр шууд хүрнэ.
 const apiOrigin =
   process.env.API_INTERNAL_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
@@ -16,8 +16,7 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       { source: "/api/v1/:path*", destination: `${apiOrigin}/api/v1/:path*` },
-      // Product photos are served from this origin too: the browser reuses the connection the
-      // page arrived on instead of opening (and warming up) a second one to the API.
+      // Барааны зургийг мөн энэ origin-оос үйлчилнэ: browser API руу хоёр дахь холболт нээхгүй, хуудас ирсэн холболтоо ашиглана.
       { source: "/media/:path*", destination: `${apiOrigin}/media/:path*` },
     ];
   },

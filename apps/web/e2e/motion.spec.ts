@@ -13,7 +13,7 @@ test("adding to the cart confirms on the button, flies to the cart and shows the
   const product = pickProduct(products, testInfo.workerIndex);
   await openProduct(page, product);
 
-  // No size yet: the sizes shake and the message slides in.
+  // Хэмжээ сонгоогүй: хэмжээнүүд сэгсэрч, мессеж гулсан орно.
   await page.getByRole("button", { name: "Add to Bag", exact: true }).click();
   await expect(page.getByText("Please select a size.")).toBeVisible();
   await expect(page.locator("fieldset").locator("xpath=..")).toHaveClass(/animate-shake/);
@@ -25,7 +25,7 @@ test("adding to the cart confirms on the button, flies to the cart and shows the
   const drawer = page.getByRole("dialog");
   await expect(drawer.getByText(product.name)).toBeVisible();
   await expect(drawer.getByRole("progressbar", { name: "Progress to free shipping" })).toBeVisible();
-  // The flying copy of the photo is gone once it has landed.
+  // Нисэж буй зургийн хуулбар газардсаны дараа алга болно.
   await expect(page.locator('body > img[aria-hidden="true"]')).toHaveCount(0);
 });
 
@@ -109,7 +109,7 @@ test.describe("on a phone", () => {
     await expect(bar.getByRole("button", { name: "Search", exact: true })).toBeVisible();
     await expect(bar.getByRole("button", { name: /^Bag/ })).toBeVisible();
     await expect(bar.getByRole("button", { name: "Open menu" })).toBeVisible();
-    // The account is in the Bag page on a phone, not in the bar.
+    // Утсан дээр account нь Bag хуудсанд байдаг, bar-д биш.
     await expect(bar.getByRole("button", { name: /^Account/ })).toBeHidden();
     await expect(bar.getByRole("link", { name: "Sign in" })).toBeHidden();
     await expect(page.getByRole("navigation", { name: "Quick navigation" })).toHaveCount(0);
@@ -126,8 +126,8 @@ test.describe("on a phone", () => {
     await expect(menu).toBeVisible();
     const box = await menu.boundingBox();
     expect(box!.width).toBeGreaterThanOrEqual(389);
-    expect(box!.y + box!.height).toBeGreaterThanOrEqual(843); // down to the bottom of the screen
-    // As on apple.com: the logo, search and bag fade out and only the X is left in the bar.
+    expect(box!.y + box!.height).toBeGreaterThanOrEqual(843); // дэлгэцийн доод хүртэл
+    // apple.com шиг: logo, хайлт, bag бүдгэрч, bar-д зөвхөн X үлдэнэ.
     const bar = page.getByRole("banner");
     await expect(bar.getByRole("link", { name: "Angel" })).toBeHidden();
     await expect(bar.getByRole("button", { name: "Search", exact: true })).toBeHidden();
@@ -164,7 +164,7 @@ test.describe("on a phone", () => {
     const bag = page.getByRole("dialog", { name: /^Bag/ });
     await expect(bag).toBeVisible();
     await expect(bag.getByRole("link", { name: "Angel" })).toHaveCount(0);
-    // The account lives here on a phone, as under apple.com's Bag.
+    // Утсан дээр account нь apple.com-ийн Bag-ийн адил энд байна.
     await expect(bag.getByRole("navigation", { name: "My profile" }).getByRole("link", { name: "Sign in" })).toBeVisible();
   });
 
@@ -185,7 +185,7 @@ test("with reduced motion everything still works, without the flight", async ({ 
 
   await addToCartFromProductPage(page, product);
 
-  // No flight: the Bag is there at once, and nothing is left flying over the page.
+  // Нисэлт байхгүй: Bag шууд гарч, хуудас дээр юу ч нисэн үлдэхгүй.
   await expect(page.getByRole("dialog").getByText(product.name)).toBeVisible();
   await expect(page.locator('body > img[aria-hidden="true"]')).toHaveCount(0);
 });

@@ -28,7 +28,7 @@ MAX_NAME_LENGTH = 120
 
 
 class OAuthFailure(Exception):
-    """A sign-in that must end on the login page. `reason` is the `?error=` code shown there."""
+    """Нэвтрэх хуудсанд дуусах ёстой нэвтрэлт. `reason` нь тэнд харагдах `?error=` код."""
 
     def __init__(self, reason: str) -> None:
         super().__init__(reason)
@@ -108,7 +108,7 @@ class OAuthService:
                     self._session.add(user)
                 issued = await self._auth.start_session(user, guest_cart_token)
         except IntegrityError:
-            # Lost a race with the same person signing in twice at once: they can simply retry.
+            # Нэг хүн хоёр удаа зэрэг нэвтэрч хожигдсон: дахин оролдоход хангалттай.
             log.warning("oauth_race")
             raise OAuthFailure("google_failed") from None
         if created:
@@ -119,7 +119,7 @@ class OAuthService:
                     body=f"Hi {user.full_name}, your account is ready.",
                 )
             )
-        # An administrator who did not ask for a particular page lands in the admin area.
+        # Тодорхой хуудас хүсээгүй administrator admin хэсэгт очно.
         next_path = "/admin" if user.is_admin and flow.next_path == "/" else flow.next_path
         return SignInResult(issued, next_path)
 
@@ -137,9 +137,9 @@ class OAuthService:
             )
             created = True
         else:
-            # Google vouches for this email, and nobody has verified the address of an account
-            # made with a password, so whoever registered it first might not be its owner. Drop
-            # the password: the owner now signs in with Google, a squatter cannot.
+            # Google энэ email-ийг баталгаажуулдаг, харин нууц үгээр үүссэн бүртгэлийн хаягийг хэн ч
+            # баталгаажуулаагүй тул түрүүлж бүртгүүлсэн хүн эзэн биш байж болно. Нууц үгийг устга:
+            # эзэн одоо Google-ээр нэвтэрнэ, булаан авагч нэвтэрч чадахгүй.
             if user.password_hash is not None:
                 log.info("oauth_password_removed", user_id=user.id)
                 user.password_hash = None

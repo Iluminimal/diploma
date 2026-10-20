@@ -2,7 +2,7 @@ from starlette.datastructures import MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 _HEADERS = {
-    # The API returns JSON and images: never let a browser guess a different type.
+    # API нь JSON, зураг буцаадаг: browser-т өөр төрөл таах эрх хэзээ ч өгөхгүй.
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
 }

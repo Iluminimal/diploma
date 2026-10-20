@@ -1,4 +1,4 @@
-"""Helpers for the account, cart and checkout tests."""
+"""Account, сагс, checkout тестүүдийн туслахууд."""
 
 import hashlib
 import hmac
@@ -42,7 +42,7 @@ class Shopper:
 async def another_client(
     api: Api, *, refresh_token: str | None = None
 ) -> AsyncIterator[AsyncClient]:
-    """A second browser: same app, its own cookie jar (optionally holding a refresh cookie)."""
+    """Хоёр дахь browser: ижил апп, өөрийн cookie jar (refresh cookie байж болно)."""
     transport = ASGITransport(app=api.app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         if refresh_token:
@@ -111,7 +111,7 @@ async def stock_of(engine: AsyncEngine, product_id: int) -> int:
 
 
 async def set_role(engine: AsyncEngine, user_id: int, role: str) -> None:
-    """Promote or demote straight in the database, as `make create-admin` would."""
+    """`make create-admin`-ий адил database дээр шууд админ болгох эсвэл болиулах."""
     async with engine.begin() as connection:
         await connection.execute(
             text("UPDATE users SET role = :role WHERE id = :id"), {"role": role, "id": user_id}
@@ -122,7 +122,7 @@ async def set_product(engine: AsyncEngine, product_id: int, **columns: Any) -> N
     assignments = ", ".join(f"{name} = :{name}" for name in columns)
     async with engine.begin() as connection:
         await connection.execute(
-            text(f"UPDATE products SET {assignments} WHERE id = :id"),  # noqa: S608 - test-only names
+            text(f"UPDATE products SET {assignments} WHERE id = :id"),  # noqa: S608 - тестийн нэр
             {**columns, "id": product_id},
         )
 
@@ -138,8 +138,9 @@ def webhook(
     message: str | None = None,
     event_type: str | None = None,
 ) -> tuple[bytes, dict[str, str]]:
-    """A Stripe-shaped webhook body with a valid signature header. `kind` is succeeded, failed or
-    canceled; `event_type` overrides the full Stripe event name."""
+    """Stripe хэлбэрийн webhook body, хүчинтэй signature header-тэй. `kind` нь succeeded, failed
+    эсвэл canceled; `event_type` Stripe event-ийн бүтэн нэрийг дарна.
+    """
     stripe_name = {"failed": "payment_failed"}.get(kind, kind)
     intent: dict[str, Any] = {
         "id": intent_id,

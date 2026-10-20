@@ -1,5 +1,5 @@
-"""Read-only aggregates for the admin dashboard and the customer list. No new tables: it is all
-sums and counts over orders, order items, products and users."""
+"""Admin dashboard болон хэрэглэгчийн жагсаалтын зөвхөн унших aggregate-ууд. Шинэ хүснэгт
+байхгүй: бүгд захиалга, захиалгын мөр, бараа, хэрэглэгчийн дээрх sum, count."""
 
 from datetime import date, datetime
 from typing import Any
@@ -11,12 +11,12 @@ from sqlalchemy.orm import selectinload
 from angel.models import Order, OrderItem, Product, User
 from angel.repositories.patterns import contains_pattern
 
-# Money that stands: paid, and not (yet) returned. By the day it was paid.
+# Баталгаатай орлого: төлөгдсөн, буцаагдаагүй. Төлөгдсөн өдрөөр бүлэглэнэ.
 REVENUE_STATUSES = ("paid", "shipped", "delivered")
-# Orders a customer actually bought (a refunded one was bought too).
+# Худалдан авсан захиалгууд (буцаан олголттой захиалга ч худалдан авсанд тооцогдоно).
 BOUGHT_STATUSES = (*REVENUE_STATUSES, "refunded")
 DELETED_EMAIL = "%@deleted.invalid"
-# Phone-only accounts have no email: NOT LIKE alone would be NULL for them and drop them.
+# Зөвхөн утасны бүртгэлд email байхгүй: NOT LIKE ганцаараа NULL өгч, тэднийг хасчихна.
 _NOT_DELETED = or_(User.email.is_(None), User.email.not_like(DELETED_EMAIL))
 
 
@@ -96,8 +96,8 @@ class DashboardRepository:
         return [(r[0], r[1], r[2], r[3], int(r[4]), int(r[5])) for r in rows.all()]
 
     async def low_stock(self, threshold: int, limit: int) -> tuple[list[Product], int, int]:
-        """On-sale products running low (not yet out), the number of those, and how many on-sale
-        products have none left at all."""
+        """Нөөц нь багассан (гэхдээ дуусаагүй) зарагдаж буй бараа, тэдгээрийн тоо, мөн нөөц нь
+        бүр дууссан барааны тоо."""
         on_sale = Product.is_active.is_(True)
         low = Product.stock_quantity.between(1, threshold)
         products = await self._session.execute(
@@ -120,7 +120,7 @@ class DashboardRepository:
         ).scalar_one()
         return list(products.scalars()), int(low_total), int(out_total)
 
-    # --- customers ----------------------------------------------------------------------------
+    # --- хэрэглэгчид ---
 
     def _customers(self) -> Select[Any]:
         agg = (

@@ -9,8 +9,8 @@ import { useAuth } from "@/features/auth/auth-store";
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
- * Keeps the admin screens away from everyone but administrators. This is for the visitor's
- * benefit (a clear message instead of failing requests): the API is what actually refuses.
+ * Admin дэлгэцийг админаас бусдад хаана. Энэ нь зочинд ойлгомжтой мессеж үзүүлэхийн тулд (хүсэлт
+ * алдаа өгөхийн оронд); бодитоор татгалздаг нь API.
  */
 export function AdminGate({ children }: { children: ReactNode }) {
   const status = useAuth((state) => state.status);

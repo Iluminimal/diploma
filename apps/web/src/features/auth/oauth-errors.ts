@@ -5,9 +5,12 @@ const MESSAGES: Record<string, string> = {
   account_disabled: "This account has been disabled.",
 };
 
-/** What to tell someone sent back to the login page by `?error=`. Unknown codes say nothing: a link must not put its own words on our page. */
+/**
+ * `?error=`-оор нэвтрэх хуудас руу буцаагдсан хүнд юу хэлэх. Үл мэдэгдэх код юу ч хэлэхгүй: холбоос
+ * бидний хуудсанд өөрийн үгээ оруулж болохгүй.
+ */
 export function oauthErrorMessage(raw: string | string[] | undefined): string | null {
   const code = Array.isArray(raw) ? raw[0] : raw;
-  // Own properties only: `?error=constructor` must not find Object.prototype's.
+  // Зөвхөн өөрийн property: `?error=constructor` нь Object.prototype-ийнхыг олох ёсгүй.
   return code && Object.hasOwn(MESSAGES, code) ? MESSAGES[code]! : null;
 }

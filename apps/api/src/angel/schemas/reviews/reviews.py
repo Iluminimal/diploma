@@ -28,7 +28,7 @@ class ReviewCreate(BaseModel):
 
 
 class ReviewUpdate(BaseModel):
-    """Only the fields sent change; `null` clears the title or the text."""
+    """Зөвхөн илгээсэн талбарууд өөрчлөгдөнө; `null` нь гарчиг эсвэл текстийг цэвэрлэнэ."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -59,7 +59,7 @@ class ReviewOut(BaseModel):
     rating: int
     title: str | None
     body: str | None
-    # First name and the last name's initial ("Ada L."): a person, but not findable.
+    # Нэр болон овгийн эхний үсэг ("Ada L."): хүн гэдэг нь мэдэгдэнэ, гэхдээ хайж олох боломжгүй.
     author: str
     status: ReviewStatus
     created_at: datetime
@@ -73,7 +73,7 @@ class RatingSummary(BaseModel):
 
 
 class ReviewViewer(BaseModel):
-    """What the signed-in visitor can do on this product."""
+    """Нэвтэрсэн зочин энэ бараа дээр юу хийж чадах вэ."""
 
     purchased: bool = Field(description="Has a paid order containing the product")
     review: ReviewOut | None = Field(description="Their own review, even one that is hidden")
@@ -90,7 +90,7 @@ class ReviewPage(BaseModel):
     viewer: ReviewViewer | None = Field(description="Only when a signed-in visitor asks")
 
 
-# --- administrators ---------------------------------------------------------------------------
+# --- administrator-ууд ---
 
 AdminReviewStatusFilter = Literal["all", "published", "hidden"]
 
@@ -117,7 +117,7 @@ class AdminReviewProduct(BaseModel):
 class AdminReviewOut(ReviewOut):
     product: AdminReviewProduct
     user_id: int
-    # None for an author who signed up with a phone number.
+    # Утасны дугаараар бүртгүүлсэн зохиогчид None.
     author_email: str | None
     author_phone: str | None
 

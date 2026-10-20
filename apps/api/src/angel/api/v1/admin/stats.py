@@ -1,4 +1,4 @@
-"""The dashboard's figures."""
+"""Dashboard-ын үзүүлэлтүүд."""
 
 from typing import Annotated
 
@@ -12,7 +12,7 @@ from angel.schemas.admin.dashboard import (
     StatsQuery,
 )
 
-# Rate limit first so guessing tokens against the admin area is throttled; then the role check.
+# Rate limit, role шалгалт нь __init__.py дахь router-т нэг дор хийгддэг (эхлээд rate limit).
 
 router = APIRouter()
 

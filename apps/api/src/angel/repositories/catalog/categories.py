@@ -20,7 +20,7 @@ class FilterOptions:
 
 @dataclass(frozen=True)
 class LeafCategory:
-    """An article type with the names of its ancestors, which products copy."""
+    """Article type болон түүний өвөг ангиллын нэрс (бараа эдгээрийг хуулж авдаг)."""
 
     id: int
     path: str
@@ -40,7 +40,7 @@ class CategoryRepository:
         return list(result.scalars())
 
     async def leaf_categories(self, category_id: int | None = None) -> list[LeafCategory]:
-        """Every article type (level 3), active products or not, for the admin's category picker."""
+        """Бүх article type (түвшин 3), идэвхтэй бараагүй ч. Admin-ы ангилал сонгогчид."""
         sub = aliased(Category)
         master = aliased(Category)
         statement = (
@@ -56,7 +56,7 @@ class CategoryRepository:
         return [LeafCategory(*row) for row in rows.all()]
 
     async def gender_category_counts(self) -> list[tuple[str, int, int]]:
-        """(gender, article type id, active products), one row per populated combination."""
+        """(gender, article type id, идэвхтэй барааны тоо): бараатай хослол бүрт нэг мөр."""
         rows = await self._session.execute(
             select(Product.gender, Product.category_id, func.count(Product.id))
             .where(Product.is_active.is_(True), Product.category_id.is_not(None))
@@ -65,8 +65,8 @@ class CategoryRepository:
         return [(gender, category_id, n) for gender, category_id, n in rows.all()]
 
     async def searchable_article_types(self) -> list[Category]:
-        """Leaf categories that have active products (what search can return), the one with
-        the most products first. A few article types (e.g. "Shorts") exist under several parents."""
+        """Идэвхтэй бараатай leaf ангиллууд (search буцааж чадах зүйл), барааны тоо ихтэй нь
+        түрүүлж. Зарим article type (жишээ нь "Shorts") хэд хэдэн эцэг ангилалд байдаг."""
         result = await self._session.execute(
             select(Category)
             .join(Product, Product.category_id == Category.id)

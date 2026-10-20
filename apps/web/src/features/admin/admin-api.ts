@@ -46,7 +46,7 @@ export type CustomerListParams = {
 export type ReviewListParams = {
   q: string;
   status: (typeof REVIEW_STATUSES)[number];
-  /** 0 means any number of stars. */
+  /** 0 бол од хязгаарлахгүй гэсэн үг. */
   rating: number;
   page: number;
 };
@@ -78,7 +78,10 @@ export const fetchAdminProduct = (id: number) =>
 
 export const fetchAdminCategories = () => call(browserApi().GET("/api/v1/admin/categories"));
 
-/** The upload endpoints take multipart forms; the browser sets the boundary, so no content type here. */
+/**
+ * Upload endpoint-ууд multipart form авдаг; boundary-г browser өөрөө тохируулдаг тул content type
+ * энд заахгүй.
+ */
 const multipart = (form: FormData) => ({
   body: form as unknown as never,
   bodySerializer: (body: unknown) => body as FormData,

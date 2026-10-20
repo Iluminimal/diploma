@@ -22,7 +22,7 @@ from angel.db.base import Base
 from angel.models.mixins import TimestampMixin
 
 EMBEDDING_DIMENSION = 512
-# Tuned against exact search on the full catalogue (see docs/ml-pipeline.md).
+# Бүтэн каталог дээрх яг (exact) хайлттай харьцуулж тохируулсан (docs/ml-pipeline.md-ийг хар).
 HNSW_M = 16
 HNSW_EF_CONSTRUCTION = 128
 
@@ -52,14 +52,13 @@ class Product(TimestampMixin, Base):
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
-    # Id in the source dataset: the idempotency key for ingestion. NULL for products created
-    # later through the admin area.
+    # Эх dataset дахь id: ingestion-ий idempotency key. Дараа нь админаар үүсгэсэн бараанд NULL.
     source_id: Mapped[int | None] = mapped_column(Integer, unique=True)
     slug: Mapped[str] = mapped_column(String(200), unique=True)
     name: Mapped[str] = mapped_column(String(300))
 
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id", ondelete="RESTRICT"))
-    # Denormalized on purpose: filtered vector search must not need a join.
+    # Зориуд denormalize: шүүлттэй vector хайлт join шаардаж болохгүй.
     gender: Mapped[str] = mapped_column(String(20))
     master_category: Mapped[str] = mapped_column(String(100))
     sub_category: Mapped[str] = mapped_column(String(100))
@@ -69,21 +68,21 @@ class Product(TimestampMixin, Base):
     usage: Mapped[str | None] = mapped_column(String(50))
     year: Mapped[int | None] = mapped_column(SmallInteger)
 
-    # Money as integer minor units (cents): no float rounding, matches Stripe.
+    # Мөнгийг бүхэл минор нэгжээр (cent): float-ийн дугуйруулалтгүй, Stripe-тай таарна.
     price_cents: Mapped[int] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(3), server_default="USD")
     stock_quantity: Mapped[int] = mapped_column(Integer, server_default="0")
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
-    # Kept in step with the published reviews, in the same transaction that changes them.
+    # Нийтлэгдсэн review-тэй нийцүүлж, тэдгээрийг өөрчилдөг transaction-д нь хамт шинэчилнэ.
     rating_average: Mapped[Decimal] = mapped_column(Numeric(3, 2), server_default="0")
     rating_count: Mapped[int] = mapped_column(Integer, server_default="0")
 
-    # Storage key prefix: thumbnails live at `{image_key}_{400|800}.webp`.
+    # Storage key-ийн угтвар: thumbnail нь `{image_key}_{400|800}.webp` дээр байна.
     image_key: Mapped[str] = mapped_column(String(200))
     blur_data_url: Mapped[str | None] = mapped_column(Text)
 
     embedding: Mapped[list[float]] = mapped_column(Vector(EMBEDDING_DIMENSION))
-    # Model revision + preprocessing that produced `embedding` (EmbeddingService.version).
+    # `embedding`-ийг гаргасан model revision + урьдчилсан боловсруулалт (EmbeddingService.version).
     embedding_version: Mapped[str] = mapped_column(String(100))
 
     search_vector: Mapped[str] = mapped_column(

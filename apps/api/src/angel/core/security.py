@@ -1,11 +1,11 @@
-"""Password hashing, access tokens and opaque tokens.
+"""Нууц үгийн hash, access token, opaque token.
 
-* Passwords: argon2id (argon2-cffi defaults, RFC 9106 "low memory" profile). `needs_rehash`
-  lets login upgrade old hashes when the parameters are raised.
-* Access tokens: short-lived HS256 JWTs. Only `sub`, `jti`, `iat`, `exp` and `typ` are in them:
-  everything else is read from the database, so a role or email change is never stale.
-* Refresh and guest-cart tokens: 256 random bits, only their SHA-256 is stored. They are
-  high-entropy, so a fast hash is enough (a slow one would only add login latency).
+* Нууц үг: argon2id (argon2-cffi default, RFC 9106 "low memory" profile). Параметр нэмэгдэхэд
+  `needs_rehash` нь login үед хуучин hash-ийг шинэчлэх боломж өгнө.
+* Access token: богино настай HS256 JWT. Зөвхөн `sub`, `jti`, `iat`, `exp`, `typ` агуулна: бусдыг
+  database-аас уншдаг тул role, email өөрчлөлт хэзээ ч хоцрохгүй.
+* Refresh, guest-cart token: 256 бит санамсаргүй, зөвхөн SHA-256-г нь хадгална. Entropy өндөр тул
+  хурдан hash хангалттай (удаан hash нь зөвхөн login-ийг удаашруулна).
 """
 
 import hashlib
@@ -18,12 +18,12 @@ import jwt
 from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
 
-ACCESS_TOKEN_TYPE = "access"  # noqa: S105 - a claim value, not a secret
+ACCESS_TOKEN_TYPE = "access"  # noqa: S105 - claim-ийн утга, нууц биш
 JWT_ALGORITHM = "HS256"
 
 _hasher = PasswordHasher()
-# Verified against when the email is unknown, so "no such user" costs as much as "wrong
-# password" and response time does not reveal which emails are registered.
+# Email үл мэдэгдэх үед үүнийг шалгана: "ийм хэрэглэгч алга" нь "нууц үг буруу"-тай адил хугацаа
+# зарцуулж, хариуны хугацаанаас бүртгэлтэй email-ийг таашгүй болгоно.
 _DUMMY_HASH = _hasher.hash(secrets.token_urlsafe(16))
 
 
@@ -43,7 +43,7 @@ def needs_rehash(password_hash: str) -> bool:
 
 
 def burn_password_check(password: str) -> None:
-    """Spend the same time as a real verification (unknown email)."""
+    """Жинхэнэ шалгалттай адил хугацаа зарцуулна (email үл мэдэгдэх үед)."""
     verify_password(password, _DUMMY_HASH)
 
 
@@ -76,12 +76,12 @@ def create_access_token(
 
 
 def decode_access_token(token: str, secret: str) -> int | None:
-    """The user id, or None for anything that is not a valid, unexpired access token."""
+    """Хэрэглэгчийн id; хүчинтэй, хугацаа дуусаагүй access token биш бол None."""
     try:
         claims = jwt.decode(
             token,
             secret,
-            algorithms=[JWT_ALGORITHM],  # never trust the header's `alg`
+            algorithms=[JWT_ALGORITHM],  # header-ийн `alg`-д хэзээ ч бүү итгэ
             options={"require": ["sub", "exp", "iat", "typ"]},
         )
         if claims["typ"] != ACCESS_TOKEN_TYPE:

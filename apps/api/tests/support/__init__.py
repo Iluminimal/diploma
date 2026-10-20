@@ -1,1 +1,1 @@
-"""Shared test helpers: building a catalogue, shoppers and orders, fakes."""
+"""Тестийн нийтлэг туслахууд: каталог, худалдан авагч, захиалга, fake-үүд."""

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PhotoSearchTrigger } from "@/features/search/photo-search-trigger";
 import { Tile } from "./tile";
 
-/** The dark tile: the one thing that makes this shop different, and the button to try it. */
+/** Хар tile: энэ дэлгүүрийг ялгах цорын ганц зүйл ба туршиж үзэх товч. */
 export function PhotoTile() {
   return (
     <Tile

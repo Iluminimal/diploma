@@ -12,21 +12,21 @@ import {
 import { ADMIN_EMAIL, ADMIN_PASSWORD } from "./support/env";
 
 type Fixtures = {
-  /** A fresh customer (API session). */
+  /** Шинэ хэрэглэгч (API session). */
   account: Account;
-  /** A browser page already signed in as `account`. */
+  /** Аль хэдийн `account`-аар нэвтэрсэн browser хуудас. */
   shopperPage: Page;
-  /** A browser page signed in as the e2e administrator. */
+  /** e2e админаар нэвтэрсэн browser хуудас. */
   adminPage: Page;
-  /** In-stock apparel for this test (a different product per worker, to avoid stock collisions). */
+  /** Энэ тестэд зориулсан нөөцтэй хувцас (worker бүрт өөр бараа, ингэснээр нөөц мөргөлдөхгүй). */
   products: CatalogProduct[];
   api: APIRequestContext;
-  /** Makes a product that belongs to this test and is withdrawn when it ends. */
+  /** Энэ тестийн өөрийн бараа үүсгэнэ; тест дуусахад хасагдана. */
   newProduct: (options?: { name?: string; stock?: number }) => Promise<{ id: number; name: string }>;
 };
 
-// Playwright hands each fixture a callback that is conventionally called `use`; it is named
-// `provide` here because the React hooks lint rule takes any `use(...)` call for a hook.
+// Playwright fixture бүрт `use` гэж нэрлэдэг callback өгдөг. Энд `provide` гэж нэрлэсэн, учир нь
+// React hook-ийн lint дүрэм `use(...)` дуудлага бүрийг hook гэж үздэг.
 export const test = base.extend<Fixtures>({
   api: async ({ playwright }, provide) => {
     const context = await playwright.request.newContext();

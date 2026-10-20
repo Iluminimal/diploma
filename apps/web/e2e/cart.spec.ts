@@ -43,7 +43,7 @@ test("quantities can be changed on the cart page, and stop at the stock on hand"
     await increase.click();
     await page.waitForTimeout(150);
   }
-  await expect(increase).toBeDisabled(); // the stock limit (or the per-line limit) was reached
+  await expect(increase).toBeDisabled(); // нөөцийн хязгаар (эсвэл мөр бүрийн хязгаар) хүрсэн
 
   const remove = page.locator("main").getByRole("button", { name: new RegExp(`Remove ${product.name}`) });
   await remove.click();
@@ -61,8 +61,8 @@ test("the guest's cart survives a reload", async ({ page, products }, testInfo) 
 
 test("signing in merges the guest's cart into the account's", async ({ page, account, api, products }, testInfo) => {
   const [mine, theirs] = [pickProduct(products, testInfo.workerIndex + 3), pickProduct(products, testInfo.workerIndex + 4)];
-  await addToCart(api, account, theirs.id); // already in the account's cart
-  await addToCartFromProductPage(page, mine); // added as a guest
+  await addToCart(api, account, theirs.id); // account-ын сагсанд аль хэдийн байгаа
+  await addToCartFromProductPage(page, mine); // зочноор нэмсэн
 
   await page.goto("/login?next=/cart");
   await signInThroughTheForm(page, account.email, account.password);

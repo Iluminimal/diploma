@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og";
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
-/** The favicon: Angel's mark (a halo over an A) in white on black. */
+/** Favicon: Angel-ийн тэмдэг (A үсгийн дээрх halo), хар дэвсгэр дээр цагаан. */
 export default function Icon() {
   return new ImageResponse(
     (

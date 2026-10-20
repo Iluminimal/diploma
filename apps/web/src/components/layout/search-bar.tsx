@@ -15,7 +15,7 @@ import { firstImage, useImageInput } from "@/features/search/use-image-input";
 import { useDebounced } from "@/lib/use-debounced";
 import { cn } from "@/lib/utils";
 
-// The picker (and the dialog library behind it) is fetched the first time someone asks for it.
+// Сонгогч (ба ард нь dialog сан) хэн нэгэн анх хүсэхэд ачаалагдана.
 const PhotoSearchDialog = dynamic(() => import("@/features/search/photo-search-dialog").then((m) => m.PhotoSearchDialog), {
   ssr: false,
 });
@@ -40,11 +40,14 @@ const searchHref = (q: string) => `/products?q=${encodeURIComponent(q)}`;
 
 type Props = {
   className?: string;
-  /** `bar`: a compact field with a dropdown. `overlay`: the large field inside the header's search panel, results inline. */
+  /**
+   * `bar`: dropdown-той авсаархан талбар. `overlay`: header-ийн хайлтын panel доторх том талбар, үр
+   * дүн нь шууд доор.
+   */
   variant?: "bar" | "overlay";
-  /** Called after the person chose where to go (the overlay closes itself). */
+  /** Хүн хаашаа явахаа сонгосны дараа дуудагдана (overlay өөрөө хаагдана). */
   onNavigate?: () => void;
-  /** Shown under the field in the overlay while nothing has been typed. */
+  /** Overlay-д юу ч бичээгүй байхад талбарын доор харагдана. */
   quickLinks?: ReactNode;
 };
 
@@ -109,7 +112,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
   const hasProducts = options.some((o) => o.type === "product");
 
   useEffect(() => {
-    // The overlay is opened to type in it.
+    // Overlay нь бичихийн тулд нээгдсэн.
     if (overlay) inputRef.current?.focus();
   }, [overlay]);
 
@@ -158,7 +161,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
   function onPaste(event: ClipboardEvent) {
     const file = firstImage(event.clipboardData.files);
     if (!file) return;
-    // Handled here: the page-wide paste listener (home page) must not take the same photo twice.
+    // Энд зохицуулна: хуудас даяарх paste listener (нүүр хуудас) нэг зургийг хоёр удаа авах ёсгүй.
     event.preventDefault();
     event.stopPropagation();
     void searchWithPhoto(file);
@@ -224,8 +227,8 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           onPaste={onPaste}
           onKeyDown={(e) => {
             if (e.key === "Escape") {
-              // Only dismiss the suggestions: a search field would otherwise clear itself, and
-              // a highlighted suggestion that is no longer shown must not be what Enter opens.
+              // Зөвхөн санал болголтыг хаана: хайлтын талбар өөрөө цэвэрлэгдэж, мөн харагдахаа
+              // больсон идэвхжсэн санал болголт Enter-ээр нээгдэх ёсгүй.
               if (showList) e.preventDefault();
               setOpen(false);
               setActive(-1);
@@ -290,7 +293,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
               <li
                 key={option.key}
                 role="presentation"
-                // Suggestions that appear as you type rise in, a hair apart.
+                // Бичих үед гарах санал болголтууд бага зэрэг хоцорч дээш гарна.
                 className="animate-in fade-in slide-in-from-top-1 fill-mode-backwards duration-200"
                 style={{ animationDelay: `${Math.min(i, 6) * 28}ms` }}
               >

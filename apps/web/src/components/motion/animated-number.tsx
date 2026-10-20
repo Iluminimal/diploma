@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { EASE_OUT_EXPO } from "./easing";
 
-/** The cubic-bezier of `EASE_OUT_EXPO`, solved for t by a few Newton steps. */
+/** `EASE_OUT_EXPO`-ийн cubic-bezier, t-г Newton-ы цөөн алхмаар бодсон. */
 function easeOut(progress: number): number {
   const [x1, y1, x2, y2] = EASE_OUT_EXPO;
   const bezier = (a: number, b: number, t: number) => 3 * a * (1 - t) ** 2 * t + 3 * b * (1 - t) * t ** 2 + t ** 3;
@@ -23,10 +23,10 @@ const reducedMotion = () =>
   window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /**
- * A number that counts to its new value instead of jumping: a subtotal when an item is added, a
- * quantity, a result count. The first render shows the value as is (nothing to animate from, and
- * no mismatch with the server), and so does anyone who asked for reduced motion. It is plain text,
- * not a live region, so a screen reader reads the figure when it reaches it, not every step.
+ * Шууд үсрэхийн оронд шинэ утга руугаа тоологддог тоо: бараа нэмэхэд subtotal, тоо ширхэг, үр
+ * дүнгийн тоо. Эхний render утгыг шууд харуулна (animation эхлэх зүйл байхгүй, server-тэй
+ * зөрөхгүй), reduced motion хүссэн хүнд ч мөн адил. Энгийн текст, live region биш: screen reader
+ * алхам бүрийг биш, тоо хүрсэн үед нь уншина.
  */
 export function AnimatedNumber({
   value,
@@ -62,7 +62,7 @@ export function AnimatedNumber({
     return () => cancelAnimationFrame(frame);
   }, [value, duration, instant]);
 
-  // Reduced motion shows the value itself; otherwise the last frame of the count (which ends on it).
+  // Reduced motion утгыг шууд харуулна; үгүй бол тоололтын сүүлийн frame (утгандаа дуусна).
   const display = instant ? value : shown;
   return <span className={className}>{format(Math.round(display))}</span>;
 }

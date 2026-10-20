@@ -6,10 +6,10 @@ import type { ReactNode } from "react";
 const loadFeatures = () => import("./features").then((module) => module.default);
 
 /**
- * The animation engine, for the few places that need real orchestration (a cart line that slides
- * shut when removed). Scroll reveals, the hero and the header are CSS and never load it: wrap
- * only what animates, and the engine is fetched only when that part of the page is shown.
- * `reducedMotion="user"` makes transform animations honour the visitor's operating-system setting.
+ * Жинхэнэ зохицуулалт хэрэгтэй цөөн газрын animation engine (устгахад гулсаж хаагддаг сагсны мөр).
+ * Scroll reveal, hero, header нь CSS бөгөөд үүнийг хэзээ ч ачаалдаггүй: зөвхөн animation хийдэг
+ * хэсгийг ороо, ингэснээр хуудасны тэр хэсэг харагдах үед л engine татагдана.
+ * `reducedMotion="user"` нь transform animation-ыг үйлдлийн системийн тохиргоог дагуулна.
  */
 export function MotionProvider({ children }: { children: ReactNode }) {
   return (

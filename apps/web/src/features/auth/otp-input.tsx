@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 const LENGTH = 6;
 
 /**
- * Six boxes for a one-time code. Typing moves ahead, Backspace steps back, a pasted (or
- * autofilled) code spreads over the boxes, and `onComplete` fires when the last digit lands.
- * `invalid` shakes the boxes once; the shake is a CSS animation and stops for reduced motion.
+ * Нэг удаагийн кодын зургаан нүд. Бичихэд урагшилна, Backspace хойш буцна, буулгасан (эсвэл
+ * автоматаар бөглөсөн) код нүднүүдэд тархана, сүүлийн орон ормогц `onComplete` дуудагдана.
+ * `invalid` нүднүүдийг нэг удаа сэгсэрнэ; сэгсрэх нь CSS animation бөгөөд reduced motion үед
+ * зогсоно.
  */
 export function OtpInput({
   value,

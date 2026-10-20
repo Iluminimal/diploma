@@ -6,7 +6,7 @@ type Props = {
   page: number;
   pages: number;
   total: number;
-  /** URL of another page of the same list. */
+  /** Нэг жагсаалтын өөр хуудасны URL. */
   hrefFor: (page: number) => string;
 };
 

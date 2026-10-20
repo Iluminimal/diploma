@@ -18,9 +18,9 @@ CATEGORIES = [
     category(12, 2, 2, "Belts", "accessories/belts"),
     category(13, 3, 2, "Shoes", "footwear/shoes"),
     category(20, 10, 3, "Tshirts", "apparel/topwear/tshirts"),
-    category(21, 10, 3, "Dresses", "apparel/topwear/dresses"),  # misfiled duplicate
+    category(21, 10, 3, "Dresses", "apparel/topwear/dresses"),  # буруу ангилсан давхардал
     category(22, 11, 3, "Dresses", "apparel/dress/dresses"),
-    category(23, 12, 3, "Tshirts", "accessories/belts/tshirts"),  # misfiled, other master
+    category(23, 12, 3, "Tshirts", "accessories/belts/tshirts"),  # буруу ангилсан, өөр master
     category(24, 13, 3, "Casual Shoes", "footwear/shoes/casual-shoes"),
     category(25, 12, 3, "Belts", "accessories/belts/belts"),
 ]
@@ -64,7 +64,7 @@ def test_counts_follow_the_department_genders_and_never_double_count() -> None:
     women = department(snapshot, "women")
     men = department(snapshot, "men")
     kids = department(snapshot, "kids")
-    # Women = Women + Unisex; the misfiled dresses (21) and Men's misfiled t-shirt (23) merge in.
+    # Women = Women + Unisex; буруу ангилсан dresses (21), Men-ийн t-shirt (23) нийлнэ.
     assert women.product_count == 6 + 2 + 8 + 2
     assert men.product_count == 10 + 2 + 1 + 5 + 3
     assert kids.product_count == 4

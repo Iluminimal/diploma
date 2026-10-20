@@ -1,7 +1,7 @@
-"""Deterministic synthetic prices and stock. The dataset has neither.
+"""Тогтмол (deterministic) synthetic үнэ, нөөц. Dataset-д аль нь ч байдаггүй.
 
-Each product's values depend only on (seed, source_id, category), never on row order or on
-which subset is being ingested, so a `--limit` run and the full run agree.
+Бүтээгдэхүүн бүрийн утга зөвхөн (seed, source_id, category)-оос хамаарна; мөрийн дараалал,
+ingest хийж буй дэд олонлогоос хамаарахгүй. Тиймээс `--limit` ажил болон бүтэн ажил ижил гарна.
 """
 
 import hashlib
@@ -11,7 +11,7 @@ import random
 CURRENCY = "USD"
 DEFAULT_SEED = 20240607
 
-# Typical price in whole dollars, most specific match first: article type, sub category, master.
+# Ердийн үнэ (бүхэл доллар). Хамгийн тодорхой таарсныг эхэлж авна: article type, sub, master.
 _BY_ARTICLE_TYPE = {
     "Tshirts": 25, "Shirts": 42, "Jeans": 58, "Trousers": 52, "Shorts": 30, "Dresses": 65,
     "Tops": 30, "Jackets": 95, "Sweaters": 55, "Sweatshirts": 48, "Kurtas": 38, "Sarees": 85,
@@ -49,7 +49,7 @@ def generate_price_and_stock(
     master_category: str,
     seed: int = DEFAULT_SEED,
 ) -> tuple[int, int]:
-    """Return `(price_cents, stock_quantity)`. Prices end in .99; ~8% of products are sold out."""
+    """`(price_cents, stock_quantity)` буцаана. Үнэ .99-өөр төгсөнө; бүтээгдэхүүний ~8% дууссан."""
     digest = hashlib.sha256(f"{seed}:{source_id}".encode()).digest()
     rng = random.Random(int.from_bytes(digest[:8], "big"))  # noqa: S311 - not security related
     base = base_price_dollars(article_type, sub_category, master_category)

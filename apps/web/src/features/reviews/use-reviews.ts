@@ -17,8 +17,9 @@ import {
 } from "./reviews-api";
 
 /**
- * A product's reviews. What the server rendered is used as it is for a visitor looking at the
- * first page; a signed-in customer fetches their own copy, which says whether they can review.
+ * Бүтээгдэхүүний сэтгэгдэл. Server-ээс render хийснийг эхний хуудсыг харж буй зочинд тэр хэвээр нь
+ * ашиглана; нэвтэрсэн үйлчлүүлэгч өөрийн хуулбарыг татах бөгөөд тэр нь сэтгэгдэл бичиж болох
+ * эсэхийг хэлнэ.
  */
 export function useReviews(productId: number, sort: ReviewSort, page: number, initial: ReviewPage | null) {
   const status = useAuth((state) => state.status);
@@ -27,18 +28,21 @@ export function useReviews(productId: number, sort: ReviewSort, page: number, in
   return useQuery({
     queryKey: [...queryKeys.reviews(productId), { sort, page, signedIn }],
     queryFn: () => fetchReviews(productId, sort, page),
-    // Wait for the session to be known: a signed-in customer's answer differs from a visitor's.
+    // Session мэдэгдэхийг хүлээнэ: нэвтэрсэн үйлчлүүлэгчийн хариу зочнийхоос өөр.
     enabled: status !== "unknown",
     initialData: !signedIn && isFirstPage && initial ? initial : undefined,
-    // The server's copy is for the first paint and for crawlers (it may be up to a minute old,
-    // like the rest of the page): the browser fetches a current one straight away.
+    // Server-ийн хуулбар нь эхний paint болон crawler-д зориулагдсан (хуудасны бусад хэсэг шиг нэг
+    // минут хүртэл хуучин байж болно): browser шууд шинийг татна.
     initialDataUpdatedAt: 0,
     staleTime: 30_000,
     placeholderData: (previous) => previous,
   });
 }
 
-/** Changes to a review also change the product's average, so every cached view of its reviews is refetched. */
+/**
+ * Сэтгэгдлийн өөрчлөлт бүтээгдэхүүний дундажийг бас өөрчилдөг тул cache-д байгаа бүх харагдацыг
+ * дахин татна.
+ */
 function useReviewMutation<V, R>(productId: number, mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();
   return useMutation({

@@ -1,7 +1,7 @@
-/* Product page only (imported by product-gallery.tsx). */
+/* Зөвхөн бүтээгдэхүүний хуудас (product-gallery.tsx import хийнэ). */
 /*
- * Hover zoom on the product photo (mouse only): the image grows around the pointer, whose
- * position the gallery writes to --zx / --zy. Touch has the enlarge dialog and swipe instead.
+ * Бүтээгдэхүүний зургийн hover zoom (зөвхөн хулгана): зураг заагчийн орчимд томорно, заагчийн
+ * байрлалыг gallery --zx / --zy-д бичнэ. Touch төхөөрөмж оронд нь томруулах dialog, swipe ашиглана.
  */
 @media (hover: hover) and (pointer: fine) {
   .zoom-stage .zoom-image {
@@ -15,7 +15,10 @@
   }
 }
 
-/* Named for the card-to-page transition: the product card's photo morphs into this one (see .press-card in globals.css). */
+/*
+ * Картаас хуудас руу шилжих transition-д нэрлэсэн: картын зураг энэ зураг болж хувирна
+ * (globals.css дахь .press-card-г хар).
+ */
 .zoom-stage {
   view-transition-name: product-hero;
 }

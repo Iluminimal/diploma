@@ -1,7 +1,7 @@
-"""A small searchable catalogue with known content, for API tests.
+"""Агуулга нь мэдэгдэж буй жижиг хайх боломжтой каталог, API тестэд зориулсан.
 
-Every product has its own JPEG; its stored embedding is what the (fake) model produces for that
-exact image, so uploading the JPEG must return the product at rank 1.
+Бараа бүр өөрийн JPEG-тэй; хадгалсан embedding нь (fake) model тэр зурагт гаргадаг утга тул
+тэр JPEG-ийг upload хийвэл бараа 1-р байранд гарна.
 """
 
 import io
@@ -49,8 +49,9 @@ def make_jpeg(seed: int, size: tuple[int, int] = (120, 160)) -> bytes:
 async def seed_catalogue(
     engine: AsyncEngine, embedder: FakeEmbedder, count: int = 40
 ) -> list[Entry]:
-    """Products 1..count. Gender, type and colour cycle; price is 1000 + 100 * n except that
-    every 6th product shares one price (to exercise tie-breaking); every 5th is out of stock."""
+    """1..count бараа. Хүйс, төрөл, өнгө эргэлдэнэ; үнэ нь 1000 + 100 * n, харин 6 дахь бараа бүр
+    ижил үнэтэй (тэнцүү үед эрэмбийг шалгахад); 5 дахь бараа бүр нөөцгүй.
+    """
     jpegs: dict[int, bytes] = {}
     products: list[CleanProduct] = []
     vectors = []

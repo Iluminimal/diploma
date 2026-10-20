@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-/** The title of an admin screen (the page's one `h1`), with room for its main action. */
+/** Admin дэлгэцийн гарчиг (хуудасны цорын ганц `h1`), гол үйлдлийн товчид зай үлдээнэ. */
 export function AdminPageHeader({
   title,
   description,
@@ -9,7 +9,7 @@ export function AdminPageHeader({
 }: {
   title: string;
   description?: string;
-  /** A link above the title, e.g. "All orders". */
+  /** Гарчгийн дээрх холбоос, жишээ нь "All orders". */
   back?: ReactNode;
   actions?: ReactNode;
 }) {

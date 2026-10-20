@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { Reveal } from "@/components/motion/reveal";
 
 /**
- * Sign in and password pages, like the Apple Account page: one centred column with a large title, a
- * line of help and the form. Nothing else competes with it. A page whose heading changes as it goes
- * (the sign-in flow) leaves `title` out and draws its own.
+ * Нэвтрэх, нууц үгийн хуудсууд (Apple Account-ын хуудас шиг): том гарчигтай нэг багана, тусламжийн
+ * мөр, form. Өөр юу ч анхаарал сарниулахгүй. Гарчиг нь явцдаа солигддог хуудас (нэвтрэх flow)
+ * `title`-ыг орхиж, өөрөө зурна.
  */
 export function AuthShell({
   title,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-/** Counts down from `start()`'s seconds to zero; `remaining` is 0 when it is over. */
+/** `start()`-ын өгсөн секундээс тэг хүртэл тоолно; дуусахад `remaining` нь 0. */
 export function useCountdown() {
   const [endsAt, setEndsAt] = useState<number | null>(null);
   const [now, setNow] = useState(() => Date.now());

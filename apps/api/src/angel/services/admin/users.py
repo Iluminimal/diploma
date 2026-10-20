@@ -11,11 +11,10 @@ from angel.repositories.accounts.users import UserRepository
 async def provision_admin(
     session: AsyncSession, *, email: str, password: str | None, full_name: str
 ) -> tuple[User, bool]:
-    """Creates an administrator, or promotes the account that already has this email.
+    """Administrator үүсгэнэ, эсвэл энэ email-тэй бүртгэл аль хэдийн байвал түүнийг дэвшүүлнэ.
 
-    Returns the user and whether it was newly created. An existing account keeps its password
-    unless one is given. Registration can never produce an admin: this is the only way in.
-    """
+    Хэрэглэгч болон шинээр үүссэн эсэхийг буцаана. Одоо байгаа бүртгэл нууц үг өгөөгүй бол
+    хуучнаа хадгална. Бүртгүүлэх замаар admin хэзээ ч үүсэхгүй: энэ бол цорын ганц зам."""
     email = email.strip().lower()
     password_hash = await asyncio.to_thread(hash_password, password) if password else None
     async with session.begin():

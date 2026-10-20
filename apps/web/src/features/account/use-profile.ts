@@ -5,7 +5,7 @@ import { useAuth } from "@/features/auth/auth-store";
 import { browserApi, call } from "@/lib/api/browser";
 import { accountKeys } from "@/lib/query-keys";
 
-/** Rename the account. The header and the greeting read the user from the auth store. */
+/** Бүртгэлийн нэрийг солино. Header, мэндчилгээ хэрэглэгчийг auth store-оос уншдаг. */
 export function useUpdateName() {
   return useMutation({
     mutationFn: (full_name: string) => call(browserApi().PATCH("/api/v1/auth/me", { body: { full_name } })),
@@ -15,7 +15,10 @@ export function useUpdateName() {
 
 type PasswordChange = { current_password?: string; new_password: string };
 
-/** Set or change the password. The API ends every other login and hands this browser a new session. */
+/**
+ * Нууц үгийг тохируулах эсвэл солих. API бусад бүх нэвтрэлтийг дуусгаж, энэ browser-т шинэ session
+ * өгнө.
+ */
 export function useChangePassword() {
   return useMutation({
     mutationFn: (body: PasswordChange) => call(browserApi().PUT("/api/v1/auth/password", { body })),
@@ -25,7 +28,7 @@ export function useChangePassword() {
 
 type Deletion = { confirm: string; password?: string };
 
-/** Delete the account. The API clears the session cookies; here the in-memory state goes too. */
+/** Бүртгэлийг устгана. API session cookie-г цэвэрлэнэ; энд санах ойн state бас арилна. */
 export function useDeleteAccount() {
   const queryClient = useQueryClient();
   return useMutation({

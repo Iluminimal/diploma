@@ -1,18 +1,17 @@
-"""Checkout: turn the cart into a pending order that holds the stock, and start the payment.
+"""Checkout: cart-ыг нөөцийг барьдаг pending захиалга болгоод төлбөрийг эхлүүлнэ.
 
-The order is created in three short transactions with the payment provider call between them,
-never inside one (a transaction that waits on the network holds row locks for as long as the
-network takes):
+Захиалга гурван богино transaction-аар үүснэ, төлбөрийн provider-ийн дуудлага тэдгээрийн хооронд
+байх бөгөөд transaction дотор хэзээ ч биш (сүлжээ хүлээдэг transaction сүлжээ дуустал мөрийн
+түгжээг барина):
 
-1. look up the idempotency key and find the user's older unpaid orders;
-2. cancel those orders' payments at the provider (no transaction);
-3. one transaction: lock stock rows in id order, re-validate the cart, decrement stock, write the
-   order with its price snapshot;
-4. create the payment (no transaction), then store it.
+1. idempotency key-г хайж, хэрэглэгчийн хуучин төлөгдөөгүй захиалгуудыг олох;
+2. тэдгээр захиалгын төлбөрийг provider дээр цуцлах (transaction-гүй);
+3. нэг transaction: нөөцийн мөрүүдийг id-н дарааллаар түгжиж, cart-ыг дахин шалгаж, нөөцийг
+   хасаж, захиалгыг үнийн snapshot-тай бичих;
+4. төлбөр үүсгэж (transaction-гүй), дараа нь хадгалах.
 
-Replaying the request (same `Idempotency-Key`) skips ahead to whatever is missing, so a client
-that timed out at any point can simply repeat the request.
-"""
+Хүсэлтийг давтахад (ижил `Idempotency-Key`) дутуу үлдсэн алхамаас үргэлжилнэ, тиймээс аль ч
+үед timeout болсон client хүсэлтээ дахин илгээхэд хангалттай."""
 
 import contextlib
 import secrets
@@ -61,7 +60,7 @@ from angel.storage import Storage
 
 log = get_logger(__name__)
 
-# No 0/O/1/I: order numbers get read out over the phone.
+# 0/O/1/I байхгүй: захиалгын дугаарыг утсаар уншиж өгдөг.
 MAX_ATTEMPTS = 5
 _NUMBER_ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 
@@ -99,10 +98,10 @@ class CheckoutService:
 
         order_id = await self._existing_order_id(user_id, idempotency_key)
         if order_id is None:
-            # Unpaid orders of this user must be cancelled at the provider before their stock is
-            # handed to the new order, or both could end up paid. That needs a network call, so it
-            # happens between transactions; if another checkout of the same user slipped a new
-            # unpaid order in meanwhile, go round again.
+            # Хэрэглэгчийн төлөгдөөгүй захиалгуудыг нөөцийг нь шинэ захиалгад өгөхөөс өмнө provider
+            # дээр цуцлах ёстой, үгүй бол хоёулаа төлөгдөж болно. Үүнд сүлжээний дуудлага хэрэгтэй
+            # тул transaction-уудын хооронд хийнэ; хэрэв ижил хэрэглэгчийн өөр checkout энэ хооронд
+            # шинэ төлөгдөөгүй захиалга нэмсэн бол дахин нэг тойрно.
             cancelled: dict[int, str] = {}
             for _ in range(MAX_ATTEMPTS):
                 placed = await self._place_order(user_id, request, idempotency_key, cancelled)
@@ -122,7 +121,7 @@ class CheckoutService:
         return await self._complete(user_id, order_id, gateway)
 
     async def simulate_payment(self, user_id: int, number: str) -> OrderOut:
-        """Offline mode only: pay for an order as if the provider had confirmed it."""
+        """Зөвхөн offline горим: provider баталгаажуулсан мэт захиалгыг төлнө."""
         gateway = self._require_gateway()
         if gateway.mode != "offline" or self._settlement is None:
             raise ProblemError(HTTPStatus.NOT_FOUND, "Not found")
@@ -151,7 +150,7 @@ class CheckoutService:
             assert fresh is not None
             return to_order_out(fresh, self._storage)
 
-    # --- steps ------------------------------------------------------------------------------
+    # --- алхмууд ---
 
     async def _existing_order_id(self, user_id: int, idempotency_key: str) -> int | None:
         async with self._session.begin():
@@ -166,11 +165,11 @@ class CheckoutService:
         idempotency_key: str,
         cancelled: dict[int, str],
     ) -> int | dict[int, str]:
-        """The order's id, or {order id: payment id} of unpaid orders whose payment still has to
-        be cancelled at the provider before this can proceed (nothing is changed then)."""
+        """Захиалгын id, эсвэл үргэлжлэхээсөө өмнө provider дээр төлбөрийг нь цуцлах ёстой
+        төлөгдөөгүй захиалгуудын {order id: payment id} (тэр үед юу ч өөрчлөгдөхгүй)."""
         async with self._session.begin():
             await self._lock_user(user_id)
-            # A concurrent request with the same key may have finished since the last look.
+            # Ижил key-тэй зэрэг ирсэн хүсэлт сүүлийн харцаас хойш дуусч болсон.
             existing = await self._orders.get_by_idempotency_key(user_id, idempotency_key)
             if existing is not None:
                 return existing.id
@@ -208,7 +207,7 @@ class CheckoutService:
                     "Choose one of your saved addresses.",
                     type_=ADDRESS_NOT_FOUND_TYPE,
                 )
-            assert user is not None  # the token's subject; users are never deleted
+            assert user is not None  # token-ийн subject; хэрэглэгч хэзээ ч устгагддаггүй
             contact_email = request.contact_email or user.email
             if contact_email is None:
                 raise ProblemError(
@@ -225,7 +224,7 @@ class CheckoutService:
                     type_=CART_EMPTY_TYPE,
                 )
 
-            # Lock every product this transaction touches in one ordered statement.
+            # Энэ transaction-д хамаарах бүх барааг нэг эрэмбэлсэн statement-ээр түгжинэ.
             product_ids = {item.product_id for item in cart.items}
             product_ids |= {item.product_id for order in stale for item in order.items}
             products = await self._products.get_many(sorted(product_ids), for_update=True)
@@ -298,7 +297,7 @@ class CheckoutService:
             return order.id
 
     async def _complete(self, user_id: int, order_id: int, gateway: PaymentGateway) -> CheckoutOut:
-        """Make sure the order has a payment, then describe it for the browser."""
+        """Захиалгад төлбөр байгаа эсэхийг баталгаажуулаад browser-т тайлбарлана."""
         async with self._session.begin():
             order = await self._orders.get_by_id(order_id)
             assert order is not None
@@ -311,7 +310,7 @@ class CheckoutService:
                     amount_cents=total,
                     currency=currency,
                     order_number=number,
-                    # Repeating the call for the same order returns the same PaymentIntent.
+                    # Ижил захиалгад дуудлагыг давтавал ижил PaymentIntent буцна.
                     idempotency_key=f"order-{order_id}",
                 )
             except PaymentProviderError as exc:
@@ -338,7 +337,7 @@ class CheckoutService:
                     )
                 )
             if not still_open:
-                # Replaced by a newer checkout while the intent was being created: close it.
+                # Intent үүсч байх хооронд шинэ checkout-оор солигдсон: хаа.
                 with contextlib.suppress(PaymentProviderError):
                     await gateway.cancel_intent(intent.id)
 
@@ -357,7 +356,7 @@ class CheckoutService:
             )
 
     async def _abort(self, order_id: int) -> None:
-        """The provider refused to create a payment: give the stock back."""
+        """Provider төлбөр үүсгэхээс татгалзсан: нөөцийг буцаа."""
         async with self._session.begin():
             order = await self._orders.get_for_update(order_id)
             if order is not None and order.payment is None:
@@ -375,8 +374,8 @@ class CheckoutService:
             ) from exc
 
     async def _lock_user(self, user_id: int) -> None:
-        """Checkouts of one user run one at a time (released at commit). Different users never
-        wait for each other here."""
+        """Нэг хэрэглэгчийн checkout-ууд нэг нэгээр ажиллана (commit дээр чөлөөлөгдөнө). Өөр
+        хэрэглэгчид энд хоорондоо хүлээхгүй."""
         await self._session.execute(
             text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
             {"key": f"checkout:{user_id}"},

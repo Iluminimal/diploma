@@ -1,5 +1,5 @@
-"""The administrator's API. One guard in front of every section: rate limit first, so guessing
-tokens against the admin area is throttled, then the role check, and nothing is cached."""
+"""Administrator-ын API. Хэсэг бүрийн өмнө нэг хамгаалалт: эхлээд rate limit (admin хэсэгт token
+таамаглахыг удаашруулна), дараа нь role шалгана, юу ч cache хийхгүй."""
 
 from fastapi import APIRouter, Depends
 

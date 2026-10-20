@@ -3,8 +3,8 @@ import type { Page } from "@playwright/test";
 export type RecordedSearch = { url: string; fields: string[] };
 
 /**
- * Records the multipart forms the page sends to the search endpoints. (Playwright cannot read a
- * multipart body that contains a Blob, so the page's own `fetch` is wrapped instead.)
+ * Хайлтын endpoint руу хуудасны илгээдэг multipart формуудыг бүртгэнэ. (Playwright Blob агуулсан
+ * multipart body-г уншиж чадахгүй тул хуудасны өөрийн `fetch`-ийг боож авна.)
  */
 export async function recordSearches(page: Page) {
   await page.addInitScript(() => {

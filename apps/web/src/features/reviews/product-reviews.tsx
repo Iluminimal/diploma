@@ -31,7 +31,7 @@ const SORT_LABELS: Record<ReviewSort, string> = {
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-US", { dateStyle: "medium" });
 
-/** How the ratings spread, one bar per number of stars, most stars first. */
+/** Үнэлгээний хуваарилалт, од бүрт нэг bar, олон одтой нь түрүүнд. */
 function Distribution({ distribution, count }: { distribution: number[]; count: number }) {
   return (
     <ul aria-label="Ratings by number of stars" className="space-y-1.5 text-sm">
@@ -125,7 +125,7 @@ function ReviewItem({ review, mine, productId }: { review: Review; mine: boolean
   );
 }
 
-/** What a visitor can do about writing one: the form, or the reason they cannot. */
+/** Зочин сэтгэгдэл бичихэд юу хийж болох: form, эсвэл чадахгүй шалтгаан. */
 function WriteReview({ productId, page }: { productId: number; page: ReviewPage }) {
   const status = useAuth((state) => state.status);
   const viewer = page.viewer;
@@ -155,9 +155,8 @@ function WriteReview({ productId, page }: { productId: number; page: ReviewPage 
 }
 
 /**
- * The reviews of a product: the average and how it is made up, the reviews themselves, and (for a
- * customer who bought it) the form to write one. The first page arrives with the page; the rest is
- * fetched as it is asked for.
+ * Бүтээгдэхүүний сэтгэгдэл: дундаж ба бүрэлдэхүүн, сэтгэгдлүүд өөрсдөө, мөн (худалдаж авсан
+ * үйлчлүүлэгчид) бичих form. Эхний хуудас хуудастайгаа хамт ирнэ; үлдсэнийг шаардлагатай үед татна.
  */
 export function ProductReviews({ productId, initial }: { productId: number; initial: ReviewPage | null }) {
   const [sort, setSort] = useState<ReviewSort>("newest");

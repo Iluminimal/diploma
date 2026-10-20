@@ -14,7 +14,7 @@ class StatsQuery(BaseModel):
 
 
 class Delta(BaseModel):
-    """A figure for the period and for the equally long period just before it."""
+    """Тухайн хугацааны болон түүнтэй ижил урттай өмнөх хугацааны үзүүлэлт."""
 
     current: int
     previous: int
@@ -44,8 +44,8 @@ class TopProduct(BaseModel):
 
 
 class AdminStats(BaseModel):
-    """The dashboard. Revenue counts orders that are paid, shipped or delivered, by the day they
-    were paid; a refunded order is not revenue."""
+    """Dashboard. Орлого нь төлөгдсөн, илгээсэн, хүргэсэн захиалгыг төлөгдсөн өдрөөр нь тооцно;
+    буцаан олгосон захиалга орлого биш."""
 
     days: int
     currency: str
@@ -66,7 +66,7 @@ class AdminStats(BaseModel):
     recent_orders: list[AdminOrderSummary]
 
 
-# --- customers --------------------------------------------------------------------------------
+# --- хэрэглэгчид ---
 
 CustomerStatusFilter = Literal["all", "active", "inactive"]
 CustomerSort = Literal["newest", "spent", "orders", "name"]
@@ -92,8 +92,8 @@ class AdminCustomer(BaseModel):
     avatar_url: str | None
     is_active: bool
     created_at: datetime
-    # Orders that were paid (including ones since refunded), what was paid for the ones that stand,
-    # and when the last order of any kind was placed.
+    # Төлөгдсөн захиалгууд (дараа нь буцаан олгосон ч орно), баталгаатай захиалгын төлсөн дүн, мөн
+    # ямар ч төрлийн хамгийн сүүлийн захиалга өгсөн цаг.
     orders_count: int
     total_spent_cents: int
     last_order_at: datetime | None
@@ -113,7 +113,7 @@ class AdminCustomerDetail(AdminCustomer):
     recent_orders: list[AdminOrderSummary]
 
 
-# --- stock ------------------------------------------------------------------------------------
+# --- нөөц ---
 
 
 class StockUpdate(BaseModel):

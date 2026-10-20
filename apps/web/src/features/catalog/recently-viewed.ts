@@ -20,7 +20,10 @@ function isProduct(value: unknown): value is Product {
   );
 }
 
-/** The products this browser looked at last, newest first. Storage can be blocked or tampered with: that just means none. */
+/**
+ * Энэ browser-ийн сүүлд үзсэн бүтээгдэхүүн, шинэ нь түрүүнд. Storage хаалттай эсвэл өөрчлөгдсөн
+ * байж болно: тэгвэл хоосон.
+ */
 export function readRecentlyViewed(): Product[] {
   let raw: string | null;
   try {
@@ -28,7 +31,7 @@ export function readRecentlyViewed(): Product[] {
   } catch {
     return EMPTY;
   }
-  // The same array until storage changes, as `useSyncExternalStore` requires.
+  // Storage өөрчлөгдөх хүртэл ижил массив, `useSyncExternalStore` шаарддаг.
   if (raw === cache.raw) return cache.items;
   let items: Product[] = EMPTY;
   try {
@@ -41,7 +44,9 @@ export function readRecentlyViewed(): Product[] {
   return items;
 }
 
-/** Remember a product page visit. The photo placeholder is dropped to keep the entry small. */
+/**
+ * Бүтээгдэхүүний хуудас үзсэнийг санана. Бичлэг жижиг байлгахын тулд зургийн placeholder-ыг хасна.
+ */
 export function recordView(product: Product): void {
   const entry: Product = { ...product, image: { ...product.image, blur_data_url: null } };
   const next = [entry, ...readRecentlyViewed().filter((p) => p.id !== product.id)].slice(0, MAX);
@@ -49,7 +54,7 @@ export function recordView(product: Product): void {
     window.localStorage.setItem(KEY, JSON.stringify(next));
     window.dispatchEvent(new Event(EVENT));
   } catch {
-    // Not remembering is fine.
+    // Санахгүй байсан ч зүгээр.
   }
 }
 

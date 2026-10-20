@@ -80,7 +80,8 @@ describe("toSearchParams / toHref", () => {
     });
     const href = toHref("/products", original);
     const reparsed = parseListingQuery(Object.fromEntries(new URL(href, "http://x").searchParams.entries()));
-    // Object.fromEntries keeps only the last repeated value, so compare via the serialized form.
+    // Object.fromEntries зөвхөн давтагдсан сүүлийн утгыг үлдээдэг тул serialize хийсэн хэлбэрээр
+    // харьцуул.
     expect(toSearchParams(reparsed).get("sort")).toBe("price_asc");
     expect(href).toContain("gender=Men&gender=Unisex");
     expect(href).toContain("page=3");

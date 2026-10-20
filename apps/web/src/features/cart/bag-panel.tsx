@@ -13,7 +13,7 @@ import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
 import { MiniCartSkeleton } from "./mini-cart";
 
-// The panel's list, steppers and mutations are only fetched when someone opens it.
+// Самбарын жагсаалт, stepper, mutation-ууд нь хүн нээх үед л татагдана.
 const MiniCart = dynamic(() => import("./mini-cart").then((m) => m.MiniCart), {
   ssr: false,
   loading: () => <MiniCartSkeleton />,
@@ -23,22 +23,23 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   count: number;
-  /** The button that opens the panel: focus goes back to it on close. */
+  /** Самбарыг нээсэн товч: хаахад focus түүн рүү буцна. */
   trigger: RefObject<HTMLButtonElement | null>;
 };
 
 /**
- * The Bag, as on apple.com: a solid page with the title in large type, the items in a column lined up with the bar's logo and,
- * under them, the profile links (the account lives here, not in the phone menu). From md up it fills the
- * screen under the bar, lined up with its logo, and the bar stays, usable: the bag button closes it again, and so does opening the
- * search or a department menu (a dialog that is not modal). On a phone it covers the whole screen and its own
- * bar is only the close button, as the header's other buttons are gone. Loaded on first open (see `CartButton`): the dialog
- * library is not needed to show a bag icon.
+ * apple.com шиг Bag: том гарчигтай цул хуудас, bar-ын logo-той эгнээтэй бүтээгдэхүүний багана, доор
+ * нь профайл холбоосууд (account энд байдаг, утасны цэсэнд биш). md-ээс дээш bar-ын доорх дэлгэцийг
+ * бүхлээр нь эзэлж, bar хэвээр ашиглагдана: bag товч дахин хаана, search эсвэл department цэс
+ * нээхэд бас хаагдана (modal биш dialog). Утсан дээр бүх дэлгэцийг хучиж, өөрийн bar нь зөвхөн хаах
+ * товч, учир нь header-ийн бусад товч алга. Эхний нээлтээр ачаална (`CartButton`-г хар): bag icon
+ * харуулахад dialog library хэрэггүй.
  */
 export function BagPanel({ open, onOpenChange, count, trigger }: Props) {
   const close = () => onOpenChange(false);
   useBarPanel(open);
-  // Under the bar the page behind and the bar stay usable; over the whole screen on a phone the dialog is modal.
+  // Bar-ын доор ард байгаа хуудас ба bar ашиглагдсаар байна; утсан дээр бүх дэлгэцийг хучих тул
+  // dialog modal болно.
   const wide = useMediaQuery("(min-width: 768px)");
   const signedIn = useAuth((state) => state.status === "signedIn");
   return (
@@ -46,7 +47,7 @@ export function BagPanel({ open, onOpenChange, count, trigger }: Props) {
       <Dialog.Portal>
         <Dialog.Content
           className="bag-flyout bg-background fixed inset-0 z-50 flex flex-col overflow-y-auto overscroll-contain outline-none duration-300 max-md:data-closed:animate-out max-md:data-closed:fade-out-0 max-md:data-open:animate-in max-md:data-open:fade-in-0 max-md:data-open:slide-in-from-top-4 md:top-[2.8125rem] md:bottom-auto md:z-30 md:max-h-[calc(100dvh-2.8125rem)] md:bg-[var(--flyout)]"
-          // A press in the bar (a department, the search, the bag button) is that control's business.
+          // Bar дахь дарилт (department, search, bag товч) тэр хяналтын өөрийн хэрэг.
           onInteractOutside={(event) => {
             if ((event.target as Element).closest("header")) event.preventDefault();
           }}
@@ -55,7 +56,7 @@ export function BagPanel({ open, onOpenChange, count, trigger }: Props) {
             trigger.current?.focus();
           }}
         >
-          {/* On a phone the page covers the bar, so it has the X of its own; from md up the bar is still there. */}
+          {/* Утсан дээр хуудас bar-ыг хучдаг тул өөрийн X-тэй; md-ээс дээш bar байсаар байна. */}
           <div className="container-nav w-full md:hidden">
             <div className="flex h-12 items-center justify-end">
               <Dialog.Close className={HEADER_CELL} aria-label="Close Bag">
@@ -99,13 +100,14 @@ export function BagPanel({ open, onOpenChange, count, trigger }: Props) {
   );
 }
 
-/** One line of the profile list: a small icon and the name in semibold type, as under apple.com's Bag. */
+/** Профайл жагсаалтын нэг мөр: жижиг icon ба semibold нэр, apple.com-ын Bag-ийн доорх шиг. */
 function ProfileLink({ href, onClick, children }: { href: string; onClick: () => void; children: ReactNode }) {
   return (
     <Link
       href={href}
       onClick={onClick}
-      // Account pages answer a signed-out visitor with a redirect: prefetched, that answer would be replayed after sign-in.
+      // Нэвтрээгүй зочин account хуудсанд redirect авдаг: prefetch хийвэл тэр хариу нэвтэрсний
+      // дараа дахин тоглогдох байсан.
       prefetch={false}
       className="hover:text-brand focus-visible:ring-ring/60 -mx-2 flex items-center gap-3 rounded-md px-2 py-2 text-lg font-semibold tracking-tight outline-none transition-colors focus-visible:ring-3 md:py-1.5 md:text-xs md:leading-4 md:tracking-normal"
     >

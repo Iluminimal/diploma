@@ -1,6 +1,6 @@
 import type { ListingQuery } from "./filters";
 
-/** Human heading for a listing, derived from the most telling filters. */
+/** Хамгийн тодорхой шүүлтүүрээс гаргасан жагсаалтын хүнд ойлгомжтой гарчиг. */
 export function listingTitle(query: ListingQuery): string {
   if (query.q) return `Results for “${query.q}”`;
   const kids = query.gender.length === 2 && query.gender.includes("Boys") && query.gender.includes("Girls");

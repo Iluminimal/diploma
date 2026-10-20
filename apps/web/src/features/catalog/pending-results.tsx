@@ -5,8 +5,8 @@ import { cn } from "@/lib/utils";
 import { useListingPending } from "./listing-pending";
 
 /**
- * The product grid. When a filter changes the old grid stays on screen, dimmed and not clickable,
- * until the new one arrives, instead of flashing a skeleton.
+ * Бүтээгдэхүүний grid. Шүүлтүүр солигдоход шинэ нь иртэл хуучин grid дэлгэцэн дээр бүдэг,
+ * дарагдахгүй байдлаар үлдэнэ, skeleton анивчихгүй.
  */
 export function PendingResults({ children }: { children: ReactNode }) {
   const pending = useListingPending((state) => state.pending);

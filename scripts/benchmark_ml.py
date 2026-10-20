@@ -1,8 +1,8 @@
-"""Benchmark the ML pipeline on this machine and decide the defaults.
+"""ML pipeline-ийг энэ машин дээр benchmark хийж, default утгуудыг шийднэ.
 
-Measures: image decode/thumbnail throughput per worker count, fp16 vs fp32 numerical
-agreement on MPS, throughput and memory per batch size, CPU throughput, whether JPEG draft
-decoding changes embeddings, and CLIP center-crop vs pad-to-square preprocessing quality.
+Хэмжих зүйлс: worker тоо бүрийн зураг decode/thumbnail хурд, MPS дээрх fp16 ба fp32-ийн тоон
+ойролцоо байдал, batch хэмжээ бүрийн хурд ба санах ой, CPU хурд, JPEG draft decoding нь
+embedding-ийг өөрчлөх эсэх, CLIP center-crop ба pad-to-square preprocessing-ийн чанар.
 
     cd apps/api && uv run python ../../scripts/benchmark_ml.py --n 2000
 """
@@ -54,7 +54,7 @@ def _thumb_job(args: tuple[int, str, str]) -> bool:
 
 
 def rss_mb() -> float:
-    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6  # bytes on macOS
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1e6  # macOS дээр bytes
 
 
 def embed_all(
@@ -67,7 +67,7 @@ def embed_all(
 def timed_embed(
     embedder: FashionClipEmbedder, arrays: NDArray[np.uint8], batch: int
 ) -> tuple[NDArray[np.float32], float]:
-    embed_all(embedder, arrays[:batch], batch)  # warm-up (kernel compilation)
+    embed_all(embedder, arrays[:batch], batch)  # warm-up (kernel compile хийгдэнэ)
     start = time.perf_counter()
     vectors = embed_all(embedder, arrays, batch)
     return vectors, len(arrays) / (time.perf_counter() - start)
@@ -100,7 +100,7 @@ def main() -> None:
         f"{select_device()}\n"
     )
 
-    # 1. Decode + thumbnail throughput per worker count --------------------------------------
+    # 1. Worker тоо бүрийн decode + thumbnail хурд -------------------------------------------
     print("== 1. decode + 2 WebP sizes + blur + 224px array, images/s (whole pipeline)")
     with tempfile.TemporaryDirectory(dir=args.workdir) as tmp:
         jobs = [(int(products["id"][i]), paths[i], tmp) for i in range(args.thumb_n)]
@@ -117,7 +117,7 @@ def main() -> None:
             f"-> {per_product * 41_900 / 1e9:.2f} GB for 41.9k products\n"
         )
 
-    # 2. Arrays for embedding experiments ------------------------------------------------------
+    # 2. Embedding туршилтад зориулсан array-ууд -----------------------------------------------
     print("== 2. preparing arrays (draft-pad, draft-crop, full-decode-pad)")
     start = time.perf_counter()
     with Pool(3) as pool:
@@ -125,7 +125,7 @@ def main() -> None:
     pad, crop, pad_full = (np.stack([d[i] for d in decoded]) for i in range(3))
     print(f"   {time.perf_counter() - start:.0f}s\n")
 
-    # 3. fp32 on MPS, batch sweep --------------------------------------------------------------
+    # 3. MPS дээр fp32, batch хэмжээ сэлгэж үзэх -----------------------------------------------
     device = select_device()
     print(f"== 3. fp32 on {device}: batch-size sweep (images/s, peak RSS)")
     fp32 = FashionClipEmbedder(device=device, fp16=False)
@@ -143,7 +143,7 @@ def main() -> None:
     )
     assert reference is not None
 
-    # 4. fp16 stability on MPS -----------------------------------------------------------------
+    # 4. MPS дээр fp16-ийн тогтвортой байдал ---------------------------------------------------
     print("== 4. fp16 vs fp32 on MPS")
     fp16 = FashionClipEmbedder(device=device, fp16=True)
     fp16.load()
@@ -168,13 +168,13 @@ def main() -> None:
         print(f"   fp16 batch={batch}: {rate:.1f} img/s")
     del fp16
 
-    # 5. draft decoding vs full decoding -------------------------------------------------------
+    # 5. draft decoding ба бүтэн decoding -------------------------------------------------------
     print("\n== 5. JPEG draft (1/2-scale) decode vs full decode")
     full_vectors = embed_all(fp32, pad_full, 64)
     cos_draft = (full_vectors * vectors32).sum(axis=1)
     print(f"   cosine(draft, full): min {cos_draft.min():.5f} mean {cos_draft.mean():.5f}\n")
 
-    # 6. center-crop vs pad --------------------------------------------------------------------
+    # 6. center-crop ба pad ---------------------------------------------------------------------
     print("== 6. center-crop vs pad-to-square (leave-one-out kNN within the sample)")
     crop_vectors = embed_all(fp32, crop, 64)
     labels = {c: products[c].to_numpy() for c in ("articleType", "subCategory", "gender")}

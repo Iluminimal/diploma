@@ -8,7 +8,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 
 
 async def test_pgvector_is_installed_with_iterative_scan_support(settings: Settings) -> None:
-    """The baseline migration enables pgvector; >= 0.8 is required for hnsw.iterative_scan."""
+    """Baseline migration pgvector-ийг идэвхжүүлнэ; hnsw.iterative_scan-д >= 0.8 хэрэгтэй."""
     engine = create_async_engine(settings.database_url)
     try:
         async with engine.connect() as connection:
@@ -21,7 +21,7 @@ async def test_pgvector_is_installed_with_iterative_scan_support(settings: Setti
             major, minor, *_ = (int(part) for part in version.split("."))
             assert (major, minor) >= (0, 8)
 
-            # The setting only exists when the installed version supports it.
+            # Суулгасан хувилбар дэмжсэн үед л энэ тохиргоо байна.
             await connection.execute(text("SET hnsw.iterative_scan = relaxed_order"))
     finally:
         await engine.dispose()

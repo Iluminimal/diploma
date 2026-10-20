@@ -1,7 +1,7 @@
 import { expect, type Page } from "@playwright/test";
 import type { CatalogProduct } from "./api";
 
-/** Opens the header's search panel (the magnifier) and returns its field. */
+/** Header-ийн хайлтын panel-ийг (томруулагч) нээж, талбарыг нь буцаана. */
 export async function openSearch(page: Page) {
   await page.getByRole("button", { name: "Search", exact: true }).click();
   const box = page.getByRole("combobox");
@@ -10,7 +10,7 @@ export async function openSearch(page: Page) {
   return box;
 }
 
-// The phone tab bar has a cart button too (hidden on a computer): the one that can be seen.
+// Утасны tab bar-д мөн сагсны товч байдаг (компьютер дээр нуугдсан): харагдаж байгааг нь авна.
 export const cartButton = (page: Page) => page.locator('button[aria-label^="Bag"]:visible');
 
 export async function openProduct(page: Page, product: CatalogProduct) {
@@ -18,7 +18,7 @@ export async function openProduct(page: Page, product: CatalogProduct) {
   await expect(page.getByRole("heading", { level: 1, name: product.name })).toBeVisible();
 }
 
-/** Chooses the first size the product offers (adult sizes, kids' sizes and shoe sizes all differ). */
+/** Барааны санал болгож буй эхний хэмжээг сонгоно (том хүн, хүүхэд, гутлын хэмжээ бүгд өөр). */
 export async function chooseSize(page: Page): Promise<string> {
   const label = page.locator("fieldset label").first();
   const size = (await label.innerText()).trim();
@@ -26,7 +26,7 @@ export async function chooseSize(page: Page): Promise<string> {
   return size;
 }
 
-/** Picks a size and adds the product; leaves the Bag panel open. Returns the size chosen. */
+/** Хэмжээ сонгож бараа нэмнэ; Bag panel нээлттэй үлдэнэ. Сонгосон хэмжээг буцаана. */
 export async function addToCartFromProductPage(page: Page, product: CatalogProduct): Promise<string> {
   await openProduct(page, product);
   const size = await chooseSize(page);
@@ -44,7 +44,10 @@ export async function signInThroughTheForm(page: Page, email: string, password: 
 
 export const money = (cents: number) => `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}`;
 
-/** Spread tests over the catalogue so parallel purchases rarely meet on the last unit of one product. */
+/**
+ * Тестүүдийг каталогт тараана: зэрэгцээ худалдан авалт нэг барааны сүүлийн ширхэг дээр ховор
+ * таарна.
+ */
 export function pickProduct(products: CatalogProduct[], testIndex: number): CatalogProduct {
   return products[testIndex % products.length]!;
 }

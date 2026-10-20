@@ -11,7 +11,10 @@ import { useToggleWishlist, useWishlist } from "./use-wishlist";
 
 type Props = {
   product: Product;
-  /** `card`: a round overlay for product cards. `button`: a labelled button for the product page. */
+  /**
+   * `card`: бүтээгдэхүүний картын дээрх дугуй overlay. `button`: бүтээгдэхүүний хуудасны label-тэй
+   * товч.
+   */
   variant?: "card" | "button";
   className?: string;
 };
@@ -24,7 +27,7 @@ export function WishlistButton({ product, variant = "card", className }: Props) 
   const toggle = useToggleWishlist();
   const saved = data?.items.some((item) => item.id === product.id) ?? false;
 
-  // The particles fly only when the shopper fills the heart, not for hearts that load already filled.
+  // Тоосонцор зөвхөн зүрхийг дүүргэх үед нисдэг, аль хэдийн дүүрсэн ачаалагдсан зүрхэнд биш.
   const [burst, setBurst] = useState(false);
   useEffect(() => {
     if (!burst) return;
@@ -43,7 +46,7 @@ export function WishlistButton({ product, variant = "card", className }: Props) 
   };
 
   const label = saved ? `Remove ${product.name} from your wishlist` : `Save ${product.name} to your wishlist`;
-  // `key` restarts the pop each time the heart fills.
+  // `key` зүрх дүүрэх бүрд pop animation-ыг дахин эхлүүлнэ.
   const icon = (
     <span className="relative grid place-items-center">
       <Heart key={String(saved)} className={cn("size-[1.15rem]", saved && "animate-pop fill-current")} />

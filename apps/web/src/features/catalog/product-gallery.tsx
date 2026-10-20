@@ -10,16 +10,17 @@ import type { Product } from "./product";
 type Photo = Product["image"];
 type Props = {
   product: Pick<Product, "name" | "image">;
-  /** All of the product's photos, first one shown. The catalogue has one per product today. */
+  /** Бүтээгдэхүүний бүх зураг, эхнийх нь харагдана. Одоогоор нэг бүтээгдэхүүнд нэг зураг. */
   images?: Photo[];
 };
 
-const SWIPE = 45; // px of horizontal travel that turns the page
+const SWIPE = 45; // хуудас эргүүлэхэд хэрэгтэй хэвтээ зайн px
 
 /**
- * The product's photos. The stage cross-fades between them, a swipe (touch) or a thumbnail turns
- * the page, a mouse hovering the stage zooms in around the pointer (see `.zoom-stage` in
- * globals.css), and a click opens the full-size view. With one photo there is no strip and no swipe.
+ * Бүтээгдэхүүний зургууд. Stage зургуудын хооронд cross-fade хийнэ, swipe (touch) эсвэл thumbnail
+ * хуудас эргүүлнэ, хулгана stage дээр очвол заагчийн орчимд zoom хийнэ (globals.css дахь
+ * `.zoom-stage`-г хар), товшвол бүтэн хэмжээний харагдац нээгдэнэ. Нэг зурагтай бол strip, swipe
+ * байхгүй.
  */
 export function ProductGallery({ product, images: given }: Props) {
   const images = given?.length ? given : [product.image];
@@ -29,7 +30,7 @@ export function ProductGallery({ product, images: given }: Props) {
   const current = images[index] ?? images[0]!;
   const go = (to: number) => setIndex((to + images.length) % images.length);
 
-  // The stage is written to directly, not through state: the pointer moves many times a second.
+  // Stage-д state-ээр дамжуулалгүй шууд бичнэ: заагч секундэд олон удаа хөдөлдөг.
   function zoomAt(event: PointerEvent<HTMLButtonElement>) {
     const box = stage.current;
     if (!box || event.pointerType !== "mouse") return;

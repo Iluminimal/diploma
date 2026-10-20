@@ -3,9 +3,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * "Nothing here yet": an icon in a soft circle, a title, one line of help and the way forward.
- * It settles in (a short rise and fade) so an empty cart or wishlist feels like a state, not a gap.
- * `as` is the title's element: a heading where the page has none of its own, a paragraph otherwise.
+ * "Энд одоохондоо юу ч алга": зөөлөн дугуй доторх icon, гарчиг, нэг мөр тусламж ба цааш явах зам.
+ * Богино өргөгдөж бүдэг байдлаас гарч, хоосон сагс, wishlist нь цоорхой биш төлөв мэт харагдана.
+ * `as` нь гарчгийн элемент: хуудас өөрийн heading-гүй бол heading, бусад үед догол мөр.
  */
 export function EmptyState({
   icon: Icon,
@@ -20,7 +20,7 @@ export function EmptyState({
   title: ReactNode;
   description?: ReactNode;
   as?: "h2" | "h3" | "p";
-  /** A dashed frame, for "no results" inside a page. */
+  /** Хуудас доторх "үр дүн алга"-д зориулсан тасархай хүрээ. */
   bordered?: boolean;
   className?: string;
   children?: ReactNode;

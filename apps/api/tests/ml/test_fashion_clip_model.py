@@ -1,4 +1,4 @@
-"""Tests with the real FashionCLIP model (downloads ~600 MB once). Run with `make test-ml`."""
+"""Жинхэнэ FashionCLIP model-ийн тест (~600 MB нэг удаа татна). `make test-ml`-ээр ажиллуулна."""
 
 import asyncio
 from collections.abc import Iterator
@@ -27,7 +27,7 @@ def embedder() -> Iterator[FashionClipEmbedder]:
 
 @pytest.fixture(scope="module")
 def real_products() -> dict[str, list[CleanProduct]]:
-    """A few real shirts and shoes from the dataset (skipped when it is not available)."""
+    """Dataset-ийн хэдэн жинхэнэ цамц, гутал (dataset байхгүй бол алгасна)."""
     dataset = get_settings().dataset_dir
     if dataset is None or not (dataset.expanduser() / "styles.csv").exists():
         pytest.skip("DATASET_DIR not set")
@@ -135,7 +135,7 @@ async def test_async_api_runs_off_the_event_loop_and_serialises(
     task = asyncio.create_task(ticker())
     results = await asyncio.gather(*(embedder.aembed_images([image]) for image in images))
     task.cancel()
-    assert ticks > 0  # the loop kept running while inference happened
+    assert ticks > 0  # inference явагдах хооронд loop зогсолгүй ажилласан
     expected = embedder.embed_images(images)
     for index, result in enumerate(results):
         np.testing.assert_allclose(result[0], expected[index], atol=1e-5)

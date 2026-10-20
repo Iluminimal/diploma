@@ -1,7 +1,7 @@
 import { getSimilarProducts } from "./api";
 import { ProductRail } from "./product-rail";
 
-/** Visually similar products from the stored embedding (no model inference on the API side). */
+/** Хадгалсан embedding-ээс харагдацаараа төстэй бүтээгдэхүүн (API талд model inference хийхгүй). */
 export async function SimilarProducts({ productId }: { productId: number }) {
   const { results } = await getSimilarProducts(productId, 12);
   if (results.length === 0) return null;

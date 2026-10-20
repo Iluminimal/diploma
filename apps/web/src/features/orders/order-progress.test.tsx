@@ -35,7 +35,7 @@ describe("OrderProgress", () => {
     const { container } = render(<OrderProgress order={{ status: "shipped", ...shipped }} />);
 
     const fills = [...container.querySelectorAll<HTMLElement>(".animate-grow")];
-    expect(fills).toHaveLength(2); // placed -> paid -> shipped
+    expect(fills).toHaveLength(2); // үүсгэсэн -> төлсөн -> илгээсэн
     expect(fills.map((fill) => fill.style.animationDelay)).toEqual(["0ms", "160ms"]);
   });
 

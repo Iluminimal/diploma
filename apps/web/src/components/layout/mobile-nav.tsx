@@ -7,10 +7,10 @@ import { HEADER_CELL } from "@/components/layout/header-cell";
 import { cn } from "@/lib/utils";
 import { useBarPanel } from "./bar-panel";
 
-// The menu panel (with the categories it fetches) is loaded the first time the button is pressed.
+// Цэсний panel (ачаалдаг ангилалтай нь) товчийг анх дарахад ачаалагдана.
 const MobileMenuPanel = dynamic(() => import("./mobile-nav-menu").then((m) => m.MobileMenuPanel), { ssr: false });
 
-/** Two thin lines that turn into an X, like the menu button on apple.com. */
+/** X болж хувирдаг хоёр нарийн шугам, apple.com-ийн цэсний товч шиг. */
 function MenuIcon({ open }: { open: boolean }) {
   const line = "absolute left-0 h-px w-full rounded-full bg-current transition-transform duration-300 ease-out-expo";
   return (
@@ -22,10 +22,10 @@ function MenuIcon({ open }: { open: boolean }) {
 }
 
 /**
- * The menu button of the phone header, last in the row (logo, search, bag, menu) as on apple.com.
- * Pressed, its lines become an X, the rest of the bar fades out and a full page of links opens under
- * it; pressed again (or Escape, or following a link) it closes. After a navigation the menu counts as closed, without
- * an effect: it remembers the page it was opened on.
+ * Утасны header-ийн цэсний товч, мөрийн сүүлд (logo, хайлт, bag, цэс), apple.com шиг. Дарахад
+ * шугамууд X болж, bar-ын үлдсэн хэсэг бүдгэрч, доор нь холбоосын бүтэн хуудас нээгдэнэ; дахин
+ * дарах (эсвэл Escape, холбоос дагах) хаана. Навигацийн дараа effect-гүйгээр хаагдсан гэж
+ * тооцогдоно: нээсэн хуудсаа санадаг.
  */
 export function MobileNav() {
   const pathname = usePathname();
@@ -33,7 +33,7 @@ export function MobileNav() {
   const [requested, setRequested] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
   const open = openedAt !== null && openedAt === pathname;
-  // Stable: the panel's effect depends on it and must not run again at every render.
+  // Тогтвортой: panel-ийн effect үүнээс хамаарах тул render бүрт дахин ажиллах ёсгүй.
   const close = useCallback(() => setOpenedAt(null), []);
   useBarPanel(open);
 

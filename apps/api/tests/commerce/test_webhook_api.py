@@ -24,7 +24,7 @@ HOOK = "/api/v1/webhooks/stripe"
 
 
 class Placed:
-    """A pending order with its payment, ready to receive webhooks."""
+    """Төлбөртэй хүлээгдэж буй захиалга, webhook хүлээн авахад бэлэн."""
 
     def __init__(
         self, api: Api, shopper: Shopper, number: str, total: int, product_id: int, intent_id: str
@@ -100,7 +100,7 @@ async def place_order(api: Api, *, quantity: int = 2) -> Placed:
     )
 
 
-# --- authenticity ----------------------------------------------------------------------------
+# --- Жинхэнэ эсэх ----------------------------------------------------------------------------
 
 
 async def test_unsigned_or_wrongly_signed_webhooks_are_rejected_and_change_nothing(
@@ -132,7 +132,7 @@ async def test_a_stale_signature_is_rejected(
         placed = await place_order(api)
         body, headers = webhook("succeeded", placed.intent_id, amount=placed.total)
         timestamp, _, signature = headers["Stripe-Signature"].partition(",")
-        old = f"t={int(timestamp[2:]) - 3600},{signature}"  # replayed an hour later
+        old = f"t={int(timestamp[2:]) - 3600},{signature}"  # нэг цагийн дараа дахин илгээсэн
 
         response = await api.client.post(
             HOOK, content=body, headers={**headers, "Stripe-Signature": old}
@@ -148,7 +148,7 @@ async def test_webhook_needs_no_session_and_no_origin(
         placed = await place_order(api)
         body, headers = webhook("succeeded", placed.intent_id, amount=placed.total)
 
-        # Stripe is not a browser: no cookies, no Origin, and a foreign one must not matter.
+        # Stripe browser биш: cookie, Origin байхгүй, гадаад Origin нөлөөлөх ёсгүй.
         response = await api.client.post(
             HOOK, content=body, headers={**headers, "Origin": "https://stripe.com"}
         )
@@ -179,7 +179,7 @@ async def test_webhooks_are_unavailable_when_payments_are_not_configured(
         assert response.status_code == 503
 
 
-# --- success ---------------------------------------------------------------------------------
+# --- Амжилттай -------------------------------------------------------------------------------
 
 
 async def test_a_successful_payment_marks_the_order_paid_once(
@@ -198,8 +198,8 @@ async def test_a_successful_payment_marks_the_order_paid_once(
         assert order["paid_at"]
         payment = await placed.payment()
         assert payment["status"] == "succeeded"
-        assert payment["client_secret"] is None  # no longer needed
-        assert await placed.stock() == 5  # stays reserved: it was sold
+        assert payment["client_secret"] is None  # дахин хэрэггүй
+        assert await placed.stock() == 5  # зарагдсан тул нөөц хэвээр
         cart = await api.client.get("/api/v1/cart", headers=placed.shopper.auth)
         assert cart.json()["lines"] == []
         confirmations = [m for m in mailer.sent if "confirmed" in m.subject]
@@ -240,7 +240,7 @@ async def test_a_second_success_event_for_a_paid_order_changes_nothing(
         placed = await place_order(api)
 
         await placed.event("succeeded")
-        await placed.event("succeeded")  # different event id, same payment
+        await placed.event("succeeded")  # өөр event id, ижил төлбөр
 
         assert len([m for m in mailer.sent if "confirmed" in m.subject]) == 1
         assert gateway.refunds == []
@@ -259,7 +259,7 @@ async def test_a_payment_of_the_wrong_amount_is_refunded_not_fulfilled(
         assert order["status"] == "cancelled"
         assert gateway.refunds == [placed.intent_id]
         assert (await placed.payment())["status"] == "refunded"
-        assert await placed.stock() == 7  # given back
+        assert await placed.stock() == 7  # буцаан олгосон
 
 
 async def test_a_payment_in_the_wrong_currency_is_refunded_too(
@@ -274,7 +274,7 @@ async def test_a_payment_in_the_wrong_currency_is_refunded_too(
         assert gateway.refunds == [placed.intent_id]
 
 
-# --- late and out-of-order events ------------------------------------------------------------
+# --- Хоцорсон ба дарааллаас гадуурх event ----------------------------------------------------
 
 
 async def test_payment_after_the_order_was_cancelled_is_refunded(
@@ -282,7 +282,7 @@ async def test_payment_after_the_order_was_cancelled_is_refunded(
 ) -> None:
     async with api_factory(gateway=gateway) as api:
         placed = await place_order(api)
-        # The shopper starts a new checkout; the first order is replaced and its stock released.
+        # Худалдан авагч шинэ checkout эхлүүлнэ; эхний захиалга солигдож, нөөц нь суллагдана.
         second = await checkout(placed.shopper, await add_address(placed.shopper))
         assert second.status_code == 200
         assert (await placed.order())["status"] == "cancelled"
@@ -290,10 +290,10 @@ async def test_payment_after_the_order_was_cancelled_is_refunded(
         late = await placed.event("succeeded")
 
         assert late.status_code == 200
-        assert (await placed.order())["status"] == "cancelled"  # never resurrected
+        assert (await placed.order())["status"] == "cancelled"  # хэзээ ч сэргээгдэхгүй
         assert gateway.refunds == [placed.intent_id]
         assert (await placed.payment())["status"] == "refunded"
-        assert await placed.stock() == 5  # only the second order holds stock
+        assert await placed.stock() == 5  # зөвхөн хоёр дахь захиалга нөөц эзэлнэ
 
 
 async def test_a_failed_refund_is_retried_when_the_event_is_redelivered(
@@ -311,9 +311,9 @@ async def test_a_failed_refund_is_retried_when_the_event_is_redelivered(
         gateway.fail_refund = False
         redelivered = await api.client.post(HOOK, content=body, headers=headers)
 
-        assert first.status_code == 503  # Stripe will try again
+        assert first.status_code == 503  # Stripe дахин оролдоно
         assert redelivered.status_code == 200
-        assert gateway.refunds == [placed.intent_id]  # refunded exactly once, on the retry
+        assert gateway.refunds == [placed.intent_id]  # retry үед яг нэг удаа буцаан олгосон
         assert (await placed.payment())["status"] == "refunded"
 
 
@@ -330,8 +330,8 @@ async def test_a_declined_card_keeps_the_order_open_for_another_try(
         assert payment["status"] == "failed"
         assert payment["last_error"] == "Your card was declined."
         assert (await placed.order())["status"] == "pending"
-        assert await placed.stock() == 5  # still reserved
-        await placed.event("succeeded")  # the retry with another card works
+        assert await placed.stock() == 5  # нөөц хэвээр
+        await placed.event("succeeded")  # өөр картаар дахин оролдоход амжилттай
         assert (await placed.order())["status"] == "paid"
         assert (await placed.payment())["status"] == "succeeded"
 
@@ -363,7 +363,7 @@ async def test_a_cancelled_payment_releases_the_stock(
         assert (await placed.order())["status"] == "cancelled"
         assert (await placed.payment())["status"] == "canceled"
         assert await placed.stock() == 7
-        await placed.event("canceled", event_id="evt_again")  # and releasing twice is harmless
+        await placed.event("canceled", event_id="evt_again")  # хоёр дахин суллах нь хор хөнөөлгүй
         assert await placed.stock() == 7
 
 

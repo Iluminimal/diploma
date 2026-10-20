@@ -23,7 +23,7 @@ class WishlistService:
         async with self._session.begin():
             ids = await self._wishlist.list_product_ids(user_id, MAX_WISHLIST_ITEMS)
             products = await self._products.get_many(ids)
-        # Newest first; products withdrawn from the catalogue quietly drop out of the list.
+        # Шинэ нь эхэнд; catalogue-оос татагдсан бараа жагсаалтаас чимээгүй гарна.
         return WishlistOut(
             items=[
                 to_product_out(products[i], self._storage)
@@ -33,7 +33,7 @@ class WishlistService:
         )
 
     async def add(self, user_id: int, product_id: int) -> None:
-        """Idempotent: saving the same product twice is not an error (double taps, retries)."""
+        """Idempotent: ижил барааг хоёр удаа хадгалах нь алдаа биш (давхар товшилт, retry)."""
         async with self._session.begin():
             product = (await self._products.get_many([product_id])).get(product_id)
             if product is None or not product.is_active:

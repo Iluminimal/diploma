@@ -1,7 +1,7 @@
-"""What the shop needs from a payment provider, independent of Stripe.
+"""Дэлгүүрт төлбөрийн provider-аас хэрэгтэй зүйл, Stripe-ээс хамаарахгүй.
 
-Services depend on this protocol only. `StripeGateway` talks to Stripe; `OfflineGateway` is an
-in-process stand-in for development without keys and for tests.
+Service-үүд зөвхөн энэ protocol-оос хамаарна. `StripeGateway` Stripe-тай ярина; `OfflineGateway`
+нь key-гүй хөгжүүлэлт, тестэд зориулсан процесс доторх орлуулагч.
 """
 
 from dataclasses import dataclass
@@ -11,11 +11,11 @@ PaymentEventKind = Literal["succeeded", "failed", "canceled"]
 
 
 class PaymentProviderError(Exception):
-    """The provider could not be reached or refused the call. Safe to retry."""
+    """Provider-тэй холбогдсонгүй эсвэл дуудлагыг татгалзсан. Дахин оролдоход аюулгүй."""
 
 
 class InvalidSignatureError(Exception):
-    """A webhook body that is not signed by the provider (or is malformed)."""
+    """Provider гарын үсэг зураагүй (эсвэл буруу бүтэцтэй) webhook body."""
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,7 @@ class IntentInfo:
 
 @dataclass(frozen=True)
 class PaymentEvent:
-    """A provider webhook reduced to what the order logic cares about."""
+    """Захиалгын логикт хэрэгтэй зүйл болгон хураасан provider webhook."""
 
     id: str
     kind: PaymentEventKind
@@ -43,17 +43,17 @@ class PaymentGateway(Protocol):
     async def create_intent(
         self, *, amount_cents: int, currency: str, order_number: str, idempotency_key: str
     ) -> IntentInfo:
-        """Create (or, for a repeated `idempotency_key`, return) the payment for one order."""
+        """Нэг захиалгын төлбөрийг үүсгэнэ (`idempotency_key` давтагдвал өмнөхийг нь буцаана)."""
         ...
 
     async def cancel_intent(self, intent_id: str) -> Literal["canceled", "succeeded"]:
-        """Cancel an unpaid intent. "succeeded" means it was paid in the meantime."""
+        """Төлөгдөөгүй intent-ийг цуцлана. "succeeded" бол ээлжид төлөгдчихсөн гэсэн үг."""
         ...
 
     async def refund(self, intent_id: str, *, idempotency_key: str) -> str:
-        """Refund a paid intent in full; returns the refund id."""
+        """Төлөгдсөн intent-ийг бүтнээр нь буцаан олгоно; refund id буцаана."""
         ...
 
     def parse_event(self, payload: bytes, signature: str | None) -> PaymentEvent | None:
-        """Verify and decode a webhook. None for event types we do not act on."""
+        """Webhook-ийг шалгаж задлана. Бидний боловсруулдаггүй event төрөлд None."""
         ...

@@ -1,5 +1,5 @@
-"""Text messages behind an interface, like `Mailer`: development logs the message (so the one-time
-code can be read from the API log), production hands it to Twilio."""
+"""SMS (interface-ийн ард), `Mailer`-тэй адил: хөгжүүлэлтэд log-д бичнэ (нэг удаагийн кодыг API
+log-оос уншина), production-д Twilio руу өгнө."""
 
 from dataclasses import dataclass
 from typing import Protocol
@@ -22,7 +22,7 @@ class Sms:
 
 
 class SmsDeliveryError(Exception):
-    """The provider did not accept the message (the person should try again)."""
+    """Үйлчилгээ үзүүлэгч мессежийг хүлээн авсангүй (хэрэглэгч дахин оролдох ёстой)."""
 
 
 class SmsSender(Protocol):
@@ -30,8 +30,8 @@ class SmsSender(Protocol):
 
 
 class ConsoleSmsSender:
-    """Writes the message to the structured log. The body (which holds a one-time code) and the
-    full number are logged in dev only."""
+    """Мессежийг structured log-д бичнэ. Body (нэг удаагийн код агуулна) болон бүтэн дугаарыг
+    зөвхөн dev-д log-дно."""
 
     def __init__(self, *, log_body: bool) -> None:
         self._log_body = log_body

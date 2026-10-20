@@ -35,7 +35,7 @@ log = get_logger(__name__)
 
 
 def author_name(user: User) -> str:
-    """ "Ada Lovelace" is shown as "Ada L."; one name, or a deleted account, as it is."""
+    """ "Ada Lovelace" нь "Ada L." гэж харагдана; нэг нэр эсвэл устгасан бүртгэл хэвээрээ."""
     parts = user.full_name.split()
     if user.full_name == DELETED_NAME or len(parts) < 2:
         return user.full_name or DELETED_NAME
@@ -80,7 +80,7 @@ class ReviewService:
         self._cache = cache
         self._reviews = ReviewRepository(session)
 
-    # --- the product page ----------------------------------------------------------------
+    # --- барааны хуудас ---
 
     async def list(
         self, product_id: int, query: ReviewListQuery, viewer_id: int | None
@@ -123,7 +123,7 @@ class ReviewService:
             can_review=purchased and own is None,
         )
 
-    # --- a buyer's own review ------------------------------------------------------------
+    # --- худалдан авагчийн өөрийн сэтгэгдэл ---
 
     async def create(self, user_id: int, product_id: int, data: ReviewCreate) -> ReviewOut:
         async with self._session.begin():
@@ -171,7 +171,7 @@ class ReviewService:
                 review.body = data.body
             await self._reviews.flush()
             await self._reviews.recompute_rating(review.product_id)
-            # `updated_at` is set by the database; read it back before the session closes.
+            # `updated_at`-г database тавьдаг; session хаагдахаас өмнө дахин унш.
             await self._session.refresh(review)
             author = await self._reviews.author(user_id)
         await self._cache.invalidate_catalogue()
@@ -187,8 +187,8 @@ class ReviewService:
         log.info("review_deleted", review_id=review_id, product_id=product_id)
 
     async def _own_locked(self, user_id: int, review_id: int) -> Review:
-        """The caller's review with the product and the review locked (product first, always).
-        Somebody else's review is simply not found."""
+        """Дуудагчийн сэтгэгдлийг бараатай нь хамт түгжинэ (үргэлж бараа эхэлж). Өөр хүний
+        сэтгэгдэл олдохгүй."""
         review = await self._reviews.get(review_id)
         if review is None or review.user_id != user_id:
             raise _no_review(review_id)
@@ -198,7 +198,7 @@ class ReviewService:
             raise _no_review(review_id)
         return locked
 
-    # --- moderation ----------------------------------------------------------------------
+    # --- модераци ---
 
     async def admin_list(self, query: AdminReviewListQuery) -> AdminReviewPage:
         async with self._session.begin():

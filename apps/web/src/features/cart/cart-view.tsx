@@ -40,7 +40,8 @@ export function CartView() {
   }
   if (cart.lines.length === 0) {
     return (
-      // As tall as the loading skeleton (3 rows of 8rem and their gaps), so the page below does not jump.
+      // Ачаалах skeleton-той ижил өндөр (8rem-ийн 3 мөр ба зайнууд), ингэснээр доорх хуудас
+      // үсрэхгүй.
       <div>
         <EmptyState
           icon={ShoppingBag}

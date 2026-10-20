@@ -11,25 +11,25 @@ from angel.oauth.provider import OAuthError, OAuthProfile
 log = get_logger(__name__)
 
 AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
-TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105 - a URL, not a secret
+TOKEN_URL = "https://oauth2.googleapis.com/token"  # noqa: S105 - URL, нууц биш
 ISSUERS = {"https://accounts.google.com", "accounts.google.com"}
 CLOCK_SKEW_SECONDS = 60
 
 
 def _https_url(value: object) -> str | None:
-    """Only https photos are kept: the value ends up in an <img src> on our pages."""
+    """Зөвхөн https зургийг хадгална: утга нь манай хуудасны <img src> болно."""
     if isinstance(value, str) and value.startswith("https://") and len(value) <= 500:
         return value
     return None
 
 
 class GoogleOAuth:
-    """Authorization code flow with PKCE against Google.
+    """Google-тэй PKCE бүхий authorization code flow.
 
-    The ID token is not signature-checked: it arrives straight from Google's token endpoint over
-    TLS in answer to a request carrying our client secret and PKCE verifier, which Google's own
-    documentation accepts as proof of origin. Its claims are still checked (issuer, audience,
-    expiry, the nonce we sent, a stable subject, a verified email).
+    ID token-ы гарын үсгийг шалгадаггүй: энэ нь манай client secret, PKCE verifier-тэй хүсэлтийн
+    хариуд Google-ийн token endpoint-оос TLS-ээр шууд ирдэг бөгөөд Google-ийн баримт үүнийг
+    гарал үүслийн нотолгоо гэж хүлээн зөвшөөрдөг. Харин claim-уудыг шалгана (issuer, audience,
+    хугацаа, илгээсэн nonce, тогтвортой subject, баталгаажсан email).
     """
 
     name = "google"
@@ -84,7 +84,7 @@ class GoogleOAuth:
                 "google_failed", f"token request failed: {type(exc).__name__}"
             ) from exc
         if response.status_code != 200:
-            # Google's error body names the cause (e.g. invalid_grant); it is for logs only.
+            # Google-ийн алдааны body шалтгааныг нэрлэнэ (жишээ нь invalid_grant); зөвхөн log-д.
             raise OAuthError("google_failed", f"token endpoint answered {response.status_code}")
         try:
             id_token = response.json()["id_token"]

@@ -36,10 +36,10 @@ function heading(step: Step, who: Identifier | null): { title: string; subtitle:
 }
 
 /**
- * Signing in and signing up are one flow, as on apple.com or airbnb.com: one field for an email
- * or a phone number, then the next step for what was typed. A phone number gets a code by text; an
- * email gets a password, or a code by email. A code for somebody new creates their account, and
- * only then is the name asked. No step reveals whether an account exists.
+ * Нэвтрэх, бүртгүүлэх нь нэг flow (apple.com, airbnb.com шиг): имэйл эсвэл утасны дугаарын нэг
+ * талбар, дараа нь бичсэнд тохирсон алхам. Утсанд SMS-ээр код очно; имэйлд нууц үг, эсвэл имэйлээр
+ * код. Шинэ хүний код бүртгэл үүсгэж, зөвхөн дараа нь нэр асууна. Ямар ч алхам бүртгэл байгаа
+ * эсэхийг ил болгохгүй.
  */
 export function SignInFlow({ next, notice, social }: { next: string; notice?: string | null; social?: ReactNode }) {
   const router = useRouter();
@@ -70,7 +70,7 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
     router.refresh();
   }
 
-  /** Sends a code. Resolves to whether it went out; the reason, if not, is in `problem`. */
+  /** Код илгээнэ. Илгээгдсэн эсэхийг буцаана; үгүй бол шалтгаан нь `problem`-д. */
   async function sendCode(destination: string) {
     setProblem(null);
     setBusy(true);

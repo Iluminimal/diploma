@@ -14,10 +14,10 @@ import {
 import { SCHEMES, VARIANTS, VIEWPORTS, expectNoViolations, scan, settled, sweep, type Variant } from "./support/axe";
 
 /**
- * Automated WCAG 2.1 A/AA checks (axe) on every kind of screen, in light and dark mode at phone
- * and desktop width, with reduced motion so nothing is caught mid-animation. Automated checks find
- * roughly a third of accessibility problems: keyboard use and screen reader wording are covered
- * by the specs in keyboard.spec.ts and by the manual pass described in docs/frontend.md.
+ * Бүх төрлийн дэлгэц дээр axe-ээр WCAG 2.1 A/AA-ийн автомат шалгалт: гэрэл ба харанхуй горим, утас
+ * ба компьютерийн өргөнөөр. Animation дундуур баригдахгүйн тулд reduced motion асаасан. Автомат
+ * шалгалт a11y асуудлын ердөө гуравны нэгийг олдог; keyboard болон screen reader-ийн хэсгийг
+ * keyboard.spec.ts ба docs/frontend.md-д бичсэн гар шалгалт хариуцна.
  */
 
 const heading = (page: import("@playwright/test").Page) => async () => {
@@ -152,7 +152,7 @@ test.describe("storefront", () => {
     for (const variant of VARIANTS) {
       await page.setViewportSize(VIEWPORTS[variant.viewport]);
       await page.emulateMedia({ colorScheme: variant.scheme, reducedMotion: "reduce" });
-      await page.context().clearCookies(); // a fresh guest cart: this product has little stock
+      await page.context().clearCookies(); // шинэ зочны сагс: энэ барааны нөөц бага
       await page.goto(`/products/${product!.id}/${product!.slug}`);
       await page.locator("fieldset label").first().click();
       await page.getByRole("button", { name: /add to bag/i }).click();
@@ -225,7 +225,7 @@ test.describe("reviews and tracking", () => {
     const number = await placePaidOrder(api, account, product.id);
     await shipAndDeliver(api, admin, number);
 
-    // The buyer, with the form to write a review, and with their own review afterwards.
+    // Худалдан авагч: сэтгэгдэл бичих форм, дараа нь өөрийнх нь сэтгэгдэл.
     const reviewsReady = () => expect(page.getByRole("form", { name: "Write a review" })).toBeVisible();
     await sweep(page, `/account/orders/${number}`, { ready: () => expect(page.getByRole("link", { name: /Write a review/ })).toBeVisible() });
     await sweep(page, `/products/${product.id}`, { ready: reviewsReady });
@@ -234,7 +234,7 @@ test.describe("reviews and tracking", () => {
       ready: () => expect(page.getByRole("button", { name: "Edit" })).toBeVisible(),
     });
 
-    // A visitor sees the reviews and the invitation to sign in.
+    // Зочин сэтгэгдлийг харж, нэвтрэх урилгыг харна.
     const visitor = await (await browser.newContext()).newPage();
     await sweep(visitor, `/products/${product.id}`, {
       ready: () => expect(visitor.getByRole("heading", { name: "Fits well" })).toBeVisible(),
@@ -292,7 +292,7 @@ test.describe("admin", () => {
         await page.goto(`/admin/orders/${number}`);
         await page.getByRole("button", { name: button, exact: true }).click();
         await expect(page.getByRole("dialog", { name: dialogName })).toBeVisible();
-        // Errors are part of what a screen reader must be able to reach.
+        // Алдаа нь screen reader-т хүрэх ёстой хэсгийн нэг.
         await page.getByRole("dialog").getByRole("button", { name: /Mark as shipped|Refund order/ }).click();
         await expect(page.getByRole("dialog").getByRole("alert").first()).toBeVisible();
         await settled(page);

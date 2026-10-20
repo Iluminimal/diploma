@@ -1,4 +1,4 @@
-"""ORM rows and request models to DTOs and repository inputs."""
+"""ORM мөр болон request model-ийг DTO, repository-ийн оролт болгоно."""
 
 from angel.ingestion.images import thumbnail_key
 from angel.models import Order, OrderEvent, OrderItem, Product
@@ -105,12 +105,12 @@ _PUBLIC_DATA = {"shipped": ("carrier", "tracking_number"), "cancelled": ("reason
 
 
 def _loaded_events(order: Order) -> list[OrderEvent]:
-    """The history, when the order was loaded with it (checkout and listings do not)."""
+    """Захиалгыг түүхтэй нь ачаалсан үед түүх (checkout, жагсаалтууд ачаалдаггүй)."""
     return list(order.__dict__.get("events", []))
 
 
 def to_public_events(order: Order) -> list[OrderEventOut]:
-    """What a customer may see: no notes, no names of staff, no internal detail."""
+    """Худалдан авагч юу харж болох вэ: тэмдэглэл, ажилтны нэр, дотоод мэдээлэл байхгүй."""
     return [
         OrderEventOut(
             type=event.type,

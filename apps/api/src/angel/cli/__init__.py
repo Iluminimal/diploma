@@ -1,1 +1,1 @@
-"""Command-line tools: `make create-admin`, `make seed-demo`, `make openapi`."""
+"""Command line хэрэгслүүд: `make create-admin`, `make seed-demo`, `make openapi`."""

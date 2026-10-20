@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/admin/products/new",
 }));
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }) }));
-// jsdom has no object URLs.
+// jsdom-д object URL байдаггүй.
 vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: () => "blob:preview", revokeObjectURL: () => {} }));
 
 const categories = [
@@ -58,7 +58,7 @@ describe("NewProductView", () => {
     expect(await screen.findByText("Enter a name")).toBeInTheDocument();
     expect(screen.getByText("Choose a category")).toBeInTheDocument();
     expect(screen.getByText("Enter a price like 49.99")).toBeInTheDocument();
-    // The missing photo is reported together with the rest, not one attempt later.
+    // Зураггүй байгааг бусадтай нь хамт мэдээлнэ, дараагийн оролдлогод биш.
     expect(screen.getByText("Choose a photo of the product.")).toBeInTheDocument();
     await fillRequired();
     await userEvent.click(screen.getByRole("button", { name: "Create product" }));
@@ -71,7 +71,8 @@ describe("NewProductView", () => {
     renderWithQuery(<NewProductView />);
     await screen.findByLabelText("Category");
 
-    // `accept` only filters the file picker; a dragged-in or renamed file still reaches the form.
+    // `accept` нь зөвхөн файл сонгогчийг шүүнэ; чирсэн эсвэл нэр нь солигдсон файл form-д хүрсээр
+    // байна.
     await userEvent
       .setup({ applyAccept: false })
       .upload(screen.getByLabelText("Photo"), new File(["x"], "doc.pdf", { type: "application/pdf" }));

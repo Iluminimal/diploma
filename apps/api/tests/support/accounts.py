@@ -1,4 +1,4 @@
-"""Helpers for the sign-in-with-a-code tests."""
+"""Кодоор нэвтрэх тестүүдийн туслахууд."""
 
 import secrets
 
@@ -13,7 +13,7 @@ OTP_VERIFY = "/api/v1/auth/otp/verify"
 
 
 def unique_phone() -> str:
-    """A valid US number nobody else in the run uses."""
+    """Энэ ажиллуулалтад өөр хэн ч ашиглаагүй хүчинтэй US дугаар."""
     return f"+1415555{secrets.randbelow(9000) + 1000}"
 
 
@@ -30,7 +30,7 @@ async def sign_in_with_phone(
     *,
     client: AsyncClient | None = None,
 ) -> Shopper:
-    """Request a code for `phone`, read it from the recorded text and sign in."""
+    """`phone`-д код хүсч, илгээсэн текстээс уншаад нэвтэрнэ."""
     phone = phone or unique_phone()
     client = client or api.client
     requested = await client.post(OTP_REQUEST, json={"destination": phone})

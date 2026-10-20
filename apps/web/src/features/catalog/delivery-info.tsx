@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchShippingMethods } from "@/features/checkout/checkout-api";
 import { queryKeys } from "@/lib/query-keys";
 
-/** What delivery costs and how long it takes, read from the same endpoint checkout charges by. */
+/** Хүргэлт хэд, хэр удах вэ: checkout-ын ашигладаг endpoint-оос уншина. */
 export function DeliveryInfo() {
   const { data, isPending, isError } = useQuery({
     queryKey: queryKeys.shippingMethods,

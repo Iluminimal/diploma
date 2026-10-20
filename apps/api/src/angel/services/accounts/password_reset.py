@@ -1,5 +1,5 @@
-"""Forgot password: a code goes to the phone number or email on the account, and with it the
-person chooses a new password."""
+"""Нууц үг мартсан: бүртгэлийн утасны дугаар эсвэл email руу код очиж, түүгээр шинэ нууц үг
+сонгоно."""
 
 import asyncio
 from datetime import UTC, datetime
@@ -30,8 +30,8 @@ class PasswordResetService:
         self._users = UserRepository(session)
 
     async def forgot(self, raw_destination: str) -> None:
-        """Always looks the same from outside: a code is sent only if the account exists, but the
-        answer (and the cooldown) do not depend on it."""
+        """Гаднаас үргэлж ижил харагдана: бүртгэл байвал л код илгээгдэнэ, гэхдээ хариу (болон
+        cooldown) үүнээс хамаарахгүй."""
         destination = normalize_destination(raw_destination, self._settings.default_phone_region)
         async with self._session.begin():
             user = await self._find(destination)
@@ -55,13 +55,13 @@ class PasswordResetService:
                     type_=OTP_INVALID_TYPE,
                 )
             user.password_hash = new_hash
-            # The code reached the owner: that address or number is now proven.
+            # Код эзэнд хүрсэн: тэр хаяг эсвэл дугаар одоо баталгаажлаа.
             if is_phone(destination):
                 user.phone_verified_at = user.phone_verified_at or now
             else:
                 user.email_verified_at = user.email_verified_at or now
             self._session.add(user)
-            # A forgotten password may be a leaked one: every login ends.
+            # Мартсан нууц үг алдагдсан байж болно: бүх нэвтрэлт дуусна.
             await RefreshTokenRepository(self._session).revoke_all_for_user(user.id, now)
             issued = await self._auth.issue_session(user)
         await self._auth.clear_failures(user.identifier)

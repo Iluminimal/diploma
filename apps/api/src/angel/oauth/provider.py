@@ -3,8 +3,8 @@ from typing import Protocol
 
 
 class OAuthError(Exception):
-    """The provider's answer cannot be trusted or used. `reason` is one of the codes the login
-    page knows ("google_failed", "google_unverified"); nothing else about it is shown."""
+    """Provider-ийн хариуг итгэж ч, ашиглаж ч болохгүй. `reason` нь login хуудасны мэддэг кодуудын
+    нэг ("google_failed", "google_unverified"); өөр юу ч харуулахгүй."""
 
     def __init__(self, reason: str, detail: str = "") -> None:
         super().__init__(detail or reason)
@@ -17,7 +17,7 @@ class OAuthProfile:
     email: str
     email_verified: bool
     name: str | None
-    # An https URL of the person's photo, if the provider gave a usable one.
+    # Provider хэрэгэмжтэй зураг өгсөн бол хүний зургийн https URL.
     picture: str | None = None
 
 
@@ -27,9 +27,9 @@ class OAuthProvider(Protocol):
     def authorization_url(
         self, *, state: str, nonce: str, code_challenge: str, login_hint: str | None
     ) -> str:
-        """Where to send the browser to sign in."""
+        """Нэвтрэхийн тулд browser-ийг хаашаа илгээх."""
         ...
 
     async def exchange(self, *, code: str, code_verifier: str, nonce: str) -> OAuthProfile:
-        """Trade the authorization code for who signed in. Raises `OAuthError`."""
+        """Authorization code-оор хэн нэвтэрснийг авна. `OAuthError` шидэж болно."""
         ...

@@ -31,7 +31,7 @@ class OtpRepository:
         return challenge
 
     async def latest(self, purpose: str, destination: str) -> OtpChallenge | None:
-        """The newest challenge for this purpose and destination, used or not (resend cooldown)."""
+        """Хамгийн сүүлийн challenge, ашигласан эсэхээс үл хамаарна (resend cooldown-д)."""
         result = await self._session.execute(
             select(OtpChallenge)
             .where(OtpChallenge.purpose == purpose, OtpChallenge.destination == destination)
@@ -41,8 +41,8 @@ class OtpRepository:
         return result.scalar_one_or_none()
 
     async def latest_open_for_update(self, purpose: str, destination: str) -> OtpChallenge | None:
-        """The newest challenge that was not used yet, locked: two guesses at the same moment are
-        counted one after the other."""
+        """Хамгийн сүүлийн, ашиглагдаагүй challenge-ийг түгжинэ: зэрэг ирсэн хоёр таамаглалыг нэг
+        нэгээр нь тооцно."""
         result = await self._session.execute(
             select(OtpChallenge)
             .where(
@@ -65,7 +65,7 @@ class OtpRepository:
         return int(result.scalar_one())
 
     async def consume_open(self, purpose: str, destination: str, now: datetime) -> None:
-        """A new code replaces the older ones: only the newest can be used."""
+        """Шинэ код хуучныг орлоно: зөвхөн хамгийн сүүлийнх нь хүчинтэй."""
         await self._session.execute(
             update(OtpChallenge)
             .where(

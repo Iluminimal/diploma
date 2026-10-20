@@ -11,7 +11,7 @@ WISHLIST = "/api/v1/wishlist"
 ADDRESSES = "/api/v1/addresses"
 
 
-# --- wishlist --------------------------------------------------------------------------------
+# --- Хүслийн жагсаалт -----------------------------------------------------------------------
 
 
 async def test_wishlist_requires_an_account(api_factory: ApiFactory) -> None:
@@ -92,7 +92,7 @@ async def test_each_user_has_their_own_wishlist(api_factory: ApiFactory) -> None
             assert (await browser.get(WISHLIST, headers=bob.auth)).json()["items"] == []
 
 
-# --- addresses -------------------------------------------------------------------------------
+# --- Хаягууд ---------------------------------------------------------------------------------
 
 
 async def test_address_book_basics(api_factory: ApiFactory) -> None:
@@ -106,8 +106,8 @@ async def test_address_book_basics(api_factory: ApiFactory) -> None:
         listing = await api.client.get(ADDRESSES, headers=shopper.auth)
 
         assert first.status_code == second.status_code == 201
-        assert first.json()["country"] == "GB"  # normalised
-        assert first.json()["is_default"] is True  # the first address is the default
+        assert first.json()["country"] == "GB"  # улсын код стандарт хэлбэрт орсон
+        assert first.json()["is_default"] is True  # эхний хаяг автоматаар үндсэн болно
         assert second.json()["is_default"] is False
         assert [a["id"] for a in listing.json()["items"]] == [
             first.json()["id"],
@@ -132,7 +132,7 @@ async def test_there_is_always_exactly_one_default(api_factory: ApiFactory) -> N
         )
         assert await defaults() == [third]
         await api.client.delete(f"{ADDRESSES}/{third}", headers=shopper.auth)
-        assert len(await defaults()) == 1  # another one was promoted
+        assert len(await defaults()) == 1  # өөр нэг хаяг үндсэн болсон
         await api.client.delete(f"{ADDRESSES}/{second}", headers=shopper.auth)
         assert await defaults() == [first]
 
@@ -153,7 +153,7 @@ async def test_address_update_clears_optional_fields_but_not_required_ones(
 
         assert cleared.json()["line2"] is None
         assert cleared.json()["city"] == "Leeds"
-        assert cleared.json()["phone"] == "+44 20 7946 0958"  # untouched
+        assert cleared.json()["phone"] == "+44 20 7946 0958"  # утас өөрчлөгдөөгүй
         assert required.status_code == 422
 
 

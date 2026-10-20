@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "./auth-store";
 
-// The dropdown library is only needed once a signed-in shopper opens the menu.
+// Dropdown library нь нэвтэрсэн хэрэглэгч цэсийг нээх үед л хэрэгтэй.
 const AccountDropdown = dynamic(() => import("./account-dropdown").then((m) => m.AccountDropdown), { ssr: false });
 
 export function AccountMenu() {
@@ -28,7 +28,7 @@ export function AccountMenu() {
       </Link>
     );
   }
-  // The first click asks for the real menu, which opens itself as soon as it has loaded.
+  // Эхний товшилт жинхэнэ цэсийг дуудна; ачаалагдмагц цэс өөрөө нээгдэнэ.
   if (!requested) {
     return (
       <button

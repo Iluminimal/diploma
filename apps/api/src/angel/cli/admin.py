@@ -1,5 +1,5 @@
-"""Operational commands. `make create-admin EMAIL=you@example.com` is the way to get the first
-administrator: registering through the API always creates a customer."""
+"""Үйл ажиллагааны command-ууд. Эхний administrator-ыг `make create-admin EMAIL=you@example.com`-оор
+үүсгэнэ: API-аар бүртгүүлбэл үргэлж customer болдог."""
 
 import argparse
 import asyncio
@@ -37,8 +37,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def _password(args: argparse.Namespace) -> str | None:
-    """From $ADMIN_PASSWORD (scripts, CI), otherwise asked for without echo. Never an argument:
-    command lines end up in shell history and process listings."""
+    """$ADMIN_PASSWORD-оос (script, CI), үгүй бол дэлгэцэнд харуулахгүйгээр асууна. Argument-аар
+    хэзээ ч авахгүй: command line нь shell history, process жагсаалтад үлддэг."""
     if args.keep_password:
         return None
     value = os.environ.get(PASSWORD_ENV)

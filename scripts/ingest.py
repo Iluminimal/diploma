@@ -1,4 +1,4 @@
-"""Dataset ingestion. Run from apps/api so the project environment is used:
+"""Dataset ingestion. Төслийн environment ашиглахын тулд apps/api-аас ажиллуул:
 
 cd apps/api && uv run python ../../scripts/ingest.py --limit 500
 make ingest ARGS="--limit 500"

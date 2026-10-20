@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary-hover active:bg-primary-active",
-        // Apple's "Learn more": a blue outline that fills on hover.
+        // Apple-ийн "Learn more": hover дээр дүүрдэг цэнхэр хүрээ.
         bordered:
           "border-brand bg-transparent text-brand hover:border-primary hover:bg-primary hover:text-primary-foreground active:bg-primary-active",
         outline:
@@ -19,7 +19,8 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
-          // Solid, so the label keeps its contrast (white on the red, black on the lighter dark-mode red).
+          // Тод өнгө, ингэснээр label contrast-аа хадгална (улаан дээр цагаан, харанхуй горимын
+          // цайвар улаан дээр хар).
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:border-destructive/40 focus-visible:ring-destructive/30 dark:text-black dark:focus-visible:ring-destructive/40",
         link: "text-brand underline-offset-4 hover:underline",
       },
@@ -29,7 +30,7 @@ const buttonVariants = cva(
         xs: "h-6 gap-1 rounded-full px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
         sm: "h-8 gap-1 rounded-full px-4 text-sm in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
         lg: "h-11 gap-2 px-6 text-[1.0625rem] has-data-[icon=inline-end]:pr-4 has-data-[icon=inline-start]:pl-4",
-        // Apple's big call-to-action pill (hero sections).
+        // Apple-ийн том call-to-action товч (hero хэсгүүд).
         xl: "h-12 gap-2 px-7 text-[1.0625rem] has-data-[icon=inline-end]:pr-5 has-data-[icon=inline-start]:pl-5",
         icon: "size-9",
         "icon-xs":

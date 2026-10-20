@@ -1,4 +1,4 @@
-"""Ingestion end to end against a real Postgres, with a deterministic fake embedder."""
+"""Жинхэнэ Postgres дээр, тогтмол fake embedder-ээр ингестийн бүтэн урсгал."""
 
 from pathlib import Path
 
@@ -106,8 +106,8 @@ async def test_ingest_writes_products_categories_thumbnails_and_embeddings(
     assert first.is_active is True
     assert len({r.slug for r in rows}) == 10
     assert search_hit > 0
-    # 3 masters (Apparel, Footwear, Accessories) + 3 subs (Shirts and Tops share Topwear)
-    # + 4 article types.
+    # 3 master (Apparel, Footwear, Accessories) + 3 sub (Shirts, Tops нь Topwear-г хуваалцана)
+    # + 4 article type.
     assert sorted(c.level for c in categories) == [1] * 3 + [2] * 3 + [3] * 4
     for product in products:
         for size in THUMBNAIL_SIZES:
@@ -171,7 +171,7 @@ async def test_a_crash_mid_run_keeps_completed_batches(
             options=OPTIONS,
             embedder=CrashingEmbedder(),
         )
-    assert await _count(db_engine) == 8  # two batches of 4 were committed
+    assert await _count(db_engine) == 8  # 4-ийн хоёр batch commit хийгдсэн
 
     retry = FakeEmbedder()
     await ingest_products(
@@ -220,7 +220,7 @@ async def test_reembed_replaces_embeddings_but_keeps_shop_owned_fields(
         db_engine, products, storage, version=VERSION, options=OPTIONS, embedder=embedder
     )
 
-    assert embedder.images_embedded == 3  # the stale version triggers re-embedding
+    assert embedder.images_embedded == 3  # хуучирсан хувилбар дахин embedding хийхийг өдөөнө
     assert stats.thumbnails_written == 0
     async with db_engine.connect() as connection:
         rows = (await connection.execute(select(Product))).all()
@@ -272,9 +272,9 @@ async def test_export_then_import_matches_direct_embedding(
         storage=storage,
     )
     assert exported.upserted == 9
-    assert len(list(out.glob("embeddings-*.parquet"))) >= 2  # sharded for resumability
+    assert len(list(out.glob("embeddings-*.parquet"))) >= 2  # дахин эхлүүлэхэд зориулж хэсэглэсэн
 
-    # Re-running the export only does the missing work.
+    # Export-ыг дахин ажиллуулахад дутуу хэсгийг л хийнэ.
     again = FakeEmbedder()
     resumed = export_embeddings(
         products, out, again, options=OPTIONS, dtype="float32", shard_size=4, storage=storage

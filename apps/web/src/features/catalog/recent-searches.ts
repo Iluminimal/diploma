@@ -1,7 +1,10 @@
 const KEY = "angel:recent-searches";
 const MAX = 5;
 
-/** The last few text searches on this device. Storage can be blocked or full: that just means none. */
+/**
+ * Энэ төхөөрөмж дээрх сүүлийн хэдэн текст хайлт. Storage хаалттай эсвэл дүүрэн байж болно: тэгвэл
+ * хоосон гэсэн үг.
+ */
 export function readRecentSearches(): string[] {
   try {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(KEY) ?? "[]");
@@ -11,7 +14,7 @@ export function readRecentSearches(): string[] {
   }
 }
 
-/** Newest first, no duplicates (ignoring case). Returns the stored list. */
+/** Шинэ нь түрүүнд, давхардалгүй (том жижиг үсгийг үл хамаарна). Хадгалсан жагсаалтыг буцаана. */
 export function rememberSearch(query: string): string[] {
   const text = query.trim();
   if (!text) return readRecentSearches();
@@ -19,7 +22,7 @@ export function rememberSearch(query: string): string[] {
   try {
     window.localStorage.setItem(KEY, JSON.stringify(next));
   } catch {
-    // Not remembering is fine.
+    // Санахгүй байсан ч зүгээр.
   }
   return next;
 }

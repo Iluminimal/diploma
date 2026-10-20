@@ -7,7 +7,7 @@ function reducedMotion() {
 const inView = (rect: DOMRect) =>
   rect.width > 0 && rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth;
 
-/** The cart icon gives a short bounce when something lands in it. */
+/** Cart icon-д ямар нэг зүйл ортолоо богино үсрэнэ. */
 function bounce(target: Element) {
   target.animate([{ scale: 1 }, { scale: 1.28 }, { scale: 0.94 }, { scale: 1 }], {
     duration: 520,
@@ -16,13 +16,13 @@ function bounce(target: Element) {
 }
 
 /**
- * "Add to cart" made visible: a copy of the product photo shrinks and flies from where the shopper
- * is looking to the cart icon in the header, which bounces as it lands. Resolves when it has
- * landed (the Bag opens then). With reduced motion, or when there is nowhere to fly from or to,
- * it resolves at once. Web Animations, no library: this ships with the page.
+ * "Add to cart"-ыг харагдуулна: бүтээгдэхүүний зургийн хуулбар жижгэрч, худалдан авагчийн харж буй
+ * газраас header дахь cart icon руу нисч, буухад icon үсэрнэ. Буусны дараа resolve болно (тэр үед
+ * Bag нээгдэнэ). Reduced motion үед, эсвэл хаанаас/хаашаа нисэх газар байхгүй бол шууд resolve
+ * болно. Web Animations, library-гүй: хуудсатай хамт ачаалагдана.
  *
- * `source` is the photo the shopper added from; `fallback` (the button they pressed) is used when
- * the photo has scrolled out of sight, as it has on a phone's sticky bar.
+ * `source` нь нэмсэн зураг; `fallback` (дарсан товч) нь зураг дэлгэцээс гарсан үед, жишээ нь утасны
+ * sticky bar дээр ашиглагдана.
  */
 export async function flyToCart(source: Element | null, fallback: Element | null, image?: string): Promise<void> {
   const target = document.querySelector(CART_BUTTON);
@@ -69,7 +69,7 @@ export async function flyToCart(source: Element | null, fallback: Element | null
   try {
     await flight.finished;
   } catch {
-    // cancelled (the page changed under it): nothing to land
+    // цуцлагдсан (хуудас солигдсон): буух зүйл алга
   } finally {
     clone.remove();
   }

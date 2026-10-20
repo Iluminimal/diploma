@@ -29,8 +29,8 @@ class CheckoutRequest(BaseModel):
 
     address_id: Annotated[int, Field(ge=1, le=2**63 - 1)]
     shipping_method: ShippingMethodId
-    # Where the order emails go. Required only when the account has no email (it signed up with
-    # a phone number); otherwise the account's email is used.
+    # Захиалгын email хаашаа явах вэ. Бүртгэлд email байхгүй (утасны дугаараар бүртгүүлсэн) үед л
+    # заавал; үгүй бол бүртгэлийн email-ийг хэрэглэнэ.
     contact_email: EmailStr | None = None
 
     @field_validator("contact_email", mode="after")
@@ -51,11 +51,11 @@ class OrderItemOut(BaseModel):
 
 
 class OrderEventOut(BaseModel):
-    """One step in an order's history, as the customer sees it."""
+    """Захиалгын түүхийн нэг алхам, худалдан авагчид харагддаг хэлбэрээр."""
 
     type: Literal["placed", "paid", "shipped", "delivered", "cancelled", "refunded"]
     at: datetime
-    # Only what is safe to show: a shipment's carrier and tracking number, why it was cancelled.
+    # Зөвхөн харуулахад аюулгүй зүйл: ачилтын тээвэрлэгч ба tracking дугаар, цуцалсан шалтгаан.
     data: dict[str, Any]
 
 
@@ -87,7 +87,7 @@ class OrderSummary(BaseModel):
     currency: str
     total_cents: int
     item_count: int
-    # The first few product images, for the history list.
+    # Эхний хэдэн барааны зураг, түүхийн жагсаалтад.
     images: list[ProductImage]
 
 
@@ -100,8 +100,8 @@ class OrderPage(BaseModel):
 
 
 class PaymentOut(BaseModel):
-    """What the browser needs to collect payment. `stripe`: confirm the PaymentIntent with
-    Stripe.js using `client_secret`. `offline` (development): call the simulate endpoint."""
+    """Browser төлбөр авахад хэрэгтэй зүйл. `stripe`: `client_secret`-ээр Stripe.js-ээр
+    PaymentIntent-ийг баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна."""
 
     provider: Literal["stripe", "offline"]
     client_secret: str | None

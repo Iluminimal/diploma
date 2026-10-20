@@ -52,7 +52,7 @@ from angel.schemas.problem import ProblemDetail
 from angel.services.accounts.auth import IssuedSession
 from angel.services.accounts.oauth import OAuthFailure, login_error_url
 
-# Every endpoint here either sets or reads a cookie, so all of them check the request's origin.
+# Endpoint бүр cookie тавьдаг эсвэл уншдаг тул бүгд request-ийн origin-ийг шалгана.
 router = APIRouter(
     prefix="/auth",
     tags=["auth"],
@@ -69,7 +69,7 @@ OAuthCookie = Annotated[str | None, Cookie(alias=OAUTH_COOKIE, include_in_schema
 
 def _respond(issued: IssuedSession, response: Response, settings: SettingsDep) -> SessionOut:
     set_session_cookies(response, settings, issued.refresh_token, issued.refresh_max_age)
-    # The guest cart was merged into the account's: the cookie has done its job.
+    # Зочны сагс account-ийнхтай нэгдсэн тул cookie-ийн үүрэг дууссан.
     clear_cart_cookie(response, settings)
     return SessionOut(
         access_token=issued.access.value,
@@ -423,9 +423,9 @@ async def delete_me(
     clear_cart_cookie(response, settings)
 
 
-# --- sign in with Google -------------------------------------------------------------------------
-# Both endpoints are navigations, not fetches: the browser follows their redirects, so they answer
-# with redirects (never JSON) and a failure ends on the login page with a short `?error=` code.
+# --- Google-ээр нэвтрэх --------------------------------------------------------------------------
+# Хоёр endpoint хоёул fetch биш browser-ийн navigation: browser redirect дагадаг тул redirect-ээр
+# хариулна (JSON хэзээ ч биш). Алдаа гарвал `?error=` богино кодтойгоор login хуудас руу буцна.
 
 
 @router.get("/providers", summary="Which sign-in methods besides a password are available")
@@ -487,7 +487,7 @@ async def google_callback(
     if service is None:
         return fail("google_failed")
     if error is not None:
-        # "access_denied" is the person pressing Cancel; anything else is Google or us failing.
+        # "access_denied" нь хэрэглэгч Cancel дарсан; бусад нь Google эсвэл бидний алдаа.
         return fail("google_denied" if error == "access_denied" else "google_failed")
     if not code or not state:
         return fail("google_failed")

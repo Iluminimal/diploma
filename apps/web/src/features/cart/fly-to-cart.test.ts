@@ -15,7 +15,7 @@ beforeEach(() => {
   animations = [];
   Object.defineProperty(window, "innerWidth", { value: 1000, configurable: true });
   Object.defineProperty(window, "innerHeight", { value: 800, configurable: true });
-  // jsdom has no Web Animations: a stub whose `finished` resolves when the test says so.
+  // jsdom-д Web Animations байхгүй: тест хэлэхэд `finished` нь resolve болдог stub.
   Element.prototype.animate = function (this: Element) {
     let done: () => void = () => {};
     const finished = new Promise<void>((resolve) => (done = resolve));

@@ -19,7 +19,7 @@ class PriceRange(BaseModel):
 
 
 class CatalogFilters(BaseModel):
-    """Everything a filter sidebar needs to render."""
+    """Filter sidebar зурахад хэрэгтэй бүх зүйл."""
 
     categories: list[CategoryNode]
     genders: list[str]
@@ -30,8 +30,9 @@ class CatalogFilters(BaseModel):
 
 
 class NavNode(BaseModel):
-    """A group, sub-category or article type in the shopper-facing tree. `path` is what the
-    `category` listing filter and the /c/... URLs take, e.g. "apparel/topwear/tshirts"."""
+    """Худалдан авагчид харагдах модны бүлэг, дэд ангилал эсвэл article type. `path` нь
+    `category` жагсаалтын filter болон /c/... URL-ын авдаг утга, жишээ нь
+    "apparel/topwear/tshirts"."""
 
     name: str
     slug: str
@@ -50,7 +51,7 @@ class NavDepartment(BaseModel):
 
 
 class CatalogNav(BaseModel):
-    """Women / Men / Kids, each with its own counts, for the mega menu and category pages."""
+    """Women / Men / Kids тус бүр өөрийн тоотой, mega menu болон ангиллын хуудсанд."""
 
     departments: list[NavDepartment]
 
@@ -62,7 +63,7 @@ class SitemapEntry(BaseModel):
 
 
 class SitemapPage(BaseModel):
-    """Every active product, in id order, lightly: what a sitemap needs and nothing else."""
+    """Идэвхтэй бүх бараа id-н дарааллаар, хөнгөн хэлбэрээр: sitemap-д хэрэгтэй зүйл л."""
 
     items: list[SitemapEntry]
     total: int

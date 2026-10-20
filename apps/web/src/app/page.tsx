@@ -16,14 +16,14 @@ export const metadata: Metadata = {
   openGraph: { title: "Angel: shop by photo", description, url: "/" },
 };
 
-// Rendered per request: the page reads the catalogue API, which isn't available at build time (CI, Docker).
-// The API client's fetch cache (`revalidate`) still keeps these cheap.
+// Хүсэлт бүрт render хийнэ: хуудас каталогийн API-г уншдаг бөгөөд build үед (CI, Docker) API
+// байдаггүй. API client-ийн fetch cache (`revalidate`) эдгээрийг хямд байлгана.
 export const dynamic = "force-dynamic";
 
 /**
- * The home page is apple.com's: tiles edge to edge, 12px apart, each a headline, a line, a button and
- * a picture. What a shop needs and nothing more: the idea (the photo search), the departments, the new
- * pieces, what delivery is like, and the way back to what the visitor looked at.
+ * Нүүр хуудас apple.com-ийн загвартай: tile-ууд ирмэг хүртэл, 12px зайтай, тус бүр гарчиг, мөр,
+ * товч, зурагтай. Дэлгүүрт хэрэгтэй зүйл л байна: санаа (зургаар хайх), department-үүд, шинэ бараа,
+ * хүргэлт ямар болох, хэрэглэгч сүүлд үзсэн зүйл рүү буцах зам.
  */
 export default function Home() {
   return (

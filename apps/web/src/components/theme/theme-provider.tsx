@@ -4,7 +4,10 @@ import { createContext, useContext, useMemo, useSyncExternalStore, type ReactNod
 
 export type Theme = "light" | "dark" | "system";
 
-/** Same key next-themes used, so a theme somebody already picked is kept. */
+/**
+ * next-themes-ийн ашигладаг түлхүүртэй ижил, ингэснээр хэрэглэгчийн өмнө сонгосон theme
+ * хадгалагдана.
+ */
 export const THEME_STORAGE_KEY = "theme";
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 
@@ -23,7 +26,7 @@ function systemPrefersDark() {
   return typeof matchMedia === "function" && matchMedia(DARK_QUERY).matches;
 }
 
-/** The class on <html> the page was painted with: the inline script sets it before first paint. */
+/** Хуудас зурагдсан <html> дээрх class: inline script үүнийг анхны paint-аас өмнө тавьдаг. */
 function applyToDocument() {
   const dark = readStoredTheme() === "dark" || (readStoredTheme() === "system" && systemPrefersDark());
   const root = document.documentElement;
@@ -51,16 +54,16 @@ function setTheme(theme: Theme) {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch {
-    // Private mode: the choice lasts until the page is closed.
+    // Private горим: сонголт хуудсыг хаах хүртэл үргэлжилнэ.
   }
   applyToDocument();
   listeners.forEach((listener) => listener());
 }
 
 type ThemeContext = {
-  /** What was picked: light, dark or system. */
+  /** Сонгосон нь: light, dark эсвэл system. */
   theme: Theme;
-  /** What is shown: light or dark. */
+  /** Харагдаж буй нь: light эсвэл dark. */
   resolvedTheme: "light" | "dark";
   setTheme: (theme: Theme) => void;
 };
@@ -68,9 +71,10 @@ type ThemeContext = {
 const Context = createContext<ThemeContext | null>(null);
 
 /**
- * Light, dark or the system's, kept in localStorage and shown as a `dark` class on <html>. The
- * first paint is handled by `ThemeScript`, which the server puts in <head>: a script rendered from
- * a client component would never run (React warns about it), which is why this is not next-themes.
+ * Light, dark эсвэл системийнх, localStorage-д хадгалагдаж <html> дээр `dark` class-аар харагдана.
+ * Анхны paint-ыг `ThemeScript` зохицуулах бөгөөд server үүнийг <head>-д тавьдаг: client
+ * component-ээс render хийсэн script хэзээ ч ажиллахгүй (React анхааруулдаг), тиймээс next-themes
+ * ашигладаггүй.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const theme = useSyncExternalStore(subscribe, readStoredTheme, () => "system" as const);

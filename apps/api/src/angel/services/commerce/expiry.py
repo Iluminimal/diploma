@@ -1,6 +1,6 @@
-"""Housekeeping that runs in the background: unpaid orders give their stock back, and abandoned
-guest carts are deleted. Safe to run in several API processes at once: every order is decided
-under its row lock and only if it is still pending, and cancelling a payment twice is harmless."""
+"""Дэвсгэрт ажилладаг цэвэрлэгээ: төлөгдөөгүй захиалга нөөцөө буцаана, орхигдсон зочны cart
+устана. Хэд хэдэн API process зэрэг ажиллуулахад аюулгүй: захиалга бүрийг мөрийн түгжээн дор,
+зөвхөн pending хэвээр байвал шийднэ, төлбөрийг хоёр удаа цуцлах нь хор хөнөөлгүй."""
 
 import asyncio
 from datetime import UTC, datetime, timedelta
@@ -31,7 +31,7 @@ class OrderExpirer:
         self._settings = settings
 
     async def run_once(self) -> int:
-        """Expire pending orders older than the TTL. Returns how many were released."""
+        """TTL-ээс хуучин pending захиалгыг дуусгана. Хэдийг чөлөөлсөнийг буцаана."""
         cutoff = datetime.now(UTC) - timedelta(minutes=self._settings.order_pending_ttl_minutes)
         async with self._sessions() as session, session.begin():
             candidates = [
@@ -55,9 +55,9 @@ class OrderExpirer:
                 outcome = await self._gateway.cancel_intent(intent_id)
             except PaymentProviderError as exc:
                 log.warning("order_expiry_deferred", order_id=order_id, error=str(exc))
-                return False  # try again on the next sweep
+                return False  # дараагийн sweep дээр дахин оролдоно
             if outcome == "succeeded":
-                return False  # paid after all: the webhook settles it
+                return False  # эцэстээ төлөгдсөн: webhook үүнийг шийднэ
         async with self._sessions() as session, session.begin():
             order = await OrderRepository(session).get_for_update(order_id)
             if order is None:

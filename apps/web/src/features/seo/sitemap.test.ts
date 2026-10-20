@@ -25,7 +25,7 @@ describe("entries", () => {
     expect(urls).toContain("http://localhost:3000/");
     expect(urls).toContain("http://localhost:3000/products");
     expect(urls).toContain("http://localhost:3000/search");
-    // "New" is a sort of the whole catalogue, not a page of its own.
+    // "New" нь бүх catalogue-ийн эрэмбэ, тусдаа хуудас биш.
     expect(urls.some((url) => url.includes("sort="))).toBe(false);
     expect(urls.every((url) => url.startsWith("http://localhost:3000"))).toBe(true);
   });
@@ -48,7 +48,7 @@ describe("entries", () => {
       ...productEntries([{ id: 1, slug: "a-b-c-1", updated_at: "2026-10-08T10:00:00Z" }]),
     ].map((entry) => entry.url);
 
-    // Next.js does not escape what it puts in <loc>.
+    // Next.js <loc>-д оруулсан зүйлийг escape хийдэггүй.
     for (const url of urls) expect(url).not.toMatch(/[&<>"']/);
   });
 

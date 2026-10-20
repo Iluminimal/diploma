@@ -10,7 +10,7 @@ import {
 import { ProductRail } from "@/features/catalog/product-rail";
 import { SectionHeading } from "./section-heading";
 
-/** What this visitor looked at last, kept on their device. Nothing for a first visit. */
+/** Зочны сүүлд үзсэн зүйл, түүний төхөөрөмжид хадгалагдсан. Анх удаа ирсэн үед юу ч байхгүй. */
 export function RecentlyViewed() {
   const items = useSyncExternalStore(subscribeToRecentlyViewed, readRecentlyViewed, recentlyViewedOnServer);
   if (items.length === 0) return null;

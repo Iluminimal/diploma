@@ -21,7 +21,7 @@ class TextSearchRequest(BaseModel):
 
 
 class ImageSearchForm(FilterParams):
-    """Multipart form of an image search: the photo plus optional filters."""
+    """Зургаар хайх multipart form: зураг болон нэмэлт filter-үүд."""
 
     file: Annotated[UploadFile, Field(description="JPEG, PNG or WebP, up to 8 MB")]
     limit: Limit = None
@@ -59,10 +59,11 @@ class SearchTimings(BaseModel):
 
 class SearchResponse(BaseModel):
     results: list[SearchHit]
-    # Best guesses for what the image shows, most likely first. Empty for text/similar search.
+    # Зураг юу харуулж буйг таамагласан хамгийн магадлалтай нь эхэнд. Текст эсвэл төстэй барааны
+    # хайлтад хоосон.
     detected: list[DetectedCategory] = []
     timings: SearchTimings
-    # True when the text embedding or the whole result list came from the Redis cache.
+    # Текстийн embedding эсвэл үр дүнгийн бүх жагсаалт Redis cache-ээс ирсэн бол True.
     cached: bool = False
 
 

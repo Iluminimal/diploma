@@ -7,14 +7,15 @@ import { AccountMenu } from "@/features/auth/account-menu";
 import { CartButton } from "@/features/cart/cart-button";
 
 /**
- * Apple's global bar: slim, translucent, 44px high and 1024px wide, the logo, the small links, search,
- * bag and account spread evenly across it (`justify-content: space-between`, as on apple.com). A hairline appears under it once the page scrolls.
- * On a phone it is the same four things as apple.com: logo, search, bag and the menu button.
+ * Apple-ийн global bar: нарийн, тунгалаг, 44px өндөр, 1024px өргөн; logo, жижиг холбоосууд, хайлт,
+ * bag, account жигд тархсан (`justify-content: space-between`, apple.com шиг). Хуудас scroll хийхэд
+ * доор нь hairline гарна. Утсан дээр apple.com-ийнхтэй ижил дөрвөн зүйл: logo, хайлт, bag, цэсний
+ * товч.
  */
 export function SiteHeader() {
   return (
     <header
-      // Named so page transitions leave it in place (see globals.css).
+      // Нэр өгсөн тул хуудас шилжихэд үлдэнэ (globals.css-ыг үз).
       style={{ viewTransitionName: "site-header" }}
       className="header-elevate bg-background/80 sticky top-0 z-40 border-b border-transparent backdrop-blur-xl backdrop-saturate-150 transition-colors duration-300"
     >
@@ -23,9 +24,9 @@ export function SiteHeader() {
           <AngelLogo showName={false} markClassName="size-7" />
         </Link>
         <MegaMenu />
-        {/* Logo, search, bag, menu: the phone bar of apple.com. The account is in the Bag page on a phone
-            and in the bar from md up. From md up the icons are items of the row like the links, so all of
-            it is spread evenly, as apple.com's bar is. */}
+        {/* Logo, хайлт, bag, цэс: apple.com-ийн утасны bar. Утсан дээр account нь Bag хуудсанд,
+           md-ээс дээш bar-д байна. Md-ээс дээш icon-ууд холбоостой адил мөрийн item тул бүгд
+           жигд тархана, apple.com-ийн bar шиг. */}
         <div className="flex items-center md:contents">
           <HeaderSearch />
           <CartButton />

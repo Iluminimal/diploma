@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { bootstrapSession } from "./session";
 
-/** Restores the session from the refresh cookie once, when the app first loads in the browser. */
+/** Апп browser дээр анх ачаалахад refresh cookie-оос session-ыг нэг удаа сэргээнэ. */
 export function AuthBootstrap() {
   useEffect(() => {
     void bootstrapSession();

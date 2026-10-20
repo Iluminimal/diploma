@@ -3,10 +3,10 @@ import { useEffect } from "react";
 let open = 0;
 
 /**
- * Says to the page that a menu, search or Bag page is open, by an attribute on <html> (`data-bar-panel`)
- * for as long as `isOpen` is true. As on apple.com's phone bar, CSS then fades out everything in the
- * bar except the button that closes it (see `.phone-bar-item` in globals.css). A count, not a flag:
- * one page opening as another closes must not clear it.
+ * Цэс, хайлт, Bag хуудас нээлттэй гэдгийг `isOpen` үнэн байх хугацаанд <html> дээрх attribute-оор
+ * (`data-bar-panel`) хуудсанд мэдэгднэ. apple.com-ийн утасны bar шиг CSS нь хаадаг товчноос бусад
+ * бүх зүйлийг бүдгэрүүлнэ (globals.css дахь `.phone-bar-item`-ыг үз). Flag биш тоолуур: нэг хуудас
+ * нээгдэж, нөгөө хаагдахад үүнийг арилгах ёсгүй.
  */
 export function useBarPanel(isOpen: boolean) {
   useEffect(() => {

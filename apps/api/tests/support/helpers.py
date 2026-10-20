@@ -20,9 +20,9 @@ async def running_app(
     payment_gateway: PaymentGateway | None = None,
     raise_app_exceptions: bool = True,
 ) -> AsyncIterator[tuple[AsyncClient, FastAPI]]:
-    """Run the real app (lifespan included) behind an in-process HTTP client.
+    """Жинхэнэ апп-ыг (lifespan-тай) in-process HTTP client-ийн ард ажиллуулна.
 
-    The model is a fast fake unless one is passed: tests never download or load FashionCLIP.
+    Model нь өөр өгөөгүй бол хурдан fake: тест FashionCLIP-ийг хэзээ ч татахгүй, ачаалахгүй.
     """
     app = create_app(settings, embedder=embedder or FakeEmbedder(), payment_gateway=payment_gateway)
     async with LifespanManager(app):

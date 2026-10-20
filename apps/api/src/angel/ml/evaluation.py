@@ -1,4 +1,4 @@
-"""Helpers shared by the recall and latency scripts."""
+"""Recall болон latency script-үүдийн нийтлэг туслах функцууд."""
 
 import io
 import random
@@ -17,7 +17,7 @@ from angel.repositories.catalog.products import SearchFilters
 
 
 async def sample_products(engine: AsyncEngine, n: int, seed: int) -> list[tuple[int, int]]:
-    """Reproducible random sample of `(id, source_id)` from the catalogue."""
+    """Каталогоос `(id, source_id)`-ийн давтагдах (seed-тэй) санамсаргүй түүвэр."""
     async with engine.connect() as connection:
         rows = (
             await connection.execute(
@@ -35,7 +35,7 @@ async def exact_top_k(
     k: int,
     filters: SearchFilters | None = None,
 ) -> list[int]:
-    """Ground truth: a sequential scan with exact distances (no HNSW)."""
+    """Жинхэнэ хариу (ground truth): HNSW-гүй, бүх мөрийг шалгаж яг зайг бодно."""
     await session.execute(text("SELECT set_config('enable_indexscan', 'off', true)"))
     distance = Product.embedding.cosine_distance(embedding)
     statement = (
@@ -48,7 +48,7 @@ async def exact_top_k(
 
 
 def make_upload(path: Path, longest_side: int | None) -> bytes:
-    """JPEG bytes as a browser would send: the original, or a phone-style downscaled copy."""
+    """Browser-ийн илгээдэг шиг JPEG bytes: эх зураг, эсвэл утасных шиг жижигрүүлсэн хуулбар."""
     if longest_side is None:
         return path.read_bytes()
     with Image.open(path) as image:

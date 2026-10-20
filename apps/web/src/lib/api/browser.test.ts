@@ -52,7 +52,7 @@ describe("browserApi", () => {
 
   it("refreshes once on a 401 and repeats the request with the new token, body included", async () => {
     const fetchMock = vi.fn(async (input: Request | string) => {
-      if (typeof input === "string") return json(session); // the refresh call
+      if (typeof input === "string") return json(session); // refresh дуудлага
       return input.headers.get("Authorization") === "Bearer fresh-token"
         ? json(emptyCart)
         : json({ title: "Not signed in", status: 401 }, 401);

@@ -1,8 +1,8 @@
-"""Fixed-window rate limiting in Redis, per client address and per limit name.
+"""Redis дахь тогтмол цонхтой rate limit: клиентийн хаяг ба limit-ийн нэрээр.
 
-One Lua script increments the counter and sets its expiry atomically, so a crash between the
-two commands can never leave a key that never expires. If Redis is unavailable the request is
-allowed (and the failure logged): losing rate limiting must not take search down with it.
+Нэг Lua script тоолуурыг нэмж, хүчинтэй хугацааг атомаар тогтооно, тиймээс хоёр командын дунд
+crash болсон ч хэзээ ч дуусдаггүй key үлдэхгүй. Redis ажиллахгүй бол хүсэлтийг зөвшөөрнө (алдааг
+log-дож): rate limit алдагдсанаас болж хайлт унаж болохгүй.
 """
 
 import asyncio
@@ -54,7 +54,7 @@ class Rate:
 
     @classmethod
     def parse(cls, value: str) -> "Rate":
-        """`"20/60"` = 20 requests per 60 seconds."""
+        """`"20/60"` = 60 секундэд 20 хүсэлт."""
         requests, _, window = value.partition("/")
         rate = cls(int(requests), int(window))
         if rate.requests < 1 or rate.window_seconds < 1:
@@ -92,7 +92,7 @@ class RateLimiter:
         )
 
     async def peek(self, name: str, client: str, rate: Rate) -> Decision:
-        """The state of a counter without counting a hit (used for failed-login counters)."""
+        """Тоолуурын төлөвийг тоолохгүйгээр харна (амжилтгүй нэвтрэлтийн тоолуурт хэрэглэнэ)."""
         key = f"{self._prefix}:{name}:{client}"
         try:
             count, ttl = await asyncio.wait_for(self._peek_script(key), self._timeout)

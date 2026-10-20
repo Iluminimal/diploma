@@ -170,7 +170,7 @@ export function AddressesView() {
                 if (!deleting) return;
                 await remove.mutateAsync(deleting.id).then(
                   () => toast.success("Address deleted."),
-                  () => undefined, // the hook already showed the reason
+                  () => undefined, // шалтгааныг hook аль хэдийн харуулсан
                 );
                 setDeleting(null);
               }}

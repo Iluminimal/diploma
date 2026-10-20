@@ -1,4 +1,4 @@
-"""Shipping, delivering, cancelling, refunding and annotating orders, as an administrator."""
+"""Администратор захиалгыг илгээх, хүргэх, цуцлах, буцаан олгох, тэмдэглэл бичих."""
 
 import asyncio
 from collections.abc import AsyncIterator
@@ -23,7 +23,7 @@ SHIP = {"carrier": "DHL", "tracking_number": "JD0146 0000 1234"}
 
 
 class Shop:
-    """A running app with a recording gateway and mailer, an administrator and orders to act on."""
+    """Бичдэг gateway ба mailer, администратор, захиалгатай ажиллаж буй апп."""
 
     def __init__(
         self, api: Api, admin: Shopper, gateway: RecordingGateway, mailer: RecordingMailer
@@ -62,7 +62,7 @@ def event_types(order: dict[str, Any]) -> list[str]:
     return [event["type"] for event in order["events"]]
 
 
-# --- shipping and delivering ------------------------------------------------------------------
+# --- Илгээх ба хүргэх -------------------------------------------------------------------------
 
 
 async def test_a_paid_order_can_be_shipped_with_a_tracking_number(shop: Shop) -> None:
@@ -173,7 +173,7 @@ async def test_two_administrators_shipping_at_once_ship_it_once(shop: Shop) -> N
     assert event_types(await shop.get(number)).count("shipped") == 1
 
 
-# --- cancelling ---------------------------------------------------------------------------------
+# --- Цуцлах -------------------------------------------------------------------------------------
 
 
 async def test_cancelling_an_unpaid_order_gives_the_stock_back_and_cancels_the_payment(
@@ -247,7 +247,7 @@ async def test_a_payment_that_arrives_after_an_admin_cancel_is_refunded(shop: Sh
     assert [e["data"] for e in refunded] == [{"reason": "order_cancelled", "automatic": True}]
 
 
-# --- refunding ----------------------------------------------------------------------------------
+# --- Буцаан олголт ------------------------------------------------------------------------------
 
 
 @pytest.mark.parametrize("before", ["paid", "shipped", "delivered"])
@@ -332,7 +332,7 @@ async def test_a_refund_needs_a_reason_and_an_explicit_restock_choice(
     assert (await shop.act(number, "refund", **body)).status_code == 422
 
 
-# --- notes, listing, access -----------------------------------------------------------------------
+# --- Тэмдэглэл, жагсаалт, хандалт -----------------------------------------------------------------
 
 
 async def test_notes_are_for_administrators_only(shop: Shop) -> None:

@@ -1,7 +1,7 @@
 import { ProductGridSkeleton } from "@/components/product/product-grid";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** The shape of a listing, shown at once while a category page is being prepared. */
+/** Ангиллын хуудас бэлтгэгдэж байх хооронд шууд харуулах жагсаалтын хэлбэр. */
 export function ListingSkeleton() {
   return (
     <div className="container-page py-8 md:py-12" aria-busy>

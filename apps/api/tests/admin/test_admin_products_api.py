@@ -1,4 +1,4 @@
-"""Admin product management: list, create from a photo, edit, replace the photo, withdraw."""
+"""Админы бүтээгдэхүүний удирдлага: жагсаах, зургаас үүсгэх, засах, зураг солих, хасах."""
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -29,8 +29,9 @@ MB = 1024 * 1024
 async def admin_api(
     api_factory: ApiFactory, db_engine: AsyncEngine, media: Path, **settings: Any
 ) -> AsyncIterator[tuple[Api, Shopper]]:
-    """A running API (thumbnails written under `media`, never the real data folder) and a signed-in
-    administrator."""
+    """Ажиллаж буй API (thumbnail `media` дор бичигдэнэ, жинхэнэ data хавтас биш) ба
+    нэвтэрсэн админ.
+    """
     async with api_factory(media_dir=media, **settings) as api:
         admin = await register(api.client)
         await set_role(db_engine, admin.user_id, "admin")
@@ -85,7 +86,7 @@ def media_files(media: Path) -> list[Path]:
     return sorted((media / "products" / "admin").glob("*.webp")) if media.exists() else []
 
 
-# --- who may use it ------------------------------------------------------------------------
+# --- Хэн ашиглаж болох ---------------------------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -128,7 +129,7 @@ async def test_admin_requests_are_rate_limited(
     assert statuses == [200, 200, 429]
 
 
-# --- reading -------------------------------------------------------------------------------
+# --- Унших ---------------------------------------------------------------------------------
 
 
 async def test_the_list_includes_withdrawn_products_and_filters_them(
@@ -186,7 +187,7 @@ async def test_the_list_paginates_sorts_and_searches(
         assert prices == sorted(prices)
         assert target["id"] in [p["id"] for p in by_id["items"]]
         assert target["id"] in [p["id"] for p in by_part["items"]]
-        assert wildcard["total"] == 0  # a literal percent sign, not "match everything"
+        assert wildcard["total"] == 0  # утгаараа % тэмдэгт, "бүгдийг тааруул" биш
         assert huge.status_code == 200
         assert huge.json()["total"] == 0
 
@@ -204,7 +205,7 @@ async def test_one_product_can_be_read_and_a_missing_one_is_a_404(
         assert missing.json()["type"] == NOT_FOUND
 
 
-# --- creating from a photo -----------------------------------------------------------------
+# --- Зургаас үүсгэх ------------------------------------------------------------------------
 
 
 async def test_a_product_created_from_a_photo_is_found_by_visual_search(
@@ -230,13 +231,13 @@ async def test_a_product_created_from_a_photo_is_found_by_visual_search(
         assert body["is_active"] is True
         assert body["source_id"] is None
         assert body["embedding_version"] == api.embedder.version
-        # Searching with the very photo that was uploaded returns the new product first.
+        # Upload хийсэн яг тэр зургаар хайхад шинэ бараа эхэнд гарна.
         assert (await search_ids(api, photo))[0] == body["id"]
-        # And it is part of the storefront.
+        # Мөн дэлгүүрийн жагсаалтад орсон байна.
         detail = await api.client.get(f"/api/v1/products/{body['id']}")
         assert detail.status_code == 200
         assert detail.json()["in_stock"] is True
-        assert len(media_files(tmp_path)) == 2  # 400 px and 800 px thumbnails
+        assert len(media_files(tmp_path)) == 2  # 400 px ба 800 px thumbnail
         assert body["image"]["thumb_800"].endswith("_800.webp")
         async with db_engine.connect() as connection:
             stored = (
@@ -361,7 +362,7 @@ async def test_files_are_removed_when_the_product_cannot_be_saved(
         assert media_files(tmp_path) == []
 
 
-# --- editing -------------------------------------------------------------------------------
+# --- Засах ---------------------------------------------------------------------------------
 
 
 async def test_editing_changes_only_the_fields_that_are_sent(
@@ -383,7 +384,7 @@ async def test_editing_changes_only_the_fields_that_are_sent(
         assert body["stock_quantity"] == 0
         assert body["name"] == created["name"]
         assert body["season"] == "Summer"
-        assert body["slug"] == created["slug"]  # URLs stay stable
+        assert body["slug"] == created["slug"]  # URL тогтвортой хэвээр
         assert body["updated_at"] >= created["updated_at"]
         public = (await api.client.get(f"/api/v1/products/{created['id']}")).json()
         assert public["price_cents"] == 2500
@@ -453,7 +454,7 @@ async def test_editing_a_missing_product_is_a_404(
         assert response.json()["type"] == NOT_FOUND
 
 
-# --- replacing the photo -------------------------------------------------------------------
+# --- Зураг солих ---------------------------------------------------------------------------
 
 
 async def test_replacing_the_photo_recomputes_the_embedding_and_removes_the_old_files(
@@ -511,7 +512,7 @@ async def test_a_bad_replacement_photo_leaves_the_product_untouched(
         assert (await search_ids(api, make_jpeg(900)))[0] == created["id"]
 
 
-# --- withdrawing ---------------------------------------------------------------------------
+# --- Хасах ---------------------------------------------------------------------------------
 
 
 async def test_a_withdrawn_product_disappears_everywhere_and_can_come_back(
@@ -537,7 +538,7 @@ async def test_a_withdrawn_product_disappears_everywhere_and_can_come_back(
             await api.client.get(f"{PRODUCTS}/{product_id}", headers=admin.auth)
         ).status_code == 200
         again = await api.client.post(f"{PRODUCTS}/{product_id}/deactivate", headers=admin.auth)
-        assert again.status_code == 200  # withdrawing twice is harmless
+        assert again.status_code == 200  # хоёр удаа хасах нь хор хөнөөлгүй
 
         on = await api.client.post(f"{PRODUCTS}/{product_id}/activate", headers=admin.auth)
 

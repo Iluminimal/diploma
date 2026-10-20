@@ -1,5 +1,5 @@
-"""Redis caches for search. Every operation is best effort: a Redis error or timeout is
-logged and treated as a miss, so the cache can only ever make search faster, never break it."""
+"""Хайлтын Redis cache-ууд. Үйлдэл бүр best effort: Redis алдаа эсвэл timeout лог хийгдэж miss
+гэж тооцогдоно, тиймээс cache хайлтыг зөвхөн хурдасгаж чадна, хэзээ ч эвдэхгүй."""
 
 import asyncio
 import hashlib
@@ -24,14 +24,14 @@ _HITS = TypeAdapter(list[SearchHit])
 
 
 def normalize_query(query: str) -> str:
-    """Casing and spacing never change what a text query means to FashionCLIP's tokenizer
-    (it lowercases), so they must not split the cache either."""
+    """Том жижиг үсэг, хоосон зай нь FashionCLIP-ийн tokenizer-д текстийн утгыг өөрчлөхгүй (жижиг
+    үсэг болгодог), тиймээс cache-ийг хуваах ёсгүй."""
     return " ".join(query.lower().split())
 
 
 class SearchCache:
-    """Keys carry the embedding version: after a model or preprocessing change (re-embed) old
-    entries are simply never read again and expire on their own."""
+    """Key-үүд embedding-ийн version агуулна: model эсвэл preprocessing өөрчлөгдсөний дараа
+    (re-embed) хуучин entry-г дахин уншихгүй, өөрөө дуусна."""
 
     def __init__(
         self,
@@ -52,7 +52,7 @@ class SearchCache:
         self._filters_ttl = filters_ttl_seconds
         self._timeout = timeout_seconds
 
-    # --- text embeddings -------------------------------------------------------------------
+    # --- текстийн embedding ---
 
     def _text_key(self, query: str) -> str:
         digest = hashlib.sha256(normalize_query(query).encode()).hexdigest()
@@ -69,7 +69,7 @@ class SearchCache:
             self._text_key(query), embedding.astype(np.float32).tobytes(), self._text_ttl
         )
 
-    # --- similar products ------------------------------------------------------------------
+    # --- төстэй бараа ---
 
     def _similar_key(self, product_id: int, filters: SearchFilters, limit: int) -> str:
         spec = json.dumps(asdict(filters), sort_keys=True)
@@ -97,7 +97,7 @@ class SearchCache:
             self._similar_ttl,
         )
 
-    # --- catalogue filter options ------------------------------------------------------------
+    # --- catalogue-ийн filter сонголтууд ---
 
     @property
     def _filters_key(self) -> str:
@@ -115,7 +115,7 @@ class SearchCache:
     async def set_catalog_filters(self, filters: CatalogFilters) -> None:
         await self._set(self._filters_key, filters.model_dump_json().encode(), self._filters_ttl)
 
-    # --- category navigation -----------------------------------------------------------------
+    # --- ангиллын навигаци ---
 
     @property
     def _nav_key(self) -> str:
@@ -133,11 +133,11 @@ class SearchCache:
     async def set_taxonomy(self, snapshot: TaxonomySnapshot) -> None:
         await self._set(self._nav_key, snapshot.model_dump_json().encode(), self._filters_ttl)
 
-    # --- invalidation ----------------------------------------------------------------------
+    # --- хүчингүй болгох ---
 
     async def invalidate_catalogue(self) -> None:
-        """Forget cached similar-product lists and filter options after an admin change, so a
-        deactivated or repriced product does not linger in them until their TTL runs out."""
+        """Admin-ы өөрчлөлтийн дараа төстэй барааны жагсаалт, filter сонголтыг мартана, ингэвэл
+        идэвхгүй болсон эсвэл үнэ нь өөрчлөгдсөн бараа TTL дуусах хүртэл тэдгээрт үлдэхгүй."""
         try:
             await asyncio.wait_for(self._invalidate(), self._timeout * 20)
         except Exception as exc:
@@ -153,7 +153,7 @@ class SearchCache:
         if batch:
             await self._redis.delete(*batch)
 
-    # --- plumbing --------------------------------------------------------------------------
+    # --- дотоод хэрэгслүүд ---
 
     async def _get(self, key: str) -> bytes | None:
         try:

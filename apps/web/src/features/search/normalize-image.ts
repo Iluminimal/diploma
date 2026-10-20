@@ -1,12 +1,12 @@
 /**
- * Turn whatever the user picked, dropped, pasted or captured into a JPEG the API accepts.
+ * Хэрэглэгчийн сонгосон, чирсэн, paste хийсэн, авсан зургийг API-ийн хүлээн авах JPEG болгоно.
  *
- * - The API takes JPEG, PNG and WebP up to 8 MB. iPhone photos can be HEIC/HEIF, so those are
- *   decoded here (natively where the browser can, e.g. Safari; otherwise with `heic-to`, which is
- *   only downloaded when needed) and re-encoded.
- * - Everything is downscaled to a 1600 px long edge: the model looks at 224 px, so more pixels
- *   only slow the upload down. EXIF orientation is applied by the decoder.
- * - Nothing leaves memory: the result is a `File` the caller holds until the search is replaced.
+ * - API 8 MB хүртэлх JPEG, PNG, WebP авна. iPhone зураг HEIC/HEIF байж болох тул энд decode хийж
+ *   (browser чаддаг бол native, жишээ нь Safari; үгүй бол хэрэгтэй үедээ л татагдах `heic-to`-оор)
+ *   дахин encode хийнэ.
+ * - Бүгдийг урт тал нь 1600 px болтол багасгана: model 224 px-ээр харадаг тул илүү pixel нь зөвхөн
+ *   upload-ыг удаашруулна. EXIF orientation-ыг decoder хэрэглэнэ.
+ * - Юу ч санах ойгоос гарахгүй: үр дүн нь хайлтыг солих хүртэл дуудагчийн барьдаг `File`.
  */
 
 export const MAX_INPUT_BYTES = 40 * 1024 * 1024;
@@ -30,12 +30,12 @@ export class ImageInputError extends Error {
   }
 }
 
-/** iOS sometimes hands over HEIC files with an empty MIME type, so the extension counts too. */
+/** iOS заримдаа HEIC файлыг хоосон MIME type-тай өгдөг тул өргөтгөлийг бас тооцно. */
 export function looksLikeHeic(file: Blob & { name?: string }): boolean {
   return /^image\/hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name ?? "");
 }
 
-/** Fit `width x height` inside a `max` px long edge without upscaling. */
+/** `width x height`-ыг томруулалгүйгээр `max` px урт талдаа багтаана. */
 export function fitWithin(width: number, height: number, max = MAX_EDGE): { width: number; height: number } {
   const scale = Math.min(1, max / Math.max(width, height));
   return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
@@ -66,7 +66,7 @@ function encodeJpeg(bitmap: ImageBitmap): Promise<Blob> {
   canvas.height = height;
   const ctx = canvas.getContext("2d");
   if (!ctx) return Promise.reject(new ImageInputError("decode-failed"));
-  // JPEG has no alpha: transparent PNGs would turn black.
+  // JPEG-д alpha байдаггүй: тунгалаг PNG хар болох байсан.
   ctx.fillStyle = "#fff";
   ctx.fillRect(0, 0, width, height);
   ctx.drawImage(bitmap, 0, 0, width, height);

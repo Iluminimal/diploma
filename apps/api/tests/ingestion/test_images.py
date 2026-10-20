@@ -102,7 +102,7 @@ def test_transparency_is_composited_on_white() -> None:
 def test_exif_orientation_is_applied_and_metadata_dropped(tmp_path: Path) -> None:
     image = Image.new("RGB", (40, 20), (10, 20, 30))
     exif = Image.Exif()
-    exif[0x0112] = 6  # rotate 90 degrees clockwise to display
+    exif[0x0112] = 6  # 90 градус цагийн зүүгээр эргүүлж харуулна
     path = _save(tmp_path / "rot.jpg", image, format="JPEG", exif=exif)
     loaded = load_image(path)
     assert loaded.size == (20, 40)
@@ -110,7 +110,7 @@ def test_exif_orientation_is_applied_and_metadata_dropped(tmp_path: Path) -> Non
 
 
 def test_decompression_bomb_is_rejected_before_decoding() -> None:
-    # 60M pixels (over our 50M limit, under Pillow's own warning), but the file is tiny.
+    # 60M пиксель (манай 50M хязгаараас дээш, Pillow-ийн анхааруулгаас доош), гэхдээ файл жижиг.
     buffer = io.BytesIO()
     Image.new("1", (7_746, 7_746)).save(buffer, format="PNG")
     with pytest.raises(InvalidImageError, match="not acceptable"):
@@ -129,7 +129,7 @@ def test_jpeg_draft_decoding_keeps_the_minimum_side(tmp_path: Path) -> None:
 
 
 def test_clip_array_pad_keeps_whole_image_and_crop_cuts_it() -> None:
-    # Portrait image: red top third, green middle, blue bottom third.
+    # Босоо зураг: дээд гуравны нэг улаан, дунд ногоон, доод гуравны нэг цэнхэр.
     pixels = np.zeros((300, 100, 3), dtype=np.uint8)
     pixels[:100, :, 0] = 255
     pixels[100:200, :, 1] = 255
@@ -140,10 +140,10 @@ def test_clip_array_pad_keeps_whole_image_and_crop_cuts_it() -> None:
     cropped = to_clip_array(image, "crop")
 
     assert padded.shape == cropped.shape == (CLIP_SIZE, CLIP_SIZE, 3)
-    assert padded[5, CLIP_SIZE // 2, 0] > 200  # top of the padded image is still red
-    assert padded[-5, CLIP_SIZE // 2, 2] > 200  # bottom is still blue
-    assert tuple(padded[100, 2]) == (255, 255, 255)  # side padding is white
-    assert cropped[5, CLIP_SIZE // 2, 1] > 200  # the crop only sees the green middle
+    assert padded[5, CLIP_SIZE // 2, 0] > 200  # padding хийсэн зургийн дээд хэсэг улаан хэвээр
+    assert padded[-5, CLIP_SIZE // 2, 2] > 200  # доод хэсэг цэнхэр хэвээр
+    assert tuple(padded[100, 2]) == (255, 255, 255)  # хажуугийн padding цагаан
+    assert cropped[5, CLIP_SIZE // 2, 1] > 200  # crop зөвхөн дунд ногоон хэсгийг харна
     assert cropped[5, CLIP_SIZE // 2, 0] < 50
 
 

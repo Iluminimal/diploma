@@ -1,5 +1,6 @@
-"""End-to-end search quality with the real FashionCLIP model, the real catalogue in the dev
-database and real photos. Run with `make test-ml` (needs `make ingest` to have been run)."""
+"""Жинхэнэ FashionCLIP model, dev database-ийн жинхэнэ каталог, жинхэнэ зургаар хайлтын чанарыг
+end-to-end шалгана. `make test-ml`-ээр ажиллуулна (өмнө нь `make ingest` хийсэн байх ёстой).
+"""
 
 from collections.abc import AsyncIterator
 from pathlib import Path
@@ -89,8 +90,8 @@ async def test_catalogue_photos_find_themselves(
         results = response.json()["results"]
         own = next(h for h in results if h["product"]["slug"].endswith(f"-{product.source_id}"))
         assert own["similarity"] > 0.999
-        # The dataset occasionally lists one photo twice (e.g. a t-shirt photo also used for a
-        # watch), so ties at the top are legitimate: nothing may beat the product itself.
+        # Dataset заримдаа нэг зургийг хоёр бараанд ашигладаг (жишээ нь цамцны зургийг цагонд),
+        # тиймээс эхэнд тэнцэх нь хэвийн: барааг өөрийг нь хэн ч гүйцэхгүй байхад л болно.
         assert results[0]["similarity"] == pytest.approx(own["similarity"], abs=1e-3)
 
 
@@ -120,4 +121,4 @@ async def test_hybrid_moves_the_results_towards_the_described_colour(
 
     assert red_share(refined.json()) > red_share(plain.json()) + 0.2
     tshirts = sum(h["product"]["article_type"] == "Tshirts" for h in refined.json()["results"])
-    assert tshirts >= 12  # still t-shirts, just redder
+    assert tshirts >= 12  # дахиад цамц, зүгээр л улаавтар

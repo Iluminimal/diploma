@@ -36,8 +36,8 @@ export type ContactKind = "phone" | "email" | "verify-email";
 const EMAIL = /^\S+@\S+\.\S+$/;
 
 /**
- * Add or change the phone number or email, or confirm the email already on the account. Two
- * steps: say where the code should go (and prove the password, if there is one), then type it.
+ * Утасны дугаар эсвэл имэйлийг нэмэх, солих, эсвэл бүртгэлд байгаа имэйлийг баталгаажуулна. Хоёр
+ * алхамтай: кодыг хаашаа явуулахыг хэлж (нууц үг байвал баталж), дараа нь кодыг оруулна.
  */
 export function ContactDialog({
   kind,
@@ -82,7 +82,7 @@ export function ContactDialog({
     onOpenChange(next);
   }
 
-  // Confirming the current address: the code goes out as soon as the dialog opens.
+  // Одоогийн хаягийг баталгаажуулах үед dialog нээгдмэгц код явна.
   useEffect(() => {
     if (!open || !verifying) return;
     let cancelled = false;
@@ -97,7 +97,7 @@ export function ContactDialog({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per opening
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- нээгдэх бүрд нэг удаа
   }, [open, verifying]);
 
   async function send(event?: { preventDefault: () => void }) {
@@ -253,7 +253,7 @@ export function ContactDialog({
   );
 }
 
-/** Remove the phone number or the email. The API refuses if it is the only way to sign in. */
+/** Утасны дугаар эсвэл имэйлийг устгана. Нэвтрэх цорын ганц арга бол API татгалзана. */
 export function RemoveContactDialog({
   kind,
   user,

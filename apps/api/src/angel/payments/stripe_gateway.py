@@ -19,8 +19,8 @@ _EVENT_KINDS: dict[str, PaymentEventKind] = {
 
 
 def parse_stripe_event(payload: bytes, signature: str | None, secret: str) -> PaymentEvent | None:
-    """Verify the `Stripe-Signature` header (HMAC over timestamp + raw body, 5 min tolerance)
-    and reduce the event. Raises InvalidSignatureError for anything not signed with `secret`."""
+    """`Stripe-Signature` header-ийг шалгаж (timestamp + түүхий body дээрх HMAC, 5 минутын зөрүү),
+    event-ийг хураана. `secret`-ээр гарын үсэг зураагүй бол InvalidSignatureError шиднэ."""
     if not secret:
         raise PaymentProviderError("webhook secret is not configured")
     if not signature:
@@ -32,7 +32,7 @@ def parse_stripe_event(payload: bytes, signature: str | None, secret: str) -> Pa
     kind = _EVENT_KINDS.get(event["type"])
     if kind is None:
         return None
-    # StripeObjects are not dicts (v16): convert once instead of poking at attributes.
+    # StripeObject нь dict биш (v16): attribute бүрээр нь хөндөхийн оронд нэг удаа хөрвүүлнэ.
     intent: dict[str, Any] = event["data"]["object"].to_dict()
     error = intent.get("last_payment_error") or {}
     return PaymentEvent(
@@ -60,7 +60,7 @@ class StripeGateway:
                 {
                     "amount": amount_cents,
                     "currency": currency.lower(),
-                    # Cards and wallets only: redirect-based methods would need a return page.
+                    # Зөвхөн карт, wallet: redirect-тэй аргад буцах хуудас хэрэгтэй болно.
                     "automatic_payment_methods": {"enabled": True, "allow_redirects": "never"},
                     "description": f"Angel order {order_number}",
                     "metadata": {"order_number": order_number},
@@ -78,7 +78,7 @@ class StripeGateway:
             await self._client.v1.payment_intents.cancel_async(intent_id)
             return "canceled"
         except stripe.InvalidRequestError:
-            # Stripe refuses to cancel an intent that is already paid (or already cancelled).
+            # Stripe аль хэдийн төлөгдсөн (эсвэл цуцлагдсан) intent-ийг цуцлахаас татгалздаг.
             try:
                 intent = await self._client.v1.payment_intents.retrieve_async(intent_id)
             except stripe.StripeError as exc:

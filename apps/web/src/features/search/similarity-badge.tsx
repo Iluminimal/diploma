@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** Cosine similarity as a whole percent ("92% match"). */
+/** Cosine similarity-г бүхэл хувиар ("92% match"). */
 export function matchPercent(similarity: number): number {
   return Math.max(0, Math.min(100, Math.round(similarity * 100)));
 }

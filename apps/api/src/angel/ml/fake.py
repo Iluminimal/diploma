@@ -1,5 +1,6 @@
-"""A deterministic stand-in for FashionCLIP, for tests and for the end-to-end stack in CI, where
-there is no model download and no GPU. `EMBEDDER=fake` selects it; production refuses it."""
+"""FashionCLIP-ийн оронд тест, CI-ийн end-to-end орчинд ашиглах тогтмол (deterministic) embedder.
+
+CI-д model татах, GPU байхгүй. `EMBEDDER=fake` гэж сонгоно; production үүнийг хүлээн авахгүй."""
 
 import hashlib
 from collections.abc import Sequence
@@ -12,9 +13,9 @@ from angel.ml.fashion_clip import DIMENSION
 
 
 class FakeEmbedder:
-    """The vector is a pure function of the pixels, so identical images get identical embeddings
-    and different images get unrelated ones. Search "works" (a product's own photo finds it
-    first) but it knows nothing about clothes."""
+    """Vector нь зөвхөн pixel-ээс хамаарна: ижил зураг ижил embedding, өөр зураг хамааралгүй
+    embedding авна. Хайлт "ажиллана" (бүтээгдэхүүний өөрийн зураг эхэнд гарна) ч хувцасны талаар
+    юу ч мэдэхгүй."""
 
     dimension = DIMENSION
     logit_scale = 100.0

@@ -14,7 +14,7 @@ def counts(*values: int) -> metrics.Counts:
 
 class TestAveragePrecision:
     def test_worked_example(self) -> None:
-        # relevant at ranks 1 and 3 of 4: P@1 = 1, P@3 = 2/3.
+        # 4-ийн 1, 3-р байрнаас хамааралтай: P@1 = 1, P@3 = 2/3.
         relevance = rel([1, 0, 1, 0])
 
         by_best = metrics.average_precision(relevance, counts(10), 4)
@@ -37,7 +37,7 @@ class TestAveragePrecision:
         assert early > late
 
     def test_few_relevant_products_exist_so_finding_them_all_is_perfect(self) -> None:
-        # Only two relevant products exist; both at the top of K=5 is a perfect result.
+        # Хамааралтай бараа ердөө хоёр; хоёулаа K=5-ын эхэнд байвал төгс үр дүн.
         scores = metrics.average_precision(rel([1, 1, 0, 0, 0]), counts(2), 5)
         assert scores[0] == pytest.approx(1.0)
 

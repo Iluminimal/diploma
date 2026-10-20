@@ -14,7 +14,7 @@ import { categoryHref, type CategoryTrail } from "./nav";
 
 export type Crumb = { label: string; href: string };
 
-/** Home > Men > Clothing > Topwear > T-shirts, the last one not a link. */
+/** Home > Men > Clothing > Topwear > T-shirts, сүүлийнх нь холбоос биш. */
 export function categoryCrumbs({ department, nodes }: CategoryTrail): Crumb[] {
   return [
     { label: "Home", href: "/" },

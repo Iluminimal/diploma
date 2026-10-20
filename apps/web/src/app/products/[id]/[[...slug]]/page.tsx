@@ -58,7 +58,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
   const product = await getProduct(id);
   if (!product) notFound();
 
-  // One canonical URL per product: fix a missing or stale slug with a 308.
+  // Бараа бүрт нэг canonical URL: slug алга эсвэл хуучирсан бол 308-аар зас.
   if (slug?.join("/") !== product.slug) permanentRedirect(productPath(product));
 
   const reviews = await getProductReviews(product.id);

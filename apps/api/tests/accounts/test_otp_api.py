@@ -47,7 +47,7 @@ async def test_a_new_phone_number_signs_up_with_a_code(api_factory: ApiFactory) 
         me = await api.client.get(ME, headers={"Authorization": f"Bearer {body['access_token']}"})
         assert me.status_code == 200
         assert me.json()["id"] == body["user"]["id"]
-        # Only a hash of the code is stored.
+        # Кодын зөвхөн hash хадгалагдана.
         stored = await scalar(api, "SELECT code_hash FROM otp_challenges LIMIT 1")
         assert stored != sms.last_code()
         assert len(str(stored)) == 64
@@ -133,7 +133,7 @@ async def test_a_new_code_replaces_the_old_one(api_factory: ApiFactory) -> None:
         old = await verify(api, phone, first)
         new = await verify(api, phone, second)
 
-        assert old.status_code == 400  # a repeat of the same random code is a 1-in-a-million fluke
+        assert old.status_code == 400  # санамсаргүй ижил код давтагдах нь ховор тохиолдол
         assert new.status_code == 200
 
 
@@ -171,7 +171,7 @@ async def test_a_code_is_only_good_for_the_number_it_was_sent_to(api_factory: Ap
 
         response = await verify(api, mine, theirs_code)
 
-        assert response.status_code == 400  # same caveat: two random codes can coincide
+        assert response.status_code == 400  # мөн адил: хоёр санамсаргүй код давхцаж болно
 
 
 @pytest.mark.parametrize("destination", ["abc", "12", "+1 555", "not@", ""])
@@ -248,7 +248,7 @@ async def test_an_email_code_signs_up_and_verifies_the_address(api_factory: ApiF
 async def test_an_email_code_for_an_unverified_password_account_removes_the_password(
     api_factory: ApiFactory,
 ) -> None:
-    """Whoever registered an address first may not own it; the code proves who does."""
+    """Дугаарыг түрүүлж бүртгүүлсэн хүн эзэмшигч болохгүй; кодоор эзэмшигч нь тогтоогдоно."""
     async with api_factory(seed_count=0) as api:
         mailer = RecordingMailer()
         api.app.state.mailer = mailer

@@ -1,4 +1,4 @@
-"""Transactional email behind an interface. Development logs the message instead of sending it."""
+"""Transactional имэйл (interface-ийн ард). Хөгжүүлэлтэд илгээхийн оронд log-д бичнэ."""
 
 from dataclasses import dataclass
 from typing import Protocol
@@ -20,8 +20,8 @@ class Mailer(Protocol):
 
 
 class ConsoleMailer:
-    """Writes the email to the structured log. The body is logged in dev only: it can hold
-    order details, which have no place in production logs."""
+    """Имэйлийг structured log-д бичнэ. Body-г зөвхөн dev-д бичнэ: захиалгын мэдээлэл агуулж болох
+    тул production log-д байж болохгүй."""
 
     def __init__(self, *, log_body: bool) -> None:
         self._log_body = log_body

@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Optimistic gate for pages that only make sense signed in: no session marker, no page. It is a
- * convenience (no flash of an empty account page), not security: the API enforces every call.
+ * Нэвтэрсэн байхыг шаарддаг хуудсуудад зориулсан найдвартай бус хаалт: session marker байхгүй бол
+ * хуудас байхгүй. Энэ нь тав тухын зүйл (хоосон account хуудас анивчихгүй), аюулгүй байдал биш: API
+ * дуудлага бүрийг өөрөө шалгадаг.
  */
 export function proxy(request: NextRequest) {
   if (request.cookies.has("lk_session")) return NextResponse.next();

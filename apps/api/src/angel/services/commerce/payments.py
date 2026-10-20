@@ -1,8 +1,8 @@
-"""Settling payments: the one place that turns a provider event into an order state change.
+"""Төлбөр шийдвэрлэх: provider-ийн event-ийг захиалгын төлвийн өөрчлөлт болгодог цорын ганц
+газар.
 
-Called by the Stripe webhook and, in offline mode, by the simulate endpoint, so the code that
-runs in development is the code that runs in production.
-"""
+Stripe webhook болон offline горимд simulate endpoint дуудна, тиймээс development-д ажилладаг
+код төрөлд ажилладаг код байна."""
 
 from datetime import UTC, datetime
 
@@ -31,19 +31,19 @@ class PaymentSettlement:
         self._orders = OrderRepository(session)
 
     async def handle(self, event: PaymentEvent) -> None:
-        """Apply one event exactly once.
+        """Нэг event-ийг яг нэг удаа хэрэглэнэ.
 
-        The event id is stored in the same transaction as the state change: a crash rolls both
-        back and the provider redelivers, a redelivery after success finds the id and does
-        nothing. Handlers are also written to be harmless when events arrive late or out of order.
-        """
+        Event id төлвийн өөрчлөлттэй нэг transaction-д хадгалагдана: crash хоёуланг rollback
+        хийж provider дахин хүргэнэ, амжилтын дараах дахин хүргэлт id-г олж юу ч хийхгүй.
+        Handler-ууд event хожимдож эсвэл дарааллаас гадуур ирсэн ч хор хөнөөлгүй байхаар
+        бичигдсэн."""
         confirmation: Email | None = None
         async with self._session.begin():
             if not await self._orders.record_event(event.id, event.kind):
                 log.info("payment_event_duplicate", event_id=event.id)
                 return
             payment = await self._orders.get_payment_by_provider_id(event.intent_id)
-            if payment is None:  # not ours (another integration on the same Stripe account)
+            if payment is None:  # бидний биш (ижил Stripe бүртгэл дээрх өөр интеграци)
                 log.info("payment_event_unknown_intent", event_id=event.id)
                 return
             order = await self._orders.get_for_update(payment.order_id)
@@ -64,8 +64,8 @@ class PaymentSettlement:
         if payment.status in ("succeeded", "refunded"):
             return None
         if order.status == "cancelled":
-            # Paid after we gave the stock back (expired, or replaced by a newer checkout). The
-            # goods may be gone, so the money goes back instead.
+            # Нөөцийг буцаасны дараа төлөгдсөн (дууссан, эсвэл шинэ checkout-оор солигдсон). Бараа
+            # алга болсон байж болох тул оронд нь мөнгийг буцаана.
             await self._refund(payment, reason="order_cancelled")
             self._orders.add_event(
                 order.id, "refunded", {"reason": "order_cancelled", "automatic": True}
@@ -88,7 +88,7 @@ class PaymentSettlement:
         self._orders.add_event(order.id, "paid", {"amount_cents": payment.amount_cents})
         carts = CartRepository(self._session)
         cart = await carts.find(user_id=order.user_id)
-        if cart is not None:  # the bought lines leave the cart; anything added since stays
+        if cart is not None:  # худалдаж авсан мөрүүд cart-аас гарна; түүнээс хойш нэмсэн нь үлдэнэ
             await carts.remove_lines(cart.id, {(i.product_id, i.size) for i in order.items})
         await self._session.flush()
         return Email(
@@ -100,8 +100,8 @@ class PaymentSettlement:
 
     @staticmethod
     def _on_failed(payment: Payment, event: PaymentEvent) -> None:
-        # The order stays pending: the shopper can try another card on the same PaymentIntent
-        # until the order expires. A failure that arrives after success is ignored.
+        # Захиалга pending хэвээр: захиалга дуустал худалдан авагч ижил PaymentIntent дээр өөр карт
+        # оролдож болно. Амжилтын дараа ирсэн алдааг үл хэрэгсэнэ.
         if payment.status == "requires_payment":
             payment.status = "failed"
         if payment.status == "failed":
@@ -113,8 +113,8 @@ class PaymentSettlement:
         await release_order(self._session, order, "payment_canceled")
 
     async def _refund(self, payment: Payment, *, reason: str) -> None:
-        """Called inside the transaction on purpose: if the refund call fails, the event is not
-        recorded and the provider will deliver it again. The idempotency key makes a repeat safe."""
+        """Зориудаар transaction дотор дуудна: refund дуудлага амжилтгүй бол event бүртгэгдэхгүй,
+        provider дахин хүргэнэ. Idempotency key нь давтахыг аюулгүй болгоно."""
         payment.refund_id = await self._gateway.refund(
             payment.provider_payment_id, idempotency_key=f"refund-{payment.provider_payment_id}"
         )

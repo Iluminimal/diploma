@@ -1,4 +1,4 @@
-"""product reviews and denormalized ratings
+"""бүтээгдэхүүний сэтгэгдэл ба denormalize хийсэн үнэлгээ
 
 Revision ID: d7e3b9a4f518
 Revises: c4a1d7e92b30
@@ -19,7 +19,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    """Schema-г шинэчилнэ."""
     op.add_column(
         "products",
         sa.Column("rating_average", sa.Numeric(3, 2), server_default="0", nullable=False),
@@ -85,7 +85,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
+    """Schema-г өмнөх төлөвт буцаана."""
     op.drop_index("ix_reviews_user_id", table_name="reviews")
     op.drop_index("ix_reviews_status_created", table_name="reviews")
     op.drop_index("ix_reviews_product_status_created", table_name="reviews")

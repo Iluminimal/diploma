@@ -18,7 +18,8 @@ import { useSearchStore } from "./search-store";
 import { SimilarityBadge } from "./similarity-badge";
 import { firstImage, useImageInput, usePasteImage } from "./use-image-input";
 
-// Filter toggles are batched so a few quick taps cost one request (image search is rate limited).
+// Шүүлтүүрийн сонголтуудыг багцалдаг тул хурдан хэдэн товшилт нэг хүсэлт болно (зургийн хайлт rate
+// limit-тэй).
 const FILTER_DEBOUNCE_MS = 400;
 
 function allArticleTypes(options: CatalogFilterOptions): string[] {
@@ -48,7 +49,7 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
     staleTime: Infinity,
     gcTime: 60_000,
     retry: false,
-    // Keep showing the previous results while a filter changes, but never another photo's.
+    // Шүүлтүүр солигдох үед өмнөх үр дүнг харуулсаар байна, гэхдээ өөр зургийнхыг хэзээ ч биш.
     placeholderData: (previous, previousQuery) =>
       previousQuery?.queryKey[1] === imageId ? keepPreviousData(previous) : undefined,
   });
@@ -83,10 +84,10 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
           <aside className="space-y-5 self-start lg:sticky lg:top-24">
             <div className="flex gap-4 lg:block">
               <div className="tile relative aspect-[3/4] w-28 shrink-0 sm:w-36 lg:w-full">
-                {/* eslint-disable-next-line @next/next/no-img-element -- a local blob URL, not optimizable */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- локал blob URL, optimize хийх боломжгүй */}
                 <img src={image.previewUrl} alt="Your photo" className="size-full object-cover" />
                 {search.isFetching && (
-                  // A soft band sweeps down the photo while it is being searched.
+                  // Хайлт явагдах үед зураг дээгүүр зөөлөн зурвас доош сэлгэнэ.
                   <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
                     <div className="animate-scan from-brand/0 via-brand/45 to-brand/0 absolute inset-x-0 top-0 h-1/3 bg-linear-to-b" />
                   </div>
@@ -153,7 +154,7 @@ export function SearchView({ options }: { options: CatalogFilterOptions }) {
                   {data.results.map((hit, i) => (
                     <li
                       key={hit.product.id}
-                      // Results rise in one after another; the delay repeats per row of nine.
+                      // Үр дүн нэг нэгээр дээшилж гарна; саатал есөн мөр тутамд давтагдана.
                       className="animate-in fade-in slide-in-from-bottom-3 fill-mode-backwards duration-500"
                       style={{ animationDelay: `${(i % 9) * 45}ms` }}
                     >

@@ -1,4 +1,4 @@
-"""The admin's read-only view of every customer's orders."""
+"""Админы харах эрхтэй (read-only) бүх хэрэглэгчийн захиалгын жагсаалт."""
 
 from pathlib import Path
 
@@ -76,7 +76,7 @@ async def test_the_list_shows_every_customers_orders_newest_first(
         assert oldest["customer_email"] == first_customer.email
         assert oldest["item_count"] == 2
         assert oldest["total_cents"] > 0
-        # A customer still sees only their own.
+        # Худалдан авагч зөвхөн өөрийнхөө захиалгыг харна.
         own = (await api.client.get("/api/v1/orders", headers=first_customer.auth)).json()
         assert [o["number"] for o in own["items"]] == [first]
 
@@ -107,7 +107,7 @@ async def test_the_list_filters_by_status_and_searches_by_number_or_email(
         assert await numbers(status="pending") == [pending]
         assert await numbers(status="cancelled") == [cancelled]
         assert len(await numbers(status="all")) == 3
-        assert await numbers(q=pending[:7].lower()) == [pending]  # a prefix, any case
+        assert await numbers(q=pending[:7].lower()) == [pending]  # угтвар, том жижиг үсэг үл ялгана
         assert await numbers(q=paid_customer.email.split("@")[0][-5:].upper()) == [paid]
         assert await numbers(q="%") == []
         assert await numbers(q="_") == []

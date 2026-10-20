@@ -25,7 +25,10 @@ import { cardSchema, DEMO_CARD, PaymentForm, type CardValues } from "./payment-f
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
-/** A step of the checkout: its number turns into a check mark once done, and a line to the next step fills. */
+/**
+ * Checkout-ийн нэг алхам: дууссаны дараа дугаар нь check mark болж, дараагийн алхам руу шугам
+ * дүүрнэ.
+ */
 function Section({
   step,
   title,
@@ -37,7 +40,7 @@ function Section({
   step: number;
   title: string;
   done?: boolean;
-  /** One line shown beside the title when the step is done ("Ada Lovelace, 12 Analytical Way"). */
+  /** Алхам дуусахад гарчгийн хажууд харагдах нэг мөр ("Ada Lovelace, 12 Analytical Way"). */
   summary?: string;
   last?: boolean;
   children: React.ReactNode;
@@ -76,13 +79,13 @@ function Section({
   );
 }
 
-/** Resolves after `ms`, or at once when the shopper asked for less motion. */
+/** `ms`-ийн дараа resolve болно, эсвэл хэрэглэгч хөдөлгөөнийг багасгахыг хүссэн бол шууд. */
 function minimumWait(ms: number): Promise<void> {
   const reduced = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   return reduced ? Promise.resolve() : new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/** Covers the page while the payment goes through; announced to screen readers as a status. */
+/** Төлбөр хийгдэх үед хуудсыг хучна; screen reader-д төлөв (status) болгон зарлана. */
 function ProcessingOverlay() {
   return (
     <div className="bg-background/75 animate-in fade-in fixed inset-0 z-50 grid place-items-center backdrop-blur-xl duration-300">
@@ -118,7 +121,7 @@ export function CheckoutView() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const status = useAuth((state) => state.status);
-  // Accounts made with a phone number have no email: the order updates need one.
+  // Утасны дугаараар үүссэн бүртгэлд имэйл байдаггүй: захиалгын мэдээлэлд имэйл хэрэгтэй.
   const hasEmail = useAuth((state) => Boolean(state.user?.email));
   const [contactEmail, setContactEmail] = useState("");
   const [contactError, setContactError] = useState<string | null>(null);
@@ -130,8 +133,8 @@ export function CheckoutView() {
   const [pickedAddress, setPickedAddress] = useState<number | null>(null);
   const [method, setMethod] = useState<ShippingMethodId>("standard");
   const [addingAddress, setAddingAddress] = useState(false);
-  // One key per attempt: repeating the request after a dropped connection returns the same order
-  // instead of creating a second one. A definite answer (success or refusal) starts a new attempt.
+  // Оролдлого бүрд нэг key: холболт тасарсны дараа хүсэлтийг давтахад хоёр дахь захиалга үүсгэхгүй,
+  // ижил захиалгыг буцаана. Тодорхой хариу (амжилт эсвэл татгалзал) шинэ оролдлого эхлүүлнэ.
   const attemptKey = useRef(crypto.randomUUID());
 
   const {
@@ -166,7 +169,7 @@ export function CheckoutView() {
           detail: "This demo store only takes demo payments, but the server is set up for live ones.",
         });
       }
-      // The overlay is on screen for at least a moment, so a fast answer does not flash it.
+      // Overlay дор хаяж түр харагдана, ингэснээр хурдан хариу анивчихгүй.
       const [paid] = await Promise.all([payDemoOrder(order.number), minimumWait(900)]);
       return paid;
     },
@@ -177,7 +180,7 @@ export function CheckoutView() {
     },
     onError: (error) => {
       if (!(error instanceof ApiError) || error.status !== 0) attemptKey.current = crypto.randomUUID();
-      void queryClient.invalidateQueries({ queryKey: queryKeys.cart }); // stock may have changed
+      void queryClient.invalidateQueries({ queryKey: queryKeys.cart }); // нөөц өөрчлөгдсөн байж болно
     },
   });
 

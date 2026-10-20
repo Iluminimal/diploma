@@ -53,7 +53,7 @@ describe("MegaMenu", () => {
 
     await userEvent.hover(trigger("Women"));
 
-    // No waiting for a delay: the flyout stays open and shows the other department.
+    // Хүлээлтгүй: flyout нээлттэй үлдэж өөр department-ийг харуулна.
     expect(expanded("Women")).toBe("true");
     expect(expanded("Men")).toBe("false");
     expect(flyout()).toHaveAttribute("data-open", "true");
@@ -105,7 +105,7 @@ describe("MegaMenu", () => {
   });
 
   it("is as tall as the department it shows when open, and nothing when closed", async () => {
-    // jsdom has no layout: say the shown content is 420px tall, and report it when observed.
+    // jsdom-д layout байхгүй: харагдаж буй агуулгын өндөр 420px гэж хэлээд, ажиглагдахад мэдэгднэ.
     vi.stubGlobal("ResizeObserver", class { constructor(private cb: () => void) {} observe() { this.cb(); } disconnect() {} });
     const height = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(420);
     render(<MegaMenu />);
@@ -131,7 +131,7 @@ describe("MegaMenu", () => {
 
       const followed = fireEvent.click(trigger("Men"), { detail: 1 });
 
-      expect(followed).toBe(false); // preventDefault was called: no navigation
+      expect(followed).toBe(false); // preventDefault дуудагдсан: навигаци болоогүй
       expect(expanded("Men")).toBe("true");
     });
 
@@ -167,14 +167,14 @@ describe("MegaMenu", () => {
       await userEvent.keyboard("{ArrowRight}{ArrowRight}");
       expect(trigger("New")).toHaveFocus();
       await userEvent.keyboard("{ArrowRight}");
-      expect(trigger("New")).toHaveFocus(); // the end: no wrapping
+      expect(trigger("New")).toHaveFocus(); // төгсгөл: тойрохгүй
       await userEvent.keyboard("{Home}");
       expect(trigger("Women")).toHaveFocus();
       await userEvent.keyboard("{End}");
       expect(trigger("New")).toHaveFocus();
       await userEvent.keyboard("{ArrowLeft}");
       expect(trigger("Kids")).toHaveFocus();
-      // Moving along the bar does not open anything by itself.
+      // Bar дагуу хөдлөхөд өөрөө юу ч нээгдэхгүй.
       expect(flyout()).toHaveAttribute("data-open", "false");
     });
 

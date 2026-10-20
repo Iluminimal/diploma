@@ -1,8 +1,8 @@
 import type { ShippingMethodId, ShippingMethods } from "./checkout-api";
 
 /**
- * What the shipping line will cost, for the live total on the page. The server decides the real
- * amount when the order is created; this mirrors its rule (standard is free over a threshold).
+ * Хуудасны шууд нийт дүнд зориулж хүргэлт хэд болохыг бодно. Жинхэнэ дүнг захиалга үүсгэхэд сервер
+ * шийднэ; энэ нь түүний дүрмийг давтана (standard нь босгоос дээш үнэгүй).
  */
 export function shippingCostFor(methods: ShippingMethods, id: ShippingMethodId, subtotalCents: number): number {
   const method = methods.items.find((m) => m.id === id);

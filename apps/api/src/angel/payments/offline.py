@@ -6,12 +6,12 @@ from angel.payments.stripe_gateway import parse_stripe_event
 
 
 class OfflineGateway:
-    """Development without Stripe keys (`PAYMENTS_MODE=offline`) and the test double.
+    """Stripe key-гүй хөгжүүлэлт (`PAYMENTS_MODE=offline`) ба тестийн орлуулагч.
 
-    Nothing leaves the process: intents are made up, and the shopper "pays" through the simulate
-    endpoint, which feeds the same settlement code a real webhook reaches. Webhooks signed with
-    the configured secret are still verified exactly like Stripe's, so they can be replayed
-    locally. Never allowed in production (see `Settings`).
+    Процессоос юу ч гарахгүй: intent-үүд зохиомол, худалдан авагч simulate endpoint-оор "төлнө".
+    Энэ нь жинхэнэ webhook-ийн хүрдэг settlement кодыг ажиллуулна. Тохируулсан secret-ээр
+    гарын үсэг зурсан webhook-ийг Stripe-ийнхтэй яг адил шалгана, тиймээс локалд дахин тоглуулж
+    болно. Production-д хэзээ ч зөвшөөрөхгүй (`Settings`-ийг хар).
     """
 
     mode: Literal["stripe", "offline"] = "offline"
@@ -22,7 +22,7 @@ class OfflineGateway:
     async def create_intent(
         self, *, amount_cents: int, currency: str, order_number: str, idempotency_key: str
     ) -> IntentInfo:
-        # Derived from the key so a repeated request gets the same intent, like Stripe's.
+        # Key-ээс гаргана: давтагдсан хүсэлт Stripe-ийнх шиг ижил intent авна.
         suffix = idempotency_key.replace("-", "")[:24] or secrets.token_hex(12)
         return IntentInfo(
             f"pi_offline_{suffix}", f"pi_offline_{suffix}_secret_offline", "requires_payment"

@@ -16,7 +16,7 @@ export async function generateMetadata({ searchParams }: PageProps<"/products">)
     description: `Shop ${title.toLowerCase()} at Angel. Filter by colour, price and category.`,
     alternates: { canonical },
     openGraph: { title, url: canonical },
-    // Free-text search and deep pages add no value to a search index.
+    // Чөлөөт текстийн хайлт болон гүн хуудсууд хайлтын индексэд ямар ч үнэ цэнэ нэмэхгүй.
     robots: query.q || query.page > 1 ? { index: false, follow: true } : undefined,
   };
 }

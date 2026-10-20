@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-/** A circle and a tick that draw themselves, for "it worked" (the order confirmation). */
+/** Өөрсдөө зурагддаг тойрог ба тик, "амжилттай" гэдэгт (захиалгын баталгаажуулалт). */
 export function AnimatedCheck({ className }: { className?: string }) {
   return (
     <svg

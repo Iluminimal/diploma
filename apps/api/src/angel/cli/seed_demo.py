@@ -1,11 +1,10 @@
-"""Demo data for development: customers, a month and a half of orders in every state, and
-reviews, so the admin dashboard has something to show.
+"""Хөгжүүлэлтийн demo өгөгдөл: customer, бүх төлөвтэй 1.5 сарын захиалга, review. Admin
+dashboard-д харуулах зүйл гаргана.
 
-Everything is made up and deterministic for a given `--seed`. Customers are
-`demo-<name>@example.com` with one known password; `clean` removes exactly what was made (and
-gives the stock back). Orders go through the same tables checkout fills, with their history as
-events, so the admin screens and the customer's order page read them like real ones. It never
-runs against production.
+Бүгд зохиомол бөгөөд өгөгдсөн `--seed`-д тогтмол. Customer нь `demo-<name>@example.com`, нэг
+мэдэгдэж буй нууц үгтэй. `clean` нь үүсгэснийг яг арилгаж, stock-ийг буцаана. Захиалга нь
+checkout-ийн бөглөдөг ижил хүснэгтүүдэд, түүхийг нь event болгон бичдэг тул admin дэлгэц болон
+customer-ийн захиалгын хуудас жинхэнэ захиалга шиг уншина. Production дээр хэзээ ч ажиллахгүй.
 """
 
 import argparse
@@ -37,7 +36,7 @@ from angel.schemas.commerce.order import ShippingMethodId
 from angel.services.catalog.sizes import sizes_for
 from angel.services.commerce.shipping import shipping_cost
 
-# Share of delivered items whose buyer wrote a review.
+# Хүргэгдсэн бараа бүрийн хэдэн хувьд нь худалдан авагч review бичих вэ.
 REVIEW_CHANCE = 0.5
 FRESH_STATUSES = {0: "pending", 1: "paid", 2: "paid"}
 FRESH_STATUSES_END = 8
@@ -167,7 +166,7 @@ async def seed_demo(
     days: int = 45,
     seed: int = 2026,
 ) -> Summary | None:
-    """Add the demo data. None when it is already there (run `clean` first to start over)."""
+    """Demo өгөгдөл нэмнэ. Аль хэдийн байвал None (шинээр эхлэхийн тулд эхлээд `clean` ажиллуул)."""
     if settings.app_env == "prod":
         raise SystemExit("refusing to seed demo data when APP_ENV=prod")
     sessions = async_sessionmaker(engine, expire_on_commit=False)
@@ -192,8 +191,8 @@ async def seed_demo(
 
 
 async def clean_demo(engine: AsyncEngine) -> str:
-    """Remove the demo customers with their orders and reviews, put their stock back and
-    recompute the ratings of the products they reviewed."""
+    """Demo customer-ийг захиалга, review-тэй нь устгаж, stock-ийг буцааж, review бичсэн
+    бүтээгдэхүүний rating-ийг дахин бодно."""
     async with engine.begin() as connection:
         found = await connection.execute(
             text("SELECT id FROM users WHERE email LIKE :pattern"), DEMO_EMAILS
@@ -202,8 +201,8 @@ async def clean_demo(engine: AsyncEngine) -> str:
         if not ids:
             return "no demo data to remove"
         params: dict[str, Any] = {"ids": list(ids)}
-        # Stock is held by every order that was not cancelled, and by a refunded one only when
-        # its items were not put back at the time.
+        # Цуцлагдаагүй захиалга бүр stock-ийг барьдаг. Refund хийсэн захиалга тухайн үед бараагаа
+        # буцаагаагүй бол л барьж байгаа.
         await connection.execute(
             text(
                 """
@@ -295,7 +294,7 @@ class _Maker:
         shuffled = list(pool)
         rng.shuffle(shuffled)
         self.pool = shuffled
-        # A few products sell far more than the rest, so "top products" is a real ranking.
+        # Цөөн бүтээгдэхүүн бусдаасаа хавьгүй их зарагддаг тул "top products" жинхэнэ эрэмбэ болно.
         self.weights = [1 / (rank + 1) ** 0.9 for rank in range(len(shuffled))]
         self.stock = {p.id: p.stock_quantity for p in shuffled}
         self.sold: Counter[int] = Counter()
@@ -305,7 +304,7 @@ class _Maker:
         self.reviews_made = 0
         self.touched: set[int] = set()
 
-    # --- customers ----------------------------------------------------------------------------
+    # --- хэрэглэгч -----------------------------------------------------------------------------
 
     async def run(self, customers: int, orders: int) -> None:
         people = await self._customers(customers)
@@ -332,7 +331,7 @@ class _Maker:
             if email in names:
                 continue
             names.add(email)
-            # Most have been around a while; a third signed up within the period.
+            # Ихэнх нь аль хэдийн удаан байгаа; гуравны нэг нь энэ хугацаанд бүртгүүлсэн.
             joined_days_ago = (
                 self.rng.uniform(0.2, self.days)
                 if self.rng.random() < 0.3
@@ -376,7 +375,7 @@ class _Maker:
             )
         return people
 
-    # --- orders -------------------------------------------------------------------------------
+    # --- захиалга -----------------------------------------------------------------------------
 
     def _status_for(self, age_hours: float) -> str:
         table: list[tuple[float, dict[str, float]]] = [
@@ -413,7 +412,7 @@ class _Maker:
 
     def _number(self) -> str:
         while True:
-            # new_order_number() is random; draw from the seeded generator instead.
+            # new_order_number() санамсаргүй тул оронд нь seed-тэй generator-оос сонгоно.
             number = "LK-" + "".join(
                 self.rng.choice("23456789ABCDEFGHJKLMNPQRSTUVWXYZ") for _ in range(8)
             )
@@ -425,8 +424,8 @@ class _Maker:
         self, people: list["_Person"], reviewed: set[tuple[int, int]], index: int
     ) -> None:
         rng = self.rng
-        # The newest few are fixed: something awaiting payment and something just paid, then a
-        # handful from today, the way a shop always looks. The rest thin out with age.
+        # Хамгийн шинэ цөөн нь тогтсон: төлбөр хүлээж буй, дөнгөж төлсөн, дараа нь өнөөдрийн
+        # хэд хэдэн захиалга (дэлгүүр үргэлж ингэж харагддаг). Үлдсэн нь хуучин байх тусам цөөрнө.
         fresh = FRESH_STATUSES.get(index)
         if fresh:
             age_days = rng.uniform(0.003, 0.03)
@@ -446,7 +445,7 @@ class _Maker:
         subtotal = sum(i.product.price_cents * i.quantity for i in items)
         method: ShippingMethodId = "express" if rng.random() < 0.2 else "standard"
         shipping = shipping_cost(self.settings, method, subtotal)
-        # When things happened. A step that would land in the future is not reached yet.
+        # Үйл явдал хэзээ болсон. Ирээдүйд таарах алхамд хараахан хүрээгүй гэж үзнэ.
         paid_at = created + timedelta(minutes=rng.uniform(1, 6))
         shipped_at = paid_at + timedelta(hours=rng.uniform(3, 30))
         delivered_at = shipped_at + timedelta(days=rng.uniform(1, 5))
@@ -460,7 +459,7 @@ class _Maker:
         if status in ("shipped", "delivered"):
             status = status_of_chain = _reachable(status, shipped_at, delivered_at, horizon)
         if status == "pending":
-            # Stays pending for the length of the expiry sweep, no longer.
+            # Expiry sweep-ийн хугацаанаас илүү pending байхгүй (тэгвэл цуцлагдах байсан).
             created = self.now - timedelta(minutes=rng.uniform(2, 12))
             paid_at = created
         if status in ("paid", "refunded") and paid_at > horizon:
@@ -597,7 +596,7 @@ class _Maker:
             if holds_stock:
                 self.sold[item.product.id] += item.quantity
             else:
-                # The sale never held stock (cancelled) or gave it back: undo the reservation.
+                # Борлуулалт stock барьж байгаагүй (цуцлагдсан) эсвэл буцаасан: нөөцлөлтийг буцаана.
                 self.stock[item.product.id] += item.quantity
         self.orders_made += 1
         self.statuses[status] += 1
@@ -646,7 +645,7 @@ class _Person:
 
 
 def _reachable(wanted: str, shipped: datetime, delivered: datetime, horizon: datetime) -> str:
-    """The furthest stage of `wanted` (paid, shipped, delivered) that has happened by now."""
+    """`wanted` (paid, shipped, delivered)-ийн яг одоогоор болчихсон хамгийн сүүлийн шат."""
     if wanted == "delivered" and delivered <= horizon:
         return "delivered"
     if wanted in ("delivered", "shipped") and shipped <= horizon:

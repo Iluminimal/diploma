@@ -23,20 +23,20 @@ async def start(client: AsyncClient, email: str | None = None, **params: str) ->
 
 
 def callback_target(start_response: Response) -> str:
-    """The path and query the fake Google sends the browser back to."""
+    """Fake Google browser-ыг буцаах path ба query."""
     location = urlparse(start_response.headers["location"])
     return f"{location.path}?{location.query}"
 
 
 async def sign_in(client: AsyncClient, email: str | None = None, **params: str) -> Response:
-    """The whole round trip a browser makes: start, 'Google', callback."""
+    """Browser-ийн хийх бүтэн явц: эхлэх, "Google", callback."""
     first = await start(client, email, **params)
     assert first.status_code == 302, first.text
     return await client.get(callback_target(first))
 
 
 async def who_am_i(client: AsyncClient) -> dict[str, object]:
-    """Trade the refresh cookie the callback set for a session, like the web app does on load."""
+    """Callback-ийн тавьсан refresh cookie-г session-оор солино, web апп ачаалахад хийдэг шиг."""
     response = await client.post(REFRESH)
     assert response.status_code == 200, response.text
     user: dict[str, object] = response.json()["user"]
@@ -131,7 +131,7 @@ async def test_a_google_email_that_has_a_password_account_links_and_removes_the_
         assert user["id"] == shopper.user_id
         assert await scalar(api, "SELECT count(*) FROM users") == 1
         assert await scalar(api, "SELECT count(*) FROM oauth_identities") == 1
-        # Whoever knew the password no longer gets in with it.
+        # Нууц үгээ мэддэг хүн ч одоо түүгээр нэвтэрч чадахгүй.
         login = await api.client.post(
             "/api/v1/auth/login", json={"email": email, "password": PASSWORD}
         )
@@ -155,7 +155,7 @@ async def test_password_login_for_a_google_only_account_looks_like_any_wrong_pas
 
         assert known.status_code == unknown.status_code == 401
         assert known.json()["title"] == unknown.json()["title"]
-        # And registering that email is still refused: the account exists.
+        # Мөн тэр имэйлээр бүртгүүлэх нь татгалзагдсан хэвээр: account байна.
         again = await api.client.post(
             "/api/v1/auth/register", json={"email": email, "password": PASSWORD, "full_name": "X"}
         )
@@ -259,7 +259,7 @@ async def test_a_callback_with_the_wrong_state_is_refused(api_factory: ApiFactor
 
 
 async def test_a_callback_started_in_another_browser_is_refused(api_factory: ApiFactory) -> None:
-    """The attacker's link, followed by a victim who never started a sign-in."""
+    """Халдагчийн холбоос, нэвтрэлт эхлүүлээгүй хохирогч дээр нээгдэнэ."""
     async with api_factory(seed_count=0, oauth_mode="fake") as api:
         attackers_link = callback_target(await start(api.client, unique_email()))
 

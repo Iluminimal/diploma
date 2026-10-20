@@ -4,13 +4,13 @@ import type { Product } from "@/features/catalog/product";
 
 type Props = {
   product: Pick<Product, "name" | "image">;
-  /** Responsive `sizes` hint: what share of the viewport the image occupies. */
+  /** Responsive `sizes` hint: зураг viewport-ын хэдэн хувийг эзэлдэг. */
   sizes: string;
   priority?: boolean;
   className?: string;
 };
 
-/** Catalogue photos are 3:4 portraits; the blur placeholder is a tiny inline WebP from the API. */
+/** Каталогийн зургууд 3:4 босоо; blur placeholder нь API-аас ирдэг жижиг inline WebP. */
 export function ProductImage({ product, sizes, priority, className }: Props) {
   const { image, name } = product;
   return (

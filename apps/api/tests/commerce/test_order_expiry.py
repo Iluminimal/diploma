@@ -69,7 +69,7 @@ async def test_unpaid_orders_past_the_deadline_give_their_stock_back(
         assert released == 1
         assert await status_of(api, number) == ("cancelled", "expired")
         assert await stock_of(api.app.state.engine, product_id) == 7
-        assert len(gateway.cancelled) == 1  # the payment can no longer be completed
+        assert len(gateway.cancelled) == 1  # төлбөрийг дахин дуусгах боломжгүй
         async with api.app.state.engine.connect() as connection:
             payment = (
                 await connection.execute(text("SELECT status, client_secret FROM payments"))
@@ -108,7 +108,7 @@ async def test_an_order_paid_in_the_meantime_is_not_expired(
         released = await expirer(api, gateway).run_once()
 
         assert released == 0
-        assert await status_of(api, number) == ("pending", None)  # the webhook will settle it
+        assert await status_of(api, number) == ("pending", None)  # webhook эцэслэнэ
         assert await stock_of(api.app.state.engine, product_id) == 4
 
 
@@ -121,7 +121,10 @@ async def test_a_provider_outage_defers_expiry_to_the_next_sweep(
         gateway.fail_cancel = True
 
         assert await expirer(api, gateway).run_once() == 0
-        assert await status_of(api, number) == ("pending", None)  # never freed while still payable
+        assert await status_of(api, number) == (
+            "pending",
+            None,
+        )  # төлөх боломжтой байгаа цагт хэзээ ч суллагдахгүй
 
         gateway.fail_cancel = False
         assert await expirer(api, gateway).run_once() == 1
@@ -139,10 +142,10 @@ async def test_sweeps_are_idempotent_and_safe_to_run_at_the_same_time(
         results = await asyncio.gather(*(expirer(api, gateway).run_once() for _ in range(4)))
         again = await expirer(api, gateway).run_once()
 
-        assert sum(results) == 1  # exactly one sweeper released it
+        assert sum(results) == 1  # яг нэг sweeper суллав
         assert again == 0
         assert await status_of(api, number) == ("cancelled", "expired")
-        assert await stock_of(api.app.state.engine, product_id) == 7  # not 7 + 3 * 4
+        assert await stock_of(api.app.state.engine, product_id) == 7  # 7 + 3 * 4 биш
 
 
 async def test_stale_guest_carts_are_deleted_but_accounts_and_fresh_guests_are_kept(
@@ -162,7 +165,7 @@ async def test_stale_guest_carts_are_deleted_but_accounts_and_fresh_guests_are_k
                     "WHERE id = (SELECT min(id) FROM carts)"
                 )
             )
-            await connection.execute(  # the account cart is old too, which must not matter
+            await connection.execute(  # account-ын сагс ч хуучин, гэхдээ энэ нөлөөлөхгүй
                 text(
                     "UPDATE carts SET updated_at = now() - interval '90 days' "
                     "WHERE user_id IS NOT NULL"
@@ -175,4 +178,4 @@ async def test_stale_guest_carts_are_deleted_but_accounts_and_fresh_guests_are_k
             rows = (
                 await connection.execute(text("SELECT user_id IS NULL AS guest FROM carts"))
             ).all()
-        assert sorted(r.guest for r in rows) == [False, True]  # the account's and the fresh guest's
+        assert sorted(r.guest for r in rows) == [False, True]  # account-ынх ба шинэ зочных

@@ -15,13 +15,13 @@ from angel.models.mixins import TimestampMixin
 
 
 class Cart(TimestampMixin, Base):
-    """A signed-in user's cart (`user_id`) or a guest's (`guest_token_hash`, the SHA-256 of the
-    `lk_cart` cookie). On login the guest cart is merged into the user's and deleted."""
+    """Нэвтэрсэн хэрэглэгчийн (`user_id`) эсвэл зочны (`guest_token_hash`, `lk_cart` cookie-ийн
+    SHA-256) сагс. Нэвтрэхэд зочны сагсыг хэрэглэгчийнхтэй нэгтгэж устгана."""
 
     __tablename__ = "carts"
     __table_args__ = (
         CheckConstraint("num_nonnulls(user_id, guest_token_hash) = 1", name="one_owner"),
-        # Guest carts are swept by age.
+        # Зочны сагсыг насаар нь цэвэрлэнэ.
         Index("ix_carts_updated_at", "updated_at"),
     )
 
@@ -47,7 +47,7 @@ class CartItem(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
     cart_id: Mapped[int] = mapped_column(ForeignKey("carts.id", ondelete="CASCADE"))
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
-    # "" for products without sizes: NULL would defeat the unique constraint above.
+    # Size-гүй бараанд "": NULL нь дээрх unique constraint-ийг хоосолчихно.
     size: Mapped[str] = mapped_column(String(16), server_default="")
     quantity: Mapped[int] = mapped_column(SmallInteger)
 

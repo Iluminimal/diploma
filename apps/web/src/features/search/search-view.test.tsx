@@ -94,7 +94,8 @@ describe("SearchView", () => {
     expect(search.mock.calls[1]?.[1]).toMatchObject({ refinement: "in red" });
     expect(await screen.findByText(/for “in red”/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "Clear refinement" }));
-    // Back to the photo-only results, which are still cached: no third request (they are rate limited).
+    // Зөвхөн зургийн үр дүн рүү буцна, тэр нь cache-д байгаа: гурав дахь хүсэлт байхгүй (rate
+    // limit-тэй).
     await waitFor(() => expect(screen.queryByText(/for “in red”/)).not.toBeInTheDocument());
     expect(search).toHaveBeenCalledTimes(2);
   });

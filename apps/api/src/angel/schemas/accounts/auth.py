@@ -5,8 +5,8 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
 
 FullName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
-# Length is the only rule: composition rules ("one digit, one symbol") push people to weaker,
-# predictable passwords. 10 characters is the floor, 128 keeps hashing time bounded.
+# Зөвхөн урт нь дүрэм: найрлагын дүрэм ("нэг цифр, нэг тэмдэгт") хүмүүсийг сул, таамаглахад амархан
+# нууц үг сонгоход түлхдэг. 10 тэмдэгт доод хязгаар, 128 нь hash хийх хугацааг хязгаарлана.
 Password = Annotated[str, Field(min_length=10, max_length=128)]
 
 
@@ -30,8 +30,8 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    # Not EmailStr and not length-checked beyond a cap: a malformed address must fail like a
-    # wrong one, not with a different error.
+    # EmailStr биш, дээд хязгаараас бусад урт шалгахгүй: буруу хэлбэртэй хаяг нь буруу нууц үгтэй
+    # ижил байдлаар (өөр алдаа үзүүлэхгүйгээр) амжилтгүй болох ёстой.
     email: Annotated[str, Field(min_length=1, max_length=320)]
     password: Annotated[str, Field(min_length=1, max_length=128)]
 
@@ -43,7 +43,8 @@ class LoginRequest(BaseModel):
 
 class UserOut(BaseModel):
     id: int
-    # An account made with a phone number has no email until it adds one, and the other way round.
+    # Утасны дугаараар бүртгүүлсэн хэрэглэгчид email нэмэх хүртэл email байхгүй, эсрэгээр нь мөн
+    # адил.
     email: str | None
     phone: str | None
     email_verified: bool
@@ -51,9 +52,9 @@ class UserOut(BaseModel):
     full_name: str
     role: Literal["customer", "admin"]
     avatar_url: str | None
-    # False for accounts that only sign in with Google (they may add one on the profile page).
+    # Зөвхөн Google-ээр нэвтэрдэг бүртгэлд False (профайл хуудсан дээр нэмж болно).
     has_password: bool
-    # Sign-in providers linked to the account, e.g. ["google"].
+    # Бүртгэлд холбогдсон нэвтрэх provider-ууд, жишээ нь ["google"].
     providers: list[str]
 
 
@@ -66,7 +67,7 @@ class UpdateProfileRequest(BaseModel):
 class ChangePasswordRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    # Required when the account has a password; Google-only accounts leave it out.
+    # Бүртгэл нууц үгтэй бол заавал; зөвхөн Google-ийн бүртгэл үүнийг орхино.
     current_password: Annotated[str, Field(min_length=1, max_length=128)] | None = None
     new_password: Password
 
@@ -74,8 +75,8 @@ class ChangePasswordRequest(BaseModel):
 class DeleteAccountRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    # The account's email (or phone number, if it has no email) typed back by the person, so a
-    # stolen tab cannot delete an account with one click.
+    # Бүртгэлийн email (email байхгүй бол утасны дугаар)-ыг хэрэглэгч өөрөө дахин бичнэ: ингэвэл
+    # орхигдсон tab-аас нэг товшилтоор бүртгэл устгах боломжгүй.
     confirm: Annotated[str, Field(min_length=1, max_length=320)]
     password: Annotated[str, Field(min_length=1, max_length=128)] | None = None
 
@@ -86,20 +87,20 @@ class DeleteAccountRequest(BaseModel):
 
 
 class SessionOut(BaseModel):
-    """The access token goes in `Authorization: Bearer` and is kept in memory by the client.
-    The refresh token never appears in a body: it is an httpOnly cookie."""
+    """Access token нь `Authorization: Bearer`-д очиж, client-ийн санах ойд хадгалагдана. Refresh
+    token хариуны body-д хэзээ ч гарахгүй: httpOnly cookie байна."""
 
     access_token: str
     token_type: Literal["bearer"] = "bearer"  # noqa: S105 - OAuth scheme name
     expires_in: int
     user: UserOut
-    # True when this sign-in just created the account (a new phone number or email): the page
-    # then asks for a name.
+    # Энэ нэвтрэлтээр бүртгэл дөнгөж үүссэн бол True (шинэ утасны дугаар эсвэл email): тэгвэл хуудас
+    # нэр асууна.
     is_new_user: bool = False
 
 
 class ProvidersOut(BaseModel):
-    """Which ways of signing in besides a password are available, so the page shows only those."""
+    """Нууц үгээс гадна ямар нэвтрэх арга боломжтой вэ: хуудас зөвхөн тэдгээрийг харуулна."""
 
     google: bool
 
@@ -109,7 +110,7 @@ OtpCode = Annotated[str, Field(pattern=r"^[0-9]{6}$")]
 
 
 class OtpRequest(BaseModel):
-    """Ask for a sign-in code. `destination` is a phone number (any common spelling) or an email."""
+    """Нэвтрэх код хүсэх. `destination` нь утасны дугаар (ямар ч түгээмэл бичлэг) эсвэл email."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -141,7 +142,7 @@ class ResetPasswordRequest(BaseModel):
 
 
 class VerifyCodeRequest(BaseModel):
-    """The code that confirms an address or number the signed-in person already holds."""
+    """Нэвтэрсэн хэрэглэгчийн өөрт байгаа хаяг эсвэл дугаарыг баталгаажуулах код."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -149,12 +150,12 @@ class VerifyCodeRequest(BaseModel):
 
 
 class PhoneChangeRequest(BaseModel):
-    """Add a phone number or replace the current one: a code is sent to the new number."""
+    """Утасны дугаар нэмэх эсвэл одоогийхыг солих: код шинэ дугаар руу илгээгдэнэ."""
 
     model_config = ConfigDict(extra="forbid")
 
     phone: Annotated[str, Field(min_length=3, max_length=40)]
-    # Required when the account has a password.
+    # Бүртгэл нууц үгтэй бол заавал.
     current_password: CurrentPassword = None
 
 
@@ -166,7 +167,7 @@ class PhoneConfirmRequest(BaseModel):
 
 
 class EmailChangeRequest(BaseModel):
-    """Add an email address or replace the current one: a code is sent to the new address."""
+    """Email хаяг нэмэх эсвэл одоогийхыг солих: код шинэ хаяг руу илгээгдэнэ."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -188,12 +189,12 @@ class RemoveContactRequest(BaseModel):
 
 
 class DeviceSession(BaseModel):
-    """One open login of the account, as the "your devices" list shows it."""
+    """Бүртгэлийн нээлттэй нэг нэвтрэлт, "миний төхөөрөмжүүд" жагсаалтад харагддаг хэлбэрээр."""
 
     id: uuid.UUID
     device: str
     ip: str | None
     created_at: datetime
     last_used_at: datetime
-    # The login this request belongs to.
+    # Энэ хүсэлтийг илгээсэн нэвтрэлт.
     current: bool

@@ -38,11 +38,11 @@ describe("ProductGallery", () => {
 
     swipe(300, 200);
     expect(shown()[0]).toHaveAttribute("src", expect.stringContaining("2_800"));
-    swipe(300, 290); // too short
+    swipe(300, 290); // хэт богино
     expect(shown()[0]).toHaveAttribute("src", expect.stringContaining("2_800"));
     swipe(100, 220);
     expect(shown()[0]).toHaveAttribute("src", expect.stringContaining("1_800"));
-    swipe(100, 220); // back from the first goes to the last
+    swipe(100, 220); // эхнээс нь буцахад сүүлийнх рүү очно
     expect(shown()[0]).toHaveAttribute("src", expect.stringContaining("2_800"));
   });
 

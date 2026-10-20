@@ -6,7 +6,7 @@ export const SEASONS = ["Fall", "Spring", "Summer", "Winter"] as const;
 export const ACCEPTED_IMAGES = ["image/jpeg", "image/png", "image/webp"];
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
-/** "49.99" -> 4999. Whole cents only: the form never lets a fraction of a cent through. */
+/** "49.99" -> 4999. Зөвхөн бүхэл cent: form cent-ийн бутархай оруулахгүй. */
 export function dollarsToCents(text: string): number {
   const [whole = "0", fraction = ""] = text.trim().split(".");
   return Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
@@ -16,7 +16,9 @@ export function centsToDollars(cents: number): string {
   return (cents / 100).toFixed(2);
 }
 
-/** Why a photo can't be used, or null when it can. Mirrors what the API enforces. */
+/**
+ * Зургийг яагаад ашиглах боломжгүйг эсвэл боломжтой бол null буцаана. API-ийн шаардлагыг давтана.
+ */
 export function imageProblem(file: File): string | null {
   if (!ACCEPTED_IMAGES.includes(file.type)) return "Use a JPEG, PNG or WebP photo.";
   if (file.size > MAX_IMAGE_BYTES) return "That photo is larger than 8 MB.";
@@ -26,7 +28,7 @@ export function imageProblem(file: File): string | null {
 
 const text = (max: number) => z.string().trim().max(max);
 
-/** Everything is text while it is being typed; `toPayload` converts once it is valid. */
+/** Бичиж байх үед бүх зүйл текст; зөв болсны дараа `toPayload` хөрвүүлнэ. */
 export const productSchema = z.object({
   name: z.string().trim().min(2, "Enter a name").max(300),
   category_id: z.string().min(1, "Choose a category"),
@@ -88,7 +90,7 @@ export function toFormValues(product?: AdminProduct): ProductFormValues {
   };
 }
 
-/** The create endpoint takes a multipart form: the photo plus the details; empty options are left out. */
+/** Create endpoint multipart form авна: зураг ба дэлгэрэнгүй; хоосон сонголтыг оруулахгүй. */
 export function buildCreateForm(payload: ProductPayload, photo: File): FormData {
   const form = new FormData();
   form.append("file", photo);
@@ -105,7 +107,7 @@ export function buildCreateForm(payload: ProductPayload, photo: File): FormData 
   return form;
 }
 
-/** A PATCH body; a cleared optional field is sent as null so it is actually cleared. */
+/** PATCH body; цэвэрлэсэн optional талбарыг null-аар илгээж, үнэхээр цэвэрлэгдэнэ. */
 export function toChanges(payload: ProductPayload): AdminProductChanges {
   return {
     name: payload.name,

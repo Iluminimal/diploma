@@ -21,8 +21,8 @@ from angel.storage import Storage
 
 log = get_logger(__name__)
 
-# The JPEG decoder may shrink the picture to 1/2, 1/4, ... while it stays above this: much
-# faster for phone photos, and the same setting ingestion uses for catalogue images.
+# JPEG decoder зургийг энэ хэмжээнээс дээш байх хугацаанд 1/2, 1/4, ... болгон багасгаж болно:
+# утасны зурагт хамаагүй хурдан, ingestion catalogue-ийн зурагт ижил тохиргоо хэрэглэнэ.
 DECODE_MIN_SIDE = 800
 SIMILAR_DEFAULT_LIMIT = 12
 
@@ -34,10 +34,10 @@ def _ms(start: float, end: float | None = None) -> float:
 def _combine(
     image: NDArray[np.float32], text: NDArray[np.float32], text_weight: float
 ) -> NDArray[np.float32]:
-    """Weighted sum of two unit vectors, renormalized (cosine search needs direction only)."""
+    """Хоёр нэгж vector-ийн жинлэсэн нийлбэр, дахин normalize хийнэ (cosine-д чиглэл л хэрэгтэй)."""
     combined = (1.0 - text_weight) * image + text_weight * text
     norm = float(np.linalg.norm(combined))
-    if norm < 1e-6:  # image and text exactly cancel out: fall back to the picture
+    if norm < 1e-6:  # зураг ба текст бүрэн арилгалцсан: зураг руу буцна
         return image
     return (combined / norm).astype(np.float32)
 
@@ -95,8 +95,8 @@ class SearchService:
         filters: SearchFilters,
         limit: int | None,
     ) -> SearchResponse:
-        """ "Like this picture, but ..." : image and text embeddings share one space, so a
-        weighted sum moves the query from the picture towards the described change."""
+        """ "Энэ зураг шиг, гэхдээ ...": зураг ба текстийн embedding нэг орон зайд байдаг тул
+        жинлэсэн нийлбэр query-г зургаас тайлбарласан өөрчлөлт рүү зөөнө."""
         started = time.perf_counter()
         image_vector, detected, decode_ms, embed_ms = await self._embed_upload(data)
         text_started = time.perf_counter()
@@ -118,7 +118,7 @@ class SearchService:
     async def similar_products(
         self, product_id: int, filters: SearchFilters, limit: int | None
     ) -> SearchResponse:
-        """Neighbours of a catalogue product, from its stored embedding: no inference."""
+        """Catalogue-ийн барааны хөрш, хадгалсан embedding-ээс: inference хийхгүй."""
         started = time.perf_counter()
         limit = limit or SIMILAR_DEFAULT_LIMIT
         cached = await self._cache.get_similar(product_id, filters, limit)
@@ -144,14 +144,14 @@ class SearchService:
         await self._cache.set_similar(product_id, filters, limit, hits)
         return self._respond("similar", started, hits, db_ms)
 
-    # --- steps -----------------------------------------------------------------------------
+    # --- алхмууд ---
 
     async def _embed_upload(
         self, data: bytes
     ) -> tuple[NDArray[np.float32], list[DetectedCategory], float, float]:
         decode_started = time.perf_counter()
         try:
-            # Decoding is CPU work (Pillow releases the GIL): keep it off the event loop.
+            # Decode хийх нь CPU-ийн ажил (Pillow GIL-ийг чөлөөлдөг): event loop-оос холдуул.
             image = await asyncio.to_thread(
                 load_image,
                 data,
@@ -192,8 +192,8 @@ class SearchService:
         self, vector: NDArray[np.float32], filters: SearchFilters, limit: int | None
     ) -> tuple[list[SearchHit], float]:
         started = time.perf_counter()
-        # The transaction (and with it a pooled connection) is held only for the query, never
-        # while decoding or running the model.
+        # Transaction (түүнтэй хамт pool-ийн connection) зөвхөн query-д барьцаалагдана, decode хийх
+        # эсвэл model ажиллуулах үед хэзээ ч биш.
         async with self._session.begin():
             found = await ProductRepository(self._session).search_similar(
                 vector, filters=filters, limit=limit or self._default_limit
@@ -222,7 +222,8 @@ class SearchService:
         cached: bool = False,
     ) -> SearchResponse:
         total_ms = _ms(started)
-        # Never the image, the query text or any user data: only what is needed to see load.
+        # Зураг, query текст, хэрэглэгчийн өгөгдлийг хэзээ ч биш: зөвхөн ачааллыг харахад хэрэгтэй
+        # зүйл.
         log.info("search", kind=kind, results=len(hits), total_ms=total_ms, cached=cached)
         return SearchResponse(
             results=hits,

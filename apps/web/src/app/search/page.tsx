@@ -9,8 +9,8 @@ export const metadata: Metadata = {
   openGraph: { title: "Search by photo", url: "/search" },
 };
 
-// Rendered per request: the page reads the catalogue API, which isn't available at build time (CI, Docker).
-// The API client's fetch cache (`revalidate`) still keeps these cheap.
+// Хүсэлт бүрт render хийнэ: хуудас каталогийн API-г уншдаг бөгөөд build үед (CI, Docker) API
+// байдаггүй. API client-ийн fetch cache (`revalidate`) эдгээрийг хямд байлгана.
 export const dynamic = "force-dynamic";
 
 export default async function SearchPage() {

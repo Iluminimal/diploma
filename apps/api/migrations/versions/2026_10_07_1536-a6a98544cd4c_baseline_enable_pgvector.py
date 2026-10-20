@@ -1,4 +1,4 @@
-"""baseline: enable pgvector
+"""baseline: pgvector-ийг идэвхжүүлнэ
 
 Revision ID: a6a98544cd4c
 Revises:
@@ -18,12 +18,12 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
-    # hnsw.iterative_scan (filtered vector search) needs pgvector >= 0.8; the integration
-    # test tests/test_database.py asserts the installed version.
+    """Schema-г шинэчилнэ."""
+    # hnsw.iterative_scan (шүүлттэй vector хайлт) pgvector >= 0.8 шаарддаг; суулгасан
+    # хувилбарыг tests/core/test_database.py шалгадаг.
     op.execute("CREATE EXTENSION IF NOT EXISTS vector")
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
+    """Schema-г өмнөх төлөвт буцаана."""
     op.execute("DROP EXTENSION IF EXISTS vector")

@@ -1,10 +1,9 @@
-"""One-time codes: sent to a phone number or an email address, good for one purpose, a few
-minutes and a few guesses.
+"""Нэг удаагийн код: утасны дугаар эсвэл email руу илгээгдэж, нэг зорилгод, хэдэн минут, хэдэн
+таамаглалын хугацаанд хүчинтэй.
 
-Only an HMAC of the code is stored. Every step runs in the database (not Redis), so a lost cache
-can never let a code through, and `issue` / `verify` each use their own transaction: a wrong guess
-is counted even though the request that made it fails.
-"""
+Кодын зөвхөн HMAC хадгалагдана. Алхам бүр database дээр (Redis биш) ажиллана, тиймээс cache
+алдагдсан ч код хууль бусаар нэвтрэхгүй; `issue` / `verify` тус бүр өөрийн transaction-тай:
+буруу таамаглал хүсэлт нь амжилтгүй болсон ч тоологдоно."""
 
 import hashlib
 import hmac
@@ -52,12 +51,12 @@ _SUBJECTS: dict[str, str] = {
 
 
 def is_phone(destination: str) -> bool:
-    """Normalised destinations are E.164 numbers (start with `+`) or lower-case emails."""
+    """Хэвийн болгосон хүлээн авагч нь E.164 дугаар (`+`-ээр эхэлнэ) эсвэл жижиг үсгийн email."""
     return destination.startswith("+")
 
 
 def normalize_destination(raw: str, default_region: str) -> str:
-    """The canonical form of what the person typed: an E.164 number or a lower-case email."""
+    """Хүний бичсэний каноник хэлбэр: E.164 дугаар эсвэл жижиг үсгийн email."""
     text = raw.strip()
     try:
         if "@" in text:
@@ -129,15 +128,16 @@ class OtpService:
         user_id: int | None = None,
         deliver: bool = True,
     ) -> None:
-        """Create a code and send it. `deliver=False` records the challenge but sends nothing: for
-        "forgot password" on an unknown address, which must look exactly like a known one."""
+        """Код үүсгээд илгээнэ. `deliver=False` нь challenge-ийг бүртгэнэ, гэхдээ юу ч илгээхгүй:
+        мэдэгдээгүй хаяг дээрх "нууц үг мартсан"-д, энэ нь мэдэгдсэнтэй яг ижил харагдах
+        ёстой."""
         now = datetime.now(UTC)
         code = self._settings.otp_dev_code or f"{secrets.randbelow(10**6):06d}"
         resend = self._settings.otp_resend_seconds
         async with self._session.begin():
             last = await self._otps.latest(purpose, destination)
             if last is not None:
-                # created_at is the database clock: a tiny negative age is just clock skew.
+                # created_at нь database-ийн цаг: бага зэргийн сөрөг нас нь зөвхөн цагийн зөрүү.
                 age = max(0.0, (now - last.created_at).total_seconds())
                 wait = math.ceil(resend - age)
                 if wait > 0:
@@ -164,8 +164,8 @@ class OtpService:
         *,
         user_id: int | None = None,
     ) -> int | None:
-        """Check a code and use it up. Returns the user id the challenge was issued for (None for
-        login and reset). `user_id` pins the challenge to the signed-in person who asked for it."""
+        """Кодыг шалгаад дуусгана. Challenge-ийг хэнд олгосон user id-г буцаана (login, reset-д
+        None). `user_id` нь challenge-ийг хүсэж буй нэвтэрсэн хүнтэй холбоно."""
         now = datetime.now(UTC)
         failure: ProblemError | None = None
         owner: int | None = None
@@ -193,13 +193,13 @@ class OtpService:
             else:
                 row.consumed_at = now
                 owner = row.user_id
-        # Raised after the block, so the counted attempt is committed.
+        # Блокийн дараа шиднэ, ингэвэл тоологдсон оролдлого commit хийгдсэн байна.
         if failure is not None:
             log.info("otp_rejected", purpose=purpose, reason=failure.type)
             raise failure
         return owner
 
-    # --- helpers --------------------------------------------------------------------------
+    # --- туслах функцууд ---
 
     def _hash(self, purpose: str, destination: str, code: str) -> str:
         message = f"{purpose}\x00{destination}\x00{code}".encode()

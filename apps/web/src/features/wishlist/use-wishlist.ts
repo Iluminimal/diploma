@@ -8,7 +8,7 @@ import { userMessage } from "@/lib/api/errors";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchWishlist, saveProduct, unsaveProduct, type Wishlist } from "./wishlist-api";
 
-/** Only signed-in shoppers have a wishlist: guests never trigger a request. */
+/** Нэвтэрсэн худалдан авагч л wishlist-тэй: зочин хүсэлт үүсгэхгүй. */
 export function useWishlist() {
   const status = useAuth((state) => state.status);
   const userId = useAuth((state) => state.user?.id);

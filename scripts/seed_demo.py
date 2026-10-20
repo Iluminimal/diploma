@@ -1,4 +1,4 @@
-"""Demo customers, orders and reviews for the admin dashboard (development only). Run from apps/api:
+"""Admin dashboard-ын demo customer, захиалга, review (зөвхөн хөгжүүлэлт). apps/api-аас ажиллуул:
 
 cd apps/api && uv run python ../../scripts/seed_demo.py
 cd apps/api && uv run python ../../scripts/seed_demo.py --clean

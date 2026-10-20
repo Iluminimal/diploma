@@ -27,7 +27,7 @@ export function MiniCartSkeleton() {
   );
 }
 
-/** The Bag's content. Loaded lazily (see cart-button.tsx) to keep it out of every page's JS. */
+/** Bag-ийн агуулга. Хуудас бүрийн JS-д орохгүйн тулд lazy ачаална (cart-button.tsx-г хар). */
 export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
   const { data: cart, isPending, error, refetch } = useCart();
 
@@ -52,14 +52,15 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
           as="p"
           title="Your Bag is empty"
           description="Find something you love and it will wait for you here."
-          // Under apple.com's flyout the empty Bag is a left-aligned heading and a line, not a centred picture.
+          // apple.com-ын flyout-ын доорх хоосон Bag нь төвлөрсөн зураг биш, зүүн тийш эгнээтэй
+          // гарчиг ба нэг мөр.
           className="flex-1 pb-16 md:flex-none md:items-start md:px-0 md:py-0 md:pb-0 md:text-left md:[&>div:last-child]:justify-start md:[&>span]:hidden md:[&_.type-body]:text-xs"
         >
           <Button asChild variant="bordered" onClick={onNavigate}>
             <Link href="/products">Continue shopping</Link>
           </Button>
         </EmptyState>
-        {/* Taking out the last line leaves an empty cart: the way back is here. */}
+        {/* Сүүлийн мөрийг хасахад cart хоосон болно: буцах зам энд байна. */}
         <div className="pb-4 empty:hidden">
           <UndoBar />
         </div>

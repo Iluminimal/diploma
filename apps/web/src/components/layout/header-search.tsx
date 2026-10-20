@@ -12,7 +12,7 @@ import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
 import { announceFlyout, useCloseOnOtherFlyout } from "./bar-flyout";
 import { useBarPanel } from "./bar-panel";
 
-// The search field, its suggestions and the photo picker are fetched the first time search opens.
+// Хайлтын талбар, санал болголт, зураг сонгогч хайлт анх нээгдэхэд ачаалагдана.
 const SearchBar = dynamic(() => import("./search-bar").then((m) => m.SearchBar), { ssr: false });
 
 const QUICK_LINKS = [
@@ -46,15 +46,15 @@ function QuickLinks({ onNavigate }: { onNavigate: () => void }) {
 }
 
 /**
- * Apple's way of searching: a magnifier in the bar opens a panel with a large field and quick links.
- * From md up it fills the screen under the bar and the bar stays (the magnifier closes it again, as
- * do Escape and any other flyout opening); on a phone it covers the bar too, and only its X is left.
- * The panel is portalled to <body>: the header's backdrop blur would otherwise become the
- * containing block of anything `fixed` inside it.
+ * Apple-ийн хайлтын арга: bar дахь томруулагч том талбар ба шуурхай холбоостой panel нээнэ. Md-ээс
+ * дээш bar-ын доор дэлгэцийг дүүргэж, bar үлдэнэ (томруулагч дахин хаана, Escape ба өөр flyout
+ * нээгдэхэд ч мөн хаагдана); утсан дээр bar-ыг ч бүрхэж зөвхөн X нь үлдэнэ. Panel нь <body> руу
+ * portal хийгддэг: header-ийн backdrop blur нь доторх `fixed` бүх зүйлийн containing block
+ * болчихно.
  */
 export function HeaderSearch() {
   const pathname = usePathname();
-  // Remember where it was opened: after a navigation it counts as closed, without an effect.
+  // Хаана нээснээ санана: навигацийн дараа effect-гүйгээр хаагдсан гэж тооцогдоно.
   const [openedAt, setOpenedAt] = useState<string | null>(null);
   const [requested, setRequested] = useState(false);
   const button = useRef<HTMLButtonElement>(null);
@@ -64,7 +64,8 @@ export function HeaderSearch() {
   useBarPanel(open);
   useCloseOnOtherFlyout("search", close);
 
-  // Escape closes the panel wherever focus is (the panel's own handler covers focus inside it).
+  // Escape focus хаана байсан ч panel-ийг хаана (panel доторх focus-ыг panel-ийн өөрийн handler
+  // барина).
   useEffect(() => {
     if (!open) return;
     function onKeyDown(event: globalThis.KeyboardEvent) {
@@ -76,8 +77,8 @@ export function HeaderSearch() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  // Press "/" anywhere to start searching, like on GitHub or apple.com. Not while typing in a field
-  // (a slash is a character there), not inside a dialog, and not with a modifier key held.
+  // "/" дарахад хаанаас ч хайлт эхэлнэ, GitHub, apple.com шиг. Талбарт бичиж байх үед биш (тэнд
+  // налуу зураас нь тэмдэгт), dialog дотор биш, modifier товч дарсан үед биш.
   useEffect(() => {
     function onKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key !== "/" || event.ctrlKey || event.metaKey || event.altKey || event.defaultPrevented || event.isComposing) return;
@@ -132,9 +133,9 @@ export function HeaderSearch() {
               className="search-panel bg-background fixed inset-x-0 top-0 z-50 h-dvh overflow-y-auto overscroll-contain pb-10 md:top-[2.8125rem] md:z-30 md:h-auto md:max-h-[calc(100dvh-2.8125rem)] md:bg-[var(--flyout)] md:pt-8 md:pb-20"
             >
               <div className="container-nav">
-                {/* On a phone, as on apple.com: the bar holds only the X, where the menu button was (the
-                    logo, search and bag are gone), and the field is on a row of its own below. From md up there
-                    is no X: the bar stays and its magnifier closes the panel. */}
+                {/* Утсан дээр apple.com шиг: bar-д зөвхөн X байх бөгөөд цэсийн товчны оронд орно
+                   (logo, хайлт, bag алга), талбар нь доорх тусдаа мөрөнд. Md-ээс дээш X байхгүй:
+                   bar үлдэж, түүний томруулагч panel-ийг хаана. */}
                 <div className="flex h-12 items-center justify-end md:hidden">
                   <button type="button" className={HEADER_CELL} aria-label="Close search" onClick={close}>
                     <X className="size-[18px]" strokeWidth={1.25} />

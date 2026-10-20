@@ -20,7 +20,7 @@ CART = "/api/v1/cart"
 
 
 def pick(api: Api, *, in_stock: bool = True, footwear: bool = False, skip: int = 0) -> Entry:
-    """A seeded product: apparel (sizes XS-XXL) or footwear (sizes 6-11), in or out of stock."""
+    """Seed хийсэн бараа: хувцас (XS-XXL) эсвэл гутал (6-11), нөөцтэй эсвэл дууссан."""
     matches = [
         e
         for e in api.entries
@@ -67,7 +67,7 @@ async def test_guest_adds_a_product_and_gets_an_httponly_cart_cookie(
         )
         assert "httponly" in cookie.lower()
         assert "path=/api/v1" in cookie.lower()
-        # The same browser sees its cart on the next request.
+        # Нэг browser дараагийн хүсэлтэд өөрийн сагсаа харна.
         assert (await api.client.get(CART)).json()["item_count"] == 2
 
 
@@ -115,7 +115,7 @@ async def test_stock_is_validated_against_what_is_already_in_the_cart(
     api_factory: ApiFactory,
 ) -> None:
     async with api_factory() as api:
-        product = pick(api)  # 7 in stock
+        product = pick(api)  # нөөцөд 7 ширхэг
 
         too_many = await add_to_cart(api.client, product.product_id, quantity=8)
         await add_to_cart(api.client, product.product_id, quantity=5)
@@ -236,7 +236,7 @@ async def test_the_cart_shows_live_prices_and_flags_lines_that_went_out_of_stock
         assert low["has_issues"] is True
         assert sold_out["lines"][0]["issue"] == "out_of_stock"
         assert withdrawn["lines"][0]["issue"] == "out_of_stock"
-        assert withdrawn["lines"][0]["product"]["id"] == product.product_id  # still renders
+        assert withdrawn["lines"][0]["product"]["id"] == product.product_id  # хасагдсан ч харагдана
 
 
 async def test_concurrent_adds_neither_duplicate_the_line_nor_lose_an_increment(
@@ -245,7 +245,7 @@ async def test_concurrent_adds_neither_duplicate_the_line_nor_lose_an_increment(
     async with api_factory() as api:
         product = pick(api)
         await set_product(api.app.state.engine, product.product_id, stock_quantity=500)
-        await add_to_cart(api.client, product.product_id)  # creates the cart and its cookie
+        await add_to_cart(api.client, product.product_id)  # сагс болон cookie-г үүсгэнэ
 
         responses = await asyncio.gather(
             *(add_to_cart(api.client, product.product_id) for _ in range(9))
@@ -280,7 +280,7 @@ async def test_cart_changes_from_another_site_are_refused(api_factory: ApiFactor
         assert response.status_code == 403
 
 
-# --- guest cart meets account ----------------------------------------------------------------
+# --- Зочин сагс ба account нийлэх ------------------------------------------------------------
 
 
 async def test_signed_in_cart_is_the_users_and_survives_a_new_browser(
@@ -309,7 +309,7 @@ async def test_login_merges_the_guest_cart_into_the_account_cart(api_factory: Ap
             shopper = await register(first_visit, email)
             await add_to_cart(first_visit, shared.product_id, quantity=3, token=shopper.token)
 
-        # Later, on this browser, as a guest.
+        # Дараа нь энэ browser дээр зочин байдлаар.
         await add_to_cart(api.client, shared.product_id, quantity=2)
         await add_to_cart(api.client, only_guest.product_id)
 
@@ -322,7 +322,7 @@ async def test_login_merges_the_guest_cart_into_the_account_cart(api_factory: Ap
         merged = (await api.client.get(CART, headers={"Authorization": f"Bearer {token}"})).json()
         quantities = {line["product"]["id"]: line["quantity"] for line in merged["lines"]}
         assert quantities == {shared.product_id: 5, only_guest.product_id: 1}
-        # The guest cart is gone, and so is its cookie: signed out, this browser starts empty.
+        # Зочин сагс болон cookie устсан: гарсан browser хоосон сагстай эхэлнэ.
         assert (await api.client.get(CART)).json()["lines"] == []
         async with api.app.state.engine.connect() as connection:
             guests = (

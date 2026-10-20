@@ -14,7 +14,7 @@ describe("FreeShippingProgress", () => {
     stubApi(route);
     renderWithQuery(<FreeShippingProgress subtotalCents={6_000} />);
 
-    expect(await screen.findByText("$40")).toBeInTheDocument(); // $100 threshold - $60
+    expect(await screen.findByText("$40")).toBeInTheDocument(); // $100 босго - $60
     expect(screen.getByRole("status")).toHaveTextContent("away from free shipping");
     const bar = screen.getByRole("progressbar", { name: "Progress to free shipping" });
     expect(bar).toHaveAttribute("aria-valuenow", "60");

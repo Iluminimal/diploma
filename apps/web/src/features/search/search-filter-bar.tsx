@@ -41,7 +41,7 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
   );
 }
 
-/** Quick filter chips (gender, stock), a sheet for the rest, and removable chips for what's applied. */
+/** Шуурхай шүүлтүүр chip (хүйс, нөөц), бусдад sheet, хэрэглэгдсэнд устгах боломжтой chip. */
 export function SearchFilterBar({ options, filters, onChange }: Props) {
   const [open, setOpen] = useState(false);
   const removable: { label: string; remove: () => void }[] = [];

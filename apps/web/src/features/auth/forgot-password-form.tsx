@@ -15,7 +15,7 @@ import { PasswordStrengthMeter } from "./password-strength-meter";
 import { useAuthActions } from "./use-auth-actions";
 import { useCountdown } from "./use-countdown";
 
-/** Forgot password: a code goes to the phone or email on the account, then a new password. */
+/** Нууц үг мартсан: бүртгэлийн утас эсвэл имэйл рүү код очиж, дараа нь шинэ нууц үг оруулна. */
 export function ForgotPasswordForm() {
   const router = useRouter();
   const { forgotPassword, resetPassword } = useAuthActions();

@@ -12,9 +12,9 @@ const day = (
   });
 
 /**
- * Revenue per day as bars. Drawn by hand (no chart library): the bars are SVG, the labels around
- * them are text, so nothing blurs or shrinks on a phone. The same numbers are in a table beneath,
- * for screen readers and for anyone who wants the exact figures.
+ * Өдөр тутмын орлогыг баганаар харуулна. Chart library ашиглахгүй гараар зурсан: баганууд нь SVG,
+ * тэмдэглэгээ нь текст тул утсан дээр бүдгэрэх, жижгэрэхгүй. Яг тоонуудыг screen reader болон
+ * хүссэн хүнд зориулж доор нь хүснэгтээр өгсөн.
  */
 export function RevenueChart({ stats }: { stats: AdminStats }) {
   const { series, currency } = stats;
@@ -104,7 +104,7 @@ export function RevenueChart({ stats }: { stats: AdminStats }) {
           Show the figures as a table
         </summary>
         <div
-          // A scrolling area must be reachable by keyboard.
+          // Гүйлгэдэг хэсэгт keyboard-оор хүрэх боломжтой байх ёстой.
           tabIndex={0}
           role="region"
           aria-label="Daily revenue and orders"

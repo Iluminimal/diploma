@@ -5,8 +5,8 @@ type Node = { name: string; slug: string; path: string; product_count: number; c
 type Department = { slug: string; name: string; product_count: number; groups: Node[] };
 
 /**
- * Where to click in whatever catalogue this stack has (the real one or the CI seed): the biggest
- * department, its first group, and that group's biggest sub-category.
+ * Энэ stack-ийн каталогт (жинхэнэ эсвэл CI seed) хаана дарахыг заана: хамгийн том department,
+ * түүний эхний бүлэг, тэр бүлгийн хамгийн том дэд ангилал.
  */
 export async function pickCategory(request: APIRequestContext) {
   const response = await request.get(`${API_URL}/api/v1/catalog/nav`);

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuthActions } from "./use-auth-actions";
 
-/** Signs the customer out, says so, and goes to the home page: the same on every screen that offers it. */
+/** Үйлчлүүлэгчийг гаргаж, мэдэгдэж, нүүр хуудас руу аваачна: аль дэлгэцээс ч адилхан. */
 export function useSignOut() {
   const router = useRouter();
   const { signOut } = useAuthActions();

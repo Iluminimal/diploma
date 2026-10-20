@@ -3,7 +3,7 @@ import { ProductRail } from "@/features/catalog/product-rail";
 import { newest } from "./home-data";
 import { SectionHeading } from "./section-heading";
 
-/** "New arrivals": the one shelf of products on the page, newest first, in stock. */
+/** "New arrivals": хуудасны цорын ганц бүтээгдэхүүний тавиур, шинэ нь түрүүнд, нөөцөд байгаа. */
 export async function NewArrivals() {
   const products = await newest({}, 12);
   if (products.length === 0) return null;

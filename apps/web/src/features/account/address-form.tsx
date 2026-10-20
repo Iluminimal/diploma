@@ -46,7 +46,7 @@ type Values = z.infer<typeof schema>;
 type Props = {
   initial?: Address;
   submitLabel?: string;
-  /** Offer "make this my default"; hidden when the first address is saved (it becomes the default). */
+  /** "Үндсэн болгох" сонголтыг харуулна; анхны хаяг хадгалахад нуугдана (өөрөө үндсэн болно). */
   askDefault?: boolean;
   onSubmit: (address: AddressInput) => Promise<unknown>;
   onCancel?: () => void;
@@ -81,7 +81,8 @@ export function AddressForm({ initial, submitLabel = "Save address", askDefault 
         phone: values.phone || null,
       });
     } catch {
-      // The mutation hook already showed the reason; keep the form so nothing typed is lost.
+      // Алдааны шалтгааныг mutation hook аль хэдийн харуулсан; бичсэн зүйл алдагдахгүйн тулд
+      // form-ыг хэвээр үлдээнэ.
     }
   });
 

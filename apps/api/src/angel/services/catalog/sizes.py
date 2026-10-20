@@ -1,9 +1,8 @@
-"""Which sizes a product comes in.
+"""Бараа ямар размертай ирдэг вэ.
 
-The catalogue has no size data, so sizes follow from the category. This mirrors
-`apps/web/src/features/catalog/sizes.ts`, which decides what the product page offers; keep the
-two in step. Stock is tracked per product, not per size.
-"""
+Catalogue-д размерын өгөгдөл байхгүй тул размер нь ангиллаас гарна. Энэ нь барааны хуудас юу
+санал болгохыг шийддэг `apps/web/src/features/catalog/sizes.ts`-тэй таарна; хоёрыг нэг хэвээр
+байлга. Нөөц нь барааны түвшинд, размераар биш хөтлөгдөнө."""
 
 from angel.models import Product
 
@@ -15,7 +14,7 @@ _BELTS = ("S", "M", "L")
 
 
 def sizes_for(product: Product) -> tuple[str, ...]:
-    """Empty for products where a size makes no sense (watches, bags, jewellery, fragrances)."""
+    """Размер утгагүй бараанд (цаг, цүнх, үнэт эдлэл, үнэртэн) хоосон."""
     kids = product.gender in ("Boys", "Girls")
     if product.master_category == "Apparel":
         return _KIDS_CLOTHING if kids else _CLOTHING

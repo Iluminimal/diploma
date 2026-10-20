@@ -4,12 +4,12 @@ import type { components } from "@/lib/api/client";
 export type SessionUser = components["schemas"]["UserOut"];
 type SessionResponse = components["schemas"]["SessionOut"];
 
-/** `unknown` until the first refresh attempt finishes; the UI waits instead of flashing "signed out". */
+/** Эхний refresh оролдлого дуустал `unknown`; UI "нэвтрээгүй" гэж анивчихын оронд хүлээнэ. */
 export type AuthStatus = "unknown" | "signedIn" | "signedOut";
 
 type AuthState = {
   status: AuthStatus;
-  /** Lives in memory only. A reload gets a new one from the httpOnly refresh cookie. */
+  /** Зөвхөн санах ойд хадгална. Дахин ачаалахад httpOnly refresh cookie-оос шинийг авна. */
   accessToken: string | null;
   user: SessionUser | null;
   setSession: (session: Pick<SessionResponse, "access_token" | "user">) => void;

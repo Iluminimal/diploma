@@ -45,7 +45,7 @@ class AdminDashboardService:
         self._users = UserRepository(session)
 
     async def stats(self, days: int) -> AdminStats:
-        # Whole UTC days, ending with today, and the same number of days before them to compare.
+        # UTC-ийн бүтэн өдрүүд (өнөөдрөөр төгсөнө) болон харьцуулах өмнөх ижил тооны өдрүүд.
         end = datetime.combine(
             datetime.now(UTC).date() + timedelta(days=1), datetime.min.time(), UTC
         )
@@ -117,7 +117,7 @@ class AdminDashboardService:
             recent_orders=recent_orders,
         )
 
-    # --- customers ----------------------------------------------------------------------------
+    # --- хэрэглэгчид ---
 
     async def customers(self, query: AdminCustomerListQuery) -> AdminCustomerPage:
         async with self._session.begin():
@@ -154,8 +154,8 @@ class AdminDashboardService:
         )
 
     async def set_active(self, admin: User, user_id: int, *, active: bool) -> AdminCustomerDetail:
-        """Suspend or reinstate a customer. A suspended customer cannot sign in or refresh a
-        session; what they ordered is unaffected."""
+        """Хэрэглэгчийг түдгэлзүүлэх эсвэл сэргээх. Түдгэлзүүлсэн хэрэглэгч нэвтэрч, session
+        refresh хийж чадахгүй; захиалсан зүйл нь өөрчлөгдөхгүй."""
         if user_id == admin.id:
             raise _forbidden("You cannot suspend your own account.")
         async with self._session.begin():

@@ -5,7 +5,7 @@ import type { ListingQuery } from "./filters";
 import type { CatalogFilterOptions } from "./product";
 import { useListingNavigation } from "./use-listing-navigation";
 
-/** The desktop filter column's contents: its own module, so phones never download it. */
+/** Desktop шүүлтүүрийн баганын агуулга: тусдаа module тул утас хэзээ ч татахгүй. */
 export function SidebarFilters({
   options,
   query,

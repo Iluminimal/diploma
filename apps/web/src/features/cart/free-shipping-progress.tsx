@@ -8,9 +8,9 @@ import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 
 /**
- * "You're $12 away from free shipping", with a bar that fills as the subtotal grows and turns
- * into a confirmation when it is reached. The threshold comes from the same endpoint checkout
- * uses (cached), so it can never disagree with what checkout charges. Renders nothing until known.
+ * "You're $12 away from free shipping": subtotal өсөхөд дүүрдэг bar, хүрмэгц баталгаа болж хувирна.
+ * Босгыг checkout-ын ашигладаг endpoint-оос авдаг (cache-тэй) тул checkout-ын авах дүнтэй хэзээ ч
+ * зөрөхгүй. Мэдэгдэх хүртэл юу ч зурахгүй.
  */
 export function FreeShippingProgress({ subtotalCents, className }: { subtotalCents: number; className?: string }) {
   const { data } = useQuery({

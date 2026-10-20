@@ -15,7 +15,7 @@ beforeEach(() => vi.useFakeTimers());
 afterEach(() => vi.useRealTimers());
 
 const touch = { pointerType: "touch", pointerId: 1 };
-/** A finger going from one point to another over `ms` milliseconds. */
+/** Хуруу нэг цэгээс нөгөө рүү `ms` миллисекундэд явна. */
 function drag(panel: HTMLElement, from: [number, number], to: [number, number], ms: number) {
   fireEvent.pointerDown(panel, { ...touch, clientX: from[0], clientY: from[1] });
   vi.advanceTimersByTime(ms / 2);

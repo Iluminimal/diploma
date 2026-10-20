@@ -16,7 +16,7 @@ export function breadcrumbTrail(p: Product): { label: string; href: string }[] {
   ];
 }
 
-/** schema.org Product + BreadcrumbList for a product page. */
+/** Бүтээгдэхүүний хуудасны schema.org Product + BreadcrumbList. */
 export function productJsonLd(p: Product) {
   const url = `${SITE_URL}${productPath(p)}`;
   const trail = breadcrumbTrail(p);
@@ -32,7 +32,7 @@ export function productJsonLd(p: Product) {
       category: [p.master_category, p.sub_category, p.article_type].join(" > "),
       ...(p.base_colour && p.base_colour !== "NA" ? { color: p.base_colour } : {}),
       audience: { "@type": "PeopleAudience", suggestedGender: p.gender },
-      // Only once there is a published review: an empty rating is not valid structured data.
+      // Нийтлэгдсэн сэтгэгдэл байгаа үед л: хоосон rating нь хүчинтэй structured data биш.
       ...(p.rating_count > 0 && p.rating_average !== null
         ? {
             aggregateRating: {
@@ -59,7 +59,10 @@ export function productJsonLd(p: Product) {
   ];
 }
 
-/** The body of a schema.org BreadcrumbList (`@type` and `itemListElement`) for site-relative links. */
+/**
+ * Сайттай харьцангуй холбоосуудад зориулсан schema.org BreadcrumbList-ийн бие (`@type`,
+ * `itemListElement`).
+ */
 export function breadcrumbList(items: { label: string; href: string }[]) {
   return {
     "@type": "BreadcrumbList",
@@ -72,7 +75,10 @@ export function breadcrumbList(items: { label: string; href: string }[]) {
   };
 }
 
-/** Serialize for a `<script type="application/ld+json">`; `<` is escaped so data can't close the tag. */
+/**
+ * `<script type="application/ld+json">`-д зориулж serialize хийнэ; `<`-ыг escape хийдэг тул өгөгдөл
+ * tag-ийг хааж чадахгүй.
+ */
 export function serializeJsonLd(data: unknown): string {
   return JSON.stringify(data).replace(/</g, "\\u003c");
 }

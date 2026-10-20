@@ -1330,7 +1330,7 @@ export interface components {
         };
         /**
          * AddressSnapshot
-         * @description An address as it was when the order was placed.
+         * @description Захиалга өгөх үеийн хаяг (дараа нь өөрчлөгдсөн ч хэвээр).
          */
         AddressSnapshot: {
             /** City */
@@ -1352,7 +1352,7 @@ export interface components {
         };
         /**
          * AddressUpdate
-         * @description PATCH: only the fields that are sent change.
+         * @description PATCH: зөвхөн илгээсэн талбарууд өөрчлөгдөнө.
          */
         AddressUpdate: {
             /** City */
@@ -1376,7 +1376,7 @@ export interface components {
         };
         /**
          * AdminCategory
-         * @description An article type; products are filed under one of these.
+         * @description Article type; бараа эдгээрийн аль нэгэнд ангилагдана.
          */
         AdminCategory: {
             /** Article Type */
@@ -1463,7 +1463,7 @@ export interface components {
         };
         /**
          * AdminOrderEventOut
-         * @description The same step with everything an administrator may see: notes and who did it.
+         * @description Ижил алхам, гэхдээ administrator харж болох бүх зүйлтэй: тэмдэглэл, хэн хийсэн.
          */
         AdminOrderEventOut: {
             /**
@@ -1581,7 +1581,7 @@ export interface components {
         };
         /**
          * AdminPaymentOut
-         * @description The payment record. The client secret never leaves the server.
+         * @description Төлбөрийн бичлэг. Client secret server-ээс хэзээ ч гадагш гарахгүй.
          */
         AdminPaymentOut: {
             /** Amount Cents */
@@ -1601,8 +1601,8 @@ export interface components {
         };
         /**
          * AdminProductCreateForm
-         * @description Multipart form: the product photo plus its details. The photo becomes the thumbnails and
-         *     the embedding that visual search ranks against.
+         * @description Multipart form: барааны зураг болон дэлгэрэнгүй мэдээлэл. Зургаас thumbnail-ууд болон
+         *     visual search-ийн эрэмбэлэх embedding гарна.
          */
         AdminProductCreateForm: {
             /** Base Colour */
@@ -1716,7 +1716,7 @@ export interface components {
         };
         /**
          * AdminProductUpdate
-         * @description Only the fields that are sent change. Sending `null` clears an optional field.
+         * @description Зөвхөн илгээсэн талбарууд өөрчлөгдөнө. `null` илгээвэл заавал биш талбар цэвэрлэгдэнэ.
          */
         AdminProductUpdate: {
             /** Base Colour */
@@ -1802,8 +1802,8 @@ export interface components {
         };
         /**
          * AdminStats
-         * @description The dashboard. Revenue counts orders that are paid, shipped or delivered, by the day they
-         *     were paid; a refunded order is not revenue.
+         * @description Dashboard. Орлого нь төлөгдсөн, илгээсэн, хүргэсэн захиалгыг төлөгдсөн өдрөөр нь тооцно;
+         *     буцаан олгосон захиалга орлого биш.
          */
         AdminStats: {
             average_order_cents: components["schemas"]["Delta"];
@@ -1896,7 +1896,7 @@ export interface components {
         };
         /**
          * CatalogFilters
-         * @description Everything a filter sidebar needs to render.
+         * @description Filter sidebar зурахад хэрэгтэй бүх зүйл.
          */
         CatalogFilters: {
             /** Categories */
@@ -1913,7 +1913,7 @@ export interface components {
         };
         /**
          * CatalogNav
-         * @description Women / Men / Kids, each with its own counts, for the mega menu and category pages.
+         * @description Women / Men / Kids тус бүр өөрийн тоотой, mega menu болон ангиллын хуудсанд.
          */
         CatalogNav: {
             /** Departments */
@@ -1982,7 +1982,7 @@ export interface components {
         };
         /**
          * Delta
-         * @description A figure for the period and for the equally long period just before it.
+         * @description Тухайн хугацааны болон түүнтэй ижил урттай өмнөх хугацааны үзүүлэлт.
          */
         Delta: {
             /** Current */
@@ -2004,7 +2004,7 @@ export interface components {
         };
         /**
          * DeviceSession
-         * @description One open login of the account, as the "your devices" list shows it.
+         * @description Бүртгэлийн нээлттэй нэг нэвтрэлт, "миний төхөөрөмжүүд" жагсаалтад харагддаг хэлбэрээр.
          */
         DeviceSession: {
             /**
@@ -2031,7 +2031,7 @@ export interface components {
         };
         /**
          * EmailChangeRequest
-         * @description Add an email address or replace the current one: a code is sent to the new address.
+         * @description Email хаяг нэмэх эсвэл одоогийхыг солих: код шинэ хаяг руу илгээгдэнэ.
          */
         EmailChangeRequest: {
             /** Current Password */
@@ -2057,9 +2057,9 @@ export interface components {
         };
         /**
          * FilterParams
-         * @description Catalogue filters, shared by listing (query string), image search (form fields) and text
-         *     search (JSON). Repeat a parameter to allow several values: `?gender=Men&gender=Unisex`.
-         *     Prices are integer cents, like everywhere else in the API.
+         * @description Catalogue-ийн filter-үүд, жагсаалт (query string), зургаар хайлт (form field), текстээр
+         *     хайлт (JSON) гурвын хооронд хуваалцдаг. Хэд хэдэн утга өгөхийн тулд параметрийг давтана:
+         *     `?gender=Men&gender=Unisex`. Үнэ нь бусад API шиг бүхэл cent-ээр.
          */
         FilterParams: {
             /**
@@ -2183,7 +2183,7 @@ export interface components {
         };
         /**
          * ImageSearchForm
-         * @description Multipart form of an image search: the photo plus optional filters.
+         * @description Зургаар хайх multipart form: зураг болон нэмэлт filter-үүд.
          */
         ImageSearchForm: {
             /**
@@ -2284,8 +2284,9 @@ export interface components {
         };
         /**
          * NavNode
-         * @description A group, sub-category or article type in the shopper-facing tree. `path` is what the
-         *     `category` listing filter and the /c/... URLs take, e.g. "apparel/topwear/tshirts".
+         * @description Худалдан авагчид харагдах модны бүлэг, дэд ангилал эсвэл article type. `path` нь
+         *     `category` жагсаалтын filter болон /c/... URL-ын авдаг утга, жишээ нь
+         *     "apparel/topwear/tshirts".
          */
         NavNode: {
             /**
@@ -2311,7 +2312,7 @@ export interface components {
         };
         /**
          * OrderEventOut
-         * @description One step in an order's history, as the customer sees it.
+         * @description Захиалгын түүхийн нэг алхам, худалдан авагчид харагддаг хэлбэрээр.
          */
         OrderEventOut: {
             /**
@@ -2432,7 +2433,7 @@ export interface components {
         };
         /**
          * OtpRequest
-         * @description Ask for a sign-in code. `destination` is a phone number (any common spelling) or an email.
+         * @description Нэвтрэх код хүсэх. `destination` нь утасны дугаар (ямар ч түгээмэл бичлэг) эсвэл email.
          */
         OtpRequest: {
             /** Destination */
@@ -2447,8 +2448,8 @@ export interface components {
         };
         /**
          * PaymentOut
-         * @description What the browser needs to collect payment. `stripe`: confirm the PaymentIntent with
-         *     Stripe.js using `client_secret`. `offline` (development): call the simulate endpoint.
+         * @description Browser төлбөр авахад хэрэгтэй зүйл. `stripe`: `client_secret`-ээр Stripe.js-ээр
+         *     PaymentIntent-ийг баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна.
          */
         PaymentOut: {
             /** Client Secret */
@@ -2461,7 +2462,7 @@ export interface components {
         };
         /**
          * PhoneChangeRequest
-         * @description Add a phone number or replace the current one: a code is sent to the new number.
+         * @description Утасны дугаар нэмэх эсвэл одоогийхыг солих: код шинэ дугаар руу илгээгдэнэ.
          */
         PhoneChangeRequest: {
             /** Current Password */
@@ -2485,7 +2486,7 @@ export interface components {
         };
         /**
          * ProblemDetail
-         * @description RFC 7807 problem details. Extension members (e.g. `checks`) are allowed.
+         * @description RFC 7807 problem details. Нэмэлт гишүүд (жишээ нь `checks`) зөвшөөрөгдөнө.
          */
         ProblemDetail: {
             /** Detail */
@@ -2568,7 +2569,7 @@ export interface components {
         };
         /**
          * ProvidersOut
-         * @description Which ways of signing in besides a password are available, so the page shows only those.
+         * @description Нууц үгээс гадна ямар нэвтрэх арга боломжтой вэ: хуудас зөвхөн тэдгээрийг харуулна.
          */
         ProvidersOut: {
             /** Google */
@@ -2604,7 +2605,7 @@ export interface components {
         };
         /**
          * RefundRequest
-         * @description Always the full amount (what the payment gateway supports).
+         * @description Үргэлж бүтэн дүн (төлбөрийн gateway-ийн дэмждэг зүйл).
          */
         RefundRequest: {
             /** Reason */
@@ -2696,7 +2697,7 @@ export interface components {
         };
         /**
          * ReviewUpdate
-         * @description Only the fields sent change; `null` clears the title or the text.
+         * @description Зөвхөн илгээсэн талбарууд өөрчлөгдөнө; `null` нь гарчиг эсвэл текстийг цэвэрлэнэ.
          */
         ReviewUpdate: {
             /** Body */
@@ -2708,7 +2709,7 @@ export interface components {
         };
         /**
          * ReviewViewer
-         * @description What the signed-in visitor can do on this product.
+         * @description Нэвтэрсэн зочин энэ бараа дээр юу хийж чадах вэ.
          */
         ReviewViewer: {
             /**
@@ -2762,8 +2763,8 @@ export interface components {
         };
         /**
          * SessionOut
-         * @description The access token goes in `Authorization: Bearer` and is kept in memory by the client.
-         *     The refresh token never appears in a body: it is an httpOnly cookie.
+         * @description Access token нь `Authorization: Bearer`-д очиж, client-ийн санах ойд хадгалагдана. Refresh
+         *     token хариуны body-д хэзээ ч гарахгүй: httpOnly cookie байна.
          */
         SessionOut: {
             /** Access Token */
@@ -2829,7 +2830,7 @@ export interface components {
         };
         /**
          * SitemapPage
-         * @description Every active product, in id order, lightly: what a sitemap needs and nothing else.
+         * @description Идэвхтэй бүх бараа id-н дарааллаар, хөнгөн хэлбэрээр: sitemap-д хэрэгтэй зүйл л.
          */
         SitemapPage: {
             /** Items */
@@ -2931,7 +2932,7 @@ export interface components {
         };
         /**
          * VerifyCodeRequest
-         * @description The code that confirms an address or number the signed-in person already holds.
+         * @description Нэвтэрсэн хэрэглэгчийн өөрт байгаа хаяг эсвэл дугаарыг баталгаажуулах код.
          */
         VerifyCodeRequest: {
             /** Code */

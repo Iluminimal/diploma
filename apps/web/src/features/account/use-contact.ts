@@ -7,7 +7,10 @@ import { queryKeys } from "@/lib/query-keys";
 
 type Password = { current_password?: string };
 
-/** Phone number and email: ask for a code, confirm it, remove. Each success updates the stored user. */
+/**
+ * Утас, имэйл: код авах, баталгаажуулах, устгах. Амжилт бүрт хадгалсан хэрэглэгчийн мэдээлэл
+ * шинэчлэгдэнэ.
+ */
 export function useRequestPhone() {
   return useMutation({
     mutationFn: (body: Password & { phone: string }) => call(browserApi().POST("/api/v1/auth/phone/request", { body })),
@@ -48,7 +51,7 @@ export function useRemoveEmail() {
   });
 }
 
-/** Confirm the address the account already has. */
+/** Бүртгэлд байгаа хаягийг баталгаажуулна. */
 export function useRequestEmailVerification() {
   return useMutation({ mutationFn: () => call(browserApi().POST("/api/v1/auth/email/verify/request")) });
 }
@@ -60,7 +63,7 @@ export function useConfirmEmailVerification() {
   });
 }
 
-// --- devices ---------------------------------------------------------------------------------
+// --- төхөөрөмжүүд --- ------------------------------------------------------------------------
 
 export function useSessions(enabled: boolean) {
   return useQuery({
@@ -70,7 +73,7 @@ export function useSessions(enabled: boolean) {
   });
 }
 
-/** Sign one device out. Signing out this very browser also clears the in-memory session. */
+/** Нэг төхөөрөмжийг гаргана. Яг энэ browser-ыг гаргавал санах ойн session-ыг бас цэвэрлэнэ. */
 export function useRevokeSession() {
   const queryClient = useQueryClient();
   return useMutation({

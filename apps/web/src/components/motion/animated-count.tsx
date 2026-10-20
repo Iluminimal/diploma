@@ -5,8 +5,8 @@ import { AnimatedNumber } from "./animated-number";
 const group = (value: number) => value.toLocaleString("en-US");
 
 /**
- * A whole number with thousands separators that counts to its new value (a result count). It
- * formats inside, because a server component cannot hand a function to a client component.
+ * Мянгатын тусгаарлагчтай бүхэл тоо, шинэ утга руугаа тоолно (үр дүнгийн тоо). Server component
+ * client component-д функц дамжуулж чадахгүй тул форматыг дотор нь хийнэ.
  */
 export function AnimatedCount({ value, className }: { value: number; className?: string }) {
   return <AnimatedNumber value={value} format={group} className={className} />;

@@ -1,6 +1,6 @@
 import type { Cart, CartLine } from "./cart-api";
 
-/** Rebuild the totals after changing the lines locally (optimistic updates). */
+/** Мөрүүдийг локал өөрчилсний дараа нийт дүнг дахин бодно (optimistic update). */
 export function withLines(cart: Cart, lines: CartLine[]): Cart {
   return {
     ...cart,

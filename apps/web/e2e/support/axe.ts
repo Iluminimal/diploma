@@ -15,17 +15,17 @@ export const VARIANTS: Variant[] = Object.keys(VIEWPORTS).flatMap((viewport) =>
   SCHEMES.map((scheme) => ({ viewport: viewport as Variant["viewport"], scheme })),
 );
 
-/** The page has drawn its content: nothing is loading and web fonts and transitions have settled. */
+/** Хуудас агуулгаа зурсан: юу ч ачаалж байхгүй, web font болон transition тогтсон. */
 export async function settled(page: Page) {
   await expect(page.locator('[aria-busy="true"]')).toHaveCount(0);
   await page.evaluate(() => document.fonts.ready);
-  // Contrast is measured on what is painted: let fades and slide-ins finish first.
+  // Contrast-ыг зурагдсан зүйлээр хэмждэг: эхлээд fade болон slide-in дуусгана.
   await page.waitForTimeout(400);
 }
 
 type Found = { variant: string; rule: string; impact: string; help: string; targets: string[] };
 
-/** Runs axe on the current page and returns what it found, one entry per rule. */
+/** Одоогийн хуудсан дээр axe ажиллуулж, олсон зүйлийг дүрэм бүрээр нэг мөрөөр буцаана. */
 export async function scan(page: Page, label: string): Promise<Found[]> {
   const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
   return results.violations.map((violation) => ({
@@ -38,8 +38,8 @@ export async function scan(page: Page, label: string): Promise<Found[]> {
 }
 
 /**
- * Loads the screen in every viewport and colour scheme and scans it. `open` brings the page into
- * the state to check (a dialog open, results showing) and runs after every navigation.
+ * Дэлгэцийг viewport болон өнгөний горим бүрээр ачаалж шалгана. `open` нь хуудсыг шалгах төлөвт
+ * оруулж (dialog нээх, үр дүн харуулах), навигаци бүрийн дараа ажиллана.
  */
 export async function sweep(
   page: Page,

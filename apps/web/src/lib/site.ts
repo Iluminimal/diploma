@@ -1,6 +1,6 @@
 import { env } from "@/lib/env";
 
-/** Public origin used for canonical URLs, Open Graph, JSON-LD and the sitemap (no trailing slash). */
+/** Canonical URL, Open Graph, JSON-LD, sitemap-д ашиглах нийтийн origin (төгсгөлд слэшгүй). */
 export const SITE_URL = env.NEXT_PUBLIC_SITE_URL;
 
 export const SITE_NAME = "Angel";

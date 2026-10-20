@@ -3,7 +3,7 @@ import { env } from "@/lib/env";
 
 const checkValue = z.enum(["ok", "fail", "not_configured"]);
 
-// Both the 200 body and the 503 problem+json body carry `checks`.
+// 200 хариу ба 503 problem+json хариу хоёулаа `checks`-ийг агуулна.
 const readinessBody = z.object({
   checks: z.record(z.string(), checkValue),
 });

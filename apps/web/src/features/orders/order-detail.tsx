@@ -9,8 +9,8 @@ import Image from "next/image";
 const METHOD_LABELS = { standard: "Standard shipping", express: "Express shipping" } as const;
 
 /**
- * Lines, totals and delivery details exactly as they were charged (prices are snapshots).
- * `reviewLinks` adds a "Write a review" link to each line of an order that has arrived.
+ * Мөр, нийт дүн, хүргэлтийн мэдээлэл яг төлсөн хэлбэрээрээ (үнэ нь snapshot). `reviewLinks` нь
+ * ирсэн захиалгын мөр бүрд "Write a review" холбоос нэмнэ.
  */
 export function OrderDetail({ order, reviewLinks = false }: { order: Order; reviewLinks?: boolean }) {
   const date = new Date(order.created_at).toLocaleDateString("en-US", { dateStyle: "long" });

@@ -13,19 +13,19 @@ from sqlalchemy.sql.base import ExecutableOption
 from angel.models import Product
 from angel.repositories.patterns import contains_pattern
 
-# Measured on the full catalogue (docs/ml-pipeline.md): 200 gives recall@10 = 1.0 at the same
-# latency as 80. Above ~300 the planner's cost estimate flips to an exact sequential scan
-# (~90 ms instead of ~13 ms), so requests are clamped.
+# Бүтэн catalogue дээр хэмжсэн (docs/ml-pipeline.md): 200 нь 80-тай ижил хугацаанд recall@10 = 1.0
+# өгнө. ~300-аас дээш бол planner-ийн зардлын тооцоо exact sequential scan руу шилжинэ (~13 ms-ийн
+# оронд ~90 ms), тиймээс хүсэлтийн утгыг хязгаарлана.
 DEFAULT_EF_SEARCH = 200
 MAX_EF_SEARCH = 300
-# Upper bound on index tuples an iterative scan may visit before giving up (pgvector default
-# is 20000). Keeps a very selective filter from turning into a full-index walk.
+# Iterative scan цаашаа явахаас өмнө үзэж болох index tuple-ийн дээд хязгаар (pgvector-ийн үндсэн
+# утга 20000). Маш нарийн filter бүтэн index-ийг гүйхээс сэргийлнэ.
 MAX_SCAN_TUPLES = 20_000
 
 
 @dataclass(frozen=True)
 class SearchFilters:
-    """Every field is optional; several values for one field mean "any of them"."""
+    """Талбар бүр заавал биш; нэг талбарт хэд хэдэн утга өгвөл "аль нэг нь" гэсэн утгатай."""
 
     genders: tuple[str, ...] = ()
     master_categories: tuple[str, ...] = ()
@@ -34,7 +34,7 @@ class SearchFilters:
     base_colours: tuple[str, ...] = ()
     seasons: tuple[str, ...] = ()
     usages: tuple[str, ...] = ()
-    # Leaf categories a navigation node covers; resolved by the catalog service.
+    # Навигацийн зангилааны хамарсан leaf ангиллууд; catalog service тодорхойлно.
     category_ids: tuple[int, ...] = ()
     min_price_cents: int | None = None
     max_price_cents: int | None = None
@@ -65,15 +65,15 @@ class SearchFilters:
 
 ProductSort = Literal["newest", "price_asc", "price_desc", "relevance"]
 
-# Rows are rendered as cards and JSON: the 2 KB vector and the tsvector are never needed, and
-# loading them would roughly double the bytes read per hit.
+# Мөрүүд карт болон JSON болж харагддаг: 2 KB vector болон tsvector хэрэггүй, ачаалбал нэг үр дүнд
+# уншигдах байт ойролцоогоор хоёр дахин нэмэгдэнэ.
 _LIGHT_ROWS: tuple[ExecutableOption, ...] = (
     defer(Product.embedding),
     defer(Product.search_vector),
 )
 
 
-# Longer digit strings cannot be a bigint id.
+# Хэт урт цифр мөр bigint id байж чадахгүй.
 MAX_ID_DIGITS = 18
 AdminStatus = Literal["all", "active", "inactive"]
 AdminSort = Literal["newest", "price_asc", "price_desc", "stock_asc"]
@@ -82,7 +82,7 @@ AdminSort = Literal["newest", "price_asc", "price_desc", "stock_asc"]
 @dataclass(frozen=True)
 class SimilarProduct:
     product: Product
-    similarity: float  # cosine similarity, 1.0 = identical direction
+    similarity: float  # cosine similarity, 1.0 = ижил чиглэл
 
 
 class ProductRepository:
@@ -100,9 +100,9 @@ class ProductRepository:
     async def get_many(
         self, product_ids: Sequence[int], *, for_update: bool = False
     ) -> dict[int, Product]:
-        """Products by id, inactive ones included (a cart line must still show a product that
-        was withdrawn). `for_update` takes row locks in id order: every transaction that locks
-        several products does so in the same order, so two checkouts cannot deadlock."""
+        """Id-аар бараа авна, идэвхгүй нь орно (cart-ын мөр татгалзсан барааг ч харуулах ёстой).
+        `for_update` нь мөрүүдийг id-н дарааллаар түгжинэ: олон бараа түгжих transaction бүр
+        ижил дарааллаар хийдэг тул хоёр checkout deadlock-д орохгүй."""
         if not product_ids:
             return {}
         statement = (
@@ -112,8 +112,8 @@ class ProductRepository:
             .order_by(Product.id)
         )
         if for_update:
-            # populate_existing: the values read under the lock must replace anything this
-            # session cached earlier, or the stock arithmetic would start from a stale number.
+            # populate_existing: түгжээн дор уншсан утга session-ийн өмнө cache хийсэн утгыг солих
+            # ёстой, үгүй бол нөөцийн тооцоо хуучин тооноос эхэлнэ.
             statement = statement.with_for_update().execution_options(populate_existing=True)
         result = await self._session.execute(statement)
         return {product.id: product for product in result.scalars()}
@@ -127,15 +127,14 @@ class ProductRepository:
         offset: int,
         limit: int,
     ) -> tuple[list[Product], int]:
-        """One page of the catalogue plus the total number of matches.
+        """Catalogue-ийн нэг хуудас болон таарсан нийт тоо.
 
-        Ordering always ends with `id`, so pages never overlap or skip rows when many products
-        share a price or a rank.
-        """
+        Эрэмбэ үргэлж `id`-ээр төгсдөг: олон бараа ижил үнэ эсвэл rank-тай үед хуудсууд
+        давхцахгүй, мөр алгасахгүй."""
         clauses = filters.clauses()
         rank = None
         if text_query:
-            # websearch_to_tsquery accepts raw user input (quotes, "or", "-word") without errors.
+            # websearch_to_tsquery хэрэглэгчийн шууд текстийг (хашилт, "or", "-үг") алдаагүй авна.
             query = func.websearch_to_tsquery(literal_column("'english'::regconfig"), text_query)
             clauses.append(Product.search_vector.op("@@")(query))
             rank = func.ts_rank(Product.search_vector, query)
@@ -166,7 +165,7 @@ class ProductRepository:
     async def sitemap_entries(
         self, *, offset: int, limit: int
     ) -> tuple[list[tuple[int, str, datetime]], int]:
-        """(id, slug, updated_at) of active products in id order, plus how many there are."""
+        """Идэвхтэй барааны (id, slug, updated_at) id-н дарааллаар, мөн нийт тоо."""
         total = (
             await self._session.execute(
                 select(func.count()).select_from(Product).where(Product.is_active.is_(True))
@@ -181,7 +180,7 @@ class ProductRepository:
         )
         return [(r.id, r.slug, r.updated_at) for r in rows.all()], int(total)
 
-    # --- admin: everything below sees inactive products too ----------------------------------
+    # --- admin: доорх бүх зүйл идэвхгүй барааг ч харна ---
 
     async def get_any(self, product_id: int, *, for_update: bool = False) -> Product | None:
         statement = select(Product).where(Product.id == product_id).options(*_LIGHT_ROWS)
@@ -201,8 +200,8 @@ class ProductRepository:
         stock: str = "all",
         low_stock_threshold: int = 5,
     ) -> tuple[list[Product], int]:
-        """Admin listing. A plain substring match on the name (or the exact id), because an admin
-        types half a word; the storefront's stemmed full-text search would miss it."""
+        """Admin-ы жагсаалт. Нэрээр энгийн substring хайлт (эсвэл яг id), учир нь admin үгийн
+        хагасыг бичдэг; storefront-ийн stemmed full-text хайлт үүнийг олохгүй."""
         clauses: list[ColumnElement[bool]] = []
         if text_query:
             by_name = Product.name.ilike(contains_pattern(text_query), escape="\\")
@@ -241,8 +240,8 @@ class ProductRepository:
         return await self.save(product)
 
     async def save(self, product: Product) -> Product:
-        """Flush and reload the database-generated timestamps (expired by the write, and a lazy
-        reload is impossible in async code)."""
+        """Database-ийн үүсгэсэн timestamp-уудыг flush хийж дахин уншина (бичилтээр хүчингүй
+        болсон, async кодод lazy reload хийх боломжгүй)."""
         await self._session.flush()
         await self._session.refresh(product, ["created_at", "updated_at"])
         return product
@@ -264,14 +263,13 @@ class ProductRepository:
         exclude_id: int | None = None,
         iterative_scan: bool = True,
     ) -> list[SimilarProduct]:
-        """Top-`limit` products by cosine similarity, using the HNSW index.
+        """HNSW index ашиглан cosine similarity-ээр шилдэг `limit` бараа.
 
-        Filtered HNSW search is the classic failure mode: the index returns `ef_search`
-        candidates and the WHERE clause then discards most of them, leaving fewer than `limit`
-        rows. pgvector >= 0.8 iterative scan keeps scanning the index until enough rows pass
-        the filters, so no over-fetching is needed. `relaxed_order` is faster but may return
-        rows slightly out of order, so results are re-sorted here (limit is small).
-        """
+        Filter-тэй HNSW хайлт бол сонгодог асуудалтай: index `ef_search` candidate буцаагаад
+        WHERE нөхцөл ихэнхийг нь хаяснаар `limit`-ээс цөөн мөр үлдэж болно. pgvector >= 0.8
+        iterative scan нь filter-ээс хангалттай мөр гарах хүртэл index-ийг үргэлжлүүлэн
+        сканддаг тул илүү татах шаардлагагүй. `relaxed_order` хурдан боловч мөрүүдийг жаахан
+        эмх замбараагүй буцааж болно, тиймээс энд дахин эрэмбэлнэ (limit жижиг)."""
         distance = Product.embedding.cosine_distance(embedding)
         statement = (
             select(Product, distance.label("distance"))
@@ -283,9 +281,9 @@ class ProductRepository:
         if exclude_id is not None:
             statement = statement.where(Product.id != exclude_id)
 
-        # set_config(..., is_local=true) is SET LOCAL with bind parameters: scoped to the
-        # current transaction, so it never leaks to other users of the pooled connection.
-        # One statement = one round trip.
+        # set_config(..., is_local=true) нь bind parameter-тэй SET LOCAL: зөвхөн одоогийн
+        # transaction-д үйлчилнэ, тиймээс pool-ийн connection-ийг ашиглах бусдад нөлөөлөхгүй. Нэг
+        # statement = нэг round trip.
         await self._session.execute(
             text(
                 "SELECT set_config('hnsw.ef_search', :ef_search, true), "

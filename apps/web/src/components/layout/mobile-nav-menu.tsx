@@ -14,7 +14,7 @@ import {
 import { useCatalogNav } from "@/features/catalog/use-catalog-nav";
 import { cn } from "@/lib/utils";
 
-/** One step of the drill-down: where "Shop all" goes and what lies below it. */
+/** Drill-down-ы нэг алхам: "Shop all" хаашаа хөтлөх, доор нь юу байгаа. */
 type Step = { name: string; href: string; children: Step[] };
 
 function fromNode(department: string, node: NavNode): Step {
@@ -39,13 +39,13 @@ function departments(nav: CatalogNav | undefined): Step[] {
 const row = (i: number) => ({ "--i": i }) as CSSProperties;
 
 /**
- * The page that opens under the phone header when the menu button is pressed, as on apple.com: the
- * shop in large type, each line fading in after the one above, and nothing else (the search and the
- * account are the magnifier's and the Bag's pages). Departments
- * drill down level by level (Men > Clothing > Topwear). It covers the page below the bar (the bar
- * itself stays, but only its button, now an X; the rest fades out), the page behind it cannot scroll or be reached, and Escape
- * closes it and returns focus to the button. Portalled to <body> because the header's backdrop
- * blur would otherwise be the containing block of anything `fixed` inside it.
+ * Цэсний товч дарахад утасны header-ийн доор нээгддэг хуудас, apple.com шиг: дэлгүүр том үсгээр,
+ * мөр бүр дээрхийнхээ дараа бүдэг байдлаас гарч, өөр юу ч үгүй (хайлт ба account нь томруулагч,
+ * Bag-ийн хуудсанд байдаг). Department-үүд түвшин түвшнээр доош орно (Men > Clothing > Topwear).
+ * Bar-ын доорх хуудсыг бүрхэнэ (bar үлдэх боловч зөвхөн X болсон товч нь үлдэж, бусад нь бүдгэрнэ),
+ * ард нь хуудас scroll хийгдэхгүй, хүрэх боломжгүй; Escape хааж focus-ыг товч руу буцаана.
+ * Header-ийн backdrop blur нь доторх `fixed` бүх зүйлийн containing block болох тул <body> руу
+ * portal хийнэ.
  */
 export function MobileMenuPanel({
   open,
@@ -61,12 +61,12 @@ export function MobileMenuPanel({
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const { data, isPending } = useCatalogNav(open);
 
-  // Closed: the next opening starts at the top.
+  // Хаалттай: дараагийн нээлт дээрээс эхэлнэ.
   if (!open && stack.length > 0) setStack([]);
 
   useEffect(() => {
     if (!open) return;
-    // The page behind is out of reach (no scrolling, no tabbing into it) while the menu is open.
+    // Цэс нээлттэй байхад ард байгаа хуудас хүрэх боломжгүй (scroll, tab-аар орох).
     const behind = document.querySelectorAll("#main, footer");
     behind.forEach((element) => element.setAttribute("inert", ""));
     const root = document.documentElement;

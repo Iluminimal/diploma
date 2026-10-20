@@ -3,9 +3,9 @@ import path from "node:path";
 import { ADMIN_EMAIL, ADMIN_PASSWORD } from "./support/env";
 
 /**
- * Makes sure the administrator the admin tests sign in as exists. It goes through the same CLI an
- * operator uses (`make create-admin`), so it also covers that path. Safe to repeat: an existing
- * account is promoted and given this password.
+ * Admin тестүүдийн нэвтэрдэг админ байгаа эсэхийг баталгаажуулна. Оператор ашигладаг CLI-аар (`make
+ * create-admin`) дамждаг тул тэр замыг мөн шалгана. Давтан ажиллуулахад аюулгүй: байгаа account-ыг
+ * админ болгож, энэ нууц үгийг өгнө.
  */
 export default function globalSetup() {
   const result = spawnSync(

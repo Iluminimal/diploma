@@ -10,7 +10,7 @@ from angel.models import Order, OrderEvent, OrderItem, Payment, StripeEvent
 from angel.repositories.patterns import contains_pattern, prefix_pattern
 
 _WITH_DETAILS = (selectinload(Order.items), selectinload(Order.payment))
-# Plus the history, for the pages that show it.
+# Түүхийг нэмж ачаална: түүхийг харуулдаг хуудсуудад.
 _WITH_EVENTS = (*_WITH_DETAILS, selectinload(Order.events))
 
 
@@ -37,7 +37,7 @@ class OrderRepository:
         return result.scalar_one_or_none()
 
     async def get_for_user(self, user_id: int, number: str) -> Order | None:
-        """Scoped to the owner: someone else's order number is indistinguishable from a typo."""
+        """Эзэмшигчээр хязгаарлана: өөр хүний захиалгын дугаар андуурсан дугаараас ялгагдахгүй."""
         result = await self._session.execute(
             select(Order)
             .where(Order.user_id == user_id, Order.number == number)
@@ -56,8 +56,9 @@ class OrderRepository:
         return result.scalar_one_or_none()
 
     async def get_for_update(self, order_id: int) -> Order | None:
-        """Lock the order row; state changes are decided one at a time. Items and payment are
-        loaded in separate queries (no lock) because FOR UPDATE and eager joins do not mix."""
+        """Захиалгын мөрийг түгжинэ; төлөв өөрчлөлтийг нэг нэгээр нь шийднэ. Мөрүүд болон
+        төлбөрийг тусад нь (түгжээгүй) ачаална, учир нь FOR UPDATE болон eager join хамт
+        ажилладаггүй."""
         result = await self._session.execute(
             select(Order)
             .where(Order.id == order_id)
@@ -84,7 +85,7 @@ class OrderRepository:
         )
         return int(result.scalar_one())
 
-    # --- admin: every customer's orders ------------------------------------------------------
+    # --- admin: бүх хэрэглэгчийн захиалга ---
 
     @staticmethod
     def _admin_clauses(text_query: str | None, status: str) -> list[ColumnElement[bool]]:
@@ -131,7 +132,7 @@ class OrderRepository:
         return result.scalar_one_or_none()
 
     async def status_counts(self, text_query: str | None) -> dict[str, int]:
-        """Orders per status for the admin tabs (the search applies, the status filter does not)."""
+        """Admin-ы tab бүрийн захиалгын тоо (хайлт үйлчилнэ, төлвийн filter үйлчлэхгүй)."""
         clauses = self._admin_clauses(text_query, "all")
         rows = await self._session.execute(
             select(Order.status, func.count()).where(*clauses).group_by(Order.status)
@@ -145,7 +146,7 @@ class OrderRepository:
         data: dict[str, object] | None = None,
         actor_id: int | None = None,
     ) -> None:
-        """Part of the caller's transaction: the event exists exactly if the change does."""
+        """Дуудагчийн transaction-ийн хэсэг: өөрчлөлт хийгдсэн тохиолдолд л event үүснэ."""
         self._session.add(
             OrderEvent(order_id=order_id, type=event_type, data=data or {}, actor_id=actor_id)
         )
@@ -170,8 +171,8 @@ class OrderRepository:
         return list(result.scalars())
 
     async def add_payment_if_missing(self, payment: Payment) -> None:
-        """A replayed checkout may race with the request that is already creating the payment:
-        the unique `order_id` makes the second insert a no-op."""
+        """Давтагдсан checkout нь төлбөр үүсгэж буй өмнөх хүсэлттэй өрсөлдөж болно: unique
+        `order_id` нь хоёр дахь insert-ийг юу ч хийхгүй болгоно."""
         await self._session.execute(
             insert(Payment)
             .values(
@@ -193,7 +194,7 @@ class OrderRepository:
         return result.scalar_one_or_none()
 
     async def record_event(self, event_id: str, event_type: str) -> bool:
-        """True the first time an event id is seen, False for every redelivery."""
+        """Event id анх харагдахад True, дахин хүргэгдэх бүрд False."""
         result = await self._session.execute(
             insert(StripeEvent)
             .values(id=event_id, type=event_type)

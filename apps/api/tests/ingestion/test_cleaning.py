@@ -47,9 +47,9 @@ def test_malformed_rows_are_skipped_and_counted(tmp_path: Path) -> None:
         tmp_path,
         [
             "1,Men,Apparel,Topwear,Shirts,Blue,Fall,2011,Casual,Good Shirt",
-            # unquoted comma in the name -> too many fields
+            # нэр доторх хашилтгүй таслал -> талбар хэт олон
             "2,Men,Apparel,Topwear,Shirts,Blue,Fall,2011,Casual,Shirt, with comma",
-            # too few fields: name missing entirely
+            # талбар дутуу: нэр огт байхгүй
             "3,Men,Apparel,Topwear,Shirts,Blue,Fall,2011,Casual",
         ],
         [1, 2, 3],

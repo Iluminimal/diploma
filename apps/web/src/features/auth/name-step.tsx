@@ -9,7 +9,7 @@ import { userMessage } from "@/lib/api/errors";
 import { useUpdateName } from "@/features/account/use-profile";
 import { toast } from "sonner";
 
-/** The last step for a brand-new account: what to call the customer. Optional. */
+/** Шинэ бүртгэлийн сүүлийн алхам: үйлчлүүлэгчийг юу гэж дуудах. Заавал биш. */
 export function NameStep({ onDone }: { onDone: () => void }) {
   const rename = useUpdateName();
   const [name, setName] = useState("");

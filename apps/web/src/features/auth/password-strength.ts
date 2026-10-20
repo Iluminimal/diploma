@@ -1,8 +1,8 @@
 export type Strength = { score: 0 | 1 | 2 | 3 | 4; label: string };
 
 /**
- * How long enough is, in words. Length is the only thing measured, like the API's rule (10 to 128
- * characters, nothing about digits or symbols): a long passphrase beats a short "complex" one.
+ * Хэр урт нь хангалттай вэ гэдгийг үгээр хэлнэ. Зөвхөн уртыг хэмжинэ, API-ийн дүрэм шиг (10-128
+ * тэмдэгт, цифр, тэмдэгтийн шаардлагагүй): урт passphrase нь богино "төвөгтэй" нууц үгээс дээр.
  */
 export function passwordStrength(password: string): Strength {
   const length = [...password].length;

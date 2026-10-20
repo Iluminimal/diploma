@@ -1,15 +1,14 @@
-"""Shopper-facing category tree: departments > groups > sub-categories > article types.
+"""Худалдан авагчид харагдах ангиллын мод: department > бүлэг > дэд ангилал > article type.
 
-The `categories` table mirrors the dataset (master > sub > article type). Two things make it
-unfit for navigation as it is:
+`categories` хүснэгт нь dataset-ийг (master > sub > article type) тусгана. Хоёр зүйл үүнийг
+навигаци болгоход тохиромжгүй болгодог:
 
-- Gender is not part of the tree, but shoppers start from "Women" or "Men".
-- Eleven article-type names sit under two parents, mostly data errors (a "Tshirts" under Belts,
-  "Dresses" under Topwear). The leaf with the most products wins and absorbs the others, so each
-  name has exactly one place in the tree and a product is never counted twice.
+- Gender модонд байхгүй, гэтэл худалдан авагчид "Women" эсвэл "Men"-ээс эхэлдэг.
+- Арван нэг article type-ийн нэр хоёр эцэгтэй, ихэнхдээ өгөгдлийн алдаа (Belts доорх "Tshirts",
+  Topwear доорх "Dresses"). Хамгийн их бараатай leaf яллаж бусдыг шингээнэ, тиймээс нэр бүр модонд
+  яг нэг газартай, бараа хоёр удаа тоологдохгүй.
 
-Everything here is pure: the service feeds in rows and caches the result.
-"""
+Энд бүх зүйл pure: service мөрүүдийг оруулж, үр дүнг cache хийнэ."""
 
 from collections import defaultdict
 from collections.abc import Sequence
@@ -28,7 +27,7 @@ class Department:
     genders: tuple[str, ...]
 
 
-# Unisex products are shown to both women and men; kids are their own department.
+# Unisex бараа women, men хоёуланд харагдана; kids нь тусдаа department.
 DEPARTMENTS: tuple[Department, ...] = (
     Department("women", "Women", ("Women", "Unisex")),
     Department("men", "Men", ("Men", "Unisex")),
@@ -36,7 +35,7 @@ DEPARTMENTS: tuple[Department, ...] = (
 )
 DEPARTMENT_BY_SLUG = {d.slug: d for d in DEPARTMENTS}
 
-# Raw dataset names that read badly in a menu. Anything else is shown as stored.
+# Цэсэнд муухай харагдах dataset-ийн түүхий нэрс. Бусад нь хадгалсан хэвээрээ харагдана.
 DISPLAY_NAMES = {
     "Apparel": "Clothing",
     "Apparel Set": "Sets",
@@ -51,13 +50,13 @@ DISPLAY_NAMES = {
     "Key chain": "Key chains",
     "Salwar and Dupatta": "Salwar & dupatta",
 }
-# Shoppers expect clothing first, then shoes, then the rest.
+# Худалдан авагчид эхлээд хувцас, дараа гутал, дараа нь бусдыг хүлээдэг.
 MASTER_ORDER = ("apparel", "footwear", "accessories")
 
 
 class TaxonomySnapshot(BaseModel):
-    """What the cache stores: the navigation tree plus, for each node path, the category ids a
-    listing must match (a node covers its descendants and the duplicates it absorbed)."""
+    """Cache юу хадгалдаг вэ: навигацийн мод болон зангилаа бүрийн path-д жагсаалт таарах ёстой
+    category id-нууд (зангилаа нь үр удам болон шингээсэн давхардлуудыг хамарна)."""
 
     nav: CatalogNav
     category_ids: dict[str, list[int]]
@@ -70,7 +69,7 @@ def display_name(name: str) -> str:
 def build_snapshot(
     categories: Sequence[Category], counts: Sequence[tuple[str, int, int]]
 ) -> TaxonomySnapshot:
-    """`counts` is (gender, category_id, active product count) for every populated cell."""
+    """`counts` нь бараатай нүд бүрийн (gender, category_id, идэвхтэй барааны тоо)."""
     by_id = {c.id: c for c in categories}
     per_category: dict[int, int] = defaultdict(int)
     for _gender, category_id, n in counts:
@@ -81,7 +80,7 @@ def build_snapshot(
     for leaf in leaves:
         by_name[leaf.name].append(leaf)
 
-    # canonical leaf id -> every leaf id it covers
+    # canonical leaf id -> түүний хамарсан бүх leaf id
     members: dict[int, list[int]] = {}
     for group in by_name.values():
         canonical = max(group, key=lambda c: (per_category[c.id], -c.id))

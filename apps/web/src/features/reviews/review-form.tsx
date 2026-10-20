@@ -19,7 +19,7 @@ const schema = z.object({
 });
 type Values = z.infer<typeof schema>;
 
-/** Write a review, or change the one already written (`review`). */
+/** Сэтгэгдэл бичих, эсвэл аль хэдийн бичсэнийг (`review`) засах. */
 export function ReviewForm({
   productId,
   review,
@@ -50,7 +50,7 @@ export function ReviewForm({
       onDone?.();
     };
     if (review) {
-      // `null` clears a title or text the customer has removed.
+      // `null` нь үйлчлүүлэгчийн устгасан гарчиг эсвэл текстийг цэвэрлэнэ.
       update.mutate(
         { id: review.id, changes: { rating: values.rating, title: values.title || null, body: values.body || null } },
         { onSuccess: done },

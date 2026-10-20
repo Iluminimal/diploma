@@ -29,7 +29,7 @@ function pageNumber(value: string | undefined) {
 
 const text = (value: string | undefined) => (value ?? "").trim().slice(0, 200);
 
-/** The list state lives in the URL, so a filtered view can be bookmarked and survives a reload. */
+/** Жагсаалтын state URL-д байдаг тул шүүсэн харагдацыг bookmark хийж, дахин ачаалахад хадгална. */
 export function parseProductParams(raw: Raw): ProductListParams {
   return {
     q: text(first(raw.q)),
@@ -67,7 +67,7 @@ export function parseReviewParams(raw: Raw): ReviewListParams {
   };
 }
 
-/** The inventory is the product list, kept to what is on sale and sorted by what is running out. */
+/** Нөөцийн жагсаалт нь зарагдаж буй бүтээгдэхүүнийг дуусах дарааллаар нь эрэмбэлсэн жагсаалт. */
 export function parseInventoryParams(raw: Raw): ProductListParams {
   return {
     q: text(first(raw.q)),
@@ -78,13 +78,13 @@ export function parseInventoryParams(raw: Raw): ProductListParams {
   };
 }
 
-/** The dashboard's period in days; anything unexpected falls back to the default. */
+/** Dashboard-ын хугацаа (хоногоор); гэнэтийн утга өгвөл default-д буцна. */
 export function parsePeriod(raw: Raw): number {
   const days = Number(first(raw.days));
   return STATS_PERIODS.find((period) => period === days) ?? DEFAULT_PERIOD;
 }
 
-/** Query string for a list view; defaults are left out to keep URLs short. */
+/** Жагсаалтын query string; URL богино байлгахын тулд default утгыг орхино. */
 export function toQuery(params: Record<string, string | number>, defaults: Record<string, string | number>) {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {

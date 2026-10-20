@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-/** Whether a media query matches, kept up to date. False on the server and while hydrating. */
+/** Media query таарч байгаа эсэх, шинэчлэгдэж байна. Server дээр болон hydration хийх үед false. */
 export function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(
     (onChange) => {

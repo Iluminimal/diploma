@@ -28,13 +28,13 @@ UNREACHABLE_REDIS_URL = "redis://127.0.0.1:1/0"
 
 @pytest.fixture
 def settings() -> Settings:
-    """Settings from the environment / .env (the dev infra), with quiet logs."""
+    """.env болон орчноос авсан Settings (dev infra), log чимээгүй."""
     return Settings(app_env="test", log_level="WARNING", readiness_timeout_seconds=1.0)
 
 
 @pytest.fixture
 async def require_infra(settings: Settings) -> None:
-    """Fail loudly (never skip) when Postgres/Redis are unreachable."""
+    """Postgres/Redis холбогдохгүй бол алгасахгүй, шууд fail болгоно."""
     engine = create_async_engine(settings.database_url)
     redis = Redis.from_url(settings.redis_url, socket_connect_timeout=2)
     try:
@@ -48,15 +48,15 @@ async def require_infra(settings: Settings) -> None:
         await engine.dispose()
 
 
-# --- throwaway database for tests that write catalogue data -----------------------------------
-# Ingestion tests must never touch the dev catalogue, so they get their own migrated database.
+# --- каталог бичдэг тестэд зориулсан түр database ---------------------------------------------
+# Ingestion тест dev каталогт хэзээ ч хүрэхгүй, тиймээс өөрийн migrate хийсэн database авна.
 
 API_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _alembic(database_url: str, *args: str) -> None:
     env = {**os.environ, "DATABASE_URL": database_url}
-    result = subprocess.run(  # noqa: S603 - fixed arguments, no user input
+    result = subprocess.run(  # noqa: S603 - тогтмол аргумент, хэрэглэгчийн оролтгүй
         [sys.executable, "-m", "alembic", *args],
         cwd=API_ROOT,
         env=env,
@@ -85,8 +85,8 @@ async def scratch_database(settings: Settings, suffix: str) -> AsyncIterator[str
 
 @pytest.fixture(scope="session")
 async def migrated_database_url() -> AsyncIterator[str]:
-    """A fresh database migrated to head with the real Alembic migrations."""
-    # Unreachable infra fails here, loudly, like `require_infra` does for the other tests.
+    """Жинхэнэ Alembic migration-ээр head хүртэл migrate хийсэн шинэ database."""
+    # Infra холбогдохгүй бол энд шууд fail болно, бусад тестийн `require_infra`-тай адил.
     async with scratch_database(Settings(app_env="test"), "test") as url:
         _alembic(url, "upgrade", "head")
         yield url
@@ -94,11 +94,11 @@ async def migrated_database_url() -> AsyncIterator[str]:
 
 @pytest.fixture
 async def db_engine(migrated_database_url: str) -> AsyncIterator[AsyncEngine]:
-    """Engine on the test database with empty catalogue tables."""
+    """Тестийн database-ийн engine, каталогийн хүснэгтүүд хоосон."""
     engine = create_async_engine(migrated_database_url)
     async with engine.begin() as connection:
-        # CASCADE follows the foreign keys: users takes carts, orders, payments, addresses and
-        # refresh tokens with it, products the cart, wishlist and order lines.
+        # CASCADE нь foreign key-г дагана: users-тэй хамт cart, order, payment, address,
+        # refresh token, products-тай хамт cart, wishlist, захиалгын мөр устана.
         await connection.execute(
             text("TRUNCATE users, products, categories, stripe_events RESTART IDENTITY CASCADE")
         )
@@ -106,7 +106,7 @@ async def db_engine(migrated_database_url: str) -> AsyncIterator[AsyncEngine]:
     await engine.dispose()
 
 
-# --- a running API on a small seeded catalogue ------------------------------------------------
+# --- жижиг seed хийсэн каталогтой ажиллаж буй API ---------------------------------------------
 
 
 @dataclass
@@ -125,9 +125,10 @@ ApiFactory = Callable[..., "AbstractAsyncContextManager[Api]"]
 async def api_factory(
     settings: Settings, migrated_database_url: str, db_engine: AsyncEngine
 ) -> ApiFactory:
-    """`async with api_factory(rate_limit_text="2/60") as api:` starts the real app (fake model)
-    on a freshly seeded catalogue. Settings overrides are keyword arguments. Rate limits are
-    generous and the Redis prefix and embedding version unique, so tests never see each other."""
+    """`async with api_factory(rate_limit_text="2/60") as api:` жинхэнэ апп-ыг (fake model-той)
+    шинээр seed хийсэн каталог дээр ажиллуулна. Settings-ийг keyword аргументаар дарна. Rate limit
+    сул, Redis prefix ба embedding version давтагдашгүй тул тестүүд бие биедээ нөлөөлөхгүй.
+    """
 
     @asynccontextmanager
     async def start(
@@ -153,17 +154,17 @@ async def api_factory(
             "rate_limit_oauth": "10000/60",
             "rate_limit_otp_send": "10000/60",
             "rate_limit_otp_verify": "10000/60",
-            # No wait between codes in tests (the cooldown has its own test).
+            # Тестэд кодын хооронд хүлээхгүй (cooldown-д тусдаа тест бий).
             "otp_resend_seconds": 0,
             "otp_max_sends_per_hour": 1000,
             "otp_dev_code": "",
             "sms_mode": "console",
             "default_phone_region": "US",
-            # Whatever .env says (a preview may use the fake), tests start with Google off.
+            # .env юу гэсэн ч (preview fake ашиглаж болно) тест Google унтраасан эхэлнэ.
             "oauth_mode": "google",
             "google_client_id": "",
             "google_client_secret": "",
-            # Commerce: a fixed signing key, and the in-process payment gateway.
+            # Commerce: тогтмол signing key ба in-process payment gateway.
             "jwt_secret": "test-jwt-secret-0123456789-0123456789",
             "payments_mode": "offline",
             "stripe_webhook_secret": WEBHOOK_SECRET,

@@ -1,4 +1,4 @@
-"""products and categories
+"""бараа ба ангилал
 
 Revision ID: a1f3891fa86e
 Revises: a6a98544cd4c
@@ -21,7 +21,7 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    """Schema-г шинэчилнэ."""
     op.create_table(
         "categories",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -135,7 +135,7 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
+    """Schema-г өмнөх төлөвт буцаана."""
     op.drop_index("ix_products_usage", table_name="products")
     op.drop_index("ix_products_season", table_name="products")
     op.drop_index("ix_products_search_vector", table_name="products", postgresql_using="gin")

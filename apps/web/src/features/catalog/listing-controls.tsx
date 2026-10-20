@@ -12,7 +12,7 @@ import type { CatalogFilterOptions } from "./product";
 import { useListingNavigation } from "./use-listing-navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// The phone filter sheet is fetched the first time it is opened, together with the dialog library.
+// Утасны шүүлтүүрийн sheet-ийг анх нээхэд dialog library-тай хамт татна.
 const MobileFiltersSheet = dynamic(() => import("./mobile-filters-sheet").then((m) => m.MobileFiltersSheet), {
   ssr: false,
 });
@@ -24,7 +24,7 @@ const SORT_LABELS: Record<Sort, string> = {
   price_desc: "Price: high to low",
 };
 
-// Phones never show the sidebar, so they never download it.
+// Утас sidebar харуулдаггүй тул хэзээ ч татахгүй.
 const WideSidebar = dynamic(() => import("./sidebar-filters").then((m) => m.SidebarFilters), { ssr: false });
 
 const DESKTOP = "(min-width: 64rem)";
@@ -34,7 +34,7 @@ const subscribeToWidth = (notify: () => void) => {
   return () => media.removeEventListener("change", notify);
 };
 
-/** The desktop filter column. On a narrow screen nothing is rendered or loaded for it. */
+/** Desktop-ийн шүүлтүүрийн багана. Нарийн дэлгэц дээр зурахгүй, ачаалахгүй. */
 type FilterScope = { showCategories?: boolean; groups?: FilterGroup[] };
 
 export function FilterSidebar({
@@ -67,7 +67,7 @@ export function MobileFilters({
   );
 }
 
-/** A native select: no script to load, the platform's own picker on phones, and fully accessible. */
+/** Native select: script ачаалахгүй, утсан дээр платформын өөрийн сонгогч, бүрэн a11y-тай. */
 export function SortSelect({ query }: { query: ListingQuery }) {
   const { apply } = useListingNavigation(query);
   const fallback: Sort = query.q ? "relevance" : "newest";

@@ -18,7 +18,10 @@ import { activeFilterCount, type ListingQuery } from "./filters";
 import type { CatalogFilterOptions } from "./product";
 import { useListingNavigation } from "./use-listing-navigation";
 
-/** The phone filter sheet. Loaded on first tap (see `MobileFilters`): it needs the dialog library. */
+/**
+ * Утасны шүүлтүүрийн sheet. Эхний товшилтоор ачаална (`MobileFilters`-г хар): dialog library
+ * хэрэгтэй.
+ */
 export function MobileFiltersSheet({
   options,
   query,
@@ -35,7 +38,7 @@ export function MobileFiltersSheet({
   const [open, setOpen] = useState(defaultOpen ?? false);
   const { apply } = useListingNavigation(query);
   const count = activeFilterCount(query);
-  // Pull the sheet down by its title to close it.
+  // Sheet-ийг гарчгаас нь доош татаж хаана.
   const swipe = useSwipeDismiss("y", () => setOpen(false), "[data-slot=sheet-header]");
   return (
     <Sheet open={open} onOpenChange={setOpen}>

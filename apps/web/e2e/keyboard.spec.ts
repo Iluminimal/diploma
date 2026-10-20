@@ -2,8 +2,8 @@ import { test, expect } from "./fixtures";
 import { openSearch } from "./support/ui";
 
 /**
- * What a keyboard or screen-reader user needs and axe cannot judge: that focus goes where it
- * should, stays where it should, and can always be seen.
+ * Keyboard болон screen reader хэрэглэгчид хэрэгтэй боловч axe шүүж чаддаггүй зүйл: focus очих
+ * ёстой газартаа очих, байх ёстой газартаа үлдэх, үргэлж харагдах.
  */
 
 test("the skip link is the first stop and moves focus into the page", async ({ page }) => {
@@ -30,7 +30,7 @@ test("every stop in the header and the first screen of a page shows where focus 
       const style = getComputedStyle(el);
       const outline = style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
       const shadow = style.boxShadow !== "none";
-      // A radio or checkbox shows focus on its visible look-alike, which is the next element.
+      // Radio эсвэл checkbox focus-ыг харагдах дүр төрх дээрээ (дараагийн элемент) үзүүлнэ.
       const label = `${el.tagName.toLowerCase()} ${el.getAttribute("aria-label") ?? el.textContent?.trim().slice(0, 30) ?? ""}`;
       return { label, shown: outline || shadow, hidden: el.className.includes?.("sr-only") ?? false };
     });
@@ -129,7 +129,7 @@ test("the mini-cart keeps focus inside, closes with Escape and gives focus back"
   await page.keyboard.press("Escape");
 
   await expect(drawer).toBeHidden();
-  // The dialog library hands focus back a tick after it unmounts the panel.
+  // Dialog сан panel-ийг unmount хийснээс нэг tick хойш focus-ыг буцааж өгдөг.
   await expect.poll(() => page.evaluate(() => document.activeElement?.tagName.toLowerCase())).not.toBe("body");
 });
 

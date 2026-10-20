@@ -7,7 +7,7 @@ from starlette.datastructures import Headers, MutableHeaders
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 REQUEST_ID_HEADER = "X-Request-ID"
-# Accept caller-supplied IDs only if they are short and log-safe.
+# Дуудагчийн өгсөн ID-г зөвхөн богино, log-д аюулгүй бол хүлээн авна.
 _VALID_REQUEST_ID = re.compile(r"[A-Za-z0-9._\-]{8,64}")
 
 log = structlog.stdlib.get_logger("angel.access")
@@ -19,10 +19,10 @@ def get_request_id(scope: Scope) -> str | None:
 
 
 class RequestContextMiddleware:
-    """Assigns a request ID (reusing a valid inbound one), binds it to every log line,
-    echoes it in the response, and emits one access-log line per request.
+    """Request ID олгоно (зөв ирсэн ID байвал дахин ашиглана), log мөр бүрт холбож, хариунд буцааж,
+    хүсэлт бүрт нэг access-log мөр бичнэ.
 
-    Pure ASGI on purpose: BaseHTTPMiddleware breaks contextvars propagation and streaming.
+    Зориуд цэвэр ASGI: BaseHTTPMiddleware нь contextvars дамжуулалт, streaming-ийг эвддэг.
     """
 
     def __init__(self, app: ASGIApp) -> None:

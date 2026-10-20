@@ -18,7 +18,7 @@ def ids(response_json: dict[str, Any]) -> list[int]:
     return [hit["product"]["id"] for hit in response_json["results"]]
 
 
-# --- image search ---------------------------------------------------------------------------
+# --- Зургаар хайх ---------------------------------------------------------------------------
 
 
 async def test_a_products_own_photo_finds_it_at_rank_one(api: Api) -> None:
@@ -122,7 +122,7 @@ async def test_image_search_rejects_invalid_parameters(api: Api, bad_form: dict[
     assert response.headers["content-type"] == "application/problem+json"
 
 
-# --- text search ----------------------------------------------------------------------------
+# --- Текстээр хайх --------------------------------------------------------------------------
 
 
 async def test_text_search(api: Api) -> None:
@@ -149,7 +149,7 @@ async def test_text_search_validates_the_query(api: Api, payload: dict[str, obje
     assert response.status_code == 422
 
 
-# --- hybrid search --------------------------------------------------------------------------
+# --- Hybrid хайлт ---------------------------------------------------------------------------
 
 
 async def test_hybrid_weight_zero_is_image_search_and_one_is_text_search(api: Api) -> None:
@@ -177,8 +177,8 @@ async def test_hybrid_default_blends_image_and_text(api: Api) -> None:
     body = response.json()
     assert response.status_code == 200
     assert len(body["results"]) == 10
-    assert len(body["detected"]) == 3  # category prediction comes from the image part
-    # With random fake embeddings the blend is no longer closest to the photo itself.
+    assert len(body["detected"]) == 3  # ангиллын таамаглал зургийн хэсгээс ирнэ
+    # Санамсаргүй fake embedding-ийн үед холимог нь зурагт өөрт нь хамгийн ойр байхаа больсон.
     assert body["results"][0]["similarity"] < 0.95
 
 
@@ -191,7 +191,7 @@ async def test_hybrid_validates_parameters(api: Api, data: dict[str, str]) -> No
     assert response.status_code == 422
 
 
-# --- similar products -----------------------------------------------------------------------
+# --- Төстэй бараа ---------------------------------------------------------------------------
 
 
 async def test_similar_products_exclude_the_product_and_are_sorted(api: Api) -> None:
@@ -204,7 +204,7 @@ async def test_similar_products_exclude_the_product_and_are_sorted(api: Api) -> 
     assert entry.product_id not in ids(body)
     similarities = [hit["similarity"] for hit in body["results"]]
     assert similarities == sorted(similarities, reverse=True)
-    assert body["timings"]["embed_ms"] is None  # no inference
+    assert body["timings"]["embed_ms"] is None  # inference хийгдээгүй
 
 
 async def test_similar_products_follow_filters(api: Api) -> None:
@@ -250,7 +250,7 @@ async def test_product_ids_are_validated(api: Api, bad_id: str) -> None:
     assert (await api.client.get(f"{PRODUCTS}/{bad_id}")).status_code == 422
 
 
-# --- listing ----------------------------------------------------------------------------------
+# --- Жагсаалт ---------------------------------------------------------------------------------
 
 
 async def test_listing_paginates_without_gaps_or_overlap(api: Api) -> None:
@@ -283,7 +283,7 @@ async def test_listing_sorts_by_price_with_stable_ties(api: Api) -> None:
     asc_prices = [i["price_cents"] for i in ascending["items"]]
     assert asc_prices == sorted(asc_prices)
     assert [i["price_cents"] for i in descending["items"]] == sorted(asc_prices, reverse=True)
-    # Products sharing a price (every 6th) keep a fixed order, so pages never reshuffle.
+    # Үнэ ижил бараанууд (6 бүр) тогтмол дарааллаа хадгална, тиймээс хуудас дахин холилдохгүй.
     ties = [i["id"] for i in ascending["items"] if i["price_cents"] == 5000]
     assert ties == sorted(ties)
 
@@ -308,7 +308,7 @@ async def test_listing_filters_combine(api: Api) -> None:
 
     body = response.json()
     assert response.status_code == 200
-    # Seeded data: colour is Blue when source_id % 4 == 0, season is Winter for even ids.
+    # Seed өгөгдөл: source_id % 4 == 0 бол өнгө Blue, ID тэгш бол улирал Winter.
     expected = {
         e.product_id
         for e in api.entries
@@ -343,7 +343,7 @@ async def test_listing_text_query_accepts_arbitrary_user_input(api: Api) -> None
 @pytest.mark.parametrize(
     "params",
     [
-        {"sort": "relevance"},  # needs q
+        {"sort": "relevance"},  # q хэрэгтэй
         {"sort": "cheapest"},
         {"page": "0"},
         {"page_size": "61"},

@@ -4,9 +4,8 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A titled section that opens and closes (the product page's "Details" and "Delivery"). It is a
- * plain `<details>`, so it works without script, is keyboard-operable and announces its state;
- * `globals.css` makes the panel slide.
+ * Нээгдэж хаагддаг гарчигтай хэсэг (барааны хуудасны "Details", "Delivery"). Энгийн `<details>` тул
+ * script-гүй ажиллаж, keyboard-оор удирдаж, төлвөө мэдэгдэнэ; `globals.css` panel-ийг гулсуулдаг.
  */
 export function Disclosure({
   title,

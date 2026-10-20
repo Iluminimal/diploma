@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 const WORDS = ["Poor", "Fair", "Good", "Very good", "Excellent"];
 
 /**
- * Choose 1 to 5 stars. A group of radio buttons, so the arrow keys, labels and screen readers all
- * work as they do for any other choice; the stars are what the radios look like.
+ * 1-5 од сонгоно. Radio button-уудын бүлэг тул сумны товч, label, screen reader бусад сонголттой
+ * адил ажиллана; од бол radio-ны харагдах байдал.
  */
 export function RatingInput({
   value,

@@ -15,7 +15,10 @@ type Step = { key: string; label: string; at?: string | null; done: boolean; sto
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
-/** The steps an order has been through, and the one it is on. A cancelled or refunded order ends in its own step. */
+/**
+ * Захиалгын туулсан алхмууд ба одоогийн алхам. Цуцлагдсан эсвэл буцаагдсан захиалга өөрийн алхмаар
+ * төгсөнө.
+ */
 export function orderSteps(order: Progress): Step[] {
   const flow: Step[] = [
     { key: "placed", label: "Placed", at: order.created_at, done: true },
@@ -41,7 +44,7 @@ export function OrderProgress({ order, className }: { order: Progress; className
   return (
     <ol aria-label="Order progress" className={cn("flex", className)}>
       {steps.map((step, index) => {
-        // The last step, once reached, means the order is complete: it is done, not "in progress".
+        // Сүүлийн алхамд хүрсэн бол захиалга дууссан: "явагдаж байна" биш, биелсэн.
         const finished = step.done && index === steps.length - 1;
         const state = step.stopped
           ? "stopped"
@@ -59,7 +62,7 @@ export function OrderProgress({ order, className }: { order: Progress; className
             {index > 0 && (
               <span aria-hidden className="bg-border absolute top-3.5 right-1/2 h-0.5 w-full -translate-y-1/2">
                 {step.done && (
-                  // Fills from the previous step when the page loads, one connector after the other.
+                  // Хуудас ачаалахад өмнөх алхмаас дүүрч эхэлнэ, холбогч бүр дараалан.
                   <span
                     className={cn(
                       "animate-grow absolute inset-0 origin-left",

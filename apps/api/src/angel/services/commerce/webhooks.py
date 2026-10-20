@@ -11,7 +11,7 @@ class WebhookService:
         self._settlement = settlement
 
     async def handle(self, payload: bytes, signature: str | None) -> None:
-        """Verify, then apply. Anything unsigned is rejected before the body is parsed."""
+        """Эхлээд шалгаад, дараа нь хэрэглэнэ. Гарын үсэггүйг body задлахаас өмнө татгалзана."""
         try:
             event = self._gateway.parse_event(payload, signature)
         except InvalidSignatureError as exc:
@@ -26,12 +26,13 @@ class WebhookService:
                 "Webhooks are not configured",
                 type_=PAYMENTS_UNAVAILABLE_TYPE,
             ) from exc
-        if event is None:  # event types we do not act on are acknowledged and ignored
+        if event is None:  # хэрэглэдэггүй төрлийн event: хүлээн авснаа мэдэгдээд үл хэрэгсэнэ
             return
         try:
             await self._settlement.handle(event)
         except PaymentProviderError as exc:
-            # E.g. the refund call failed. Nothing was recorded, so a 5xx makes Stripe redeliver.
+            # Жишээ нь refund дуудлага амжилтгүй. Юу ч бүртгэгдээгүй, тиймээс 5xx нь Stripe-ийг
+            # дахин хүргүүлнэ.
             raise ProblemError(
                 HTTPStatus.SERVICE_UNAVAILABLE,
                 "Could not settle the payment yet",

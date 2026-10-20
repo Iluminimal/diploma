@@ -1,5 +1,5 @@
-"""Per-image work for ingestion: decode once, then produce thumbnails, a blur placeholder and
-the CLIP input array. Runs in worker processes, so everything here must be picklable."""
+"""Ingestion-ы зураг тус бүрийн ажил: нэг удаа decode хийж, thumbnail, blur placeholder,
+CLIP-ийн оролтын array гаргана. Worker process дотор ажилладаг тул бүх зүйл picklable байх ёстой."""
 
 import base64
 import io
@@ -16,12 +16,12 @@ from angel.storage import Storage
 THUMBNAIL_SIZES = (400, 800)
 WEBP_QUALITY = 80
 BLUR_SIDE = 12
-# Largest thumbnail dictates how much the JPEG decoder may downscale.
+# Хамгийн том thumbnail нь JPEG decoder хэр хэмжээнд жижигрүүлж болохыг тодорхойлно.
 _DECODE_MIN_SIDE = max(THUMBNAIL_SIZES)
 
 
 def image_key(source_id: int) -> str:
-    """Storage key prefix for a product's images, sharded to keep directories small."""
+    """Бүтээгдэхүүний зургийн storage key prefix. Хавтас томрохоос сэргийлж хэсэгчилсэн (shard)."""
     return f"products/{source_id // 1000:03d}/{source_id}"
 
 
@@ -47,7 +47,7 @@ class ImageResult:
 
 
 def fit_longest_side(image: Image.Image, size: int) -> Image.Image:
-    """Scale so the longest side is `size`, preserving aspect. Never upscales."""
+    """Урт талыг `size` болгож харьцааг хадгална. Хэзээ ч томруулахгүй."""
     longest = max(image.size)
     if longest <= size:
         return image
@@ -70,13 +70,13 @@ def make_blur_data_url(image: Image.Image) -> str:
 
 @dataclass(frozen=True)
 class Thumbnails:
-    webp: dict[int, bytes]  # size -> encoded image
+    webp: dict[int, bytes]  # хэмжээ -> encode хийсэн зураг
     blur_data_url: str
 
 
 def build_thumbnails(image: Image.Image) -> Thumbnails:
-    """All thumbnail sizes plus the blur placeholder for one decoded image, in memory (admin
-    uploads; ingestion writes straight to storage in `process_image`)."""
+    """Decode хийсэн нэг зургийн бүх thumbnail болон blur placeholder-ийг санах ойд бэлтгэнэ
+    (admin upload-д; ingestion нь `process_image` дотор шууд storage руу бичнэ)."""
     webp: dict[int, bytes] = {}
     current = image
     for size in sorted(THUMBNAIL_SIZES, reverse=True):
@@ -86,13 +86,13 @@ def build_thumbnails(image: Image.Image) -> Thumbnails:
 
 
 def process_image(job: ImageJob, storage: Storage) -> ImageResult:
-    """Never raises for bad input: an unreadable image comes back as `error`."""
+    """Муу оролтод exception шидэхгүй: уншигдахгүй зураг `error` болж буцна."""
     try:
         image = load_image(job.path, min_side=_DECODE_MIN_SIDE)
     except InvalidImageError as exc:
         return ImageResult(job.source_id, error=str(exc))
 
-    # Derive each size from the next larger one: cheaper than resizing the original twice.
+    # Хэмжээ бүрийг дараагийн том хэмжээнээс гаргана: эх зургийг хоёр удаа жижигрүүлэхээс хямд.
     current = image
     base = image_key(job.source_id)
     for size in sorted(THUMBNAIL_SIZES, reverse=True):

@@ -18,7 +18,7 @@ export const cardSchema = z.object({
 });
 export type CardValues = z.input<typeof cardSchema>;
 
-/** Any values pass: this exists so the flow feels like a real checkout. */
+/** Ямар ч утга хүлээн авна: жинхэнэ checkout шиг мэдрэмж төрүүлэхийн тулд л байгаа. */
 export const DEMO_CARD: CardValues = {
   card_number: "4242 4242 4242 4242",
   card_name: "Demo Shopper",
@@ -62,7 +62,7 @@ export function PaymentForm({ register, errors, control }: Props) {
             })}
           />
           {brand && (
-            // Named from the first digits; it pops in when the card is recognised.
+            // Эхний цифрээс нэрлэнэ; карт танигдах үед pop хийж гарна.
             <span
               key={brand}
               className="animate-pop bg-secondary text-secondary-foreground pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 rounded-full px-2.5 py-1 text-xs font-medium"

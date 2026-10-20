@@ -16,9 +16,11 @@ type Props<T extends CatalogFilters> = {
   options: CatalogFilterOptions;
   value: T;
   onChange: (next: T) => void;
-  /** The category tree is only useful where it can narrow a browse; search uses "Detected" instead. */
+  /**
+   * Ангиллын мод нь хайлтыг нарийсгаж болох газарт л хэрэгтэй; search оронд нь "Detected" ашиглана.
+   */
   showCategories?: boolean;
-  /** Which groups to show (default: all). */
+  /** Аль бүлгүүдийг харуулах (default: бүгд). */
   groups?: ReadonlyArray<FilterGroup>;
   idPrefix?: string;
 };
@@ -72,9 +74,9 @@ type TreeProps<T extends CatalogFilters> = {
 };
 
 /**
- * A category with children. The chevron is a button of its own (a checkbox inside a `<summary>`
- * would nest interactive controls); the branch opens by itself while something inside it is
- * selected, until the user opens or closes it by hand.
+ * Дэд ангилалтай ангилал. Сумны товч тусдаа button (`<summary>` доторх checkbox нь интерактив
+ * хяналтуудыг үүрлүүлэх байсан); доторх зүйл сонгогдсон үед салбар өөрөө нээгдэж, хэрэглэгч гараар
+ * нээж хаах хүртэл хэвээр байна.
  */
 function CategoryBranch<T extends CatalogFilters>({
   node,
@@ -149,7 +151,7 @@ function PriceFilter<T extends CatalogFilters>({
   value: T;
   onChange: (next: T) => void;
 }) {
-  // Slider works in whole dollars; the API and URL use cents.
+  // Slider бүхэл доллараар ажиллана; API, URL cent ашиглана.
   const lo = Math.floor(range.min_cents / 100);
   const hi = Math.ceil(range.max_cents / 100);
   const committed: [number, number] = [
@@ -263,7 +265,7 @@ export function FilterFields<T extends CatalogFilters>({
       {show("price") && (
         <Group title="Price">
           <PriceFilter
-            // Remount if the URL changes the range from outside (e.g. "clear all").
+            // URL гаднаас мужийг өөрчилбөл (жишээ нь "clear all") дахин mount хийнэ.
             key={`${value.min_price ?? ""}-${value.max_price ?? ""}`}
             range={options.price_range}
             value={value}

@@ -6,7 +6,7 @@ from structlog.typing import Processor
 
 
 def configure_logging(level: str = "INFO", *, json_logs: bool = True) -> None:
-    """Route structlog and stdlib logging (uvicorn, SQLAlchemy, ...) through one pipeline."""
+    """structlog болон stdlib logging (uvicorn, SQLAlchemy, ...)-ийг нэг pipeline-аар дамжуулна."""
     shared: list[Processor] = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
@@ -43,9 +43,9 @@ def configure_logging(level: str = "INFO", *, json_logs: bool = True) -> None:
     root.handlers = [handler]
     root.setLevel(level)
 
-    # Uvicorn installs its own handlers; hand its loggers to the root pipeline. Its access log
-    # stays silenced (no handlers, no propagation: uvicorn skips logging when it has none)
-    # because RequestContextMiddleware emits one richer access line per request.
+    # Uvicorn өөрийн handler тавьдаг; түүний logger-уудыг root pipeline руу шилжүүлнэ. Access log
+    # нь хаалттай (handler, propagation байхгүй: uvicorn handler байхгүй бол log бичихгүй),
+    # учир нь RequestContextMiddleware хүсэлт бүрт илүү баялаг access мөр бичдэг.
     for name in ("uvicorn", "uvicorn.error"):
         logger = logging.getLogger(name)
         logger.handlers = []

@@ -1,7 +1,10 @@
 import { createApiClient } from "@/lib/api/client";
 import { errorFromResponse, networkError } from "@/lib/api/errors";
 
-/** Top text matches for the header search box (browser only; uncached so typing feels live). */
+/**
+ * Header-ийн хайлтын талбарт зориулсан текстийн шилдэг таарал (зөвхөн browser; cache-гүй тул
+ * бичихэд шууд мэдрэгдэнэ).
+ */
 export async function suggestProducts(q: string, signal?: AbortSignal) {
   let result;
   try {

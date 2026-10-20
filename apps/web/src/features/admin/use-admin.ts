@@ -36,7 +36,7 @@ import {
   type ShipDetails,
 } from "./admin-api";
 
-/** Queries wait for a confirmed administrator, so a customer never even sends the request. */
+/** Query-үүд баталгаажсан админыг хүлээнэ, тиймээс энгийн хэрэглэгч хүсэлт ч илгээхгүй. */
 function useIsAdmin() {
   const status = useAuth((state) => state.status);
   const role = useAuth((state) => state.user?.role);
@@ -91,7 +91,7 @@ export function useAdminOrder(number: string) {
   });
 }
 
-/** Mutations report their own failures with a toast, so callers only handle success. */
+/** Mutation алдаагаа өөрөө toast-оор мэдээлдэг тул дуудагч зөвхөн амжилтыг боловсруулна. */
 function useProductMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -154,9 +154,9 @@ export function useAdminReviews(params: ReviewListParams) {
 }
 
 /**
- * An action that changes the shop (ship an order, hide a review, ...). A change can show up in
- * the dashboard, the lists and the customer's own pages, so everything admin-side is refetched,
- * and the failure is reported here with a toast so callers only handle success.
+ * Дэлгүүрийг өөрчлөх үйлдэл (захиалга илгээх, сэтгэгдэл нуух г.м.). Өөрчлөлт dashboard, жагсаалт,
+ * үйлчлүүлэгчийн хуудсанд харагдаж болох тул admin-ы бүх өгөгдлийг дахин татна. Алдааг энд
+ * toast-оор мэдээлнэ.
  */
 function useShopMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();

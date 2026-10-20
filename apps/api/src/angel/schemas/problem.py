@@ -8,7 +8,7 @@ class FieldError(BaseModel):
 
 
 class ProblemDetail(BaseModel):
-    """RFC 7807 problem details. Extension members (e.g. `checks`) are allowed."""
+    """RFC 7807 problem details. Нэмэлт гишүүд (жишээ нь `checks`) зөвшөөрөгдөнө."""
 
     model_config = ConfigDict(extra="allow")
 

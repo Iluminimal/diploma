@@ -14,15 +14,15 @@ import { useAddToCart } from "./use-cart";
 
 type Props = {
   product: Product;
-  /** From `sizesFor`: null for products without sizes (watches, bags, ...). */
+  /** `sizesFor`-оос: размергүй бүтээгдэхүүнд (цаг, цүнх г.м.) null. */
   sizes: { label: string; sizes: string[] } | null;
 };
 
-/** Size choice, "Add to Bag" and the wishlist heart: the interactive part of the product page. */
+/** Размер сонголт, "Add to Bag", wishlist зүрх: бүтээгдэхүүний хуудасны интерактив хэсэг. */
 export function PurchasePanel({ product, sizes }: Props) {
   const [size, setSize] = useState<string | null>(null);
   const [missingSize, setMissingSize] = useState(false);
-  // Bumped each time a size is missing, so the shake restarts even when it is already showing.
+  // Размер дутах бүрд нэмэгдэнэ, ингэснээр сэгсрэлт аль хэдийн явж байсан ч дахин эхэлнэ.
   const [shake, setShake] = useState(0);
   const [justAdded, setJustAdded] = useState(false);
   const add = useAddToCart();
@@ -30,7 +30,7 @@ export function PurchasePanel({ product, sizes }: Props) {
   const setAdded = useBagPanel((state) => state.setAdded);
   const buttonRow = useRef<HTMLDivElement>(null);
   const sizeBox = useRef<HTMLDivElement>(null);
-  // On phones the page is long: once the main button has scrolled out of sight, a bar keeps it in reach.
+  // Утсан дээр хуудас урт: үндсэн товч дэлгэцээс гармагц bar түүнийг гарт ойр байлгана.
   const [barVisible, setBarVisible] = useState(false);
 
   useEffect(() => {
@@ -41,12 +41,12 @@ export function PurchasePanel({ product, sizes }: Props) {
     return () => observer.disconnect();
   }, [product.in_stock]);
 
-  // The shake restarts by remounting the sizes, so the cursor goes in once they are back.
+  // Размеруудыг дахин mount хийж сэгсрэлтийг дахин эхлүүлдэг тул тэд буцмагц cursor орно.
   useEffect(() => {
     if (shake > 0) sizeBox.current?.querySelector("input")?.focus({ preventScroll: true });
   }, [shake]);
 
-  // The check mark on the button lasts a moment, then it is "Add to Bag" again.
+  // Товчны check mark түр байж, дараа нь дахин "Add to Bag" болно.
   useEffect(() => {
     if (!justAdded) return;
     const timer = window.setTimeout(() => setJustAdded(false), 1600);
@@ -57,7 +57,7 @@ export function PurchasePanel({ product, sizes }: Props) {
     if (sizes && !size) {
       setMissingSize(true);
       setShake((count) => count + 1);
-      // From the bar the size picker is off-screen: bring it back, and put the cursor in it.
+      // Bar-аас размер сонгогч дэлгэцийн гадна байна: буцааж авчирч, cursor-ыг түүнд оруулна.
       sizeBox.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
@@ -120,7 +120,8 @@ export function PurchasePanel({ product, sizes }: Props) {
         <WishlistButton product={product} variant="button" className="h-12 w-full text-[1.0625rem] font-normal" />
       </div>
       <div
-        // Slides up when the main button leaves the screen; hidden (and out of the tab order) otherwise.
+        // Үндсэн товч дэлгэцээс гарахад дээш гулсаж гарна; бусад үед нуугдана (tab дарааллаас ч
+        // гарна).
         aria-hidden={!barVisible}
         inert={!barVisible}
         className={cn(
@@ -135,7 +136,7 @@ export function PurchasePanel({ product, sizes }: Props) {
         <Button
           type="button"
           disabled={add.isPending}
-          // Not the same name as the main button: a screen reader meets both on this page.
+          // Үндсэн товчтой ижил нэр биш: screen reader энэ хуудсанд хоёуланг нь таарна.
           aria-label={`Add ${product.name} to Bag`}
           onClick={(event) => addToCart(event.currentTarget)}
         >
@@ -147,7 +148,7 @@ export function PurchasePanel({ product, sizes }: Props) {
   );
 }
 
-/** Bag, then a spinner while the request runs, then a check mark that pops in. */
+/** Bag, дараа нь хүсэлт явах үед spinner, дараа нь pop хийж орох check mark. */
 function AddIcon({ pending, added }: { pending: boolean; added: boolean }) {
   if (pending) return <Loader2 className="animate-spin" />;
   if (added) return <Check key="added" className="animate-pop" />;

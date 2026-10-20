@@ -1,14 +1,13 @@
-"""What an administrator can do to an order, as one small state machine.
+"""Administrator захиалгад юу хийж чадах вэ, нэг жижиг state machine болгон.
 
     pending --cancel--> cancelled
     pending --(payment)--> paid --ship--> shipped --deliver--> delivered
     paid | shipped | delivered --refund--> refunded
 
-Every action takes the order's row lock (so two administrators, or an administrator and a webhook,
-are decided one after the other), checks that the order is in a state the action applies to (409
-otherwise), changes the order and writes an `OrderEvent` in the same transaction, and sends the
-customer an email once it has been committed.
-"""
+Үйлдэл бүр захиалгын мөрийн түгжээг авч (хоёр administrator, эсвэл administrator ба webhook-ийг нэг
+нэгээр нь шийднэ), захиалга үйлдэлд тохирох төлөвт байгааг шалгаж (үгүй бол 409), захиалгыг
+өөрчилнө. Мөн нэг transaction дотор `OrderEvent` бичиж, commit хийсний дараа хэрэглэгчид email
+илгээнэ."""
 
 from collections import defaultdict
 from datetime import UTC, datetime
@@ -62,7 +61,7 @@ class OrderFulfillmentService:
         self._storage = storage
         self._orders = OrderRepository(session)
 
-    # --- actions ------------------------------------------------------------------------------
+    # --- үйлдлүүд ---
 
     async def ship(self, number: str, admin: User, request: ShipRequest) -> AdminOrderOut:
         async with self._session.begin():
@@ -109,8 +108,8 @@ class OrderFulfillmentService:
         return await self._read(number)
 
     async def cancel(self, number: str, admin: User, request: CancelRequest) -> AdminOrderOut:
-        """Cancel an order that has not been paid: stock goes back, the payment intent is cancelled
-        at the provider first (like the expiry sweeper does)."""
+        """Төлөгдөөгүй захиалгыг цуцална: нөөц буцна, эхлээд provider дээр payment intent
+        цуцлагдана (expiry sweeper-тэй адил)."""
         async with self._session.begin():
             order = await self._lock_plain(number)
             self._require(order, ("pending",), "cancel")
@@ -144,8 +143,8 @@ class OrderFulfillmentService:
         return await self._read(number)
 
     async def refund(self, number: str, admin: User, request: RefundRequest) -> AdminOrderOut:
-        """Return the whole payment. The provider is called inside the transaction, with the order
-        locked: if it fails nothing changes, and the idempotency key makes a retry safe."""
+        """Төлбөрийг бүтнээр нь буцаана. Provider-ийг transaction дотор, захиалгыг түгжсэн байхад
+        дуудна: амжилтгүй бол юу ч өөрчлөгдөхгүй, idempotency key нь давтахыг аюулгүй болгоно."""
         if self._gateway is None:
             raise ProblemError(
                 HTTPStatus.SERVICE_UNAVAILABLE,
@@ -195,7 +194,7 @@ class OrderFulfillmentService:
         return await self._read(number)
 
     async def add_note(self, number: str, admin: User, request: NoteRequest) -> AdminOrderOut:
-        """An internal remark on any order. Customers never see it."""
+        """Аль ч захиалга дээрх дотоод тэмдэглэл. Хэрэглэгч хэзээ ч харахгүй."""
         async with self._session.begin():
             order_id = await self._orders.id_for_number(number)
             if order_id is None:
@@ -203,7 +202,7 @@ class OrderFulfillmentService:
             self._orders.add_event(order_id, "note", {"text": request.text, **_by(admin)}, admin.id)
         return await self._read(number)
 
-    # --- helpers ------------------------------------------------------------------------------
+    # --- туслах функцууд ---
 
     async def _lock(self, number: str) -> Order:
         order_id = await self._orders.id_for_number(number)
@@ -227,7 +226,7 @@ class OrderFulfillmentService:
         quantities: dict[int, int] = defaultdict(int)
         for item in order.items:
             quantities[item.product_id] += item.quantity
-        # Locked in id order, like checkout, so the two cannot deadlock.
+        # Checkout-той адил id-н дарааллаар түгжинэ, ингэвэл хоёр нь deadlock-д орохгүй.
         products = await ProductRepository(self._session).get_many(
             list(quantities), for_update=True
         )

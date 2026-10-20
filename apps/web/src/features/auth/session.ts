@@ -2,7 +2,7 @@ import { useAuth } from "./auth-store";
 
 const SESSION_COOKIE = "lk_session";
 
-/** `lk_session` is a non-secret marker the API sets next to the httpOnly refresh cookie. */
+/** `lk_session` нь API httpOnly refresh cookie-ийн хажууд тавьдаг нууц биш тэмдэг. */
 export function hasSessionCookie(): boolean {
   return (
     typeof document !== "undefined" &&
@@ -19,8 +19,8 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 let inflight: Promise<boolean> | null = null;
 
 /**
- * Trade the refresh cookie for a new access token. Concurrent callers share one request: refresh
- * tokens rotate, so two parallel refreshes would make the second look like a replayed token.
+ * Refresh cookie-г шинэ access token-оор солино. Зэрэг дуудагчид нэг хүсэлтийг хуваалцана: refresh
+ * token эргэлддэг тул зэрэгцээ хоёр refresh нь хоёр дахийг давтагдсан token мэт харагдуулна.
  */
 export function refreshSession(): Promise<boolean> {
   inflight ??= attemptRefresh().finally(() => {
@@ -44,9 +44,9 @@ async function attemptRefresh(): Promise<boolean> {
       if (response.status !== 401) break;
       rejected = true;
     } catch {
-      break; // offline or API down: not the same as "signed out"
+      break; // офлайн эсвэл API унасан: "гарсан" гэсэнтэй ижил биш
     }
-    // Another tab may have rotated the cookie a moment ago; one retry picks up the new one.
+    // Өөр tab cookie-г дөнгөж сая эргүүлсэн байж болно; нэг дахин оролдоход шинийг нь авна.
     if (attempt === 0) await sleep(150);
   }
   useAuth.getState().clear();
@@ -54,7 +54,7 @@ async function attemptRefresh(): Promise<boolean> {
   return false;
 }
 
-/** Called once on load: restore a session from the cookie, or settle on "signed out". */
+/** Ачаалахад нэг удаа дуудна: cookie-оос session сэргээх, эсвэл "гарсан" төлөвт тогтох. */
 export async function bootstrapSession(): Promise<void> {
   if (useAuth.getState().status !== "unknown") return;
   if (hasSessionCookie()) await refreshSession();

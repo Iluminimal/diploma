@@ -11,18 +11,18 @@ from angel.repositories.commerce.orders import OrderRepository
 async def release_order(
     session: AsyncSession, order: Order, reason: str, *, actor: tuple[int, str] | None = None
 ) -> bool:
-    """Cancel a pending order and give its reserved stock back.
+    """Pending захиалгыг цуцалж, нөөцөлсөн нөөцийг буцаана.
 
-    The caller holds the order row lock (`OrderRepository.get_for_update`) and runs inside a
-    transaction. Returns False, doing nothing, when the order is no longer pending: replays,
-    redelivered webhooks and the expiry sweeper can all arrive here for the same order.
-    """
+    Дуудагч захиалгын мөрийн түгжээг (`OrderRepository.get_for_update`) барьж, transaction
+    дотор ажиллана. Захиалга pending биш болсон бол юу ч хийлгүй False буцаана: replay, дахин
+    хүргэгдсэн webhook, expiry sweeper гурвуулаа ижил захиалгад ирж болно."""
     if order.status != "pending":
         return False
     quantities: dict[int, int] = defaultdict(int)
     for item in order.items:
         quantities[item.product_id] += item.quantity
-    # Rows are locked in id order, like everywhere else, so concurrent checkouts cannot deadlock.
+    # Мөрүүдийг бусад газартай адил id-н дарааллаар түгжинэ, ингэвэл зэрэг checkout deadlock-д
+    # орохгүй.
     products = await ProductRepository(session).get_many(list(quantities), for_update=True)
     for product_id, quantity in quantities.items():
         products[product_id].stock_quantity += quantity

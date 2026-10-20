@@ -23,7 +23,10 @@ export function cameraErrorMessage(error: unknown): string {
   return "We couldn't start the camera. You can upload a photo instead.";
 }
 
-/** Live preview + capture. Mounted only while the dialog is open, so state and the stream reset on close. */
+/**
+ * Шууд preview + зураг авалт. Dialog нээлттэй үед л mount хийгддэг тул хаахад state болон stream
+ * цэвэрлэгдэнэ.
+ */
 function CameraPanel({ onCapture, onClose }: { onCapture: (file: File) => void; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
@@ -104,7 +107,7 @@ function CameraPanel({ onCapture, onClose }: { onCapture: (file: File) => void; 
   );
 }
 
-/** Desktop camera capture via getUserMedia. The stream is stopped whenever the dialog closes. */
+/** getUserMedia-аар desktop камераар зураг авна. Dialog хаагдах бүрд stream зогсоно. */
 export function CameraDialog({ open, onOpenChange, onCapture }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

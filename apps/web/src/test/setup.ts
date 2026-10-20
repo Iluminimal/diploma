@@ -4,7 +4,7 @@ import { afterEach, vi } from "vitest";
 
 afterEach(() => cleanup());
 
-// jsdom lacks a few browser APIs that Radix UI components rely on.
+// jsdom-д Radix UI component-уудын шаарддаг цөөн browser API дутуу.
 class ResizeObserverStub {
   observe() {}
   unobserve() {}
@@ -21,8 +21,8 @@ class IntersectionObserverStub {
 }
 globalThis.IntersectionObserver ??= IntersectionObserverStub as unknown as typeof IntersectionObserver;
 window.HTMLElement.prototype.scrollIntoView ??= () => {};
-// Tests run with reduced motion on, so counted-up totals and the like show their final value at
-// once; a test of the animation itself stubs `matchMedia` its own way (see animated-number.test).
+// Тестүүд reduced motion-той ажиллана, ингэснээр тоолж гарсан нийлбэр зэрэг нь шууд эцсийн утгаа
+// харуулна; animation-ы тест `matchMedia`-г өөрийнхөөрөө stub хийнэ (animated-number.test-ийг үз).
 window.matchMedia ??= ((query: string) => ({
   matches: query.includes("prefers-reduced-motion: reduce"),
   media: query,
@@ -36,8 +36,8 @@ window.matchMedia ??= ((query: string) => ({
 window.HTMLElement.prototype.hasPointerCapture ??= () => false;
 window.HTMLElement.prototype.releasePointerCapture ??= () => {};
 
-// Components use the App Router hooks, which throw outside a mounted router. Tests that care
-// about navigation replace this with their own `vi.mock("next/navigation", ...)`.
+// Component-ууд App Router hook ашигладаг бөгөөд холбогдсон router-гүйгээр шиддэг. Навигацид
+// анхаардаг тестүүд үүнийг өөрийн `vi.mock("next/navigation", ...)`-оор орлуулна.
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
   usePathname: () => "/",

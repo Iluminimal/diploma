@@ -35,7 +35,7 @@ class OrderService:
         async with self._session.begin():
             order = await self._orders.get_for_user(user_id, number)
             if order is None:
-                # Also what someone else's order number gets: no way to probe for existence.
+                # Өөр хүний захиалгын дугаар ч үүнийг авна: байгаа эсэхийг шалгах арга байхгүй.
                 raise ProblemError(
                     HTTPStatus.NOT_FOUND,
                     "Order not found",

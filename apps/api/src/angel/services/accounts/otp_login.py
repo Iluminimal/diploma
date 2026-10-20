@@ -1,4 +1,4 @@
-"""Sign in (or sign up) with a one-time code sent to a phone number or an email address."""
+"""Утасны дугаар эсвэл email руу илгээсэн нэг удаагийн кодоор нэвтрэх (эсвэл бүртгүүлэх)."""
 
 from dataclasses import replace
 from datetime import UTC, datetime
@@ -18,7 +18,7 @@ from angel.services.accounts.otp import OtpService, is_phone, normalize_destinat
 
 log = get_logger(__name__)
 
-# A new phone account has no name until the page asks for it.
+# Утасны шинэ бүртгэлд хуудас асуух хүртэл нэр байхгүй.
 NEW_CUSTOMER_NAME = "New customer"
 
 
@@ -39,8 +39,8 @@ class OtpLoginService:
         self._users = UserRepository(session)
 
     async def request_code(self, raw_destination: str) -> None:
-        """Always succeeds for a valid destination, whether or not an account exists: signing in
-        and signing up are the same step, so there is nothing to hide."""
+        """Хүчинтэй хаягийн хувьд бүртгэл байгаа эсэхээс үл хамааран үргэлж амжилттай: нэвтрэх,
+        бүртгүүлэх нь ижил алхам тул нуух зүйл байхгүй."""
         destination = normalize_destination(raw_destination, self._settings.default_phone_region)
         await self._otp.issue("login", destination)
 
@@ -49,8 +49,8 @@ class OtpLoginService:
     ) -> IssuedSession:
         destination = normalize_destination(raw_destination, self._settings.default_phone_region)
         await self._otp.verify("login", destination, code)
-        # The code is spent. If a second request creates the same account at the same moment, one
-        # of the two inserts loses: it simply looks the account up again.
+        # Код зарцуулагдсан. Хоёр дахь хүсэлт зэрэг ижил бүртгэл үүсгэвэл нэг insert хожигдоно: тэр
+        # зүгээр л бүртгэлийг дахин хайна.
         for attempt in (1, 2):
             try:
                 return await self._sign_in_verified(destination, guest_cart_token)
@@ -106,9 +106,9 @@ class OtpLoginService:
             user.phone_verified_at = user.phone_verified_at or now
         else:
             if user.email_verified_at is None:
-                # Nobody had proved they own this address, so whoever registered it with a
-                # password might be a squatter. The code proves the owner is here now: drop the
-                # password and end the old sessions (the same rule as signing in with Google).
+                # Энэ хаягийг эзэмшдэгээ хэн ч нотлоогүй тул нууц үгээр түрүүлж бүртгүүлсэн хүн
+                # булаан авагч байж болно. Код одоо эзэн энд байгааг нотолно: нууц үгийг устгаад
+                # хуучин session-уудыг дуусга (Google-ээр нэвтрэхтэй ижил дүрэм).
                 if user.password_hash is not None:
                     log.info("otp_password_removed", user_id=user.id)
                     user.password_hash = None

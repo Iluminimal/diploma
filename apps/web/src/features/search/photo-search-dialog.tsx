@@ -10,9 +10,9 @@ type Props = {
 };
 
 /**
- * The picker behind the camera button in the search bar. It reuses the whole photo pipeline
- * (upload, drop, paste, camera, HEIC); on success the photo waits in the search store and
- * /search runs the query. Loaded on first click: it brings the dialog library with it.
+ * Хайлтын мөрийн камерын товчны ард байх сонгогч. Зураг авах бүх урсгалыг (upload, drop, paste,
+ * камер, HEIC) дахин ашиглана; амжилттай бол зураг search store-д хүлээж, /search хайлтыг
+ * ажиллуулна. Эхний товшилтоор ачаална: dialog library-г дагуулна.
  */
 export function PhotoSearchDialog({ open, onOpenChange }: Props) {
   const router = useRouter();

@@ -31,7 +31,7 @@ def test_values_do_not_depend_on_generation_order() -> None:
 def test_prices_are_realistic_integers_ending_in_99() -> None:
     prices = [_generate(i)[0] for i in range(2000)]
     assert all(isinstance(p, int) and p % 100 == 99 and 499 <= p <= 25_000 for p in prices)
-    assert 1500 < statistics.median(prices) < 3500  # Tshirts base is $25
+    assert 1500 < statistics.median(prices) < 3500  # Tshirts-ийн суурь үнэ $25
 
 
 def test_prices_follow_the_category() -> None:

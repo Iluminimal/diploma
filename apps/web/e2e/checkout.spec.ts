@@ -28,7 +28,7 @@ test("a signed-in shopper pays with the demo card and sees the order afterwards"
   await page.getByRole("dialog").getByRole("link", { name: "Check Out" }).click();
   await expect(page).toHaveURL(/\/checkout$/);
 
-  // A new address, saved and selected.
+  // Шинэ хаягийг хадгалаад сонгоно.
   await page.getByLabel("Full name").fill("Ada Lovelace");
   await page.getByLabel("Address", { exact: true }).fill("12 Analytical Way");
   await page.getByLabel("City").fill("Springfield");
@@ -37,7 +37,7 @@ test("a signed-in shopper pays with the demo card and sees the order afterwards"
   await expect(page.getByRole("radio", { name: /Ada Lovelace/ })).toBeChecked();
   await expect(page.getByText("Demo payment, no real charge.", { exact: false }).first()).toBeVisible();
 
-  // Express shipping costs more.
+  // Шуурхай хүргэлт илүү үнэтэй.
   const pay = page.getByRole("button", { name: /pay now/i });
   const standard = await pay.innerText();
   await page.locator("label", { hasText: "Express shipping" }).click();
@@ -50,7 +50,7 @@ test("a signed-in shopper pays with the demo card and sees the order afterwards"
   const number = /LK-[A-Z0-9]{8}/.exec(await page.locator("main").innerText())?.[0];
   expect(number).toBeTruthy();
 
-  // The cart is empty, and the order is in the account with the address and the line as bought.
+  // Сагс хоосорч, захиалга нь account-д хаяг болон худалдаж авсан мөрөөрөө орно.
   await page.goto("/account/orders");
   await page.getByRole("link", { name: new RegExp(number!) }).click();
   await expect(page.getByRole("heading", { name: `Order ${number}` })).toBeVisible();

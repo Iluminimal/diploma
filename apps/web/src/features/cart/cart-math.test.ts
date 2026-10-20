@@ -14,7 +14,7 @@ describe("cart math", () => {
     expect(updated.lines[0]).toMatchObject({ quantity: 5, line_total_cents: 5000 });
     expect(updated.item_count).toBe(6);
     expect(updated.subtotal_cents).toBe(5000 + 2500);
-    expect(cart.item_count).toBe(3); // the original is untouched
+    expect(cart.item_count).toBe(3); // анхных нь өөрчлөгдөөгүй
   });
 
   it("drops a line and its share of the totals", () => {

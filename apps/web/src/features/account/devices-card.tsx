@@ -9,7 +9,10 @@ import { useRevokeOtherSessions, useRevokeSession, useSessions } from "./use-con
 
 const when = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" });
 
-/** The devices signed in to the account, with a way to sign any of them (or all but this one) out. */
+/**
+ * Бүртгэлд нэвтэрсэн төхөөрөмжүүд; аль нэгийг нь (эсвэл одоогийнхоос бусад бүгдийг) гаргах
+ * боломжтой.
+ */
 export function DevicesCard() {
   const sessions = useSessions(true);
   const revoke = useRevokeSession();

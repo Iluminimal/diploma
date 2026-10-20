@@ -25,7 +25,7 @@ CLIENT_ID = "client-123.apps.googleusercontent.com"
 
 
 def google_returning(status: int = 200, **claims: Any) -> GoogleOAuth:
-    """A Google client whose token endpoint answers with an ID token carrying these claims."""
+    """Token endpoint нь эдгээр claim-тэй ID token буцаадаг Google client."""
     base: dict[str, Any] = {
         "iss": "https://accounts.google.com",
         "aud": CLIENT_ID,
@@ -200,7 +200,7 @@ class TestFlowCookie:
         assert not states_match("abc", None)
 
     def test_pkce_challenge_matches_the_rfc_example(self) -> None:
-        # RFC 7636 appendix B.
+        # RFC 7636, B хавсралт.
         assert (
             code_challenge("dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk")
             == "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM"

@@ -3,8 +3,8 @@ import { getCatalogNav } from "@/features/catalog/api";
 import { countProducts, productsForSitemap } from "@/features/seo/sitemap-data";
 import { categoryEntries, productEntries, sitemapIds, staticEntries } from "@/features/seo/sitemap";
 
-// Read from the catalogue API on request (it is not reachable at build time); the API client
-// caches the data for an hour, which is as fresh as a sitemap needs to be.
+// Хүсэлт ирэхэд каталогийн API-аас уншина (build үед хүрэх боломжгүй); API client өгөгдлийг нэг цаг
+// cache-лэдэг, sitemap-д энэ хангалттай шинэ.
 export const dynamic = "force-dynamic";
 
 export async function generateSitemaps() {

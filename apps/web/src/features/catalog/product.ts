@@ -6,7 +6,10 @@ export type SearchResponse = components["schemas"]["SearchResponse"];
 export type CatalogFilterOptions = components["schemas"]["CatalogFilters"];
 export type CategoryNode = components["schemas"]["CategoryNode"];
 
-/** Canonical product path: `/products/{id}/{slug}`. The id is the lookup key; the slug is for people and SEO. */
+/**
+ * Бүтээгдэхүүний каноник зам: `/products/{id}/{slug}`. Id нь хайлтын түлхүүр; slug нь хүн болон
+ * SEO-д.
+ */
 export function productPath(product: Pick<Product, "id" | "slug">): string {
   return `/products/${product.id}/${product.slug}`;
 }
@@ -19,7 +22,7 @@ export function formatPrice(cents: number, currency = "USD", locale = "en-US"): 
   }).format(cents / 100);
 }
 
-/** One-line description under a product name, e.g. "Blue · Kurtas". */
+/** Бүтээгдэхүүний нэрийн доорх нэг мөрийн тайлбар, жишээ нь "Blue · Kurtas". */
 export function productSubtitle(p: Pick<Product, "article_type" | "base_colour">): string {
   return [p.base_colour, p.article_type].filter(Boolean).join(" · ");
 }

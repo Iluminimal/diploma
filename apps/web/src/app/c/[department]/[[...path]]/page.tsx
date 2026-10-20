@@ -10,7 +10,7 @@ import { ListingView } from "@/features/catalog/listing-view";
 import { categoryHref, drilldown, type CategoryTrail } from "@/features/catalog/nav";
 import { parseListingQuery } from "@/features/catalog/parse-listing-query";
 
-// The department already says who it is for, so the gender filter would only contradict it.
+// Department хэнд зориулагдсаныг аль хэдийн хэлдэг тул хүйсийн шүүлтүүр зөвхөн зөрчилдөнө.
 const GROUPS: FilterGroup[] = ["stock", "color", "price", "season", "usage"];
 
 function titleOf({ department, nodes }: CategoryTrail): string {
@@ -57,7 +57,7 @@ export default async function CategoryPage({ params, searchParams }: PageProps<"
       chips={
         <CategoryChips
           label="Subcategories"
-          // The sidebar tree shows the same links beside the grid on wide screens.
+          // Өргөн дэлгэц дээр grid-ийн хажууд sidebar-ын мод ижил холбоосыг харуулна.
           className="lg:hidden"
           items={next.map((node) => ({
             label: node.name,

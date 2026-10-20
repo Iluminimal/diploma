@@ -17,12 +17,12 @@ async function unwrap<T>(
   return result.data;
 }
 
-/** Category tree and option lists. Cached 10 min, like the API does. */
+/** Ангиллын мод ба сонголтын жагсаалт. 10 минут cache хийнэ, API-ийн адил. */
 export const getCatalogFilters = cache(() =>
   unwrap(createApiClient(600).GET("/api/v1/catalog/filters")),
 );
 
-/** Departments with category trees and counts. Cached 10 min, like the API does. */
+/** Ангиллын мод, тоо бүхий department-ууд. 10 минут cache хийнэ, API-ийн адил. */
 export const getCatalogNav = cache(() => unwrap(createApiClient(600).GET("/api/v1/catalog/nav")));
 
 export const listProducts = cache((query: ListingQuery, pageSize = 24) =>
@@ -43,7 +43,10 @@ export const listProducts = cache((query: ListingQuery, pageSize = 24) =>
   ),
 );
 
-/** Returns `null` for an unknown or inactive product so pages can call `notFound()`. */
+/**
+ * Үл мэдэгдэх эсвэл идэвхгүй бүтээгдэхүүнд `null` буцаана, ингэснээр хуудас `notFound()` дуудаж
+ * чадна.
+ */
 export const getProduct = cache(async (id: number) => {
   try {
     return await unwrap(
@@ -57,7 +60,10 @@ export const getProduct = cache(async (id: number) => {
   }
 });
 
-/** The first page of a product's reviews, newest first. `null` if they cannot be had: the page does not depend on them. */
+/**
+ * Бүтээгдэхүүний сэтгэгдлийн эхний хуудас, шинэ нь түрүүнд. Авч чадахгүй бол `null`: хуудас тэднээс
+ * хамаарахгүй.
+ */
 export const getProductReviews = cache(async (id: number) => {
   try {
     return await unwrap(

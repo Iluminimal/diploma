@@ -7,8 +7,9 @@ import {
   type RawParams,
 } from "./filters";
 
-// Kept apart from `filters.ts`: that module is imported by browser code (search, filter chips) and
-// must not drag a schema library into every page. Only the server-rendered listing parses URLs.
+// `filters.ts`-ээс тусгаарласан: тэр module-ийг browser код (search, filter chip) import хийдэг тул
+// schema library-г хуудас бүрд татуулах ёсгүй. URL-ийг зөвхөн server-т render хийдэг жагсаалт parse
+// хийнэ.
 
 const multi = z
   .union([z.string(), z.array(z.string())])
@@ -47,13 +48,13 @@ const schema = z.object({
 });
 
 /**
- * Parse untrusted URL params into a valid listing query. Anything malformed is dropped
- * (never throws), so a hand-edited URL can't break the page or cause an API 422.
+ * Итгэмжгүй URL param-ыг хүчинтэй жагсаалтын query болгон parse хийнэ. Буруу зүйлийг хасна (хэзээ ч
+ * throw хийхгүй), ингэснээр гараар зассан URL хуудсыг эвдэхгүй, API 422 үүсгэхгүй.
  */
 export function parseListingQuery(params: RawParams): ListingQuery {
   const parsed = schema.parse(params);
   const query: ListingQuery = { ...parsed };
-  // The API rejects `relevance` without a text query, and a reversed price range.
+  // API текст query-гүй `relevance`-ийг, мөн урвуу үнийн мужийг татгалзана.
   if (!query.q && query.sort === "relevance") query.sort = undefined;
   if (
     query.min_price !== undefined &&

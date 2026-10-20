@@ -12,7 +12,10 @@ const DEPARTMENTS = [
   { slug: "kids", label: "Kids", blurb: "Easy, bright and built to be worn." },
 ] as const;
 
-/** The picture of a department: its second-newest piece, so the first tile's photos are not repeated here. */
+/**
+ * Department-ийн зураг: хоёр дахь хамгийн шинэ бүтээгдэхүүн, ингэснээр эхний tile-ийн зургууд энд
+ * давтагдахгүй.
+ */
 async function picture(slug: string): Promise<Product | undefined> {
   const items = await newest({ department: slug, category: "apparel" }, 2);
   return items[1] ?? items[0];
@@ -54,7 +57,7 @@ function DepartmentTile({ department, product, size }: { department: (typeof DEP
   );
 }
 
-/** Women and Men side by side, Kids across the full width: apple.com's rhythm of tiles, 12px apart. */
+/** Women, Men зэрэгцээ, Kids бүтэн өргөнөөр: apple.com-ын tile хэмнэл, 12px зайтай. */
 export async function Departments() {
   const [women, men, kids] = await Promise.all(DEPARTMENTS.map((d) => picture(d.slug)));
   return (

@@ -58,7 +58,7 @@ describe("HeaderSearch", () => {
 
     const dialog = await screen.findByRole("dialog", { name: "Search" });
     expect(dialog).toHaveClass("md:top-[2.8125rem]", "md:h-auto", "md:max-h-[calc(100dvh-2.8125rem)]");
-    expect(screen.queryByRole("button", { name: "Close search" })).toBeInTheDocument(); // the phone bar's X
+    expect(screen.queryByRole("button", { name: "Close search" })).toBeInTheDocument(); // утасны bar-ын X
   });
 
   it("makes way when another flyout opens under the bar (a department menu or the Bag)", async () => {

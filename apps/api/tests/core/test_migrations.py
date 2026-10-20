@@ -22,7 +22,7 @@ async def test_migrations_apply_roll_back_and_reapply(settings: Settings) -> Non
         try:
             _alembic(url, "upgrade", "head")
             assert {"products", "categories"} <= await tables()
-            _alembic(url, "check")  # models and migrations agree
+            _alembic(url, "check")  # model ба migration нийцтэй
             _alembic(url, "downgrade", "base")
             assert not ({"products", "categories"} & await tables())
             _alembic(url, "upgrade", "head")

@@ -30,13 +30,13 @@ const TYPE = {
   contactEmailRequired: "urn:angel:problem:contact-email-required",
 } as const;
 
-/** An RFC 7807 problem returned by the API, or a transport failure (`status` 0). */
+/** API-ийн буцаасан RFC 7807 problem, эсвэл дамжуулалтын алдаа (`status` 0). */
 export class ApiError extends Error {
   readonly status: number;
   readonly type: string;
   readonly detail: string | undefined;
   readonly requestId: string | undefined;
-  /** Seconds to wait before retrying (429 only). */
+  /** Дахин оролдохоос өмнө хүлээх секунд (зөвхөн 429). */
   readonly retryAfter: number | undefined;
 
   constructor(init: {
@@ -56,7 +56,7 @@ export class ApiError extends Error {
     this.retryAfter = init.retryAfter;
   }
 
-  /** Extra members of the problem body (e.g. `available`, `issues`, `sizes`). */
+  /** Problem body-ийн нэмэлт гишүүд (жишээ нь `available`, `issues`, `sizes`). */
   extensions: Record<string, unknown> = {};
 
   get isNotFound() {
@@ -75,7 +75,7 @@ function parseProblem(body: unknown): Partial<ProblemDetail> {
   return {};
 }
 
-/** Build an `ApiError` from an already-parsed error body (what openapi-fetch hands back). */
+/** Аль хэдийн parse хийсэн алдааны body-оос `ApiError` үүсгэнэ (openapi-fetch өгдөг зүйл). */
 export function errorFromBody(body: unknown, response: Response): ApiError {
   const problem = parseProblem(body);
   const retryAfter = Number(response.headers.get("Retry-After"));
@@ -91,7 +91,10 @@ export function errorFromBody(body: unknown, response: Response): ApiError {
   return error;
 }
 
-/** Build an `ApiError` from a non-2xx response. Never throws; unknown bodies fall back to the status. */
+/**
+ * 2xx биш response-оос `ApiError` үүсгэнэ. Хэзээ ч throw хийхгүй; үл мэдэгдэх body нь status руу
+ * буцна.
+ */
 export async function errorFromResponse(response: Response): Promise<ApiError> {
   const problem = parseProblem(await response.json().catch(() => null));
   const retryAfter = Number(response.headers.get("Retry-After"));
@@ -105,7 +108,7 @@ export async function errorFromResponse(response: Response): Promise<ApiError> {
   });
 }
 
-/** Convert any thrown value to a message that is safe and useful to show a shopper. */
+/** Шидэгдсэн дурын утгыг худалдан авагчид харуулахад аюулгүй, хэрэгтэй мессеж болгон хөрвүүлнэ. */
 export function userMessage(error: unknown): string {
   if (!(error instanceof ApiError)) {
     return "Something went wrong. Please try again.";
@@ -172,10 +175,10 @@ export function userMessage(error: unknown): string {
   }
 }
 
-/** Wrap a network failure (fetch rejected) as an `ApiError` with status 0. */
+/** Сүлжээний алдааг (fetch reject) status 0-тэй `ApiError` болгож боож өгнө. */
 export function networkError(cause: unknown): ApiError {
   if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
   const error = new ApiError({ status: 0, title: "Network error" });
-  error.cause = cause; // kept for server logs; never shown to shoppers
+  error.cause = cause; // server лог-д хадгална; худалдан авагчид хэзээ ч харуулахгүй
   return error;
 }

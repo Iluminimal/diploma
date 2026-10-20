@@ -34,10 +34,10 @@ const LINK =
   "text-foreground/80 hover:text-foreground focus-visible:ring-ring/60 rounded-sm transition-colors outline-none hover:underline focus-visible:ring-3";
 
 /**
- * Apple's global footer: pale grey, 12px type, the directory (a small bold heading over a short
- * list of links, per column), a "more ways to shop" line and the copyright. Rules between the
- * parts are 1px hairlines. No columns collapse on a phone: two columns side by side keep every
- * link one tap away.
+ * Apple-ийн global footer: цайвар саарал, 12px үсэг, лавлах (баганад бүрт жижиг тод гарчиг ба
+ * богино холбоосны жагсаалт), "more ways to shop" мөр ба copyright. Хэсгүүдийн хоорондох зураас нь
+ * 1px hairline. Утсан дээр багана нугарахгүй: зэрэгцсэн хоёр багана холбоос бүрийг нэг товшилтын
+ * зайд байлгана.
  */
 export function SiteFooter() {
   return (
@@ -50,8 +50,9 @@ export function SiteFooter() {
               <ul className="space-y-2">
                 {column.links.map((link) => (
                   <li key={link.href}>
-                    {/* Account pages answer a signed-out visitor with a redirect to the login page. Prefetched,
-                      that answer would be cached and replayed after they sign in, sending them back to /login. */}
+                    {/* Нэвтрээгүй зочин account хуудас руу орвол login руу redirect хийгддэг.
+                       Prefetch хийвэл тэр хариу cache-лэгдэж, нэвтэрсний дараа дахин тоглогдон
+                       дахин /login руу буцаана. */}
                     <Link href={link.href} prefetch={"private" in link ? false : undefined} className={LINK}>
                       {link.label}
                     </Link>

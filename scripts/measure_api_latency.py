@@ -1,13 +1,13 @@
-"""End-to-end API latency: the real application (lifespan, middleware, multipart parsing,
-JSON serialization, Redis caches) running in-process against the ingested catalogue, with the
-real model on the chosen device. Compares with the spec targets (image search p95 < ~400 ms,
-similar products p95 < 50 ms).
+"""API-ийн end-to-end latency: жинхэнэ апп (lifespan, middleware, multipart parsing, JSON
+serialization, Redis cache) ingest хийсэн каталог дээр in-process ажиллаж, сонгосон device дээр
+жинхэнэ model-тэй. Spec-ийн зорилттой (зургаар хайлт p95 < ~400 ms, төстэй бүтээгдэхүүн
+p95 < 50 ms) харьцуулна.
 
     cd apps/api && uv run python ../../scripts/measure_api_latency.py --device cpu
     cd apps/api && uv run python ../../scripts/measure_api_latency.py --device mps
 
-"cold" means the Redis cache entry did not exist; "cached" means it did. The caches this run
-creates are removed afterwards. Rate limiting is switched off for the run.
+"cold" гэдэг нь Redis cache-д бичлэг байгаагүй, "cached" нь байсан гэсэн үг. Энэ ажлын үүсгэсэн
+cache-үүдийг дараа нь устгана. Ажлын хугацаанд rate limiting унтраалттай.
 """
 
 from __future__ import annotations

@@ -1,4 +1,4 @@
-"""Review moderation."""
+"""Review-ийн moderation."""
 
 from typing import Annotated, Any
 
@@ -10,7 +10,7 @@ from angel.core.deps import (
 from angel.schemas.problem import ProblemDetail
 from angel.schemas.reviews.reviews import AdminReviewListQuery, AdminReviewOut, AdminReviewPage
 
-# Rate limit first so guessing tokens against the admin area is throttled; then the role check.
+# Rate limit, role шалгалт нь __init__.py дахь router-т нэг дор хийгддэг (эхлээд rate limit).
 
 router = APIRouter()
 

@@ -4,9 +4,9 @@ import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 /**
- * The storefront's header, main area and footer around every page except the admin area, which
- * brings its own shell (sidebar, no shop navigation, no footer). The header and footer arrive as
- * props, already rendered on the server, so this only decides whether to show them.
+ * Admin хэсгээс бусад бүх хуудасны эргэн тойрох дэлгүүрийн header, үндсэн хэсэг, footer. Admin нь
+ * өөрийн shell-тэй (sidebar, дэлгүүрийн навигаци ба footer-гүй). Header ба footer нь server дээр
+ * render хийгдсэн props-оор ирдэг тул энэ нь зөвхөн харуулах эсэхийг шийднэ.
  */
 export function ShopChrome({
   header,

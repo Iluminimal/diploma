@@ -53,7 +53,7 @@ export function ProfileView() {
   );
 }
 
-// --- profile ---------------------------------------------------------------------------------
+// --- профайл --- -----------------------------------------------------------------------------
 
 const nameSchema = z.object({
   full_name: z.string().trim().min(1, "Enter your name").max(120, "Keep it under 120 characters"),
@@ -105,7 +105,7 @@ function ProfileCard({ user }: { user: SessionUser }) {
   );
 }
 
-// --- sign-in methods -------------------------------------------------------------------------
+// --- нэвтрэх аргууд --- ----------------------------------------------------------------------
 
 function Method({ name, status, children }: { name: string; status: ReactNode; children?: ReactNode }) {
   return (
@@ -134,7 +134,7 @@ function SignInMethods({ user }: { user: SessionUser }) {
   const [contact, setContact] = useState<ContactKind | null>(null);
   const [removing, setRemoving] = useState<"phone" | "email" | null>(null);
   const google = user.providers.includes("google");
-  // The last way to sign in cannot be removed (the API enforces it; this just hides the button).
+  // Сүүлчийн нэвтрэх аргыг устгах боломжгүй (API шаардлагыг хангуулна; энд зөвхөн товчийг нууна).
   const canRemovePhone = user.phone !== null && user.email !== null;
   const canRemoveEmail = user.email !== null && user.phone !== null;
   return (
@@ -337,7 +337,7 @@ function PasswordDialog({
   );
 }
 
-// --- delete ----------------------------------------------------------------------------------
+// --- устгах --- ------------------------------------------------------------------------------
 
 function DeleteAccount({ user }: { user: SessionUser }) {
   const [open, setOpen] = useState(false);

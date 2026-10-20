@@ -10,7 +10,10 @@ type Props = {
   aside?: ReactNode;
 };
 
-/** A radio styled as a selectable card (addresses, shipping methods). Native radios keep the keyboard behaviour. */
+/**
+ * Сонгох боломжтой карт хэлбэртэй radio (хаяг, хүргэлтийн төрөл). Native radio keyboard-ийн
+ * ажиллагааг хадгална.
+ */
 export function ChoiceCard({ name, value, checked, onChange, children, aside }: Props) {
   return (
     <label

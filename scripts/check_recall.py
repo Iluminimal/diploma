@@ -1,11 +1,11 @@
-"""Recall sanity check: every product's own image, sent through the real query pipeline,
-must come back as rank 1 of the pgvector search.
+"""Recall-ийн sanity check: бүтээгдэхүүн бүрийн өөрийн зургийг жинхэнэ query pipeline-аар
+явуулахад pgvector хайлтын rank 1 дээр буцах ёстой.
 
     cd apps/api && uv run python ../../scripts/check_recall.py --n 500
 
-Near-duplicate catalogue images can tie with the product itself, so a hit is "self is rank 1,
-or ties rank 1 within --tie-tolerance". Strict and tie-aware rates are both reported, along
-with HNSW recall@k against an exact scan for the same queries.
+Каталогийн бараг ижил зургууд бүтээгдэхүүний өөртэй тэнцэж болох тул hit гэдэг нь "өөрөө
+rank 1, эсвэл --tie-tolerance дотор rank 1-тэй тэнцсэн". Хатуу ба tie-ийг тооцсон хувийг хоёуланг
+нь, мөн ижил query-д HNSW recall@k-г нарийн (exact) scan-тай харьцуулж харуулна.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ async def main_async(args: argparse.Namespace) -> int:
     ties = 0
     for start in range(0, len(sample), 32):
         chunk = sample[start : start + 32]
-        # Re-read the file as bytes, exactly like an upload, and decode with the shared code.
+        # Файлыг upload шиг bytes-аар дахин уншиж, нийтлэг кодоор decode хийнэ.
         images = [
             load_image((dataset / "images" / f"{source_id}.jpg").read_bytes(), min_side=800)
             for _, source_id in chunk

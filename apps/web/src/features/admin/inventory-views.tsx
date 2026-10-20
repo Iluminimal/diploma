@@ -35,7 +35,10 @@ const TABS: { stock: ProductListParams["stock"]; label: string }[] = [
 ];
 const MAX_STOCK = 100_000;
 
-/** Set how many are on the shelf. Saving writes the number given, not a change to it, so two people recounting cannot compound. */
+/**
+ * Тавиур дээр хэд байгааг тохируулна. Өөрчлөлт биш, өгсөн тоог шууд бичдэг тул хоёр хүн дахин
+ * тоолоход давхардахгүй.
+ */
 function StockEditor({ product }: { product: AdminProduct }) {
   const setStock = useSetStock();
   const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -51,7 +54,7 @@ function StockEditor({ product }: { product: AdminProduct }) {
   return (
     <form onSubmit={submit} className="flex items-center justify-end gap-2" aria-label={`Stock of ${product.name}`}>
       <Input
-        // A fresh number from the server replaces what was typed.
+        // Серверээс ирсэн шинэ тоо бичсэн утгыг орлоно.
         key={product.stock_quantity}
         name="quantity"
         type="number"

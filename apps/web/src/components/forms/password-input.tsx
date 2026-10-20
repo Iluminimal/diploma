@@ -5,7 +5,7 @@ import { useState, type ComponentProps } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-/** A password field with a button to see what was typed. */
+/** Нууц үгийн талбар, бичсэнээ харах товчтой. */
 export function PasswordInput({ className, ...props }: Omit<ComponentProps<typeof Input>, "type">) {
   const [shown, setShown] = useState(false);
   return (

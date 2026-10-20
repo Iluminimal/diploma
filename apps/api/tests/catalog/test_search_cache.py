@@ -20,7 +20,7 @@ def test_query_normalization() -> None:
 async def test_text_is_embedded_once_per_distinct_query(api_factory: ApiFactory) -> None:
     async with api_factory(seed_count=10) as api:
         embedder = api.embedder
-        before = embedder.texts_embedded  # start-up warm-up and labels
+        before = embedder.texts_embedded  # эхлэх үеийн warm-up ба label-ууд
         first = await api.client.post(TEXT, json={"query": "red floral dress"})
         again = await api.client.post(TEXT, json={"query": "red floral dress"})
         reshaped = await api.client.post(TEXT, json={"query": "  Red   Floral DRESS "})
@@ -149,7 +149,7 @@ async def test_search_keeps_working_when_redis_is_down(api_factory: ApiFactory) 
 
     assert (text.status_code, similar.status_code, image.status_code) == (200, 200, 200)
     assert text_again.json()["cached"] is False
-    assert ready.status_code == 503  # the outage is still reported, just not fatal to search
+    assert ready.status_code == 503  # тасалдлыг мэдэгдсэн хэвээр, гэхдээ хайлтад үхлийн биш
 
 
 async def test_catalog_filters_are_cached_and_expire(api_factory: ApiFactory) -> None:
@@ -158,7 +158,7 @@ async def test_catalog_filters_are_cached_and_expire(api_factory: ApiFactory) ->
         redis: Redis = api.app.state.redis
         key = f"catalog:filters:{api.embedder.version}"
         ttl = await redis.ttl(key)
-        # Change the catalogue behind the cache's back: the cached copy is still served.
+        # Cache-ийн мэдэлгүй каталогийг өөрчилнө: cache-д хадгалсан хуулбар хэвээр үйлчилнэ.
         engine = api.app.state.engine
         async with engine.begin() as connection:
             await connection.execute(text("UPDATE products SET base_colour = 'Purple'"))

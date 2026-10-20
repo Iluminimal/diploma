@@ -9,8 +9,8 @@ const BELTS = ["S", "M", "L"];
 type SizeInfo = { label: string; sizes: string[] } | null;
 
 /**
- * Sizes are derived from the category: the catalogue has no size data. Categories where a size
- * makes no sense (watches, bags, jewellery, fragrances) return `null` so no selector is shown.
+ * Размерыг ангиллаас гаргана: catalogue-д размерын өгөгдөл байхгүй. Размер утгагүй ангилал (цаг,
+ * цүнх, гоёл чимэглэл, үнэртэн) `null` буцааж, сонгогч харуулахгүй.
  */
 export function sizesFor(
   p: Pick<Product, "master_category" | "sub_category" | "article_type" | "gender">,

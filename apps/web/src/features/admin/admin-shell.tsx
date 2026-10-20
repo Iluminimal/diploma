@@ -7,9 +7,8 @@ import { AccountMenu } from "@/features/auth/account-menu";
 import { AdminNav } from "./admin-nav";
 
 /**
- * The back office around every admin screen: the shop's name and a sidebar of sections (a strip
- * across the top on a phone), a way back to the store, and the account menu. It deliberately has
- * none of the storefront's navigation.
+ * Admin дэлгэц бүрийн хүрээ: дэлгүүрийн нэр, хэсгүүдийн sidebar (утсан дээр дээр нь мөр), дэлгүүр
+ * рүү буцах холбоос, account цэс. Дэлгүүрийн navigation-ыг санаатайгаар оруулаагүй.
  */
 export function AdminShell({ children }: { children: ReactNode }) {
   const storeLink = (

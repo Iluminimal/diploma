@@ -1,4 +1,4 @@
-"""Products and stock: the catalogue as the shop's staff see it, withdrawn items included."""
+"""Бүтээгдэхүүн ба stock: дэлгүүрийн ажилтны харах каталог (хассан бараа орно)."""
 
 from typing import Annotated, Any
 
@@ -24,7 +24,7 @@ from angel.schemas.admin.products import (
 )
 from angel.schemas.problem import ProblemDetail
 
-# Rate limit first so guessing tokens against the admin area is throttled; then the role check.
+# Rate limit, role шалгалт нь __init__.py дахь router-т нэг дор хийгддэг (эхлээд rate limit).
 
 router = APIRouter()
 

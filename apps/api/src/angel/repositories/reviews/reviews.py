@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from angel.models import Order, OrderItem, Product, Review, User
 from angel.repositories.patterns import contains_pattern
 
-# A review needs a purchase that stands: paid and not returned or cancelled.
+# Сэтгэгдэл бичихэд хүчинтэй худалдан авалт хэрэгтэй: төлөгдсөн, буцаагдаагүй, цуцлагдаагүй.
 BUYER_STATUSES = ("paid", "shipped", "delivered")
 
 
@@ -14,11 +14,12 @@ class ReviewRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    # --- the product ----------------------------------------------------------------------
+    # --- бараа ---
 
     async def lock_active_product(self, product_id: int) -> bool:
-        """Lock the product row (every change to its reviews starts here, so recomputing the
-        average cannot lose a concurrent review). False when it does not exist or is withdrawn."""
+        """Барааны мөрийг түгжинэ (сэтгэгдлийн аливаа өөрчлөлт эндээс эхэлдэг тул дундаж дахин
+        тооцоолоход зэрэг орсон сэтгэгдэл алдагдахгүй). Бараа байхгүй эсвэл татагдсан бол
+        False."""
         result = await self._session.execute(
             select(Product.id)
             .where(Product.id == product_id, Product.is_active.is_(True))
@@ -56,7 +57,7 @@ class ReviewRepository:
             )
         )
 
-    # --- buying ---------------------------------------------------------------------------
+    # --- худалдан авалт ---
 
     async def buyer_order_id(self, user_id: int, product_id: int) -> int | None:
         result = await self._session.execute(
@@ -72,7 +73,7 @@ class ReviewRepository:
         )
         return result.scalar_one_or_none()
 
-    # --- reviews --------------------------------------------------------------------------
+    # --- сэтгэгдлүүд ---
 
     def add(self, review: Review) -> None:
         self._session.add(review)
@@ -134,7 +135,7 @@ class ReviewRepository:
         counts = {rating: int(n) for rating, n in rows.all()}
         return [counts.get(stars, 0) for stars in range(1, 6)]
 
-    # --- administrators -------------------------------------------------------------------
+    # --- администраторууд ---
 
     def _admin_clauses(
         self, *, text_query: str | None, rating: int | None

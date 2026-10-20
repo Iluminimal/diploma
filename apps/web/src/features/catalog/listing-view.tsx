@@ -18,22 +18,25 @@ import type { CatalogFilterOptions } from "./product";
 
 type Props = {
   title: string;
-  /** The URL this listing lives at: filters, sorting and pages are links back to it. */
+  /** Энэ жагсаалтын URL: шүүлтүүр, эрэмбэ, хуудас нь түүн рүү буцах холбоос. */
   path: string;
   query: ListingQuery;
   options: CatalogFilterOptions;
-  /** Above the heading (breadcrumbs). */
+  /** Гарчгийн дээр (breadcrumbs). */
   above?: ReactNode;
-  /** Between the heading and the grid (sub-category chips). */
+  /** Гарчиг ба grid-ийн хооронд (дэд ангиллын chip). */
   chips?: ReactNode;
-  /** Top of the desktop sidebar (the category drill-down). */
+  /** Desktop sidebar-ын дээд хэсэг (ангиллын drill-down). */
   asideTop?: ReactNode;
-  /** The checkbox category tree only makes sense where the path does not already pick a category. */
+  /** Checkbox ангиллын мод нь зам ангиллыг сонгоогүй үед л утгатай. */
   showCategories?: boolean;
   groups?: FilterGroup[];
 };
 
-/** Heading, filter sidebar, sort and paged product grid, shared by /products and /c/... */
+/**
+ * Гарчиг, шүүлтүүрийн sidebar, эрэмбэ, хуудаслалттай бүтээгдэхүүний grid; /products болон /c/...
+ * хоёрт нийтлэг.
+ */
 export function ListingView({
   title,
   path,
@@ -65,7 +68,7 @@ export function ListingView({
         </aside>
 
         <section aria-label="Products" className="min-w-0">
-          {/* On a phone the filter and sort buttons stay under the header while the grid scrolls. */}
+          {/* Утсан дээр grid гүйлгэх үед шүүлтүүр, эрэмбийн товч header-ийн доор үлдэнэ. */}
           <div className="bg-background/85 sticky top-12 z-20 -mx-4 mb-5 flex items-center justify-between gap-3 px-4 py-2 backdrop-blur-xl sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:bg-transparent lg:p-0">
             <MobileFilters options={options} query={query} showCategories={showCategories} groups={groups} />
             <div className="ml-auto">
@@ -76,7 +79,8 @@ export function ListingView({
             <ActiveFilters query={query} path={path} />
           </div>
 
-          {/* No key on the boundary: a changed filter keeps the old grid (dimmed) rather than a skeleton. */}
+          {/* Boundary-д key өгөхгүй: шүүлтүүр солигдоход skeleton биш хуучин grid (бүдэг) хэвээр
+             үлдэнэ. */}
           <Suspense fallback={<ProductGridSkeleton count={12} />}>
             <PendingResults>
               <Results query={query} path={path} />

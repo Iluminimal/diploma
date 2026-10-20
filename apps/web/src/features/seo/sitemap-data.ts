@@ -18,12 +18,12 @@ async function fetchPage(page: number, pageSize: number) {
   return result.data;
 }
 
-/** How many active products there are (one cheap request: a page of one). */
+/** Идэвхтэй бүтээгдэхүүн хэд байгаа (нэг хямд хүсэлт: нэг бүтээгдэхүүний хуудас). */
 export async function countProducts(): Promise<number> {
   return (await fetchPage(1, 1)).total;
 }
 
-/** One sitemap file's worth of products. */
+/** Нэг sitemap файлын бүтээгдэхүүнүүд. */
 export async function productsForSitemap(chunk: number) {
   return (await fetchPage(chunk + 1, SITEMAP_CHUNK)).items;
 }

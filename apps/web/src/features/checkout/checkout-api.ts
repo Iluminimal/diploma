@@ -7,11 +7,14 @@ export type CheckoutResult = components["schemas"]["CheckoutOut"];
 
 export const fetchShippingMethods = () => call(browserApi().GET("/api/v1/checkout/shipping-methods"));
 
-/** Reserves the cart's stock and creates the order. The same key always returns the same order. */
+/** Cart-ийн нөөцийг нөөцөлж, захиалга үүсгэнэ. Ижил key үргэлж ижил захиалгыг буцаана. */
 export const createCheckout = (body: { address_id: number; shipping_method: ShippingMethodId; contact_email?: string }, key: string) =>
   call(browserApi().POST("/api/v1/checkout", { body, params: { header: { "idempotency-key": key } } }));
 
-/** Demo payment: marks the order paid through the API's offline gateway. No card data is sent. */
+/**
+ * Demo төлбөр: API-ийн offline gateway-р захиалгыг төлөгдсөн гэж тэмдэглэнэ. Картын өгөгдөл
+ * илгээхгүй.
+ */
 export const payDemoOrder = (number: string) =>
   call(
     browserApi().POST("/api/v1/checkout/orders/{number}/simulate-payment", {

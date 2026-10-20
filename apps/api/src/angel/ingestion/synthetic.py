@@ -1,10 +1,9 @@
-"""A small synthetic catalogue for end-to-end tests, where there is no dataset and no model.
+"""End-to-end тестэд зориулсан жижиг synthetic каталог (dataset, model байхгүй үед).
 
-Everything about it is deterministic. Images are drawn (a coloured garment-like shape on a
-coloured ground), written as the same 400/800 px WebP thumbnails real ingestion writes, and each
-product's embedding is computed from the decoded 800 px thumbnail. A visitor who downloads a
-product's photo and searches with it uploads those exact bytes, so with the fake embedder the
-product ranks first, as it does with FashionCLIP on the real catalogue.
+Бүгд тогтмол (deterministic). Зургийг өөрсдөө зурж, жинхэнэ ingestion-ы бичдэг 400/800 px WebP
+thumbnail хэлбэрээр хадгална. Embedding-ийг decode хийсэн 800 px thumbnail-аас бодно. Хэрэглэгч
+бүтээгдэхүүний зургийг татаж аваад хайвал яг эдгээр bytes upload болдог тул fake embedder-тэй
+бүтээгдэхүүн эхэнд гарна (жинхэнэ каталог дээр FashionCLIP-тэй адил).
 """
 
 import argparse
@@ -45,13 +44,13 @@ ARTICLES = (
 GENDERS = ("Women", "Men", "Unisex", "Girls", "Boys")
 COLOURS = ("Blue", "Red", "Black", "White", "Green", "Yellow")
 BRANDS = ("Avirate", "Nordkap", "Fable", "Marlow", "Quill", "Ostrava")
-# Plenty of units, so tests that buy one never collide; every tenth product is sold out.
+# Нөөц их тул нэгийг нь худалдаж авдаг тестүүд мөргөлдөхгүй; 10 бүтээгдэхүүн тутмын нэг дууссан.
 STOCK = 40
 SOLD_OUT_EVERY = 10
 
 
 def garment_image(seed: int) -> Image.Image:
-    """A 3:4 picture that differs from every other seed's and looks vaguely like a garment."""
+    """Seed бүрт өөр, хувцас шиг харагдах 3:4 харьцаатай зураг."""
     rng = np.random.default_rng(seed)
     hue, ground = rng.random(), rng.random()
 
@@ -62,8 +61,8 @@ def garment_image(seed: int) -> Image.Image:
     image = Image.new("RGB", (600, 800), colour(ground, 0.88))
     draw = ImageDraw.Draw(image)
     body = colour(hue, 0.45)
-    draw.rounded_rectangle((170, 200, 430, 700), radius=40, fill=body)  # body
-    draw.polygon([(170, 220), (60, 330), (110, 380), (170, 320)], fill=body)  # sleeves
+    draw.rounded_rectangle((170, 200, 430, 700), radius=40, fill=body)  # бие
+    draw.polygon([(170, 220), (60, 330), (110, 380), (170, 320)], fill=body)  # ханцуй
     draw.polygon([(430, 220), (540, 330), (490, 380), (430, 320)], fill=body)
     for _ in range(int(rng.integers(2, 7))):
         y = int(rng.integers(260, 660))
@@ -74,7 +73,7 @@ def garment_image(seed: int) -> Image.Image:
 async def seed_catalogue(
     engine: AsyncEngine, storage: Storage, embedder: EmbeddingService, count: int
 ) -> int:
-    """Products 1..count, safe to run again: rows are upserted and thumbnails overwritten."""
+    """1..count бүтээгдэхүүн. Дахин ажиллуулж болно: мөрийг upsert, thumbnail-ийг дарж бичнэ."""
     products: list[CleanProduct] = []
     vectors = []
     blurs: dict[int, str] = {}

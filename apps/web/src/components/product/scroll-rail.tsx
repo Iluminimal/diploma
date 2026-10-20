@@ -5,12 +5,11 @@ import { useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
 /**
- * Native scroll-snap carousel; the arrows are an enhancement for pointer users.
+ * Native scroll-snap carousel; сумнууд нь pointer хэрэглэгчдэд зориулсан нэмэлт.
  *
- * Do not add the `scroll-smooth` class here: with snapping it starts a smooth-scroll animation
- * while the page loads, which makes Chrome report the page's largest paint hundreds of
- * milliseconds late (Lighthouse LCP 88 -> 92 on the home page). The arrows ask for smooth
- * scrolling themselves.
+ * Энд `scroll-smooth` class НЭМЭХГҮЙ: snap-тэй хамт хуудас ачаалах үед smooth-scroll animation
+ * эхлүүлж, Chrome хуудасны largest paint-ыг хэдэн зуун миллисекунд хоцорч мэдээлэхэд хүргэнэ (нүүр
+ * хуудсан дээр Lighthouse LCP 88 -> 92). Сумнууд өөрсдөө smooth scroll хүсдэг.
  */
 export function ScrollRail({ children, label }: { children: ReactNode; label: string }) {
   const ref = useRef<HTMLUListElement>(null);

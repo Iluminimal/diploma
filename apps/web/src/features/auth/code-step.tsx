@@ -7,7 +7,7 @@ import { userMessage } from "@/lib/api/errors";
 import { OtpInput } from "./otp-input";
 import { useAuthActions } from "./use-auth-actions";
 
-/** The six digits sent to a phone or an email. Signing in with them also creates a new account. */
+/** Утас эсвэл имэйлээр ирсэн зургаан орон. Үүгээр нэвтрэхэд шинэ бүртгэл бас үүснэ. */
 export function CodeStep({
   destination,
   resendIn,
@@ -16,12 +16,12 @@ export function CodeStep({
   onNaming,
 }: {
   destination: string;
-  /** Seconds until another code may be asked for. */
+  /** Дахин код авахаас өмнө үлдсэн секунд. */
   resendIn: number;
   onResend: () => void;
-  /** The session is stored. `isNew` is true for an account that was just created. */
+  /** Session хадгалагдсан. Шинээр үүссэн бүртгэлд `isNew` нь true. */
   onVerified: (isNew: boolean) => void;
-  /** Called before the session is stored for a new account, so the page does not redirect yet. */
+  /** Шинэ бүртгэлд session хадгалахаас өмнө дуудна, ингэснээр хуудас хараахан redirect хийхгүй. */
   onNaming: () => void;
 }) {
   const { signInWithCode } = useAuthActions();

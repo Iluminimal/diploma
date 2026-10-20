@@ -1,9 +1,9 @@
 import { serializeJsonLd } from "@/features/catalog/json-ld";
 
 /**
- * One `<script type="application/ld+json">` per node. A top-level array is valid JSON-LD, but many
- * consumers (crawlers, browser extensions) read `["@context"]` straight off the parsed script and
- * throw on an array.
+ * Node бүрд нэг `<script type="application/ld+json">`. Дээд түвшний массив нь хүчинтэй JSON-LD
+ * боловч олон consumer (crawler, browser extension) parse хийсэн script-ээс `["@context"]`-ийг шууд
+ * уншдаг тул массивт алдаа гаргана.
  */
 export function JsonLdScripts({ nodes }: { nodes: readonly object[] }) {
   return nodes.map((node, i) => (

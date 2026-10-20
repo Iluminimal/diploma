@@ -4,7 +4,9 @@ import { useEffect } from "react";
 import { recordView } from "./recently-viewed";
 import type { Product } from "./product";
 
-/** Renders nothing; remembers that this product page was opened (for "Recently viewed" on the home page). */
+/**
+ * Юу ч зурахгүй; энэ бүтээгдэхүүний хуудас нээгдсэнийг санана (нүүр хуудасны "Recently viewed"-д).
+ */
 export function RecordView({ product }: { product: Product }) {
   useEffect(() => {
     recordView(product);

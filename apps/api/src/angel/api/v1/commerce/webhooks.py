@@ -6,7 +6,8 @@ from angel.schemas.problem import ProblemDetail
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
-# Stripe's payment events are a few KB. The body is read whole to verify its signature, so cap it.
+# Stripe-ийн төлбөрийн event хэдхэн KB. Signature шалгахын тулд body-г бүтнээр нь уншдаг тул
+# хэмжээг хязгаарлана.
 MAX_WEBHOOK_BYTES = 256 * 1024
 
 
@@ -36,6 +37,6 @@ async def stripe_webhook(
     service: WebhookServiceDep,
     stripe_signature: str | None = Header(default=None, alias="Stripe-Signature"),
 ) -> dict[str, bool]:
-    # Raw bytes, not a parsed model: the signature covers the exact bytes Stripe sent.
+    # Parse хийсэн model биш raw bytes: signature нь Stripe-ийн илгээсэн яг bytes дээр бодогддог.
     await service.handle(await _read_limited(request), stripe_signature)
     return {"received": True}

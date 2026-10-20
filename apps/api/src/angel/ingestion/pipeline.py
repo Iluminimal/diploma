@@ -1,8 +1,8 @@
-"""Ingestion pipeline: clean products -> thumbnails + embeddings -> bulk upsert.
+"""Ingestion pipeline: цэвэрлэсэн бүтээгдэхүүн -> thumbnail + embedding -> bulk upsert.
 
-The database is the only state. A product is "done" when its row exists with the current
-`embedding_version` and both thumbnails exist, so a killed run resumes at the next batch and a
-finished run is a no-op.
+Цорын ганц төлөв нь database. Бүтээгдэхүүний мөр одоогийн `embedding_version`-тэй байх, хоёр
+thumbnail байх үед "дууссан" гэж үзнэ. Тиймээс таслагдсан ажил дараагийн batch-аас үргэлжилж,
+дууссан ажлыг дахин ажиллуулахад юу ч хийгдэхгүй.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ Progress = Callable[[int], object]
 @dataclass(frozen=True)
 class IngestOptions:
     batch_size: int = 64
-    # 0 = decode in-process (tests, tiny runs). Otherwise number of worker processes.
+    # 0 = энэ process дотроо decode хийнэ (тест, жижиг ажил). Үгүй бол worker process-ийн тоо.
     workers: int = 3
     resize_mode: ResizeMode = "pad"
     reembed: bool = False
@@ -76,7 +76,7 @@ def plan_work(
     reembed: bool = False,
     regenerate_thumbnails: bool = False,
 ) -> list[WorkItem]:
-    """Decide, per product, what is still missing. Pure apart from `storage.exists`."""
+    """Бүтээгдэхүүн бүрт юу дутаж байгааг шийднэ. `storage.exists`-ээс бусад нь side effect-гүй."""
     work: list[WorkItem] = []
     for product in products:
         needs_embedding = reembed or existing_versions.get(product.source_id) != version
@@ -89,7 +89,7 @@ def plan_work(
     return work
 
 
-# --- running image jobs ----------------------------------------------------------------------
+# --- зургийн ажлуудыг ажиллуулах -------------------------------------------------------------
 
 _worker_storage: Storage | None = None
 
@@ -107,17 +107,17 @@ def _run_job(job: ImageJob) -> ImageResult:
 def iter_results(
     jobs: Sequence[ImageJob], *, batch_size: int, workers: int, storage: Storage
 ) -> Iterator[list[ImageResult]]:
-    """Yield results batch by batch, in order.
+    """Үр дүнг batch-аар дарааллаар нь буцаана.
 
-    With worker processes, the next batch is already being decoded while the caller embeds and
-    writes the current one. At most two batches of pixel arrays exist at once (8 GB machine).
+    Worker process-той үед дуудагч одоогийн batch-ийг embed хийж бичих хооронд дараагийн batch
+    аль хэдийн decode хийгдэж байна. Нэг дор хамгийн ихдээ хоёр batch pixel array байна (8 GB RAM).
     """
     batches = [jobs[i : i + batch_size] for i in range(0, len(jobs), batch_size)]
     if workers == 0:
         for batch in batches:
             yield [process_image(job, storage) for job in batch]
         return
-    # `spawn`, never `fork`: the parent already holds torch/MPS state, which must not be forked.
+    # `fork` биш `spawn`: эх process torch/MPS төлөвтэй тул түүнийг fork хийж болохгүй.
     executor = ProcessPoolExecutor(
         workers,
         mp_context=multiprocessing.get_context("spawn"),
@@ -125,7 +125,7 @@ def iter_results(
         initargs=(storage,),
     )
     try:
-        # `map` submits every task immediately; only the results are consumed lazily.
+        # `map` бүх task-ийг шууд илгээнэ; зөвхөн үр дүнг нь хойшлуулан авна.
         current = executor.map(_run_job, batches[0], chunksize=4) if batches else iter(())
         for index in range(len(batches)):
             upcoming = (
@@ -139,7 +139,7 @@ def iter_results(
         executor.shutdown(wait=True, cancel_futures=True)
 
 
-# --- categories ------------------------------------------------------------------------------
+# --- ангилал -------------------------------------------------------------------------------
 
 CategoryKey = tuple[str, str, str]  # (master, sub, article type)
 
@@ -147,7 +147,7 @@ CategoryKey = tuple[str, str, str]  # (master, sub, article type)
 async def ensure_categories(
     connection: AsyncConnection, products: Sequence[CleanProduct]
 ) -> dict[CategoryKey, int]:
-    """Upsert the master > sub > article-type tree; return the leaf id per category triple."""
+    """master > sub > article-type модыг upsert хийж, гурвал бүрийн навч (leaf) id-г буцаана."""
     nodes: dict[str, tuple[str | None, int, str]] = {}  # path -> (parent path, level, name)
     leaf_paths: dict[CategoryKey, str] = {}
     for p in products:
@@ -184,7 +184,7 @@ async def ensure_categories(
     return {key: ids[path] for key, path in leaf_paths.items()}
 
 
-# --- the run ---------------------------------------------------------------------------------
+# --- ажиллуулалт ----------------------------------------------------------------------------
 
 
 def build_row(
@@ -230,8 +230,8 @@ def build_row(
 
 async def _upsert(connection: AsyncConnection, rows: list[dict[str, object]]) -> None:
     statement = insert(Product).values(rows)
-    # Re-ingesting refreshes catalogue data and the embedding but keeps what the shop owns:
-    # id, created_at and (after Phase 4) live stock and activity changes.
+    # Дахин ingest хийхэд каталогийн өгөгдөл, embedding шинэчлэгдэнэ, харин дэлгүүрийн өөрийн
+    # өгөгдөл (id, created_at, бодит stock, үнэ, идэвхтэй эсэх) хэвээр үлдэнэ.
     refreshed: dict[str, Any] = {
         column: statement.excluded[column]
         for column in rows[0]
@@ -254,7 +254,7 @@ async def ingest_products(
     imported: dict[int, NDArray[np.float32]] | None = None,
     on_progress: Progress | None = None,
 ) -> IngestStats:
-    """Embed (or import embeddings for), thumbnail and upsert `products`. Safe to re-run."""
+    """`products`-ийг embed (эсвэл import), thumbnail хийж upsert хийнэ. Дахин ажиллуулж болно."""
     if (embedder is None) == (imported is None):
         raise ValueError("pass exactly one of `embedder` or `imported`")
     stats = IngestStats(considered=len(products))
@@ -362,7 +362,7 @@ def export_embeddings(
     on_progress: Progress | None = None,
     storage: Storage,
 ) -> IngestStats:
-    """Embed without a database and write resumable parquet shards (run this on Colab)."""
+    """Database-гүйгээр embed хийж, үргэлжлүүлж болох parquet shard бичнэ (Colab дээр)."""
     done = embedding_store.existing_ids(out_dir, embedder.version)
     todo = [p for p in products if p.source_id not in done]
     stats = IngestStats(considered=len(products), skipped=len(products) - len(todo))

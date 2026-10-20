@@ -18,8 +18,8 @@ function Service({ icon: Icon, title, index, children }: { icon: typeof Truck; t
 }
 
 /**
- * What a shopper wants to know before buying, in the three lines every shop has: what delivery costs,
- * how fast it can be, and that paying is safe. The figures are read from the endpoint checkout charges by.
+ * Худалдан авагчийн авахаас өмнө мэдэхийг хүсдэг зүйл, дэлгүүр бүрт байдаг гурван мөр: хүргэлт хэд,
+ * хэр хурдан, төлбөр аюулгүй. Тоонуудыг checkout-ын төлбөр бодох endpoint-оос уншдаг.
  */
 export function Services() {
   const { data } = useQuery({ queryKey: queryKeys.shippingMethods, queryFn: fetchShippingMethods, staleTime: 600_000 });

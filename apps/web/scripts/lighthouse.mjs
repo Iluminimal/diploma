@@ -1,7 +1,9 @@
-// Lighthouse (mobile preset, simulated slow 4G, the default) against a running production build.
+// Lighthouse (mobile preset, simulated slow 4G, default) нь ажиллаж буй production build-ийг
+// шалгана.
 //   node scripts/lighthouse.mjs [--runs 3] [--out ../../docs/perf/lighthouse.json] [--pages home,listing]
-// Reports the median run per page, so one noisy run cannot decide. The web app must be served by
-// `make web-prod` (a dev server is far slower and says nothing about production) and the API must be up.
+// Хуудас бүрийн дунд зэргийн ажиллуулалтыг тайлагнана, ингэснээр нэг удаагийн гажиг шийдэхгүй. Web
+// app-ыг `make web-prod`-оор ажиллуулсан байх ёстой (dev server хамаагүй удаан, production-ийн
+// талаар юу ч хэлэхгүй), API мөн ажиллаж байх ёстой.
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { launch } from "chrome-launcher";
@@ -22,7 +24,7 @@ const ONLY = arg("pages", "")
 
 const listing = await (await fetch(`${API}/api/v1/products?in_stock=true&master_category=Apparel&page_size=1`)).json();
 const product = listing.items[0];
-// The biggest department's first group, whatever the catalogue holds.
+// Хамгийн том department-ийн эхний бүлэг, каталогт юу байгаагаас үл хамаарна.
 const nav = await (await fetch(`${API}/api/v1/catalog/nav`)).json();
 const department = [...nav.departments].sort((a, b) => b.product_count - a.product_count)[0];
 const PAGES = {

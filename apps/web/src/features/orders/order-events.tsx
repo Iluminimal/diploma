@@ -20,7 +20,7 @@ const AUTOMATIC_REFUNDS: Record<string, string> = {
 const text = (value: unknown) => (typeof value === "string" && value ? value : undefined);
 const cents = (value: unknown) => (typeof value === "number" ? value : undefined);
 
-/** What an event says, in words. Whatever the data lacks (the customer sees less) is left out. */
+/** Үйл явдал юу гэж хэлэх вэ, үгээр. Өгөгдөлд байхгүйг (үйлчлүүлэгч бага зүйл харна) орхино. */
 export function describeEvent(event: TimelineEvent, currency: string) {
   const { data } = event;
   const money = cents(data.amount_cents);
@@ -72,7 +72,7 @@ export function describeEvent(event: TimelineEvent, currency: string) {
 
 const when = (iso: string) => new Date(iso).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
 
-/** The order's history as a vertical list. Administrators see who did what, and their notes. */
+/** Захиалгын түүх босоо жагсаалтаар. Админ хэн юу хийснийг, тэдний тэмдэглэлийг харна. */
 export function OrderTimeline({
   events,
   currency,

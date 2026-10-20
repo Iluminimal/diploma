@@ -1,8 +1,8 @@
-"""Embedding export/import as parquet shards, so the heavy step can run on Colab/Kaggle.
+"""Embedding-ийг parquet shard хэлбэрээр export/import хийнэ (хүнд алхмыг Colab/Kaggle дээр хийнэ).
 
-A directory holds `embeddings-00000.parquet`, `embeddings-00001.parquet`, ... Each shard has
-`source_id` (int64) and `embedding` (fixed-size list of 512 float32) plus file metadata that
-says what produced the vectors. Import refuses shards from a different model/preprocessing.
+Хавтас `embeddings-00000.parquet`, `embeddings-00001.parquet`, ... файлуудтай. Shard бүр
+`source_id` (int64), `embedding` (512 float32-ийн тогтмол урттай жагсаалт) болон vector-ийг юу
+үүсгэснийг хэлэх файлын metadata агуулна. Өөр model/preprocessing-ийн shard-ийг import хийхгүй.
 """
 
 from collections.abc import Iterator
@@ -78,8 +78,8 @@ def write_shard(
     version: str,
     dtype: str,
 ) -> Path:
-    """Write the next shard atomically (temp file + rename), so a crash never leaves a
-    truncated shard that a resumed run would trust."""
+    """Дараагийн shard-ийг atomic бичнэ (түр файл + rename). Crash болоход үргэлжлүүлсэн ажил
+    итгэх таслагдсан shard үлдэхгүй."""
     directory.mkdir(parents=True, exist_ok=True)
     if vectors.shape != (len(source_ids), DIMENSION):
         raise EmbeddingStoreError(f"bad embedding shape {vectors.shape}")
@@ -110,7 +110,7 @@ def read_all(directory: Path, expected_version: str) -> Iterator[EmbeddingBatch]
 
 
 def load_index(directory: Path, expected_version: str) -> dict[int, NDArray[np.float32]]:
-    """All embeddings by source id (~90 MB for 44k products). Later shards win on duplicates."""
+    """Бүх embedding-ийг source id-аар (44k бүтээгдэхүүнд ~90 MB). Давхардвал сүүлийн shard."""
     index: dict[int, NDArray[np.float32]] = {}
     for batch in read_all(directory, expected_version):
         for source_id, vector in zip(batch.source_ids.tolist(), batch.vectors, strict=True):

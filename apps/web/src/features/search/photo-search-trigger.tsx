@@ -5,12 +5,12 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-// The picker (and the dialog library behind it) is fetched the first time someone asks for it.
+// Сонгогч (мөн ард нь байх dialog library) хүн хүсэх анхны удаа татагдана.
 const PhotoSearchDialog = dynamic(() => import("./photo-search-dialog").then((m) => m.PhotoSearchDialog), {
   ssr: false,
 });
 
-/** A button that opens the photo picker, wherever a page wants one (the home page's hero). */
+/** Зураг сонгогчийг нээдэг товч, хуудас хаана хүсэх тэнд (нүүр хуудасны hero). */
 export function PhotoSearchTrigger({ className, label = "Search with a photo" }: { className?: string; label?: string }) {
   const [requested, setRequested] = useState(false);
   const [open, setOpen] = useState(false);

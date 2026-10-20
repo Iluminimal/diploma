@@ -43,7 +43,7 @@ test("the tiles run edge to edge, 12px apart, and nothing else is on the page", 
   );
   expect(boxes[0]).toMatchObject({ left: 0, width: 1440 });
   expect(boxes[0]!.height).toBeGreaterThanOrEqual(680);
-  // The next tile starts 12px below the first.
+  // Дараагийн tile эхнийхээсээ 12px доор эхэлнэ.
   expect(boxes[1]!.top - (boxes[0]!.top + boxes[0]!.height)).toBe(12);
   await expect(page.getByRole("heading", { name: /From a photo to your Bag/ })).toHaveCount(1);
   await expect(page.getByRole("region", { name: "Shop by category" })).toHaveCount(0);

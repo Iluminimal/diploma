@@ -16,7 +16,10 @@ import { ACCOUNT_LINKS } from "./account-links";
 import type { SessionUser } from "./auth-store";
 import { useSignOut } from "./use-sign-out";
 
-/** The signed-in menu. Loaded on first click (see `AccountMenu`): it needs the dropdown library. */
+/**
+ * Нэвтэрсэн хэрэглэгчийн цэс. Эхний товшилтоор ачаална (`AccountMenu`-г хар): dropdown library
+ * хэрэгтэй.
+ */
 export function AccountDropdown({ user, defaultOpen }: { user: SessionUser; defaultOpen?: boolean }) {
   const leave = useSignOut();
 

@@ -35,7 +35,7 @@ def in_stock(api: Api, skip: int = 0) -> Entry:
 async def shopper_with_cart(
     api: Api, product: Entry, *, quantity: int = 2, size: str = "M"
 ) -> tuple[Shopper, int]:
-    """A signed-in shopper with `product` in their cart and an address; returns the address id."""
+    """`product` сагсандаа, хаягтай нэвтэрсэн худалдан авагч; хаягийн id-г буцаана."""
     shopper = await register(api.client)
     await add_to_cart(
         shopper.client, product.product_id, size=size, quantity=quantity, token=shopper.token
@@ -91,7 +91,7 @@ async def test_checkout_reserves_stock_snapshots_prices_and_starts_the_payment(
             }
         ]
         assert await stock_of(api.app.state.engine, product.product_id) == 7 - 2
-        # The cart stays until the payment succeeds: a declined card must not cost the basket.
+        # Төлбөр амжилттай болтол сагс хэвээр: татгалзсан карт сагсыг үрэхгүй.
         cart = await shopper.client.get("/api/v1/cart", headers=shopper.auth)
         assert cart.json()["item_count"] == 2
 
@@ -110,7 +110,7 @@ async def test_shipping_cost_depends_on_the_method_and_the_subtotal(
 
         assert express["shipping_cents"] == api.settings.shipping_express_cents
         assert standard["subtotal_cents"] >= api.settings.free_shipping_threshold_cents
-        assert standard["shipping_cents"] == 0  # free over the threshold
+        assert standard["shipping_cents"] == 0  # босгоос дээш бол үнэгүй
         assert standard["total_cents"] == standard["subtotal_cents"]
 
 
@@ -195,7 +195,7 @@ async def test_items_that_ran_out_stop_checkout_and_nothing_is_reserved(
         assert response.json()["type"] == "urn:angel:problem:insufficient-stock"
         issues = {i["product_id"]: i["available"] for i in response.json()["issues"]}
         assert issues == {shrinking.product_id: 3, withdrawn.product_id: 0}
-        assert await stock_of(api.app.state.engine, fine.product_id) == 7  # nothing reserved
+        assert await stock_of(api.app.state.engine, fine.product_id) == 7  # нөөц хадгалаагүй
         assert await orders_in_db(api) == []
 
 
@@ -228,7 +228,7 @@ async def test_repeating_a_request_with_the_same_key_returns_the_same_order(
         assert first.json() == second.json()
         assert len(await orders_in_db(api)) == 1
         assert len(gateway.created) == 1
-        assert await stock_of(api.app.state.engine, product.product_id) == 5  # reserved once
+        assert await stock_of(api.app.state.engine, product.product_id) == 5  # нэг л удаа нөөцөлсөн
 
 
 async def test_parallel_requests_with_one_key_create_one_order_and_one_payment(
@@ -256,7 +256,7 @@ async def test_a_replay_finishes_a_checkout_that_died_before_the_payment_was_sto
         shopper, address_id = await shopper_with_cart(api, in_stock(api))
         first = await checkout(shopper, address_id, key="attempt-0002")
         async with api.app.state.engine.begin() as connection:
-            await connection.execute(text("DELETE FROM payments"))  # the crash
+            await connection.execute(text("DELETE FROM payments"))  # гэнэт доголдсон
 
         replay = await checkout(shopper, address_id, key="attempt-0002")
 
@@ -282,7 +282,7 @@ async def test_a_payment_provider_outage_gives_the_stock_back_and_can_be_retried
         [order] = await orders_in_db(api)
         assert (order["status"], order["cancel_reason"]) == ("cancelled", "payment_setup_failed")
         gateway.fail_create = False
-        retried = await checkout(shopper, address_id)  # a new attempt, a new key
+        retried = await checkout(shopper, address_id)  # шинэ оролдлого, шинэ key
         assert retried.status_code == 200
         assert await stock_of(api.app.state.engine, product.product_id) == 5
 
@@ -298,11 +298,11 @@ async def test_a_new_checkout_replaces_the_unpaid_one_and_releases_its_stock(
         second = (await checkout(shopper, address_id, method="express")).json()["order"]
 
         assert second["number"] != first["number"]
-        assert len(gateway.cancelled) == 1  # the first payment can no longer be paid
+        assert len(gateway.cancelled) == 1  # эхний төлбөрийг дахин төлөх боломжгүй
         states = {o["number"]: (o["status"], o["cancel_reason"]) for o in await orders_in_db(api)}
         assert states[first["number"]] == ("cancelled", "replaced")
         assert states[second["number"]][0] == "pending"
-        assert await stock_of(api.app.state.engine, product.product_id) == 7 - 3  # not 7 - 6
+        assert await stock_of(api.app.state.engine, product.product_id) == 7 - 3  # 7 - 6 биш
 
 
 async def test_if_the_old_payment_went_through_meanwhile_no_second_order_is_made(
@@ -434,7 +434,9 @@ async def test_offline_payment_completes_the_order_and_clears_only_what_was_boug
         assert [line["product"]["id"] for line in cart["lines"]] == [later.product_id]
         assert await stock_of(api.app.state.engine, bought.product_id) == 5
         confirmations = [m for m in mailer.sent if "confirmed" in m.subject]
-        assert [m.subject for m in confirmations] == [f"Order {number} confirmed"]  # sent once
+        assert [m.subject for m in confirmations] == [
+            f"Order {number} confirmed"
+        ]  # нэг л удаа илгээсэн
         assert confirmations[0].to == shopper.email
 
 
@@ -455,8 +457,8 @@ async def test_simulated_payment_only_exists_in_offline_mode_and_for_your_own_or
             f"{CHECKOUT}/orders/{number}/simulate-payment", headers=shopper.auth
         )
 
-        assert foreign.status_code == 404  # offline at the time, but not theirs
-        assert live.status_code == 404  # a real gateway: no shortcut
+        assert foreign.status_code == 404  # тухайн үед offline байсан ч тэдний захиалга биш
+        assert live.status_code == 404  # жинхэнэ gateway: товчлол байхгүй
 
 
 async def test_without_payment_configuration_checkout_is_unavailable_but_the_shop_works(
@@ -473,7 +475,7 @@ async def test_without_payment_configuration_checkout_is_unavailable_but_the_sho
         assert (await api.client.get("/readyz")).status_code in (200, 503)
 
 
-# --- order history ---------------------------------------------------------------------------
+# --- Захиалгын түүх --------------------------------------------------------------------------
 
 
 async def test_order_history_is_paginated_newest_first_and_private(

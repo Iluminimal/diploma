@@ -60,8 +60,8 @@ async def _load_embedder(settings: Settings) -> EmbeddingService:
 
 
 async def _warm_up(embedder: EmbeddingService) -> None:
-    """The first forward pass compiles kernels (MPS) and allocates buffers: pay for it here,
-    not in the first user's request."""
+    """Эхний inference kernel-ийг compile хийж, buffer хуваарилдаг тул үүнийг эхний хэрэглэгчийн
+    хүсэлт дээр биш, эндээс эхлүүлнэ."""
     await embedder.aembed_images([Image.new("RGB", (64, 64), "white")])
     await embedder.aembed_texts(["warm up"])
 
@@ -69,7 +69,7 @@ async def _warm_up(embedder: EmbeddingService) -> None:
 async def _warm_up_database(
     embedder: EmbeddingService, sessions: async_sessionmaker[AsyncSession]
 ) -> None:
-    """One real similarity query: opens the first pooled connection and warms the index."""
+    """Жинхэнэ нэг төстэй хайлт хийж, эхний connection-ийг нээгээд индексийг халаана."""
     vector = (await embedder.aembed_texts(["warm up"]))[0]
     async with sessions() as session, session.begin():
         await ProductRepository(session).search_similar(vector, limit=1)
@@ -81,10 +81,10 @@ def _classifier_factory(
     async def build() -> CategoryClassifier:
         async with sessions() as session, session.begin():
             categories = await CategoryRepository(session).searchable_article_types()
-        # One label per article type: products are filtered by article type, and two prompts with
-        # the same text would split the probability between them.
+        # Article type бүрт нэг label: бараа article type-аар шүүгддэг, мөн ижил текстэй хоёр
+        # prompt магадлалыг хоорондоо хуваачихна.
         unique: dict[str, Category] = {}
-        for category in categories:  # most products first, so the main parent wins
+        for category in categories:  # бараа олонтойг эхэнд нь, ингэснээр үндсэн эх нь үлдэнэ
             unique.setdefault(category.name, category)
         labels = [CategoryLabel(c.name, c.path, c.name) for c in unique.values()]
         return await ZeroShotCategoryClassifier.build(embedder, labels)
@@ -97,8 +97,8 @@ def create_app(
     embedder: EmbeddingService | None = None,
     payment_gateway: PaymentGateway | None = None,
 ) -> FastAPI:
-    """`embedder` and `payment_gateway` are for tests: pass ready-made ones instead of loading
-    FashionCLIP and building the gateway from the settings."""
+    """`embedder`, `payment_gateway` нь тестэд зориулсан: FashionCLIP ачаалах, тохиргооноос gateway
+    үүсгэхийн оронд бэлэн объектоо дамжуулна."""
     settings = settings or get_settings()
     configure_logging(settings.log_level, json_logs=settings.log_json)
 
@@ -107,7 +107,7 @@ def create_app(
         app.state.settings = settings
         app.state.engine = create_engine(settings.database_url)
         app.state.sessions = async_sessionmaker(app.state.engine, expire_on_commit=False)
-        # Cache and rate-limit calls fail fast so a dead Redis cannot slow searches down.
+        # Cache, rate-limit дуудлага хурдан алдаа өгнө: Redis унасан үед хайлт удаашрахгүй.
         app.state.redis = Redis.from_url(
             settings.redis_url,
             socket_connect_timeout=settings.redis_op_timeout_seconds,
@@ -119,7 +119,7 @@ def create_app(
         app.state.payment_gateway = payment_gateway or build_gateway(settings)
         app.state.oauth_provider = build_oauth_provider(settings)
         if not settings.jwt_secret:
-            # Fine for development; every restart signs everyone out.
+            # Хөгжүүлэлтэд зүгээр; restart бүр хүн бүрийг гаргана.
             log.warning(
                 "jwt_secret_generated", hint="set JWT_SECRET to keep sessions across restarts"
             )
@@ -127,8 +127,8 @@ def create_app(
         if app.state.payment_gateway is None:
             log.warning("payments_disabled", hint="set STRIPE_SECRET_KEY or PAYMENTS_MODE=offline")
 
-        # The model is loaded once, here; /readyz stays red until it is. Inference later runs
-        # on the embedder's own worker thread, never on the event loop.
+        # Model-ийг эндээс нэг л удаа ачаална; ачаалагдтал /readyz улаан байна. Inference нь
+        # embedder-ийн өөрийн worker thread дээр ажиллана, event loop дээр хэзээ ч биш.
         model = embedder or await _load_embedder(settings)
         await _warm_up(model)
         app.state.embedding_service = model
@@ -148,7 +148,7 @@ def create_app(
         try:
             await app.state.classifier.get()
             await _warm_up_database(model, app.state.sessions)
-        except Exception as exc:  # database not up yet: the first requests pay instead
+        except Exception as exc:  # database хараахан асаагүй: эхний хүсэлтүүд хүлээнэ
             log.warning("database_warm_up_skipped", error=type(exc).__name__)
         log.info("startup", app_env=settings.app_env, embedding_version=model.version)
         expirer = OrderExpirer(app.state.sessions, app.state.payment_gateway, settings)
@@ -175,15 +175,15 @@ def create_app(
         redoc_url=None,
     )
 
-    # Uploads up to the size limit stay in memory: Starlette would otherwise spool anything over
-    # 1 MB to a temporary file on disk, and user photos must not be written anywhere unasked.
+    # Хязгаар доторх upload санах ойд үлдэнэ: үгүй бол Starlette 1 MB-аас том зүйлийг түр файлд
+    # бичнэ, харин хэрэглэгчийн зургийг зөвшөөрөлгүй хаана ч хадгалж болохгүй.
     MultiPartParser.spool_max_size = settings.max_upload_bytes + 1
     app.add_middleware(
         BodySizeLimitMiddleware,
         max_file_bytes=settings.max_upload_bytes,
         api_prefix=settings.api_v1_prefix,
     )
-    # Added last = outermost: CORS must see (and short-circuit) preflights before anything else.
+    # Сүүлд нэмсэн нь хамгийн гаднах: CORS preflight-ийг бусдаас өмнө хараад шууд хариулах ёстой.
     app.add_middleware(SecurityHeadersMiddleware)
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
@@ -196,8 +196,8 @@ def create_app(
     )
 
     register_exception_handlers(app)
-    # Product thumbnails (dev). Starlette checks the folder on the first request, so make
-    # sure it exists even before the first ingest.
+    # Барааны thumbnail (dev). Starlette эхний хүсэлт дээр хавтсыг шалгадаг тул ingest хийхээс
+    # өмнө ч байгаа эсэхийг баталгаажуулна.
     settings.media_dir.mkdir(parents=True, exist_ok=True)
     app.mount(settings.media_url_path, MediaFiles(directory=settings.media_dir), name="media")
     app.include_router(health.router)

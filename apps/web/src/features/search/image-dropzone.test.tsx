@@ -5,7 +5,8 @@ import { ImageDropzone } from "./image-dropzone";
 import { ImageInputError } from "./normalize-image";
 import { useSearchStore } from "./search-store";
 
-// Decoding needs a real canvas; its own tests cover that. Here it just reports what it was given.
+// Decode хийхэд жинхэнэ canvas хэрэгтэй; түүнийг өөрийнх нь тест хамарна. Энд зөвхөн авсан зүйлээ
+// мэдээлнэ.
 vi.mock("./normalize-image", async (importOriginal) => {
   const original = await importOriginal<typeof import("./normalize-image")>();
   return {

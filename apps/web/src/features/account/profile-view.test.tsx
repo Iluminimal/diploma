@@ -23,7 +23,10 @@ const googleOnly: SessionUser = { ...withPassword, has_password: false, phone: n
 
 const SESSIONS = "/api/v1/auth/sessions";
 
-/** `stubApi` plus an empty device list, which the page always asks for; `calls` leaves that one out. */
+/**
+ * `stubApi` дээр хуудасны үргэлж асуудаг хоосон төхөөрөмжийн жагсаалтыг нэмсэн; `calls` тэр
+ * хүсэлтийг оруулдаггүй.
+ */
 function stubProfileApi(routes: Parameters<typeof stubApi>[0]) {
   const api = stubApi({ [`GET ${SESSIONS}`]: respond([]), ...routes });
   return {

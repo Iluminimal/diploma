@@ -3,7 +3,7 @@ import { passwordStrength } from "./password-strength";
 
 const COLOURS = ["", "bg-destructive", "bg-amber-500", "bg-emerald-500", "bg-emerald-600"];
 
-/** Four segments that fill as the password gets longer, with the same thing in words. */
+/** Нууц үг уртсах тусам дүүрдэг дөрвөн хэсэг, мөн адил зүйлийг үгээр харуулна. */
 export function PasswordStrengthMeter({ password, id }: { password: string; id: string }) {
   const { score, label } = passwordStrength(password);
   if (score === 0) return null;

@@ -1,5 +1,5 @@
-"""Object storage abstraction: local disk in development; an S3-compatible backend is added
-with deployment (it cannot be exercised before then)."""
+"""Object storage-ийн абстракц: хөгжүүлэлтэд локал диск; S3-тэй нийцтэй backend-ийг deploy хийхдээ
+нэмнэ (тэр хүртэл турших боломжгүй)."""
 
 import os
 import tempfile
@@ -27,7 +27,7 @@ class LocalStorage:
         self.base_url = base_url.rstrip("/")
 
     def put(self, key: str, data: bytes) -> None:
-        """Write atomically: readers (and resumed runs) never see a half-written file."""
+        """Атомаар бичнэ: уншигч (болон үргэлжлүүлсэн ажил) хагас бичигдсэн файл харахгүй."""
         path = self._path(key)
         path.parent.mkdir(parents=True, exist_ok=True)
         fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix=".tmp-")
@@ -43,7 +43,7 @@ class LocalStorage:
         return self._path(key).is_file()
 
     def delete(self, key: str) -> None:
-        """Removing a file that is not there is fine: cleanup must be safe to repeat."""
+        """Байхгүй файлыг устгах нь алдаа биш: цэвэрлэгээг давтан ажиллуулахад аюулгүй."""
         self._path(key).unlink(missing_ok=True)
 
     def url(self, key: str) -> str:

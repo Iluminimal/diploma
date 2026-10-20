@@ -1,11 +1,12 @@
-"""Measure search latency against the ingested catalogue and compare with the spec targets
-(image search p95 < ~400 ms on CPU, similar products p95 < 50 ms).
+"""Ingest хийсэн каталог дээр хайлтын latency хэмжиж spec-ийн зорилттой харьцуулна
+(CPU дээр зургаар хайлт p95 < ~400 ms, төстэй бүтээгдэхүүн p95 < 50 ms).
 
     cd apps/api && uv run python ../../scripts/measure_latency.py --device cpu
     cd apps/api && uv run python ../../scripts/measure_latency.py --device mps
 
-Also sweeps hnsw.ef_search (recall@k vs an exact scan) and compares filtered search with and
-without pgvector iterative scan, which backs the choices documented in docs/ml-pipeline.md.
+Мөн hnsw.ef_search-ийг сэлгэж (recall@k-г exact scan-тай харьцуулж), шүүлттэй хайлтыг
+pgvector iterative scan-тай болон түүнгүйгээр харьцуулна. Эдгээр нь docs/ml-pipeline.md-д
+тэмдэглэсэн сонголтуудын үндэс.
 """
 
 from __future__ import annotations
@@ -59,7 +60,7 @@ async def main_async(args: argparse.Namespace) -> int:
             t1 = time.perf_counter()
             to_clip_array(image, embedder.resize_mode)
             t2 = time.perf_counter()
-            # The API path: inference on the embedder's worker thread, event loop stays free.
+            # API-ийн зам: inference embedder-ийн worker thread дээр, event loop чөлөөтэй үлдэнэ.
             vector = (await embedder.aembed_images([image]))[0]
             t3 = time.perf_counter()
             async with sessions() as session, session.begin():
@@ -101,7 +102,7 @@ async def main_async(args: argparse.Namespace) -> int:
         print(f"   target p95 < {TARGET_IMAGE_P95_MS:.0f} ms: {verdict} ({p95:.0f} ms)\n")
         ok &= p95 < TARGET_IMAGE_P95_MS
 
-    # Similar products from the stored embedding: no inference at all.
+    # Хадгалсан embedding-ээс төстэй бүтээгдэхүүн: inference огт хийхгүй.
     similar = []
     for index, (product_id, _) in enumerate(sample):
         start = time.perf_counter()

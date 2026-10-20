@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   user: { full_name: string; avatar_url: string | null };
-  /** Pixel size of the square. */
+  /** Дөрвөлжин хэмжээ, пикселээр. */
   size?: number;
   className?: string;
 };
@@ -20,22 +20,22 @@ export function initials(name: string): string {
 }
 
 /**
- * The person's photo (Google's, when they signed in with it) or their initials. Decorative: the
- * name is always written next to it, or is the label of the button around it.
+ * Хүний зураг (Google-ээр нэвтэрсэн бол Google-ийнх) эсвэл нэрийн эхний үсгүүд. Чимэглэл: нэр нь
+ * үргэлж хажууд бичигдсэн эсвэл тойрсон товчны label байна.
  */
 export function UserAvatar({ user, size = 32, className }: Props) {
   const [failed, setFailed] = useState(false);
   const style = { width: size, height: size, fontSize: size * 0.4 };
   if (user.avatar_url && !failed) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- a third-party photo of unknown size; the image loader is for catalogue photos
+      // eslint-disable-next-line @next/next/no-img-element -- гуравдагч этгээдийн хэмжээ тодорхойгүй зураг; image loader нь каталогийн зурагт зориулагдсан
       <img
         src={user.avatar_url}
         alt=""
         width={size}
         height={size}
         style={style}
-        // Google's servers need no hint about which shop this is.
+        // Google-ийн серверт энэ дэлгүүр аль нь гэдгийг хэлэх шаардлагагүй.
         referrerPolicy="no-referrer"
         onError={() => setFailed(true)}
         className={cn("shrink-0 rounded-full object-cover", className)}

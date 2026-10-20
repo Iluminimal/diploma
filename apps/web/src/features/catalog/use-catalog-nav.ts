@@ -16,9 +16,9 @@ async function fetchCatalogNav(signal?: AbortSignal) {
 }
 
 /**
- * The category tree behind the header's menus. Fetched in the browser rather than by the layout,
- * so every page stays independent of the API (and static where it can be); the API marks it
- * cacheable for five minutes, so navigating around costs nothing.
+ * Header цэсүүдийн ард байх ангиллын мод. Layout биш browser дээр татдаг тул хуудас бүр API-аас
+ * хамааралгүй (боломжтой бол static) байна; API таван минут cache хийхийг зөвшөөрдөг тул нааш цааш
+ * явахад зардалгүй.
  */
 export function useCatalogNav(enabled = true) {
   return useQuery({

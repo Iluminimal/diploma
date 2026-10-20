@@ -1,6 +1,6 @@
 import { SITE_NAME, absoluteUrl } from "@/lib/site";
 
-/** schema.org Organization and WebSite (with a search box) for the home page. */
+/** Нүүр хуудасны schema.org Organization ба WebSite (хайлтын талбартай). */
 export function siteJsonLd() {
   return [
     {

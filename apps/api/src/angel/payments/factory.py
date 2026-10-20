@@ -5,7 +5,7 @@ from angel.payments.stripe_gateway import StripeGateway
 
 
 def build_gateway(settings: Settings) -> PaymentGateway | None:
-    """None means payments are not configured: checkout answers 503, the rest of the shop works."""
+    """None бол төлбөр тохируулаагүй: checkout 503 буцаана, дэлгүүрийн бусад хэсэг ажиллана."""
     if settings.payments_mode == "offline":
         return OfflineGateway(settings.stripe_webhook_secret)
     if settings.stripe_secret_key:

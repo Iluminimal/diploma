@@ -1,9 +1,8 @@
-"""Upload hardening: everything about an upload that can be checked before decoding it.
+"""Upload-ийн хамгаалалт: задлахаас өмнө шалгаж болох бүхнийг шалгана.
 
-Nothing the client says is trusted: the declared type is only a first filter (415), the real
-format is established from the bytes when decoding (`load_image(formats=...)`), and the size is
-counted as the body streams in, so neither a lying Content-Length nor chunked encoding gets
-past the limit.
+Клиентийн хэлсэн зүйлд итгэхгүй: зарласан төрөл нь зөвхөн эхний шүүлтүүр (415), жинхэнэ формат
+decode хийхдээ byte-аас тогтоогдоно (`load_image(formats=...)`), хэмжээг body ирэх явцад тоолно,
+тиймээс Content-Length худлаа байсан ч, chunked encoding ч хязгаараас гарч чадахгүй.
 """
 
 import re
@@ -17,11 +16,11 @@ from angel.core.errors import ProblemError, problem_response
 from angel.schemas.problem import ProblemDetail
 
 ALLOWED_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/webp"})
-# Pillow format names matching the content types above.
+# Дээрх content type-д харгалзах Pillow-ийн формат нэр.
 ALLOWED_FORMATS = ("JPEG", "PNG", "WEBP")
 UPLOAD_PATHS = ("/search/image", "/search/hybrid", "/admin/products")
 _ADMIN_IMAGE_PATH = re.compile(r"^/admin/products/\d+/image$")
-# Multipart framing and the small form fields that accompany the file.
+# Multipart хүрээ болон файлтай хамт ирэх жижиг form талбарууд.
 _FORM_OVERHEAD_BYTES = 64 * 1024
 
 TOO_LARGE_TYPE = "urn:angel:problem:upload-too-large"
@@ -47,7 +46,7 @@ def invalid_image(detail: str) -> ProblemError:
 
 
 async def read_image_upload(file: UploadFile, max_bytes: int) -> bytes:
-    """The uploaded bytes, after checking declared type and size. Never returns an empty body."""
+    """Зарласан төрөл, хэмжээг шалгасны дараах upload-ийн byte. Хоосон body хэзээ ч буцаахгүй."""
     content_type = (file.content_type or "").split(";")[0].strip().lower()
     if content_type not in ALLOWED_CONTENT_TYPES:
         raise ProblemError(
@@ -66,8 +65,8 @@ async def read_image_upload(file: UploadFile, max_bytes: int) -> bytes:
 
 
 class BodySizeLimitMiddleware:
-    """Rejects oversized upload requests before (Content-Length) or while (stream) they are
-    read, so a client cannot make the server buffer an arbitrary amount of data."""
+    """Хэт том upload хүсэлтийг уншихаас өмнө (Content-Length) эсвэл унших явцад (stream)
+    татгалзана, ингэснээр клиент server-ийг хязгааргүй хэмжээний өгөгдөл buffer хийлгэж чадахгүй."""
 
     def __init__(self, app: ASGIApp, *, max_file_bytes: int, api_prefix: str) -> None:
         self.app = app
@@ -80,7 +79,7 @@ class BodySizeLimitMiddleware:
         path: str = scope["path"]
         if scope["method"] == "POST" and path in self.paths:
             return True
-        # PUT /admin/products/{id}/image replaces a product's photo.
+        # PUT /admin/products/{id}/image барааны зургийг солино.
         return scope["method"] == "PUT" and bool(
             _ADMIN_IMAGE_PATH.match(path.removeprefix(self.api_prefix))
         )

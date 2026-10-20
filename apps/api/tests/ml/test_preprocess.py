@@ -46,7 +46,7 @@ def test_formats_allow_list_checks_the_real_format() -> None:
     with pytest.raises(InvalidImageError):
         load_image(gif, formats=("JPEG", "PNG", "WEBP"))
     assert load_image(png, formats=("JPEG", "PNG", "WEBP")).size == (10, 10)
-    assert load_image(gif).size == (10, 10)  # ingestion's default stays permissive
+    assert load_image(gif).size == (10, 10)  # ingestion-ий анхдагч нь зөөлөн хэвээр
 
 
 def test_max_pixels_is_enforced_from_the_header() -> None:
@@ -55,7 +55,7 @@ def test_max_pixels_is_enforced_from_the_header() -> None:
     with pytest.raises(InvalidImageError):
         load_image(data, max_pixels=1_000_000)
     with pytest.raises(InvalidImageError):
-        load_image(data)  # the default cap (50 MP) catches it too
+        load_image(data)  # анхдагч хязгаар (50 MP) үүнийг мөн барина
 
 
 def test_animated_images_decode_only_their_first_frame() -> None:

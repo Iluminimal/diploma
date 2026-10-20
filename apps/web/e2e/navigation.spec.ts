@@ -65,7 +65,7 @@ test("the department menu behaves like one flyout: instant switching, a solid ba
   await expect(page.getByRole("region", { name: `${first!.name} categories`, exact: true })).toBeVisible();
   await expect.poll(barBackground).not.toBe(translucent);
 
-  // To another department: no close and reopen, the one flyout just shows the other content.
+  // Өөр department руу: хаагаад дахин нээхгүй, нэг flyout өөр агуулгаа харуулна.
   await link(second!.name).hover();
   await expect(link(second!.name)).toHaveAttribute("aria-expanded", "true");
   await expect(link(first!.name)).toHaveAttribute("aria-expanded", "false");
@@ -87,7 +87,7 @@ test("the department menu works from the keyboard", async ({ page, api }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   const trigger = mainNav(page).getByRole("link", { name: department.name, exact: true });
-  // Wait for the menu data: the panel only opens once there is something to show.
+  // Цэсний өгөгдлийг хүлээнэ: харуулах зүйл гарсны дараа л panel нээгдэнэ.
   await expect(async () => {
     await trigger.focus();
     await page.keyboard.press("ArrowDown");
@@ -112,7 +112,7 @@ test("on a phone the menu drills from a department to a category", async ({ page
   await menu.getByRole("button", { name: department.name, exact: true }).click();
   await expect(menu.getByRole("link", { name: `Shop all ${department.name}` })).toBeVisible();
   await menu.getByRole("button", { name: group.name, exact: true }).click();
-  // A sub-category has article types below it: it is a step down, with "Shop all" at its top.
+  // Дэд ангилал доороо барааны төрөлтэй: нэг алхам доош орох бөгөөд дээр нь "Shop all" байна.
   await menu.getByRole("button", { name: sub.name, exact: true }).click();
   await menu.getByRole("link", { name: `Shop all ${sub.name}` }).click();
 
@@ -167,7 +167,7 @@ test.describe("on a computer the bar stays, whatever is opened (apple.com's glob
   test.use({ viewport: { width: 1440, height: 900 } });
 
   const bar = (page: import("@playwright/test").Page) => page.getByRole("banner");
-  const BAR_HEIGHT = 45; // 2.75rem and its hairline
+  const BAR_HEIGHT = 45; // 2.75rem ба нарийн зураас
 
   async function expectBarWhole(page: import("@playwright/test").Page) {
     await expect(bar(page).getByRole("link", { name: "Angel" })).toBeVisible();
@@ -187,13 +187,13 @@ test.describe("on a computer the bar stays, whatever is opened (apple.com's glob
     await expect.poll(async () => (await panel.boundingBox())!.height).toBeGreaterThan(200);
     const box = await panel.boundingBox();
     expect(box!.y).toBeGreaterThanOrEqual(BAR_HEIGHT - 1);
-    expect(box!.height).toBeLessThan(600); // not the whole screen: the page shows below it, under the curtain
+    expect(box!.height).toBeLessThan(600); // Дэлгэцийг бүхлээр нь биш: curtain-ы доор хуудас харагдана
     expect(box!.width).toBeGreaterThanOrEqual(1439);
     const curtain = page.locator(".bar-curtain");
     await expect(curtain).toHaveCSS("opacity", "1");
     expect(await curtain.evaluate((el) => getComputedStyle(el).backdropFilter)).toContain("blur(20px)");
 
-    // Pressing the curtain closes the flyout.
+    // Curtain дарахад flyout хаагдана.
     await page.mouse.click(720, 850);
     await expect(panel).toBeHidden();
     await expect(curtain).toHaveCSS("opacity", "0");
@@ -208,7 +208,7 @@ test.describe("on a computer the bar stays, whatever is opened (apple.com's glob
       return items.map((e) => ({ left: e.getBoundingClientRect().left, right: e.getBoundingClientRect().right }));
     });
     const gaps = lefts.slice(1).map((item, i) => item.left - lefts[i]!.right);
-    expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(40); // about the same gap everywhere
+    expect(Math.max(...gaps) - Math.min(...gaps)).toBeLessThan(40); // хаа сайгүй ойролцоогоор ижил зай
   });
 
   test("the Bag opens under the bar too, and the bag button closes it again", async ({ page }) => {

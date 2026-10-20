@@ -97,7 +97,7 @@ describe("ProductsTable", () => {
     await userEvent.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Withdraw" }));
 
     await waitFor(() => expect(api.count("POST /api/v1/admin/products/7/deactivate")).toBe(1));
-    // The list is refreshed afterwards so the row shows its new state.
+    // Дараа нь жагсаалт шинэчлэгдэж, мөр шинэ төлвөө харуулна.
     await waitFor(() => expect(api.count("GET /api/v1/admin/products")).toBe(2));
   });
 

@@ -4,7 +4,7 @@ import { AnimatedNumber } from "@/components/motion/animated-number";
 import { formatPrice } from "@/features/catalog/product";
 import { cn } from "@/lib/utils";
 
-/** `Price` for a total that changes while you watch (the cart): it counts to the new amount. */
+/** `Price`-ын нэг хувилбар, харж байхад өөрчлөгддөг нийлбэрт (сагс): шинэ дүн рүүгээ тоолно. */
 export function AnimatedPrice({
   cents,
   currency = "USD",

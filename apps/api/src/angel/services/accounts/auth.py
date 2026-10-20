@@ -36,15 +36,16 @@ from angel.services.commerce.cart import merge_guest_cart
 
 log = get_logger(__name__)
 
-# Two tabs refreshing at the same moment present the same refresh token: the loser must not be
-# mistaken for a thief. Beyond this window a reused token means it leaked.
+# Хоёр tab зэрэг refresh хийхэд ижил refresh token ирнэ: хожигдогчийг хулгайч гэж андуурч болохгүй.
+# Энэ цонхноос хойш token дахин ирвэл алдагдсан гэсэн үг.
 REUSE_GRACE = timedelta(seconds=10)
 _LOGIN_FAILURES = "login-fail"
 
 
 @dataclass(frozen=True)
 class ClientInfo:
-    """What the "your devices" list shows about a login. Taken from the request that created it."""
+    """ "Миний төхөөрөмжүүд" жагсаалтад харагдах нэвтрэлтийн мэдээлэл, нэвтрэлтийг үүсгэсэн
+    хүсэлтээс авсан."""
 
     user_agent: str | None = None
     ip: str | None = None
@@ -52,7 +53,7 @@ class ClientInfo:
 
 @dataclass(frozen=True)
 class UserView:
-    """A user with the sign-in providers linked to them: what the API shows of an account."""
+    """Холбогдсон нэвтрэх provider-уудтай хэрэглэгч: бүртгэлээс API юу харуулдаг."""
 
     user: User
     providers: list[str]
@@ -122,7 +123,7 @@ class AuthService:
     async def register(
         self, request: RegisterRequest, guest_cart_token: str | None
     ) -> IssuedSession:
-        # Hashing is CPU-bound (~50 ms): keep it off the event loop.
+        # Hash хийх нь CPU-ийн ажил (~50 ms): event loop-оос холдуул.
         password_hash = await asyncio.to_thread(hash_password, request.password)
         async with self._session.begin():
             if await self._users.get_by_email(request.email) is not None:
@@ -131,7 +132,7 @@ class AuthService:
                 user = await self._users.create(
                     email=request.email, password_hash=password_hash, full_name=request.full_name
                 )
-            except IntegrityError:  # lost a race with a concurrent registration
+            except IntegrityError:  # зэрэг хийсэн өөр бүртгэлд хожигдсон
                 raise self._email_taken() from None
             await self._merge_cart(user.id, guest_cart_token)
             issued = await self._issue(user, family_id=uuid.uuid4())
@@ -145,14 +146,15 @@ class AuthService:
         return issued
 
     async def login(self, request: LoginRequest, guest_cart_token: str | None) -> IssuedSession:
-        # Failed attempts per email, on top of the per-address limit on the route: this is what
-        # slows a distributed guessing attack on one account.
+        # Email тус бүрийн амжилтгүй оролдлого, route дээрх хаяг тус бүрийн хязгаараас гадна: нэг
+        # бүртгэлийг тархсан байдлаар таамаглах халдлагыг энэ удаашруулна.
         failure_rate = await self.check_failure_limit(request.email)
         async with self._session.begin():
             user = await self._users.get_by_email(request.email)
-        # Always verify something, so an unknown email costs the same as a wrong password.
-        # No password hash: an account that only signs in with Google. It looks like any other
-        # failed login, so the form never reveals which emails exist or how they sign in.
+        # Үргэлж ямар нэг зүйл шалга: ингэвэл мэдэгдээгүй email буруу нууц үгтэй ижил хугацаа авна.
+        # Нууц үгийн hash байхгүй бол зөвхөн Google-ээр нэвтэрдэг бүртгэл. Энэ нь бусад амжилтгүй
+        # нэвтрэлттэй ижил харагдана, тиймээс форм аль email байгааг, хэрхэн нэвтэрдгийг хэзээ ч
+        # илчлэхгүй.
         if user is None or not user.is_active or user.password_hash is None:
             await asyncio.to_thread(burn_password_check, request.password)
             await self._count_failure(request.email, failure_rate)
@@ -187,8 +189,8 @@ class AuthService:
             elif row.used_at is not None:
                 failure = "reused"
                 if now - row.used_at > REUSE_GRACE:
-                    # Someone is replaying a token that was already rotated: assume it was
-                    # stolen and end every session that descends from the same login.
+                    # Аль хэдийн rotate хийгдсэн token-ийг дахин ашиглаж байна: хулгайлагдсан гэж
+                    # үзээд ижил нэвтрэлтээс үүссэн бүх session-ийг дуусга.
                     await self._tokens.revoke_family(row.family_id, now)
                     log.warning("refresh_token_reuse", user_id=row.user_id)
                     failure = "reuse_detected"
@@ -199,14 +201,15 @@ class AuthService:
                 else:
                     row.used_at = now
                     issued = await self._issue(user, family_id=row.family_id)
-        # Raised after the block so that the family revocation above is committed.
+        # Блокийн дараа шиднэ, ингэвэл дээрх family-г хүчингүй болгосон өөрчлөлт commit хийгдсэн
+        # байна.
         if issued is None:
             log.info("refresh_rejected", reason=failure)
             raise _unauthenticated()
         return issued
 
     async def logout(self, refresh_token: str | None) -> None:
-        """Ends the session the cookie belongs to. Always succeeds: logging out twice is fine."""
+        """Cookie-ийн session-ийг дуусгана. Үргэлж амжилттай: хоёр удаа гарсан ч зүгээр."""
         if not refresh_token:
             return
         async with self._session.begin():
@@ -221,10 +224,10 @@ class AuthService:
                 raise _unauthenticated()
             return UserView(user, await self._users.providers(user.id))
 
-    # --- failed-attempt limit (shared with the account endpoints that check a password) ----
+    # --- амжилтгүй оролдлогын хязгаар (нууц үг шалгадаг бүртгэлийн endpoint-уудтай хуваалцана) ---
 
     async def check_failure_limit(self, email: str) -> Rate:
-        """Raises 429 when this email has had too many wrong passwords lately."""
+        """Энэ email сүүлийн үед хэт олон буруу нууц үгтэй байвал 429 шиднэ."""
         rate = Rate.parse(self._settings.rate_limit_login_email)
         if self._settings.rate_limit_enabled:
             decision = await self._limiter.peek(_LOGIN_FAILURES, hash_token(email), rate)
@@ -245,17 +248,17 @@ class AuthService:
         await self._limiter.reset(_LOGIN_FAILURES, hash_token(email))
 
     async def issue_session(self, user: User) -> IssuedSession:
-        """A new login (new refresh family) without touching the cart. Runs in the caller's
-        transaction."""
+        """Cart-д хүрэлгүй шинэ нэвтрэлт (шинэ refresh family). Дуудагчийн transaction дотор
+        ажиллана."""
         return await self._issue(user, family_id=uuid.uuid4())
 
     async def start_session(self, user: User, guest_cart_token: str | None) -> IssuedSession:
-        """A new login: the guest cart joins the account's and a new refresh family begins.
-        Runs inside the caller's transaction (password login and sign-in with Google)."""
+        """Шинэ нэвтрэлт: зочны cart бүртгэлийнхтэй нэгдэж, шинэ refresh family эхэлнэ.
+        Дуудагчийн transaction дотор ажиллана (нууц үгээр нэвтрэх ба Google-ээр нэвтрэх)."""
         await self._merge_cart(user.id, guest_cart_token)
         return await self._issue(user, family_id=uuid.uuid4())
 
-    # --- helpers --------------------------------------------------------------------------
+    # --- туслах функцууд ---
 
     async def _issue(self, user: User, *, family_id: uuid.UUID) -> IssuedSession:
         refresh_token = new_opaque_token()

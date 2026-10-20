@@ -44,7 +44,7 @@ async def load_catalogue(
     products: Sequence[CleanProduct],
     vectors: np.ndarray,
 ) -> dict[int, int]:
-    """Insert products with given vectors; return source_id -> product id."""
+    """Өгөгдсөн vector-тай бараа оруулна; source_id -> product id буцаана."""
     async with engine.begin() as connection:
         category_ids = await ensure_categories(connection, products)
         rows = [
@@ -104,7 +104,7 @@ async def test_constraints_reject_bad_rows(db_engine: AsyncEngine) -> None:
             "WHERE source_id = 1"
         )
     with pytest.raises(IntegrityError):
-        await attempt("DELETE FROM categories")  # products still reference them
+        await attempt("DELETE FROM categories")  # бараанууд тэдгээрийг хэвээр лавлаж байна
 
 
 async def test_a_product_finds_itself_at_rank_one(
@@ -180,20 +180,20 @@ async def test_filters_are_applied(
             assert p.stock_quantity > 0
             assert 2000 <= p.price_cents <= 5000
         everything = await repo.search_similar(vectors[0], limit=60)
-        assert 7 not in {h.product.source_id for h in everything}  # inactive products never show
+        assert 7 not in {h.product.source_id for h in everything}  # идэвхгүй бараа харагдахгүй
 
 
 async def test_selective_filters_still_return_a_full_page_thanks_to_iterative_scan(
     db_engine: AsyncEngine, sessions: async_sessionmaker[AsyncSession]
 ) -> None:
-    """With a tiny ef_search and a filter matching ~5% of rows, plain HNSW returns almost
-    nothing (the index yields 10 candidates, the filter discards them). Iterative scan keeps
-    going until the page is full."""
+    """ef_search жижиг, шүүлт мөрийн ~5%-ийг тааруулахад энгийн HNSW бараг юу ч буцаахгүй
+    (index 10 candidate өгч, шүүлт тэдгээрийг хаяна). Iterative scan хуудас дүүртэл үргэлжилнэ.
+    """
     products = [_product(i) for i in range(1, 401)]
     vectors = _unit(400, 4)
     await load_catalogue(db_engine, products, vectors)
     async with db_engine.begin() as connection:
-        # `stock_quantity` has no index, so the planner has to filter the HNSW scan's output.
+        # `stock_quantity`-д index байхгүй тул planner HNSW scan-ий гаралтыг шүүх ёстой.
         await connection.execute(
             text(
                 "UPDATE products "
@@ -203,7 +203,7 @@ async def test_selective_filters_still_return_a_full_page_thanks_to_iterative_sc
     filters = SearchFilters(in_stock_only=True)
 
     async with sessions() as session, session.begin():
-        await session.execute(text("SET LOCAL enable_seqscan = off"))  # force the HNSW index
+        await session.execute(text("SET LOCAL enable_seqscan = off"))  # HNSW index ашиглуулна
         repo = ProductRepository(session)
         with_iterative = await repo.search_similar(
             vectors[5], filters=filters, limit=10, ef_search=10
@@ -225,7 +225,7 @@ async def test_query_settings_do_not_leak_between_transactions(
         await ProductRepository(session).search_similar(_unit(1, 5)[0], ef_search=321)
     async with sessions() as session:
         value = (await session.execute(text("SHOW hnsw.ef_search"))).scalar_one()
-    assert value == "40"  # pgvector's default, not 321
+    assert value == "40"  # pgvector-ийн анхдагч, 321 биш
 
 
 async def test_ef_search_is_clamped_below_the_sequential_scan_cliff(

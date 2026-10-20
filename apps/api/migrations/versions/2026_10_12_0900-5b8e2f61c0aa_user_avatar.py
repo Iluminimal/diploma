@@ -1,4 +1,4 @@
-"""user avatar
+"""хэрэглэгчийн avatar
 
 Revision ID: 5b8e2f61c0aa
 Revises: 9d4c1e7a3b55
@@ -19,10 +19,10 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    """Upgrade schema."""
+    """Schema-г шинэчилнэ."""
     op.add_column("users", sa.Column("avatar_url", sa.String(length=500), nullable=True))
 
 
 def downgrade() -> None:
-    """Downgrade schema."""
+    """Schema-г өмнөх төлөвт буцаана."""
     op.drop_column("users", "avatar_url")

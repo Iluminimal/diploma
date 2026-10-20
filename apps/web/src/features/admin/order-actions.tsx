@@ -28,7 +28,7 @@ const CARRIERS = ["DHL", "UPS", "FedEx", "USPS", "Royal Mail"];
 
 type Action = "ship" | "deliver" | "cancel" | "refund" | null;
 
-/** What can be done to an order in its current state (the API refuses anything else). */
+/** Захиалгад одоогийн төлвөөр нь юу хийж болох вэ (өөрийг нь API татгалзана). */
 export function availableActions(status: AdminOrder["status"]) {
   return {
     ship: status === "paid",
@@ -252,7 +252,7 @@ function RefundDialog({ order, open, onClose }: DialogProps) {
     formState: { errors },
   } = useForm<RefundValues>({
     resolver: zodResolver(refundSchema),
-    // Something that has not left the warehouse is back on the shelf; what was posted may not be.
+    // Агуулахаас гараагүй бараа тавиур руу буцна; илгээсэн нь буцахгүй байж болно.
     defaultValues: { reason: "", restock: order.status === "paid" },
   });
   const restock = useWatch({ control, name: "restock" });

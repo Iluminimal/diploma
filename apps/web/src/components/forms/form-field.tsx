@@ -11,12 +11,12 @@ type Props = {
   children: ReactNode;
 };
 
-/** A labelled control with its hint and validation message wired up for screen readers. */
+/** Хяналтын элемент ба түүний hint, validation мессеж screen reader-д холбогдсон label-тай. */
 export function Field({ id, label, error, hint, className, children }: Props) {
   return (
     <div className={cn("space-y-1.5", className)}>
       <Label htmlFor={id}>{label}</Label>
-      {/* The control shakes once when an error appears (the class is added, so it plays once). */}
+      {/* Алдаа гарахад хяналтын элемент нэг удаа сэгсэрнэ (class нэмэгддэг тул нэг удаа тоглоно). */}
       <div className={error ? "animate-shake" : undefined}>{children}</div>
       {hint && !error && (
         <p id={`${id}-hint`} className="text-muted-foreground text-xs">
@@ -36,11 +36,11 @@ export function Field({ id, label, error, hint, className, children }: Props) {
   );
 }
 
-/** Styling for a native `<select>` that matches `Input`. */
+/** Native `<select>`-ийн `Input`-тай таарах загвар. */
 export const selectClass =
   "border-field bg-card focus-visible:ring-ring/50 focus-visible:border-ring h-11 w-full rounded-xl border px-4 text-[1.0625rem] outline-none focus-visible:ring-3";
 
-/** `aria-*` props for the control inside a `Field`. */
+/** `Field` доторх хяналтын элементийн `aria-*` props. */
 export function fieldAria(id: string, error?: string, hint?: string) {
   return {
     id,

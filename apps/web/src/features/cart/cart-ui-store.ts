@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { announceFlyout } from "@/components/layout/bar-flyout";
 
-/** The line that was just added (shown highlighted in the Bag), identified by product and size. */
+/** Дөнгөж нэмсэн мөр (Bag-д тодруулж харуулна), бүтээгдэхүүн ба размераар таних. */
 export type AddedLine = { productId: number; size: string };
 
-/** The last line taken out of the cart, so it can be put back. */
+/** Cart-аас хамгийн сүүлд хассан мөр, буцааж тавихад зориулав. */
 export type RemovedLine = { productId: number; size: string; quantity: number; name: string };
 
 type CartUi = {
@@ -16,11 +16,11 @@ type CartUi = {
   setRemoved: (line: RemovedLine | null) => void;
 };
 
-/** Whether the Bag panel is open, so "Add to cart" can show it from anywhere. */
+/** Bag самбар нээлттэй эсэх, ингэснээр "Add to cart" хаанаас ч түүнийг харуулж чадна. */
 export const useBagPanel = create<CartUi>((set) => ({
   open: false,
   setOpen: (open) => {
-    // The search or a department menu that is open under the bar makes way for the Bag.
+    // Bar-ын доор нээлттэй байгаа search эсвэл department цэс Bag-д зам тавьж өгнө.
     if (open) announceFlyout("bag");
     set(open ? { open } : { open, added: null });
   },

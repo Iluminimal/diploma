@@ -28,7 +28,10 @@ async function ok<T>(response: Awaited<ReturnType<APIRequestContext["get"]>>, wh
   return (await response.json()) as T;
 }
 
-/** In-stock apparel (it has sizes), newest first. Tests pick different ones so they never fight over stock. */
+/**
+ * Нөөцтэй хувцас (хэмжээтэй), шинэ нь эхэнд. Тестүүд нөөцөөр зөрчилдөхгүйн тулд өөр өөр бараа
+ * сонгоно.
+ */
 export async function inStockProducts(request: APIRequestContext, count = 12): Promise<CatalogProduct[]> {
   const page = await ok<{ items: CatalogProduct[] }>(
     await request.get(`${API_URL}/api/v1/products`, {
@@ -40,16 +43,18 @@ export async function inStockProducts(request: APIRequestContext, count = 12): P
   return page.items;
 }
 
-/** A fresh US number for a phone sign-up. `make e2e-clean` removes accounts in this range. */
+/** Утасны бүртгэлд зориулсан шинэ US дугаар. `make e2e-clean` энэ мужийн account-уудыг устгана. */
 export const uniquePhone = () => `+1415555${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
-/** The one-time code every challenge has when the API runs with OTP_DEV_CODE=000000. */
+/** API-г OTP_DEV_CODE=000000-тэй ажиллуулахад challenge бүрийн нэг удаагийн код. */
 export const OTP_CODE = "000000";
 
 export const uniqueEmail = (label: string) =>
   `e2e-${label}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}@example.com`;
 
-/** A new customer, created through the API so tests do not spend time (or the register rate limit) on the form. */
+/**
+ * API-аар үүсгэсэн шинэ хэрэглэгч: тест форм дээр (мөн бүртгэлийн rate limit-д) хугацаа үрэхгүй.
+ */
 export async function registerAccount(request: APIRequestContext, label = "shopper"): Promise<Account> {
   const email = uniqueEmail(label);
   const body = await ok<{ access_token: string }>(
@@ -72,7 +77,10 @@ export async function signInAccount(request: APIRequestContext, email: string, p
 
 const bearer = (account: Account) => ({ ...json, Authorization: `Bearer ${account.token}` });
 
-/** Adds to the cart in size M, or in the first size the product has (kids' and shoes have others), or in no size at all. */
+/**
+ * M хэмжээгээр, эсвэл бараанд байгаа эхний хэмжээгээр (хүүхдийн болон гутлынх өөр), эсвэл хэмжээгүй
+ * нэмнэ.
+ */
 export async function addToCart(request: APIRequestContext, account: Account, productId: number, quantity = 1) {
   let size = "M";
   for (let attempt = 0; ; attempt += 1) {
@@ -83,7 +91,7 @@ export async function addToCart(request: APIRequestContext, account: Account, pr
     if (response.ok()) return;
     const problem = (await response.json().catch(() => ({}))) as { type?: string; sizes?: string[] };
     if (attempt === 0 && problem.type === "urn:angel:problem:invalid-size" && problem.sizes) {
-      // Kids' and shoe sizes differ; a bag or a watch has none, which is a size of "".
+      // Хүүхдийн болон гутлын хэмжээ өөр; цүнх, цаг хэмжээгүй бөгөөд тэр нь "" утга.
       size = problem.sizes[0] ?? "";
       continue;
     }
@@ -109,7 +117,7 @@ export async function addAddress(request: APIRequestContext, account: Account): 
   return address.id;
 }
 
-/** A paid order, placed the way the demo checkout does it. Returns its number. */
+/** Төлөгдсөн захиалга, demo checkout-ийн адил оруулсан. Дугаарыг нь буцаана. */
 export async function placePaidOrder(request: APIRequestContext, account: Account, productId: number): Promise<string> {
   await addToCart(request, account, productId);
   const addressId = await addAddress(request, account);
@@ -129,7 +137,7 @@ export async function placePaidOrder(request: APIRequestContext, account: Accoun
   return checkout.order.number;
 }
 
-/** The bytes of a catalogue product's own photo: searching with it must find that product first. */
+/** Каталогийн барааны өөрийн зургийн bytes: үүгээр хайхад тэр бараа эхэлж гарах ёстой. */
 export async function productPhoto(request: APIRequestContext, product: CatalogProduct): Promise<Buffer> {
   const response = await request.get(product.image.thumb_800);
   if (!response.ok()) throw new Error(`could not fetch ${product.image.thumb_800}`);
@@ -141,10 +149,10 @@ export async function saveToWishlist(request: APIRequestContext, account: Accoun
   if (!response.ok()) throw new Error(`saving to the wishlist failed: ${response.status()}`);
 }
 
-/** The e2e administrator, signed in through the API. */
+/** API-аар нэвтэрсэн e2e админ. */
 export const adminSession = (request: APIRequestContext) => signInAccount(request, ADMIN_EMAIL, ADMIN_PASSWORD);
 
-/** An order that has been placed but not paid (stock is held for it until it is paid or expires). */
+/** Оруулсан боловч төлөгдөөгүй захиалга (төлөх эсвэл хугацаа дуустал нөөцийг нь барьж байна). */
 export async function placePendingOrder(request: APIRequestContext, account: Account, productId: number): Promise<string> {
   await addToCart(request, account, productId);
   const addressId = await addAddress(request, account);
@@ -159,9 +167,9 @@ export async function placePendingOrder(request: APIRequestContext, account: Acc
 }
 
 /**
- * A product of this test's own (named "E2E ...", which `make e2e-clean` removes), so tests that
- * change stock or buy it cannot disturb each other or the catalogue other specs read. Use the
- * `newProduct` fixture rather than calling this: it withdraws the product when the test is over.
+ * Энэ тестийн өөрийн бараа ("E2E ..." нэртэй, `make e2e-clean` устгана): нөөц өөрчлөх эсвэл
+ * худалдан авдаг тестүүд бие биедээ болон бусад spec-ийн уншдаг каталогт саад болохгүй. Үүнийг шууд
+ * дуудахын оронд `newProduct` fixture ашигла: тест дуусахад бараа хасагдана.
  */
 export async function createProduct(
   request: APIRequestContext,
@@ -172,8 +180,8 @@ export async function createProduct(
     await request.get(`${API_URL}/api/v1/admin/categories`, { headers: bearer(admin) }),
     "listing categories",
   );
-  // Not apparel: other specs pick "the newest in-stock apparel", and a product made from a
-  // photo must not be one of them (see `newProduct` in fixtures.ts, which also withdraws it).
+  // Хувцас биш: бусад spec "хамгийн сүүлийн нөөцтэй хувцас"-ыг сонгодог, зургаас үүсгэсэн бараа
+  // тэдгээрийн нэг байж болохгүй (`newProduct` fixture-ийг fixtures.ts-ээс үз, тэр нь бас хасдаг).
   const category = categories.find((c) => c.article_type === "Handbags") ?? categories[0]!;
   const name = options.name ?? `E2E handbag ${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
   const created = await ok<{ id: number }>(
@@ -193,12 +201,12 @@ export async function createProduct(
   return { id: created.id, name };
 }
 
-/** Take a product off sale (products are never deleted: orders refer to them). */
+/** Барааг борлуулалтаас хасна (бараа хэзээ ч устгагдахгүй: захиалгууд лавладаг). */
 export async function withdrawProduct(request: APIRequestContext, admin: Account, productId: number) {
   await request.post(`${API_URL}/api/v1/admin/products/${productId}/deactivate`, { headers: bearer(admin) });
 }
 
-/** What the shop's own books say about a product (the storefront only shows "in stock"). */
+/** Дэлгүүрийн өөрийн бүртгэл барааны талаар юу гэдэг (storefront зөвхөн "нөөцтэй" гэж харуулна). */
 export async function stockOf(request: APIRequestContext, admin: Account, productId: number): Promise<number> {
   const product = await ok<{ stock_quantity: number }>(
     await request.get(`${API_URL}/api/v1/admin/products/${productId}`, { headers: bearer(admin) }),
@@ -207,7 +215,7 @@ export async function stockOf(request: APIRequestContext, admin: Account, produc
   return product.stock_quantity;
 }
 
-/** The customer's view of an order, as the API gives it. */
+/** Худалдан авагчийн харах захиалга, API-ийн өгснөөр. */
 export async function orderOf(request: APIRequestContext, account: Account, number: string) {
   return ok<{ status: string; tracking_number: string | null; events: { type: string }[] }>(
     await request.get(`${API_URL}/api/v1/orders/${number}`, { headers: bearer(account) }),
@@ -215,7 +223,7 @@ export async function orderOf(request: APIRequestContext, account: Account, numb
   );
 }
 
-/** Ships and delivers an order as the administrator does (the carrier and number are made up). */
+/** Админ шиг захиалгыг илгээж, хүргэнэ (тээвэрлэгч ба дугаар зохиомол). */
 export async function shipAndDeliver(request: APIRequestContext, admin: Account, number: string) {
   await ok(
     await request.post(`${API_URL}/api/v1/admin/orders/${number}/ship`, {
@@ -244,7 +252,7 @@ export async function userId(request: APIRequestContext, account: Account): Prom
   return me.id;
 }
 
-/** A phone-only customer, created through the API (a code that is always `OTP_CODE`). */
+/** Зөвхөн утастай хэрэглэгч, API-аар үүсгэсэн (код нь үргэлж `OTP_CODE`). */
 export async function signUpWithPhone(request: APIRequestContext, phone: string): Promise<Account & { phone: string }> {
   await ok(await request.post(`${API_URL}/api/v1/auth/otp/request`, { headers: json, data: { destination: phone } }), "asking for a code");
   const body = await ok<{ access_token: string }>(

@@ -40,7 +40,7 @@ DELETED_NAME = "Deleted user"
 
 
 def _wrong_password() -> ProblemError:
-    # 403, not 401: the person is signed in, and the web app treats a 401 as an expired session.
+    # 403, 401 биш: хэрэглэгч нэвтэрсэн байгаа, мөн web app 401-ийг session дууссан гэж ойлгодог.
     return ProblemError(
         HTTPStatus.FORBIDDEN,
         "Incorrect password",
@@ -50,8 +50,8 @@ def _wrong_password() -> ProblemError:
 
 
 class AccountService:
-    """What a signed-in person can do to their own account: rename it, set or change the password,
-    delete it."""
+    """Нэвтэрсэн хүн өөрийн бүртгэлд хийж болох зүйлс: нэр солих, нууц үг тохируулах эсвэл солих,
+    устгах."""
 
     def __init__(
         self, session: AsyncSession, auth: AuthService, otp: OtpService, settings: Settings
@@ -71,8 +71,8 @@ class AccountService:
             return UserView(user, await self._users.providers(user.id))
 
     async def change_password(self, user_id: int, request: ChangePasswordRequest) -> IssuedSession:
-        """Sets or changes the password. Every other login ends (a changed password usually means
-        the old one may be known to someone else) and this browser gets a fresh session."""
+        """Нууц үгийг тохируулна эсвэл солино. Бусад бүх нэвтрэлт дуусна (нууц үг солигдсон нь
+        хуучныг нь бусад хүн мэдэж болзошгүй гэсэн үг) бөгөөд энэ browser шинэ session авна."""
         async with self._session.begin():
             user = await self._active_user(user_id)
         await self._check_password(user, request.current_password)
@@ -88,8 +88,9 @@ class AccountService:
         return issued
 
     async def delete(self, user_id: int, request: DeleteAccountRequest) -> None:
-        """Anonymizes the account. Orders stay (accounting, and `orders.user_id` is RESTRICT), but
-        keep only their own snapshots: the user row no longer says who it was."""
+        """Бүртгэлийг нэргүйжүүлнэ. Захиалгууд үлдэнэ (нягтлан бодох бүртгэл, мөн
+        `orders.user_id` нь RESTRICT), гэхдээ зөвхөн өөрсдийн snapshot-ийг хадгална: user мөр
+        хэн байсныг мөн ингэж хэлэхээ больсон."""
         async with self._session.begin():
             user = await self._active_user(user_id)
         if user.is_admin:
@@ -122,7 +123,7 @@ class AccountService:
         await self._auth.clear_failures(request.confirm)
         log.info("account_deleted", user_id=user_id)
 
-    # --- devices: the logins that are open ------------------------------------------------
+    # --- төхөөрөмжүүд: нээлттэй нэвтрэлтүүд ---
 
     async def sessions(self, user_id: int, refresh_token: str | None) -> list[DeviceSession]:
         now = datetime.now(UTC)
@@ -144,7 +145,7 @@ class AccountService:
     async def revoke_session(
         self, user_id: int, family_id: uuid.UUID, refresh_token: str | None
     ) -> bool:
-        """Ends one login. True when it is the login of the browser that asked."""
+        """Нэг нэвтрэлтийг дуусгана. Хүсэлт гаргасан browser-ийн нэвтрэлт бол True."""
         async with self._session.begin():
             current = await self._current_family(user_id, refresh_token)
             ended = await self._tokens.revoke_family_of_user(user_id, family_id, datetime.now(UTC))
@@ -153,7 +154,7 @@ class AccountService:
         return family_id == current
 
     async def revoke_other_sessions(self, user_id: int, refresh_token: str | None) -> None:
-        """ "Sign out everywhere else": every login but the one this browser holds."""
+        """ "Бусад бүх газраас гарах": энэ browser-ийн нэвтрэлтээс бусад бүгд."""
         async with self._session.begin():
             current = await self._current_family(user_id, refresh_token)
             if current is None:
@@ -172,10 +173,10 @@ class AccountService:
         row = await self._tokens.get_by_hash(hash_token(refresh_token))
         return row.family_id if row is not None and row.user_id == user_id else None
 
-    # --- phone number and email: add, change, confirm, remove -----------------------------
+    # --- утасны дугаар ба email: нэмэх, солих, баталгаажуулах, устгах ---
 
     async def request_phone(self, user_id: int, raw_phone: str, password: str | None) -> None:
-        """Send a code to the number the person wants to use (a new one, or a replacement)."""
+        """Хүн ашиглахыг хүссэн дугаар руу (шинэ эсвэл солих) код илгээнэ."""
         phone = normalize_phone_number(raw_phone, self._settings.default_phone_region)
         user = await self._checked_user(user_id, password)
         if user.phone == phone:
@@ -199,7 +200,7 @@ class AccountService:
                 self._session.add(user)
                 await self._session.flush()
                 return UserView(user, await self._users.providers(user.id))
-        except IntegrityError:  # someone else claimed it between the check and the write
+        except IntegrityError:  # шалгалт болон бичилтийн хооронд өөр хүн авчихсан
             raise _phone_taken() from None
 
     async def remove_phone(self, user_id: int, password: str | None) -> UserView:
@@ -250,7 +251,7 @@ class AccountService:
                 return UserView(user, await self._users.providers(user.id))
             if user.phone is None:
                 raise _last_method("email address")
-            # Signing in with a password needs the email: without it the password is dead weight.
+            # Нууц үгээр нэвтрэхэд email хэрэгтэй: email-гүй бол нууц үг хэрэггүй ачаа болно.
             user.email = None
             user.email_verified_at = None
             user.password_hash = None
@@ -276,10 +277,10 @@ class AccountService:
             self._session.add(user)
             return UserView(user, await self._users.providers(user.id))
 
-    # --- helpers --------------------------------------------------------------------------
+    # --- туслах функцууд ---
 
     async def _checked_user(self, user_id: int, password: str | None) -> User:
-        """The signed-in user, who has proved the password if the account has one."""
+        """Нэвтэрсэн хэрэглэгч; бүртгэл нууц үгтэй бол нууц үгээ баталгаажуулсан байна."""
         async with self._session.begin():
             user = await self._active_user(user_id)
         await self._check_password(user, password)
@@ -298,7 +299,7 @@ class AccountService:
         return user
 
     async def _check_password(self, user: User, given: str | None) -> None:
-        """Accounts with a password must prove it; Google-only accounts have nothing to prove."""
+        """Нууц үгтэй бүртгэл нотлох ёстой; зөвхөн Google-ийн бүртгэлд нотлох зүйл байхгүй."""
         if user.password_hash is None:
             return
         rate = await self._auth.check_failure_limit(user.identifier)

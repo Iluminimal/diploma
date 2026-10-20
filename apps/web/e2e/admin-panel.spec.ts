@@ -10,7 +10,7 @@ import {
 } from "./support/api";
 import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL, PASSWORD } from "./support/env";
 
-/** Sign in through the form, as a person would. */
+/** Хүн шиг форм бөглөж нэвтэрнэ. */
 async function signInThroughTheForm(page: Page, email: string, password: string, next?: string) {
   await page.goto(next ? `/login?next=${encodeURIComponent(next)}` : "/login");
   await page.getByLabel("Email or phone number").fill(email);
@@ -106,7 +106,7 @@ test.describe("fulfilment", () => {
     const product = await newProduct();
     const number = await placePaidOrder(api, account, product.id);
 
-    // --- the administrator ships it ---------------------------------------------------------------
+    // --- админ захиалгыг илгээнэ ---
     await page.goto(`/admin/orders?status=paid&q=${number}`);
     await page.getByRole("link", { name: number }).click();
     await expect(page.getByRole("heading", { level: 1, name: `Order ${number}` })).toBeVisible();
@@ -127,14 +127,14 @@ test.describe("fulfilment", () => {
     await expect(page.getByRole("button", { name: "Mark as delivered" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Mark as shipped" })).toHaveCount(0);
 
-    // --- the customer sees where it is ---------------------------------------------------------------
+    // --- худалдан авагч захиалга хаана явааг харна ---
     await shopper.goto(`/account/orders/${number}`);
     await expect(shopper.getByText("Tracking with DHL")).toBeVisible();
     await expect(shopper.getByText("E2E 0146 1234", { exact: false }).first()).toBeVisible();
     await expect(shopper.getByRole("listitem").filter({ hasText: "Shipped, current step" })).toBeVisible();
     await expect(shopper.getByRole("link", { name: /Write a review/ })).toHaveCount(0);
 
-    // --- delivered: now they can review it -------------------------------------------------------------
+    // --- хүргэгдсэн: одоо сэтгэгдэл бичиж болно ---
     await page.getByRole("button", { name: "Mark as delivered" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Mark as delivered" }).click();
     await expect(page.getByRole("button", { name: "Refund" })).toBeVisible();
@@ -154,7 +154,7 @@ test.describe("fulfilment", () => {
     await expect(shopper.getByRole("button", { name: "Edit" })).toBeVisible();
     await expect(shopper.getByRole("form", { name: "Write a review" })).toHaveCount(0);
 
-    // --- a visitor sees it, with the rating in the page's structured data ------------------------------
+    // --- зочин үүнийг харна, үнэлгээ нь хуудасны structured data-д орсон ---
     const visitor = await (await browser.newContext()).newPage();
     await visitor.goto(`/products/${product.id}`);
     const reviews = visitor.getByRole("region", { name: "Customer reviews" });
@@ -163,7 +163,7 @@ test.describe("fulfilment", () => {
     await expect(reviews.getByText("4.0")).toBeVisible();
     await expect(reviews.getByRole("link", { name: "Sign in" })).toBeVisible();
 
-    // --- the administrator hides it: gone from the page and the rating; publishing brings it back ------
+    // --- админ нуувал хуудас болон үнэлгээнээс алга болно; дахин нийтлэхэд буцна ---
     await page.goto(`/admin/reviews?q=${encodeURIComponent(product.name)}`);
     await page.getByRole("button", { name: /Hide the review by/ }).click();
     await expect(page.getByRole("button", { name: /Publish the review by/ })).toBeVisible();
@@ -176,7 +176,7 @@ test.describe("fulfilment", () => {
     await visitor.reload();
     await expect(visitor.getByText("Soft cotton and true to size.")).toBeVisible();
 
-    // The author can change their mind.
+    // Зохиогч санаагаа өөрчилж болно.
     await shopper.reload();
     await shopper.getByRole("button", { name: "Edit" }).click();
     const edit = shopper.getByRole("form", { name: "Edit your review" });
@@ -237,7 +237,7 @@ test.describe("fulfilment", () => {
     const paid = await placePaidOrder(api, account, product.id);
     expect(await stockOf(api, admin, product.id)).toBe(19);
 
-    // --- refund ---------------------------------------------------------------------------------------
+    // --- буцаалт ---
     await page.goto(`/admin/orders/${paid}`);
     await page.getByRole("button", { name: "Refund" }).click();
     const refund = page.getByRole("dialog", { name: "Refund this order?" });
@@ -257,10 +257,10 @@ test.describe("fulfilment", () => {
     expect((await orderOf(api, account, paid)).status).toBe("refunded");
     await shopper.goto(`/account/orders/${paid}`);
     await expect(shopper.getByRole("listitem").filter({ hasText: "Refunded" }).first()).toBeVisible();
-    // The customer never sees the administrator's reason or who did it.
+    // Худалдан авагч админы шалтгаан болон хэн хийснийг хэзээ ч харахгүй.
     await expect(shopper.getByText("Customer changed their mind")).toHaveCount(0);
 
-    // --- cancel an unpaid order ---------------------------------------------------------------------------
+    // --- төлөгдөөгүй захиалгыг цуцлах ---
     const unpaid = await placePendingOrder(api, account, product.id);
     expect(await stockOf(api, admin, product.id)).toBe(19);
     await page.goto(`/admin/orders/${unpaid}`);
@@ -300,7 +300,7 @@ test.describe("running the shop", () => {
     await expect(page.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
     const figures = page.getByLabel(/Key figures for the last 30 days/);
     await expect(figures).toContainText("Revenue");
-    // Against the period before: on a new shop there is none to compare with.
+    // Өмнөх хугацаатай харьцуулалт: шинэ дэлгүүрт харьцуулах зүйл байхгүй.
     await expect(figures).toContainText(/vs previous 30 days|nothing in the period before|No sales in either period/);
     await expect(page.getByRole("img", { name: /Daily revenue over the last 30 days/ })).toBeVisible();
     const attention = page.getByRole("region", { name: "Needs attention" });

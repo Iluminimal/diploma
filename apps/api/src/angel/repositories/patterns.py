@@ -1,5 +1,5 @@
-"""LIKE patterns for user-typed text. Use them with `escape="\\\\"`, so a `%` or `_` the user
-types is an ordinary character and not a wildcard."""
+"""Хэрэглэгчийн бичсэн текстийн LIKE pattern-ууд. `escape="\\"`-тай хамт хэрэглэ: ингэвэл
+хэрэглэгчийн бичсэн `%`, `_` нь wildcard биш энгийн тэмдэгт болно."""
 
 
 def _escape(text: str) -> str:

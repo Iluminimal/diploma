@@ -11,7 +11,9 @@ import { ApiError, userMessage } from "@/lib/api/errors";
 import { cn } from "@/lib/utils";
 import { useAuthActions } from "./use-auth-actions";
 
-/** An email that has a password: ask for it, or offer a code instead (which also creates an account). */
+/**
+ * Нууц үгтэй имэйл: нууц үг асууна, эсвэл оронд нь код санал болгоно (код нь бүртгэл бас үүсгэнэ).
+ */
 export function PasswordStep({
   email,
   onSignedIn,
@@ -41,8 +43,8 @@ export function PasswordStep({
     } catch (error) {
       setProblem(
         error instanceof ApiError && error.is("invalidCredentials")
-          ? // The same words for every email, so this never reveals who has an account, plus the way
-            // out for people who signed up with Google or a code and have no password yet.
+          ? // Имэйл бүрт ижил үг тул хэнд бүртгэл байгааг ил болгохгүй. Мөн Google эсвэл
+            // кодоор бүртгүүлсэн, нууц үггүй хүмүүст гарах замыг өгнө.
             `${userMessage(error)} No password yet? Get a code by email instead, or use “Continue with Google”.`
           : userMessage(error),
       );
@@ -54,7 +56,7 @@ export function PasswordStep({
   const shown = problem ?? codeProblem ?? undefined;
   return (
     <form onSubmit={submit} noValidate className="space-y-4" aria-label="Sign in">
-      {/* Lets password managers see which account this is. */}
+      {/* Password manager аль бүртгэл болохыг таньж чадна. */}
       <input type="email" name="username" value={email} autoComplete="username" readOnly hidden />
       <div className="space-y-2">
         <div className={cn("group relative", shown && "animate-shake")}>

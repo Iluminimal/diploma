@@ -3,7 +3,7 @@ import Link from "next/link";
 import { MULTI_KEYS, toHref, type ListingQuery } from "./filters";
 import { formatPrice } from "./product";
 
-/** Removable chips as plain links: no client JS, and each chip is the URL without that value. */
+/** Устгах боломжтой chip-үүд энгийн холбоос: client JS хэрэггүй, chip бүр тэр утгагүй URL. */
 export function ActiveFilters({ query, path = "/products" }: { query: ListingQuery; path?: string }) {
   const chips: { label: string; href: string }[] = [];
   const without = (patch: Partial<ListingQuery>) => toHref(path, { ...query, ...patch, page: 1 });

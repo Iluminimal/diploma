@@ -3,7 +3,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toHref, type ListingQuery } from "./filters";
 
-/** Compact page list: 1 … 4 5 [6] 7 8 … 20. */
+/** Товчилсон хуудасны жагсаалт: 1 … 4 5 [6] 7 8 … 20. */
 export function pageWindow(current: number, pages: number): (number | "gap")[] {
   const wanted = new Set([1, pages, current - 1, current, current + 1]);
   const sorted = [...wanted].filter((p) => p >= 1 && p <= pages).sort((a, b) => a - b);

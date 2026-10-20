@@ -3,16 +3,16 @@ import { categoryPaths, type CatalogNav } from "@/features/catalog/nav";
 import { productPath } from "@/features/catalog/product";
 import { absoluteUrl } from "@/lib/site";
 
-/** Products per sitemap file. The protocol allows 50,000 URLs; smaller files are quicker to build. */
+/** Нэг sitemap файл дахь бүтээгдэхүүн. Protocol 50,000 URL зөвшөөрдөг; жижиг файл хурдан бүтдэг. */
 export const SITEMAP_CHUNK = 10_000;
 
-/** Ids of the sitemap files for a catalogue of `total` products (always at least one). */
+/** `total` бүтээгдэхүүнтэй catalogue-ийн sitemap файлын id-ууд (хамгийн багадаа нэг). */
 export function sitemapIds(total: number): { id: number }[] {
   const files = Math.max(1, Math.ceil(total / SITEMAP_CHUNK));
   return Array.from({ length: files }, (_, id) => ({ id }));
 }
 
-/** Pages that are not products or categories: the home page, the listing and the search tool. */
+/** Бүтээгдэхүүн, ангилал биш хуудсууд: нүүр, жагсаалт, хайлтын хэрэгсэл. */
 export function staticEntries(): MetadataRoute.Sitemap {
   return [
     { url: absoluteUrl("/"), changeFrequency: "daily", priority: 1 },
@@ -21,7 +21,10 @@ export function staticEntries(): MetadataRoute.Sitemap {
   ];
 }
 
-/** Every department and category page (/c/men, /c/men/apparel/topwear, ...). Shallower pages rank higher. */
+/**
+ * Бүх department, ангиллын хуудас (/c/men, /c/men/apparel/topwear, ...). Гүехэн хуудас өндөр rank
+ * авна.
+ */
 export function categoryEntries(nav: CatalogNav): MetadataRoute.Sitemap {
   return categoryPaths(nav).map((path) => ({
     url: absoluteUrl(path),
@@ -39,12 +42,12 @@ export function productEntries(items: { id: number; slug: string; updated_at: st
   }));
 }
 
-/** Where each sitemap file lives (`/sitemap/<id>.xml`). */
+/** Sitemap файл бүр хаана байх (`/sitemap/<id>.xml`). */
 export const sitemapUrl = (id: number) => absoluteUrl(`/sitemap/${id}.xml`);
 
 /**
- * Crawl rules. Account, cart, checkout and admin pages are private; free-text search and deep
- * pages are `noindex` and not worth a crawler's time (products are listed in the sitemap).
+ * Crawl-ийн дүрэм. Account, cart, checkout, admin хуудас хувийн; чөлөөт текст хайлт ба гүн хуудас
+ * `noindex` бөгөөд crawler-ийн цагийг үрэх хэрэггүй (бүтээгдэхүүн sitemap-д байна).
  */
 export function robotsFor(ids: number[]): MetadataRoute.Robots {
   return {

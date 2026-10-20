@@ -20,11 +20,11 @@ export function ConfirmationView({ number }: { number: string }) {
     queryKey: queryKeys.order(number),
     queryFn: () => fetchOrder(number),
     enabled: status === "signedIn",
-    // A payment confirmation can lag behind the redirect: keep looking until it settles.
+    // Төлбөрийн баталгаа redirect-ээс хоцорч болно: тогттол үргэлжлүүлэн шалгана.
     refetchInterval: (query) => (query.state.data?.status === "pending" ? 2_000 : false),
   });
 
-  // Move focus to the result so screen readers announce it after the redirect.
+  // Redirect-ийн дараа screen reader зарлахын тулд focus-ыг үр дүн рүү шилжүүлнэ.
   useEffect(() => {
     if (order) heading.current?.focus();
   }, [order?.status]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -90,7 +90,7 @@ export function ConfirmationView({ number }: { number: string }) {
   );
 }
 
-/** Three short steps after paying, each rising in a little after the one before. */
+/** Төлсний дараах гурван богино алхам, тус бүр өмнөхийнхөөс жаахан хоцорч гарна. */
 function WhatHappensNext({ email }: { email: string }) {
   const steps = [
     { title: "Confirmation sent", text: `A receipt is on its way to ${email}.` },

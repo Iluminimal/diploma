@@ -64,7 +64,7 @@ describe("MiniCart", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Increase quantity of Blue Kurta" }));
 
-    // The request is still pending, yet the cart already shows the new quantity and total.
+    // Хүсэлт дуусаагүй байхад cart шинэ тоо, нийт дүнгээ аль хэдийн харуулж байна.
     expect(within(screen.getAllByRole("listitem")[0]!).getByText("3")).toBeInTheDocument();
     expect(screen.getByText("$140")).toBeInTheDocument();
     release();

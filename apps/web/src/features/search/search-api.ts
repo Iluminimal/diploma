@@ -5,14 +5,14 @@ import { errorFromResponse, networkError } from "@/lib/api/errors";
 
 export type ImageSearchParams = {
   filters: CatalogFilters;
-  /** Chosen by the user; the detected category is only a suggestion and is not applied. */
+  /** Хэрэглэгчийн сонгосон; илрүүлсэн ангилал зөвхөн санал бөгөөд хэрэгжихгүй. */
   articleType: string | null;
-  /** Text refinement ("like this but in blue"). Non-empty switches to hybrid search. */
+  /** Текстээр нарийсгах ("like this but in blue"). Хоосон биш бол hybrid search руу шилжинэ. */
   refinement: string;
   limit?: number;
 };
 
-/** The upload endpoints take multipart forms; repeated fields mean "any of". */
+/** Upload endpoint-ууд multipart form авдаг; давтагдсан талбар "аль нэг нь" гэсэн үг. */
 export function buildSearchForm(file: File, params: ImageSearchParams): FormData {
   const form = new FormData();
   form.append("file", file);

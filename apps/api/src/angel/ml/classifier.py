@@ -1,8 +1,7 @@
-"""Garment localization and zero-shot category prediction.
+"""Хувцасны байршил тогтоох, zero-shot аргаар category таамаглах.
 
-Both sit behind small interfaces: a detector (e.g. YOLO) can later return several garment
-regions, each of which is embedded and classified independently. For now the "region" is the
-whole image.
+Хоёулаа жижиг interface-ийн ард байгаа: дараа нь detector (жишээ нь YOLO) хэд хэдэн хувцасны
+хэсэг буцааж, тус бүрийг тусад нь embed, classify хийж болно. Одоогоор "хэсэг" нь бүтэн зураг.
 """
 
 import asyncio
@@ -21,27 +20,27 @@ PROMPT_TEMPLATE = "a photo of {label}"
 
 @dataclass(frozen=True)
 class CategoryLabel:
-    """A predictable category. `article_type` is what products are filtered by."""
+    """Таамаглаж болох category. Бүтээгдэхүүнийг `article_type`-оор шүүнэ."""
 
     article_type: str
-    path: str  # full slug path, e.g. "apparel/topwear/shirts"
-    name: str  # human-readable text used in the prompt, e.g. "Shirts"
+    path: str  # slug-ийн бүтэн зам, жишээ нь "apparel/topwear/shirts"
+    name: str  # prompt-д орох хүнд ойлгомжтой нэр, жишээ нь "Shirts"
 
 
 @dataclass(frozen=True)
 class CategoryPrediction:
     label: CategoryLabel
-    score: float  # softmax probability over all labels, in [0, 1]
+    score: float  # бүх label дээрх softmax магадлал, [0, 1]
 
 
 class GarmentLocalizer(Protocol):
     def locate(self, image: Image.Image) -> list[Image.Image]:
-        """Garment regions to search for. Never empty."""
+        """Хайх хувцасны хэсгүүд. Хэзээ ч хоосон биш."""
         ...
 
 
 class WholeImageLocalizer:
-    """No detection: the whole picture is the garment."""
+    """Detection хийхгүй: бүтэн зургийг хувцас гэж үзнэ."""
 
     def locate(self, image: Image.Image) -> list[Image.Image]:
         return [image]
@@ -52,10 +51,10 @@ class CategoryClassifier(Protocol):
 
 
 class LazyCategoryClassifier:
-    """Builds the real classifier on first use (and retries after a failure).
+    """Жинхэнэ classifier-ийг анх ашиглах үед үүсгэнэ (алдаа гарвал дахин оролдоно).
 
-    Its labels come from the database, which may be briefly unavailable at startup; the API
-    should still boot and become ready as soon as the database is.
+    Label-үүд database-аас ирдэг, startup үед database түр бэлэн биш байж болно. Гэхдээ API
+    ердийнхөөрөө асаж, database бэлэн болмогц ажиллах ёстой.
     """
 
     def __init__(self, factory: Callable[[], Awaitable[CategoryClassifier]]) -> None:
@@ -72,10 +71,10 @@ class LazyCategoryClassifier:
 
 
 class ZeroShotCategoryClassifier:
-    """Compares an image embedding with text embeddings of the category names.
+    """Зургийн embedding-ийг category нэрсийн text embedding-тэй харьцуулна.
 
-    Label embeddings are computed once, so predicting costs one small matrix product on top of
-    the image embedding the search already needs.
+    Label embedding-ийг нэг л удаа бодсон тул таамаглал нь хайлтад аль хэдийн хэрэгтэй зургийн
+    embedding дээр нэг жижиг матрицын үржвэр нэмэхэд л хүрнэ.
     """
 
     def __init__(
@@ -106,7 +105,7 @@ class ZeroShotCategoryClassifier:
         if not self._labels:
             return []
         logits = self._logit_scale * (self._embeddings @ embedding)
-        logits -= logits.max()  # numerical stability
+        logits -= logits.max()  # тоон тогтвортой байлгах
         probabilities = np.exp(logits)
         probabilities /= probabilities.sum()
         best = np.argsort(-probabilities)[:top_k]

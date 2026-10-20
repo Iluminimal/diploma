@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 import { CountrySelect } from "./phone-input";
 
 /**
- * The one field of the sign-in page: an email or a phone number, with a label that floats up as
- * soon as there is something in it. For a phone number a country picker appears inside the field.
+ * Нэвтрэх хуудасны цорын ганц талбар: имэйл эсвэл утасны дугаар. Талбарт юм бичмэгц label дээш
+ * хөвнө. Утасны дугаар бол талбар дотор улс сонгогч гарна.
  */
 export function IdentifierField({
   value,
@@ -19,7 +19,7 @@ export function IdentifierField({
 }: {
   value: string;
   onChange: (value: string) => void;
-  /** The text is a phone number: show the country picker. */
+  /** Текст утасны дугаар: улс сонгогчийг харуулна. */
   phone: boolean;
   region: CountryCode;
   onRegionChange: (region: CountryCode) => void;
@@ -41,7 +41,8 @@ export function IdentifierField({
           type="text"
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          // "username webauthn" lets password managers and passkeys offer themselves here.
+          // "username webauthn" нь password manager болон passkey-д энд өөрсдийгөө санал болгох
+          // боломж өгнө.
           autoComplete="username webauthn"
           inputMode={phone ? "tel" : "email"}
           autoCapitalize="none"

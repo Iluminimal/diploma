@@ -16,12 +16,12 @@ from angel.models.mixins import TimestampMixin
 
 
 class Review(TimestampMixin, Base):
-    """A buyer's rating of a product. One per user per product; an administrator can hide it
-    (it then stays with its author but leaves the product page and the average)."""
+    """Худалдан авагчийн барааны үнэлгээ. Хэрэглэгч бүр бараа бүрт нэг; администратор нууж болно
+    (зохиогчид үлдэх ч барааны хуудас, дунджаас хасагдана)."""
 
     __tablename__ = "reviews"
     __table_args__ = (
-        # One review per user per product.
+        # Хэрэглэгч бүр бараа бүрт нэг review.
         UniqueConstraint("product_id", "user_id"),
         CheckConstraint("rating BETWEEN 1 AND 5", name="rating_range"),
         CheckConstraint("status IN ('published', 'hidden')", name="status_valid"),
@@ -33,7 +33,7 @@ class Review(TimestampMixin, Base):
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
     product_id: Mapped[int] = mapped_column(ForeignKey("products.id", ondelete="CASCADE"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-    # The order that made this person a buyer of the product (kept for the admin's reference).
+    # Энэ хүнийг барааны худалдан авагч болгосон захиалга (админы лавлагаанд хадгална).
     order_id: Mapped[int | None] = mapped_column(ForeignKey("orders.id", ondelete="SET NULL"))
     rating: Mapped[int] = mapped_column(SmallInteger)
     title: Mapped[str | None] = mapped_column(String(120))

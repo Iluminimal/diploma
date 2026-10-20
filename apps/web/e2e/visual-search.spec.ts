@@ -28,7 +28,7 @@ test("a photo search shows similar products with match badges and a detected cat
   await expect(page.getByText(/\d+% match/).first()).toBeVisible();
   await expect(page.getByRole("button", { name: /Detected:/ })).toBeVisible();
   if (!FAKE_MODEL) {
-    // FashionCLIP sees through the browser's re-encoding: the product's own photo still wins.
+    // FashionCLIP browser-ийн дахин encode-ыг давж харна: барааны өөрийн зураг ялсаар байна.
     await expect(page.locator("article a").first()).toHaveAttribute("href", new RegExp(`^/products/${product.id}/`));
   }
 });
@@ -46,7 +46,7 @@ test("through the API, a catalogue photo finds its own product first with a near
   expect(response.status()).toBe(200);
   const body = await response.json();
   expect(body.results[0].product.id).toBe(product.id);
-  // The thumbnail is a lossy copy of the photo the embedding was made from: very close, not exact.
+  // Thumbnail нь embedding гарсан зургийн алдагдалтай хуулбар: маш ойр боловч яг ижил биш.
   expect(body.results[0].similarity).toBeGreaterThan(0.97);
   expect(body.results[1].similarity).toBeLessThan(body.results[0].similarity - 0.05);
   expect(body.detected.length).toBeGreaterThan(0);
@@ -61,7 +61,8 @@ test("the user can override the detected category", async ({ page, api, products
   await searches.clear();
 
   await page.getByRole("button", { name: /Detected:/ }).click();
-  // "Any category" comes first; the next entry is the most likely category the model found.
+  // "Any category" эхэнд байх бөгөөд дараагийн бүртгэл нь загварын олсон хамгийн магадлалтай
+  // ангилал.
   const choice = page.getByRole("menuitemradio").nth(1);
   const category = (await choice.locator("span").first().innerText()).trim();
   await choice.click();
@@ -93,7 +94,7 @@ test("words refine the search (hybrid), and a filter chip narrows it", async ({ 
 test("pasting an image starts a search", async ({ page, api, products }) => {
   const { photo } = await ownPhoto(api, products);
   await page.goto("/search");
-  await page.waitForLoadState("networkidle"); // the listener is attached by React
+  await page.waitForLoadState("networkidle"); // Listener-ийг React залгасан
 
   await page.evaluate(async (base64) => {
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));

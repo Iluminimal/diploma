@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 export type Chip = { label: string; href: string; count?: number };
 
-/** A swipeable row of links: departments on /products, the next level down on /c/... pages. */
+/** Шудрах боломжтой холбоосын мөр: /products дээр department, /c/... хуудсанд дараагийн түвшин. */
 export function CategoryChips({ label, items, className }: { label: string; items: Chip[]; className?: string }) {
   if (items.length === 0) return null;
   return (

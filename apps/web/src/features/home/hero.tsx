@@ -7,22 +7,25 @@ import { PhotoSearchTrigger } from "@/features/search/photo-search-trigger";
 import { newest } from "./home-data";
 import { Tile } from "./tile";
 
-/** Where each of the three photos comes from. The middle one is the biggest, as the product is on apple.com's first tile. */
+/**
+ * Гурван зураг тус бүр хаанаас ирэх. Дунд нь хамгийн том, apple.com-ын эхний tile-ийн бүтээгдэхүүн
+ * шиг.
+ */
 const SLOTS = [
   { patch: { category: "footwear" }, size: "w-[30%] md:w-[22%]", offset: "mt-10 md:mt-16", hide: "hidden sm:block" },
   { patch: { department: "women", category: "apparel" }, size: "w-[46%] md:w-[28%]", offset: "mt-0", hide: "" },
   { patch: { department: "men", category: "apparel" }, size: "w-[40%] md:w-[24%]", offset: "mt-6 md:mt-10", hide: "" },
 ] as const;
 
-/** What each picture on the first tile is of; the same pieces are not repeated in the department tiles. */
+/** Эхний tile дахь зураг тус бүр юуны зураг: department tile-д ижил бүтээгдэхүүн давтагдахгүй. */
 async function heroPhotos(): Promise<(Product | undefined)[]> {
   return Promise.all(SLOTS.map(async (slot) => (await newest(slot.patch, 1))[0]));
 }
 
 /**
- * The first tile: the idea of the shop in one line, two ways in (the photo, or the new arrivals), and
- * real products underneath. The headline and the buttons are plain (never hidden or animated from
- * invisible), because they are what the page is measured on.
+ * Эхний tile: дэлгүүрийн санаа нэг мөрөөр, хоёр орох зам (зураг эсвэл шинэ бараа), доор нь жинхэнэ
+ * бүтээгдэхүүн. Гарчиг ба товчнууд энгийн (хэзээ ч нуухгүй, үл үзэгдэхээс animation хийхгүй), учир
+ * нь хуудсыг тэдгээрээр хэмждэг.
  */
 export async function Hero() {
   const photos = await heroPhotos();

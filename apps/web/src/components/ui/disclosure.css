@@ -1,7 +1,7 @@
-/* Imported by disclosure.tsx, so only pages that use a Disclosure download it. */
+/* disclosure.tsx импортолдог, ингэснээр Disclosure ашигладаг хуудсууд л үүнийг татна. */
 /*
- * A native <details> whose panel opens and closes smoothly where the browser supports animating
- * to `auto` height (Chromium, Safari); elsewhere it simply opens. No script.
+ * `auto` өндөр рүү animation хийхийг дэмждэг browser (Chromium, Safari) дээр panel-ийг зөөлөн нээж
+ * хаадаг `<details>`; бусад дээр зүгээр нээгдэнэ. Script-гүй.
  */
 .disclosure {
   interpolate-size: allow-keywords;

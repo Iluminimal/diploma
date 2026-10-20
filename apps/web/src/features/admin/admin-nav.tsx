@@ -27,7 +27,7 @@ export const ADMIN_LINKS: readonly {
   { href: "/admin/reviews", label: "Reviews", icon: Star },
 ];
 
-/** A sidebar on wide screens, a scrolling strip of pills on phones. */
+/** Өргөн дэлгэц дээр sidebar, утсан дээр гүйлгэдэг pill-үүдийн мөр. */
 export function AdminNav() {
   const pathname = usePathname();
   return (

@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      // Next turns smooth scrolling off for the instant of a route change when it sees this.
+      // Энэ attribute-ыг харвал Next route солигдох агшинд smooth scroll-ийг түр унтраадаг.
       data-scroll-behavior="smooth"
       className="h-full antialiased"
     >

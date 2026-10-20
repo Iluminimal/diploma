@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push, replace: vi.fn(), 
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }) }));
 
 const kurta = makeProduct({ id: 1, name: "Blue Kurta", price_cents: 3000 });
-const cart = makeCart([makeCartLine({ id: 10, product: kurta, quantity: 2 })]); // $60: below free shipping
+const cart = makeCart([makeCartLine({ id: 10, product: kurta, quantity: 2 })]); // $60: үнэгүй хүргэлтээс доош
 const bigCart = makeCart([makeCartLine({ id: 10, product: kurta, quantity: 4 })]); // $120
 
 const routes = (overrides: Record<string, unknown> = {}) => ({
@@ -40,7 +40,7 @@ describe("CheckoutView", () => {
     stubApi(routes() as never);
     renderWithQuery(<CheckoutView />);
 
-    expect(await screen.findByLabelText(/Ada Lovelace/)).toBeChecked(); // the default address is preselected
+    expect(await screen.findByLabelText(/Ada Lovelace/)).toBeChecked(); // үндсэн хаяг урьдчилан сонгогдсон
     expect(screen.getByRole("radio", { name: /Standard shipping/ })).toBeChecked();
     expect(screen.getByText(/Demo payment, no real charge\./, { selector: "strong" })).toBeInTheDocument();
     const summary = screen.getByRole("complementary", { name: "Order summary" });
@@ -98,7 +98,7 @@ describe("CheckoutView", () => {
     const checkout = api.calls.find((c) => c.path === "/api/v1/checkout")!;
     expect(checkout.body).toEqual({ address_id: 1, shipping_method: "standard" });
     expect(checkout.headers.get("Idempotency-Key")).toMatch(/^[0-9a-f-]{36}$/);
-    // Card details never leave the page.
+    // Картын мэдээлэл хуудаснаас гарахгүй.
     expect(JSON.stringify(api.calls.map((c) => c.body))).not.toContain("4242");
   });
 
@@ -136,7 +136,7 @@ describe("CheckoutView", () => {
     renderWithQuery(<CheckoutView />);
 
     const address = await screen.findByRole("region", { name: "Delivery address" });
-    expect(address).toHaveTextContent("12 Analytical Way"); // the summary beside the title
+    expect(address).toHaveTextContent("12 Analytical Way"); // гарчгийн хажуух хураангуй
     const shipping = screen.getByRole("region", { name: "Shipping method" });
     expect(shipping).toHaveTextContent("Standard shipping, 3-5 business days");
     expect(screen.getByRole("region", { name: "Payment" })).not.toHaveTextContent("3-5 business days");

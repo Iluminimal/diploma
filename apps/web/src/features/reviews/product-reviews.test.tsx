@@ -22,7 +22,7 @@ describe("ProductReviews for a visitor", () => {
     stubApi({ [URL]: respond(makeReviewPage()) });
     renderWithQuery(<ProductReviews productId={41885} initial={makeReviewPage()} />);
 
-    // At once, before anything has been asked for.
+    // Шууд, юу ч асуухаас өмнө.
     expect(screen.getByRole("heading", { level: 2, name: "Customer reviews" })).toBeInTheDocument();
     expect(screen.getByText("4.5")).toBeInTheDocument();
     expect(screen.getByText("2 reviews")).toBeInTheDocument();

@@ -14,7 +14,7 @@ LABELS = [
     CategoryLabel("Jeans", "apparel/bottomwear/jeans", "Jeans"),
     CategoryLabel("Casual Shoes", "footwear/shoes/casual-shoes", "Casual Shoes"),
 ]
-AXES = np.eye(3, 512, dtype=np.float32)  # three orthogonal label embeddings
+AXES = np.eye(3, 512, dtype=np.float32)  # label бүрийн ортогональ 3 embedding
 
 
 def unit(vector: np.ndarray) -> np.ndarray:
@@ -71,7 +71,7 @@ async def test_build_embeds_one_prompt_per_label() -> None:
     assert embedder.texts_embedded == 3
     assert len(built.predict(embedder.embed_texts(["a photo of jeans"])[0], 3)) == 3
     top = built.predict(embedder.embed_texts(["a photo of jeans"])[0], 1)[0]
-    assert top.label.article_type == "Jeans"  # same prompt text as the label's own embedding
+    assert top.label.article_type == "Jeans"  # label-ийн өөрийн embedding-тэй ижил prompt текст
 
 
 async def test_lazy_classifier_builds_once_and_retries_after_failure() -> None:

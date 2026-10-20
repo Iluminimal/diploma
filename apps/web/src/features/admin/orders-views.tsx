@@ -293,7 +293,7 @@ export function AdminOrderView({ number }: { number: string }) {
           </div>
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="bg-background border-border rounded-[var(--radius-tile)] border p-4 sm:p-6">
-              {/* What the customer sees of it: their view has no internal notes. */}
+              {/* Үйлчлүүлэгчид юу харагдах: тэдний харагдацад дотоод тэмдэглэл байхгүй. */}
               <OrderDetail
                 order={{ ...order, events: order.events.filter((event) => event.type !== "note") as Order["events"] }}
               />

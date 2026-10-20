@@ -8,7 +8,8 @@ from angel.repositories.accounts.users import AddressRepository
 from angel.schemas.accounts.address import AddressIn, AddressList, AddressOut, AddressUpdate
 
 MAX_ADDRESSES = 10
-# Columns that can never be empty, as opposed to the optional ones PATCH may clear with null.
+# Хэзээ ч хоосон байж болохгүй баганууд (PATCH-ийн null-аар цэвэрлэж болох нэмэлт баганаас
+# ялгаатай).
 _REQUIRED = {"full_name", "line1", "city", "postal_code", "country"}
 
 
@@ -36,7 +37,7 @@ class AddressService:
                     f"You can save up to {MAX_ADDRESSES} addresses.",
                     type_=ADDRESS_LIMIT_TYPE,
                 )
-            # The first address is the default; asking for a default replaces the previous one.
+            # Эхний хаяг нь default болно; default хүсвэл өмнөхийг нь орлоно.
             make_default = data.is_default or existing == 0
             if make_default:
                 await self._addresses.clear_default(user_id)
@@ -75,5 +76,5 @@ class AddressService:
             await self._addresses.delete(address)
             if was_default:
                 remaining = await self._addresses.list_for_user(user_id)
-                if remaining:  # never leave a shopper with addresses but no default
+                if remaining:  # хаягтай боловч default-гүй худалдан авагч үлдээхгүй
                     remaining[0].is_default = True

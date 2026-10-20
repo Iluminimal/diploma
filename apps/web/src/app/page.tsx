@@ -4,7 +4,6 @@ import { Departments } from "@/features/home/departments";
 import { Hero } from "@/features/home/hero";
 import { PhotoTile } from "@/features/home/photo-tile";
 import { RecentlyViewed } from "@/features/home/recently-viewed";
-import { Services } from "@/features/home/services";
 import { NewArrivals } from "@/features/home/shelves";
 import { JsonLdScripts } from "@/features/seo/json-ld-scripts";
 import { siteJsonLd } from "@/features/seo/site-json-ld";
@@ -23,7 +22,7 @@ export const dynamic = "force-dynamic";
 /**
  * Нүүр хуудас apple.com-ийн загвартай: tile-ууд ирмэг хүртэл, 12px зайтай, тус бүр гарчиг, мөр,
  * товч, зурагтай. Дэлгүүрт хэрэгтэй зүйл л байна: санаа (зургаар хайх), department-үүд, шинэ бараа,
- * хүргэлт ямар болох, хэрэглэгч сүүлд үзсэн зүйл рүү буцах зам.
+ * хэрэглэгч сүүлд үзсэн зүйл рүү буцах зам.
  */
 export default function Home() {
   return (
@@ -39,7 +38,6 @@ export default function Home() {
       <Suspense fallback={null}>
         <NewArrivals />
       </Suspense>
-      <Services />
       <RecentlyViewed />
     </div>
   );

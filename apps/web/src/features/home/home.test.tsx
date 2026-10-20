@@ -7,9 +7,7 @@ import { Departments } from "./departments";
 import { Hero } from "./hero";
 import { PhotoTile } from "./photo-tile";
 import { RecentlyViewed } from "./recently-viewed";
-import { Services } from "./services";
 import { NewArrivals } from "./shelves";
-import { json, stubApi } from "@/test/api-mock";
 
 vi.mock("server-only", () => ({}));
 const newest = vi.fn();
@@ -108,35 +106,6 @@ describe("NewArrivals", () => {
     newest.mockResolvedValue([]);
 
     expect(await NewArrivals()).toBeNull();
-  });
-});
-
-describe("Services", () => {
-  it("states what delivery costs and how fast it is, from the same endpoint as checkout", async () => {
-    stubApi({
-      "GET /api/v1/checkout/shipping-methods": json({
-        currency: "USD",
-        free_shipping_threshold_cents: 10000,
-        items: [
-          { id: "standard", label: "Standard", price_cents: 499, estimated_days: "3-5 days" },
-          { id: "express", label: "Express", price_cents: 1299, estimated_days: "1-2 days" },
-        ],
-      }),
-    });
-
-    renderWithQuery(<Services />);
-
-    expect(await screen.findByText(/On every order over/)).toHaveTextContent("$100");
-    expect(screen.getByText("Arrives in 1-2 days.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Secure checkout" })).toBeInTheDocument();
-  });
-
-  it("does not promise anything it cannot read", async () => {
-    stubApi({ "GET /api/v1/checkout/shipping-methods": new Response(null, { status: 500 }) });
-
-    renderWithQuery(<Services />);
-
-    expect(await screen.findByText("Delivery options are shown at checkout.")).toBeInTheDocument();
   });
 });
 

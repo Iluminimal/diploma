@@ -28,7 +28,6 @@ test("below it: the departments, the photo search, the new arrivals and what del
   await expect(page.getByRole("dialog", { name: "Search by photo" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("region", { name: "New arrivals" }).getByRole("link").first()).toHaveAttribute("href", /^\/(products|c)/);
-  await expect(page.getByRole("region", { name: "Delivery and payment" }).getByRole("heading")).toHaveText(["Free delivery", "Express delivery", "Secure checkout"]);
 });
 
 test("the tiles run edge to edge, 12px apart, and nothing else is on the page", async ({ page }) => {

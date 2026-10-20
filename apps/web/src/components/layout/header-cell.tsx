@@ -16,10 +16,10 @@ export const HEADER_CELL =
 function Glyph({ className, phone, desktop }: { className?: string; phone: React.ReactNode; desktop: React.ReactNode }) {
   return (
     <>
-      <svg aria-hidden className={cn("md:hidden", className)} width="17" height="48" viewBox="0 0 17 48" fill="currentColor">
+      <svg aria-hidden className={cn("overflow-visible md:hidden", className)} width="17" height="48" viewBox="0 0 17 48" fill="currentColor">
         {phone}
       </svg>
-      <svg aria-hidden className={cn("hidden md:block", className)} width="14" height="44" viewBox="0 0 14 44" fill="currentColor">
+      <svg aria-hidden className={cn("hidden overflow-visible md:block", className)} width="14" height="44" viewBox="0 0 14 44" fill="currentColor">
         {desktop}
       </svg>
     </>

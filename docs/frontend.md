@@ -104,7 +104,6 @@ discounts, ratings or "best sellers" (the dataset has none); every product, figu
 | Departments (`departments.tsx`) | Women and Men side by side, Kids across the full width: the name, one line, "Shop women" and a photo that bleeds off the bottom (each department's second-newest piece, so the hero's photos are not repeated) |
 | Photo search (`photo-tile.tsx`) | the one black tile: what the shop does differently, and the button to try it |
 | New arrivals (`shelves.tsx`) | the one shelf of products: the newest in stock, with "Shop all" |
-| Delivery and payment (`services.tsx`) | three lines every shop has: free delivery over a figure, express delivery and how fast, secure checkout. The figures are read from the endpoint checkout charges by (`GET /checkout/shipping-methods`), and nothing is promised when it cannot be read |
 | Recently viewed | per browser, absent on a first visit (below) |
 
 **Motion** (all CSS, transform and opacity only, no script; measured: Lighthouse performance 93 on the home page, CLS 0, TBT 25 ms):

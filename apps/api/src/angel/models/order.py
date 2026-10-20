@@ -20,8 +20,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from angel.db.base import Base
 from angel.models.mixins import TimestampMixin
 
-ORDER_STATUSES = ("pending", "paid", "shipped", "delivered", "cancelled", "refunded")
-
 
 class Order(TimestampMixin, Base):
     """pending -> paid -> shipped -> delivered; pending -> cancelled; paid, shipped or delivered

@@ -453,14 +453,12 @@ class _Maker:
         horizon = self.now - timedelta(minutes=1)
         refund_after = rng.choices(("paid", "shipped", "delivered"), weights=(2, 3, 5))[0]
         if status == "refunded":
-            refund_after = _reachable(refund_after, paid_at, shipped_at, delivered_at, horizon)
+            refund_after = _reachable(refund_after, shipped_at, delivered_at, horizon)
             status_of_chain = refund_after
         else:
             status_of_chain = status
         if status in ("shipped", "delivered"):
-            status = status_of_chain = _reachable(
-                status, paid_at, shipped_at, delivered_at, horizon
-            )
+            status = status_of_chain = _reachable(status, shipped_at, delivered_at, horizon)
         if status == "pending":
             # Stays pending for the length of the expiry sweep, no longer.
             created = self.now - timedelta(minutes=rng.uniform(2, 12))
@@ -647,9 +645,7 @@ class _Person:
     weight: float
 
 
-def _reachable(
-    wanted: str, paid: datetime, shipped: datetime, delivered: datetime, horizon: datetime
-) -> str:
+def _reachable(wanted: str, shipped: datetime, delivered: datetime, horizon: datetime) -> str:
     """The furthest stage of `wanted` (paid, shipped, delivered) that has happened by now."""
     if wanted == "delivered" and delivered <= horizon:
         return "delivered"

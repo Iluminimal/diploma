@@ -14,8 +14,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from angel.db.base import Base
 from angel.models.mixins import TimestampMixin
 
-REVIEW_STATUSES = ("published", "hidden")
-
 
 class Review(TimestampMixin, Base):
     """A buyer's rating of a product. One per user per product; an administrator can hide it

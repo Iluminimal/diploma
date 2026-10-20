@@ -4,7 +4,6 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 MAX_FILTER_VALUES = 12
 FilterValues = Annotated[list[str], Field(max_length=MAX_FILTER_VALUES)]
-FilterValue = Annotated[str, Field(min_length=1, max_length=100)]
 
 
 class ProductImage(BaseModel):

@@ -7,18 +7,18 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "alembic>=1.20.0",
+    "alembic>=1.20.1",
     "argon2-cffi>=25.1.0",
     "asyncpg>=0.32.0",
     "email-validator>=2.3.0",
-    "fastapi>=0.142.2",
-    "numpy>=2.5.3",
-    "pandas>=3.0.6",
-    "pgvector>=0.5.0",
+    "fastapi>=0.161.1",
+    "numpy>=2.5.4",
+    "pandas>=3.1.0",
+    "pgvector>=0.5.1",
     "phonenumbers>=9.0.41",
     "pillow>=12.3.0",
     "pyarrow>=25.0.1",
-    "pydantic-settings>=2.15.0",
+    "pydantic-settings>=2.16.1",
     "pyjwt>=2.15.1",
     "python-multipart>=0.0.32",
     "redis>=5",
@@ -28,7 +28,7 @@ dependencies = [
     "structlog>=26.1.0",
     "torch>=2.14.1",
     "tqdm>=4.70.1",
-    "transformers>=5.19.0",
+    "transformers>=5.20.2",
     "uvicorn[standard]>=0.54.0",
 ]
 
@@ -55,7 +55,7 @@ dev = [
     "pyarrow-stubs>=20.0.0.20260819",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
-    "ruff>=0.16.10",
+    "ruff>=0.17.2",
     "types-tqdm>=4.70.0.20260906",
 ]
 

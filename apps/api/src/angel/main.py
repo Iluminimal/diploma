@@ -118,6 +118,11 @@ def create_app(
         app.state.sms = build_sms_sender(settings)
         app.state.payment_gateway = payment_gateway or build_gateway(settings)
         app.state.oauth_provider = build_oauth_provider(settings)
+        if app.state.oauth_provider is None:
+            log.warning(
+                "google_sign_in_disabled",
+                hint="set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET (or OAUTH_MODE=fake)",
+            )
         if not settings.jwt_secret:
             # Хөгжүүлэлтэд зүгээр; restart бүр хүн бүрийг гаргана.
             log.warning(

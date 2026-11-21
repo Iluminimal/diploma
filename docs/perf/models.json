@@ -1,0 +1,512 @@
+{
+  "config": {
+    "catalogue_size": 41885,
+    "queries": 41885,
+    "ks": [
+      5,
+      10,
+      20
+    ],
+    "k_report": 10,
+    "input": "pad (same 224x224 uint8 array for every model)",
+    "device": "mps",
+    "seed": 42,
+    "reference": "fashion-clip",
+    "relevance": {
+      "category": "same article type",
+      "colour": "same article type and base colour",
+      "strict": "same article type, base colour and gender"
+    },
+    "search": "exact cosine (no ANN index), query product excluded"
+  },
+  "models": {
+    "fashion-clip": {
+      "version": "fashion-clip@7e3ba62c",
+      "dimension": 512,
+      "vision_params_m": 87.46,
+      "catalogue_embeddings_mb": 85.8,
+      "latency": {
+        "1": {
+          "batch_p50_ms": 19.97,
+          "batch_p95_ms": 23.89,
+          "per_image_ms": 20.654
+        },
+        "32": {
+          "batch_p50_ms": 240.61,
+          "batch_p95_ms": 255.77,
+          "per_image_ms": 7.57
+        }
+      },
+      "metrics": {
+        "category": {
+          "5": {
+            "mAP": 0.8568798913879737,
+            "mAP_retrieved_norm": 0.9279607322689672,
+            "P": 0.8818251277398405,
+            "recall": 0.008748599152938158,
+            "hit_rate": 0.9786543145026503,
+            "nDCG": 0.8887104675456515,
+            "queries_scored": 41882,
+            "queries_skipped": 3
+          },
+          "10": {
+            "mAP": 0.8298672808585096,
+            "mAP_retrieved_norm": 0.9132417158750937,
+            "P": 0.8655818728809513,
+            "recall": 0.015692168584062333,
+            "hit_rate": 0.9881333269662385,
+            "nDCG": 0.8752961295604603,
+            "queries_scored": 41882,
+            "queries_skipped": 3
+          },
+          "20": {
+            "mAP": 0.8033197216446764,
+            "mAP_retrieved_norm": 0.8950461103513432,
+            "P": 0.848155532209541,
+            "recall": 0.02754013242067821,
+            "hit_rate": 0.9934816866434267,
+            "nDCG": 0.8604813658431212,
+            "queries_scored": 41882,
+            "queries_skipped": 3
+          }
+        },
+        "colour": {
+          "5": {
+            "mAP": 0.3255467464643054,
+            "mAP_retrieved_norm": 0.5485720898513909,
+            "P": 0.4065595909902089,
+            "recall": 0.027316867335669254,
+            "hit_rate": 0.774514059711571,
+            "nDCG": 0.41688689340289536,
+            "queries_scored": 41466,
+            "queries_skipped": 419
+          },
+          "10": {
+            "mAP": 0.28102080904705845,
+            "mAP_retrieved_norm": 0.5258941201795345,
+            "P": 0.3814474509236483,
+            "recall": 0.04522212666089554,
+            "hit_rate": 0.8618386147687261,
+            "nDCG": 0.3996644276881955,
+            "queries_scored": 41466,
+            "queries_skipped": 419
+          },
+          "20": {
+            "mAP": 0.24248572062259086,
+            "mAP_retrieved_norm": 0.4862081194851201,
+            "P": 0.3509947909130372,
+            "recall": 0.07264167781361246,
+            "hit_rate": 0.9169681184584961,
+            "nDCG": 0.3798784474908763,
+            "queries_scored": 41466,
+            "queries_skipped": 419
+          }
+        },
+        "strict": {
+          "5": {
+            "mAP": 0.2992025624838125,
+            "mAP_retrieved_norm": 0.5247990387313304,
+            "P": 0.3753156565656566,
+            "recall": 0.038474024574537344,
+            "hit_rate": 0.7501942501942502,
+            "nDCG": 0.3893925320805741,
+            "queries_scored": 41184,
+            "queries_skipped": 701
+          },
+          "10": {
+            "mAP": 0.2559029936036798,
+            "mAP_retrieved_norm": 0.5029407817871979,
+            "P": 0.3482638888888889,
+            "recall": 0.06121823249531692,
+            "hit_rate": 0.842778749028749,
+            "nDCG": 0.3723381886839878,
+            "queries_scored": 41184,
+            "queries_skipped": 701
+          },
+          "20": {
+            "mAP": 0.22031947841933716,
+            "mAP_retrieved_norm": 0.46325817775514955,
+            "P": 0.3170272435897436,
+            "recall": 0.09544654206571075,
+            "hit_rate": 0.9028263403263403,
+            "nDCG": 0.3549322789377927,
+            "queries_scored": 41184,
+            "queries_skipped": 701
+          }
+        }
+      }
+    },
+    "marqo-fashion-siglip": {
+      "version": "marqo-fashion-siglip@c56244cc",
+      "dimension": 768,
+      "vision_params_m": 92.88,
+      "catalogue_embeddings_mb": 128.7,
+      "latency": {
+        "1": {
+          "batch_p50_ms": 43.87,
+          "batch_p95_ms": 46.33,
+          "per_image_ms": 44.318
+        },
+        "32": {
+          "batch_p50_ms": 806.72,
+          "batch_p95_ms": 1154.95,
+          "per_image_ms": 26.99
+        }
+      },
+      "metrics": {
+        "category": {
+          "5": {
+            "mAP": 0.8691065374146411,
+            "mAP_retrieved_norm": 0.9358264157500703,
+            "P": 0.8920252136956212,
+            "recall": 0.008951557959208755,
+            "hit_rate": 0.9816866434267705,
+            "nDCG": 0.8989795502172998,
+            "queries_scored": 41882,
+            "queries_skipped": 3
+          },
+          "10": {
+            "mAP": 0.841866964362641,
+            "mAP_retrieved_norm": 0.9212715937699878,
+            "P": 0.8751444534644955,
+            "recall": 0.016028969142600654,
+            "hit_rate": 0.9896614297311495,
+            "nDCG": 0.8850868163851252,
+            "queries_scored": 41882,
+            "queries_skipped": 3
+          },
+          "20": {
+            "mAP": 0.8152565693334495,
+            "mAP_retrieved_norm": 0.9031560576744995,
+            "P": 0.8576703595816819,
+            "recall": 0.028335457819244098,
+            "hit_rate": 0.994174108208777,
+            "nDCG": 0.8701763153027885,
+            "queries_scored": 41882,
+            "queries_skipped": 3
+          }
+        },
+        "colour": {
+          "5": {
+            "mAP": 0.30976861230352043,
+            "mAP_retrieved_norm": 0.537558615626189,
+            "P": 0.3933535908937443,
+            "recall": 0.027612634381944206,
+            "hit_rate": 0.7746828727149954,
+            "nDCG": 0.40296883444249076,
+            "queries_scored": 41466,
+            "queries_skipped": 419
+          },
+          "10": {
+            "mAP": 0.26775537880075184,
+            "mAP_retrieved_norm": 0.5156720526410445,
+            "P": 0.37097380986832584,
+            "recall": 0.045753267305790206,
+            "hit_rate": 0.8639367192398592,
+            "nDCG": 0.38809722623205245,
+            "queries_scored": 41466,
+            "queries_skipped": 419
+          },
+          "20": {
+            "mAP": 0.2315085456591768,
+            "mAP_retrieved_norm": 0.47624221460863664,
+            "P": 0.3427157189022331,
+            "recall": 0.07348928904026286,
+            "hit_rate": 0.9191144552163218,
+            "nDCG": 0.370466720669186,
+            "queries_scored": 41466,
+            "queries_skipped": 419
+          }
+        },
+        "strict": {
+          "5": {
+            "mAP": 0.2874483550785635,
+            "mAP_retrieved_norm": 0.5159270320728654,
+            "P": 0.3663947163947164,
+            "recall": 0.0389503676413935,
+            "hit_rate": 0.752039627039627,
+            "nDCG": 0.37926273455319626,
+            "queries_scored": 41184,
+            "queries_skipped": 701
+          },
+          "10": {
+            "mAP": 0.24684714225430163,
+            "mAP_retrieved_norm": 0.4950417746583834,
+            "P": 0.3418560606060606,
+            "recall": 0.06191382218793647,
+            "hit_rate": 0.8455710955710956,
+            "nDCG": 0.3645656347654258,
+            "queries_scored": 41184,
+            "queries_skipped": 701
+          },
+          "20": {
+            "mAP": 0.21345997728174088,
+            "mAP_retrieved_norm": 0.455855547360084,
+            "P": 0.3126699689199689,
+            "recall": 0.09652957991548805,
+            "hit_rate": 0.9052544677544677,
+            "nDCG": 0.34931679064306836,
+            "queries_scored": 41184,
+            "queries_skipped": 701
+          }
+        }
+      }
+    },
+    "resnet50-imagenet": {
+      "version": "resnet50-imagenet1k-v2",
+      "dimension": 2048,
+      "vision_params_m": 23.51,
+      "catalogue_embeddings_mb": 343.1,
+      "latency": {
+        "1": {
+          "batch_p50_ms": 28.02,
+          "batch_p95_ms": 37.7,
+          "per_image_ms": 29.298
+        },
+        "32": {
+          "batch_p50_ms": 362.74,
+          "batch_p95_ms": 369.22,
+          "per_image_ms": 11.354
+        }
+      },
+      "metrics": {
+        "category": {
+          "5": {
+            "mAP": 0.784671597185744,
+            "mAP_retrieved_norm": 0.8855637067634465,
+            "P": 0.8188529678620886,
+            "recall": 0.007370764385515156,
+            "hit_rate": 0.9600783152667017,
+            "nDCG": 0.8282211662463307,
+            "queries_scored": 41882,
+            "queries_skipped": 3
+          },
+          "10": {
+            "mAP": 0.7503051480741181,
+            "mAP_retrieved_norm": 0.8660905079585738,
+            "P": 0.7986056062270188,
+            "recall": 0.01300479110649754,
+            "hit_rate": 0.9767919392579151,
+            "nDCG": 0.8110826853426493,
+            "queries_scored": 41882,
+            "queries_skipped": 3
+          },
+          "20": {
+            "mAP": 0.7190424074809784,
+            "mAP_retrieved_norm": 0.8418023039141337,
+            "P": 0.7788357767059835,
+            "recall": 0.022647561061525583,
+            "hit_rate": 0.9864619645671171,
+            "nDCG": 0.793453584412955,
+            "queries_scored": 41882,
+            "queries_skipped": 3
+          }
+        },
+        "colour": {
+          "5": {
+            "mAP": 0.22396121722214182,
+            "mAP_retrieved_norm": 0.4377501045032879,
+            "P": 0.29190662229296294,
+            "recall": 0.016724194988617474,
+            "hit_rate": 0.6459026672454541,
+            "nDCG": 0.30454667559307613,
+            "queries_scored": 41466,
+            "queries_skipped": 419
+          },
+          "10": {
+            "mAP": 0.1827091167092463,
+            "mAP_retrieved_norm": 0.41944122221416535,
+            "P": 0.26876959436646897,
+            "recall": 0.02691807646524341,
+            "hit_rate": 0.7559928616215695,
+            "nDCG": 0.2861204007263608,
+            "queries_scored": 41466,
+            "queries_skipped": 419
+          },
+          "20": {
+            "mAP": 0.15118760480787416,
+            "mAP_retrieved_norm": 0.3822773126418786,
+            "P": 0.2467358799980707,
+            "recall": 0.043419551743052356,
+            "hit_rate": 0.8364925481117059,
+            "nDCG": 0.2690055218065673,
+            "queries_scored": 41466,
+            "queries_skipped": 419
+          }
+        },
+        "strict": {
+          "5": {
+            "mAP": 0.20118374584520418,
+            "mAP_retrieved_norm": 0.4104155200509367,
+            "P": 0.2628059440559441,
+            "recall": 0.0242000971464616,
+            "hit_rate": 0.6113539238539238,
+            "nDCG": 0.27783686319500994,
+            "queries_scored": 41184,
+            "queries_skipped": 701
+          },
+          "10": {
+            "mAP": 0.16228457898472778,
+            "mAP_retrieved_norm": 0.39454432756381747,
+            "P": 0.23865093240093235,
+            "recall": 0.03691487577915211,
+            "hit_rate": 0.7249902874902875,
+            "nDCG": 0.25982871682304215,
+            "queries_scored": 41184,
+            "queries_skipped": 701
+          },
+          "20": {
+            "mAP": 0.13337621238652997,
+            "mAP_retrieved_norm": 0.3595969129470536,
+            "P": 0.2160669191919192,
+            "recall": 0.05700405876042406,
+            "hit_rate": 0.8110431235431236,
+            "nDCG": 0.24424940626458894,
+            "queries_scored": 41184,
+            "queries_skipped": 701
+          }
+        }
+      }
+    }
+  },
+  "random_baseline": {
+    "category": {
+      "5": {
+        "mAP": 0.02936615570730465,
+        "mAP_retrieved_norm": 0.11249064832943348,
+        "P": 0.05663053340337138,
+        "recall": 0.00012055567736446798,
+        "hit_rate": 0.22921541473664103,
+        "nDCG": 0.056767475860653276,
+        "queries_scored": 41882,
+        "queries_skipped": 3
+      },
+      "10": {
+        "mAP": 0.02102996002374017,
+        "mAP_retrieved_norm": 0.12375191265508108,
+        "P": 0.05660426913709946,
+        "recall": 0.00023692252267259065,
+        "hit_rate": 0.36758034477818635,
+        "nDCG": 0.056705180008396985,
+        "queries_scored": 41882,
+        "queries_skipped": 3
+      },
+      "20": {
+        "mAP": 0.015409768036983082,
+        "mAP_retrieved_norm": 0.12185070859035464,
+        "P": 0.057008977603743856,
+        "recall": 0.0004797451630037722,
+        "hit_rate": 0.5321140346688314,
+        "nDCG": 0.056950926058476264,
+        "queries_scored": 41882,
+        "queries_skipped": 3
+      }
+    },
+    "colour": {
+      "5": {
+        "mAP": 0.0033369507548352867,
+        "mAP_retrieved_norm": 0.016098798480147055,
+        "P": 0.00733130757729224,
+        "recall": 0.0001085662612235343,
+        "hit_rate": 0.035643659865914244,
+        "nDCG": 0.0072485224338519425,
+        "queries_scored": 41466,
+        "queries_skipped": 419
+      },
+      "10": {
+        "mAP": 0.002175955592610201,
+        "mAP_retrieved_norm": 0.020074981109021044,
+        "P": 0.007258959147253171,
+        "recall": 0.00021426731804215197,
+        "hit_rate": 0.06807987266676313,
+        "nDCG": 0.00722300047830954,
+        "queries_scored": 41466,
+        "queries_skipped": 419
+      },
+      "20": {
+        "mAP": 0.0013917489545461359,
+        "mAP_retrieved_norm": 0.023538262481804986,
+        "P": 0.007326484348622967,
+        "recall": 0.00045973973120840597,
+        "hit_rate": 0.1276467467322626,
+        "nDCG": 0.0072933817274634695,
+        "queries_scored": 41466,
+        "queries_skipped": 419
+      }
+    },
+    "strict": {
+      "5": {
+        "mAP": 0.0022317728567728566,
+        "mAP_retrieved_norm": 0.01089500777000777,
+        "P": 0.00489996114996115,
+        "recall": 0.0001047984383372161,
+        "hit_rate": 0.02403846153846154,
+        "nDCG": 0.004861266029951805,
+        "queries_scored": 41184,
+        "queries_skipped": 701
+      },
+      "10": {
+        "mAP": 0.0014495544964294965,
+        "mAP_retrieved_norm": 0.013687826448243115,
+        "P": 0.004858682983682984,
+        "recall": 0.0002046660483622296,
+        "hit_rate": 0.04637723387723388,
+        "nDCG": 0.00484506586274996,
+        "queries_scored": 41184,
+        "queries_skipped": 701
+      },
+      "20": {
+        "mAP": 0.0009214119497295066,
+        "mAP_retrieved_norm": 0.016232780639477567,
+        "P": 0.004915743978243978,
+        "recall": 0.0004185079902013416,
+        "hit_rate": 0.08860236985236986,
+        "nDCG": 0.004899808607105934,
+        "queries_scored": 41184,
+        "queries_skipped": 701
+      }
+    }
+  },
+  "significance": {
+    "marqo-fashion-siglip": {
+      "category": {
+        "mean": 0.011999683504131374,
+        "ci_low": 0.010659385021000584,
+        "ci_high": 0.013380853597530861,
+        "n": 41882
+      },
+      "colour": {
+        "mean": -0.013265430246306572,
+        "ci_low": -0.01486917155549471,
+        "ci_high": -0.011626753628771705,
+        "n": 41466
+      },
+      "strict": {
+        "mean": -0.009055851349378136,
+        "ci_low": -0.010590398435587444,
+        "ci_high": -0.007503392940252234,
+        "n": 41184
+      }
+    },
+    "resnet50-imagenet": {
+      "category": {
+        "mean": -0.07956213278439159,
+        "ci_low": -0.08177614313772906,
+        "ci_high": -0.07735861937840839,
+        "n": 41882
+      },
+      "colour": {
+        "mean": -0.09831169233781213,
+        "ci_low": -0.10045111766193043,
+        "ci_high": -0.09617360581263447,
+        "n": 41466
+      },
+      "strict": {
+        "mean": -0.09361841461895198,
+        "ci_low": -0.09561723283898227,
+        "ci_high": -0.09150869740493377,
+        "n": 41184
+      }
+    }
+  }
+}

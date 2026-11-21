@@ -3,14 +3,8 @@
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { components } from "@/lib/api/client";
-import en from "../../../messages/en/search.json";
 
 type Region = components["schemas"]["RegionOut"];
-type ClassKey = keyof typeof en.regions.names;
-
-function isKnownClass(key: string | null): key is ClassKey {
-  return key !== null && key in en.regions.names;
-}
 
 type Props = {
   regions: Region[];
@@ -18,27 +12,19 @@ type Props = {
   onSelect: (index: number) => void;
 };
 
-/** "top, t-shirt, sweatshirt" -> "top": орчуулгын түлхүүр болох detector-ийн ангийн эхний үг. */
-export function regionKey(label: string | null): string | null {
-  const first = label?.split(",")[0]?.trim().toLowerCase().replace(/\s+/g, "_");
-  return first || null;
-}
-
 /**
- * Preview зураг дээр detector-ийн олсон хувцас бүрийн хайрцаг. Хайрцаг дээр дарж аль хувцсаар хайхаа
- * сонгоно. Хайрцгууд зургийн хэмжээнд харьцуулсан (0..1) тул зурагтай яг давхцах wrapper дотор
- * байрлана. Зөвхөн нэр бүхий хэсэг байвал харуулна (бүтэн зургийн fallback-д хайрцаг хэрэггүй).
+ * Preview зураг дээр detector-ийн олсон хувцас бүрийн дугаартай хайрцаг. Дарвал тэр хувцсыг дэлгэрэнгүй
+ * хайна. Хайрцгууд зургийн хэмжээнд харьцуулсан (0..1) тул зурагтай яг давхцах wrapper дотор байрлана.
+ * Detector-ийн label итгэмжгүй (гутлыг "shorts" гэх мэт) тул нэр биш дугаар харуулна; дугаар нь үр
+ * дүнгийн хэсгийн дугаартай ижил. Сонголт байхгүй (нэг л хувцас, эсвэл бүтэн зураг) үед харуулахгүй.
  */
 export function RegionOverlay({ regions, selected, onSelect }: Props) {
   const t = useTranslations("search.regions");
-  const names = useTranslations("search.regions.names");
-  if (!regions.some((r) => r.label)) return null;
+  if (regions.length < 2) return null;
 
   return (
     <div role="group" aria-label={t("group")} className="absolute inset-0">
       {regions.map((region, index) => {
-        const key = regionKey(region.label);
-        const name = isKnownClass(key) ? names(key) : (region.label ?? t("whole"));
         const active = index === selected;
         const { x, y, width, height } = region.box;
         return (
@@ -46,7 +32,7 @@ export function RegionOverlay({ regions, selected, onSelect }: Props) {
             key={index}
             type="button"
             aria-pressed={active}
-            aria-label={t("choose", { name })}
+            aria-label={t("choose", { number: index + 1 })}
             onClick={() => onSelect(index)}
             style={{ left: `${x * 100}%`, top: `${y * 100}%`, width: `${width * 100}%`, height: `${height * 100}%` }}
             className={cn(
@@ -57,12 +43,13 @@ export function RegionOverlay({ regions, selected, onSelect }: Props) {
             )}
           >
             <span
+              aria-hidden
               className={cn(
-                "type-fine absolute -top-px -left-px max-w-full truncate rounded-br-md px-1.5 py-0.5 leading-none",
-                active ? "bg-brand text-white" : "bg-black/65 text-white",
+                "absolute -top-px -left-px flex size-6 items-center justify-center rounded-br-md text-xs leading-none font-medium text-white",
+                active ? "bg-brand" : "bg-black/65",
               )}
             >
-              {name}
+              {index + 1}
             </span>
           </button>
         );

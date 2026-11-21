@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
+import { DottedFrame } from "./dotted-frame";
 import type { components } from "@/lib/api/client";
 
 type Region = components["schemas"]["RegionOut"];
@@ -63,14 +64,9 @@ export function RegionOverlay({ regions, selected, onSelect }: Props) {
             )}
           >
             {/* Цэгэн хүрээ: цэг бүр дугуй, сүүдэртэй тул ямар ч зураг дээр харагдана. */}
-            <span
-              aria-hidden
-              className={cn(
-                "pointer-events-none absolute inset-0 rounded-2xl border-[3px] border-dotted drop-shadow-[0_0_1.5px_rgb(0_0_0/0.7)] transition-colors",
-                active
-                  ? "border-brand"
-                  : "border-white group-hover:border-brand group-focus-visible:border-brand",
-              )}
+            <DottedFrame
+              tone={active ? "brand" : "white"}
+              className={cn(!active && "group-hover:border-brand group-focus-visible:border-brand")}
             />
             <span
               aria-hidden

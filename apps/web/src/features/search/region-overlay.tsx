@@ -12,81 +12,78 @@ type Props = {
   onSelect: (index: number) => void;
 };
 
-/** Хоёр цэгийн хамгийн бага зай (зургийн хэмжээнд харьцуулсан): ойр бол хоёр дахь нь доош хөдөлнө. */
-const MIN_GAP = 0.1;
-const NUDGE = 0.1;
-
 /**
- * Хувцас бүрийн цэгийн байрлал (зургийн хэмжээнд харьцуулсан 0..1): хайрцгийн төв. Хоёр хайрцгийн төв
- * давхцах (жишээ нь цамцны дээрх хантааз) үед хоёр дахь цэг нь доош хөдөлж, дарахад хэцүү болохгүй.
+ * Давхцсан хайрцагт жижиг нь дээр байх ёстой (цамцны дотор хантааз гэх мэт), эс бөгөөс том нь жижгийг
+ * хаачихна. Талбайн дарааллаар z-index: хамгийн жижиг нь хамгийн дээд.
  */
-export function dotPositions(regions: Region[]): { x: number; y: number }[] {
-  const placed: { x: number; y: number }[] = [];
-  for (const { box } of regions) {
-    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-    for (let attempt = 0; attempt < 4; attempt++) {
-      const clash = placed.some((p) => Math.hypot(p.x - point.x, p.y - point.y) < MIN_GAP);
-      if (!clash) break;
-      point.y = Math.min(0.95, point.y + NUDGE);
-    }
-    placed.push(point);
-  }
-  return placed;
+export function stackOrder(regions: Region[]): number[] {
+  const bySize = regions
+    .map((r, index) => ({ index, area: r.box.width * r.box.height }))
+    .sort((a, b) => b.area - a.area);
+  const order = new Array<number>(regions.length).fill(0);
+  bySize.forEach(({ index }, rank) => (order[index] = rank));
+  return order;
 }
 
 /**
- * Preview зураг дээр detector-ийн олсон хувцас бүрийн төвд дугаартай цэг (Amazon-ы зураг хайлт шиг).
- * Цэг дээр дарвал тэр хувцсыг дэлгэрэнгүй хайна; hover, focus хийхэд юуг хайх хүрээ нь харагдана.
- * Цэгүүд зургийн хэмжээнд харьцуулсан (0..1) тул зурагтай яг давхцах wrapper дотор байрлана. Detector-ийн
- * label итгэмжгүй (гутлыг "shorts" гэх мэт) тул нэр биш дугаар харуулна; дугаар нь үр дүнгийн хэсгийн
- * дугаартай ижил. Сонголт байхгүй (нэг л хувцас, эсвэл бүтэн зураг) үед харуулахгүй.
+ * Preview зураг дээр detector-ийн олсон хувцас бүрийг цэгэн хүрээгээр тойруулна (Amazon-ы зураг хайлт
+ * шиг). Хүрээн дотор дарвал тэр хувцсыг дэлгэрэнгүй хайна; hover, focus, сонгосон үед хүрээ цэнхэр болж
+ * өнгөлөгдөнө. Хүрээнүүд зургийн хэмжээнд харьцуулсан (0..1) тул зурагтай яг давхцах wrapper дотор
+ * байрлана. Detector-ийн label итгэмжгүй (гутлыг "shorts" гэх мэт) тул нэр биш булан дахь дугаар
+ * харуулна; дугаар нь үр дүнгийн хэсгийн дугаартай ижил. Сонголт байхгүй (нэг л хувцас, эсвэл бүтэн
+ * зураг) үед харуулахгүй.
  */
 export function RegionOverlay({ regions, selected, onSelect }: Props) {
   const t = useTranslations("search.regions");
   if (regions.length < 2) return null;
-  const dots = dotPositions(regions);
+  const order = stackOrder(regions);
 
   return (
     <div role="group" aria-label={t("group")} className="pointer-events-none absolute inset-0">
       {regions.map((region, index) => {
         const active = index === selected;
         const { x, y, width, height } = region.box;
-        const dot = dots[index]!;
         return (
-          <div key={index} className="contents">
-            <button
-              type="button"
-              aria-pressed={active}
-              aria-label={t("choose", { number: index + 1 })}
-              onClick={() => onSelect(index)}
-              style={{ left: `${dot.x * 100}%`, top: `${dot.y * 100}%` }}
-              className="peer pointer-events-auto absolute z-10 flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full outline-none"
-            >
-              {/* Анхаарал татах долгион: хөдөлгөөн багасгасан хэрэглэгчид харагдахгүй. */}
-              {!active && (
-                <span aria-hidden className="absolute inset-1 rounded-full bg-white/70 motion-safe:animate-ping" />
-              )}
-              <span
-                aria-hidden
-                className={cn(
-                  "relative flex size-6 items-center justify-center rounded-full text-xs leading-none font-semibold shadow-[0_1px_6px_rgb(0_0_0/0.45)] ring-2 transition-transform",
-                  "peer-hover:scale-110 peer-focus-visible:ring-4",
-                  active ? "bg-brand ring-white text-white" : "text-foreground bg-white ring-white/60",
-                )}
-              >
-                {index + 1}
-              </span>
-            </button>
-            {/* Хайх хүрээ: зөвхөн цэгийг заах, сонгосон үед. */}
+          <button
+            key={index}
+            type="button"
+            aria-pressed={active}
+            aria-label={t("choose", { number: index + 1 })}
+            onClick={() => onSelect(index)}
+            style={{
+              left: `${x * 100}%`,
+              top: `${y * 100}%`,
+              width: `${width * 100}%`,
+              height: `${height * 100}%`,
+              zIndex: 10 + order[index]!,
+            }}
+            className={cn(
+              "group pointer-events-auto absolute cursor-pointer rounded-2xl outline-none transition-colors",
+              active ? "bg-brand/10" : "hover:bg-white/15 focus-visible:bg-white/15",
+            )}
+          >
+            {/* Цэгэн хүрээ: цэг бүр дугуй, сүүдэртэй тул ямар ч зураг дээр харагдана. */}
             <span
               aria-hidden
-              style={{ left: `${x * 100}%`, top: `${y * 100}%`, width: `${width * 100}%`, height: `${height * 100}%` }}
               className={cn(
-                "border-brand pointer-events-none absolute rounded-md border-2 bg-brand/10 transition-opacity",
-                active ? "opacity-100" : "opacity-0 peer-hover:opacity-100 peer-focus-visible:opacity-100",
+                "pointer-events-none absolute inset-0 rounded-2xl border-[3px] border-dotted drop-shadow-[0_0_1.5px_rgb(0_0_0/0.7)] transition-colors",
+                active
+                  ? "border-brand"
+                  : "border-white group-hover:border-brand group-focus-visible:border-brand",
               )}
             />
-          </div>
+            <span
+              aria-hidden
+              className={cn(
+                "absolute -top-3 -left-3 flex size-6 items-center justify-center rounded-full text-xs leading-none font-semibold shadow-[0_1px_6px_rgb(0_0_0/0.45)] transition-colors",
+                active
+                  ? "bg-brand text-white"
+                  : "text-foreground group-hover:bg-brand bg-white group-hover:text-white group-focus-visible:bg-brand group-focus-visible:text-white",
+              )}
+            >
+              {index + 1}
+            </span>
+          </button>
         );
       })}
     </div>

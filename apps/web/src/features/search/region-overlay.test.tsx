@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { dotPositions, RegionOverlay } from "./region-overlay";
+import { RegionOverlay, stackOrder } from "./region-overlay";
 
 const region = (x: number, y: number, width: number, height: number) => ({
   box: { x, y, width, height },
@@ -9,43 +9,45 @@ const region = (x: number, y: number, width: number, height: number) => ({
   score: 0.9,
 });
 
-describe("dotPositions", () => {
-  it("places each dot at the centre of its box", () => {
-    expect(dotPositions([region(0, 0, 1, 0.5), region(0.1, 0.6, 0.5, 0.4)])).toEqual([
-      { x: 0.5, y: 0.25 },
-      { x: 0.35, y: 0.8 },
-    ]);
-  });
-
-  it("moves a dot that would sit on top of an earlier one", () => {
-    const [first, second, third] = dotPositions([region(0, 0, 1, 1), region(0.2, 0.2, 0.6, 0.6), region(0.3, 0.3, 0.4, 0.4)]);
-
-    expect(first).toEqual({ x: 0.5, y: 0.5 });
-    expect(second!.x).toBe(0.5);
-    expect(second!.y).toBeGreaterThan(0.5);
-    for (const [a, b] of [[first, second], [first, third], [second, third]] as const) {
-      expect(Math.hypot(a!.x - b!.x, a!.y - b!.y)).toBeGreaterThanOrEqual(0.1);
-    }
-  });
-
-  it("keeps nudged dots inside the photo", () => {
-    const dots = dotPositions([region(0, 0.8, 1, 0.2), region(0, 0.8, 1, 0.2), region(0, 0.8, 1, 0.2)]);
-
-    expect(Math.max(...dots.map((d) => d.y))).toBeLessThanOrEqual(0.95);
+describe("stackOrder", () => {
+  it("stacks smaller boxes above the ones that contain them", () => {
+    // 0: бүтэн зураг, 1: дунд, 2: хамгийн жижиг
+    expect(stackOrder([region(0, 0, 1, 1), region(0.2, 0.2, 0.6, 0.6), region(0.3, 0.3, 0.2, 0.2)])).toEqual([0, 1, 2]);
+    expect(stackOrder([region(0.3, 0.3, 0.2, 0.2), region(0, 0, 1, 1)])).toEqual([1, 0]);
   });
 });
 
 describe("RegionOverlay", () => {
   const regions = [region(0, 0, 1, 0.5), region(0.1, 0.6, 0.5, 0.4)];
 
-  it("renders one numbered dot per garment and marks the selected one", () => {
+  it("frames each garment, covering exactly its box", () => {
+    render(<RegionOverlay regions={regions} selected={-1} onSelect={() => {}} />);
+
+    expect(screen.getByRole("button", { name: "Search for garment 2" })).toHaveStyle({
+      left: "10%",
+      top: "60%",
+      width: "50%",
+      height: "40%",
+    });
+  });
+
+  it("puts the smaller box on top so it can still be clicked", () => {
+    render(<RegionOverlay regions={[region(0, 0, 1, 1), region(0.3, 0.3, 0.2, 0.2)]} selected={-1} onSelect={() => {}} />);
+
+    const big = Number(screen.getByRole("button", { name: "Search for garment 1" }).style.zIndex);
+    const small = Number(screen.getByRole("button", { name: "Search for garment 2" }).style.zIndex);
+
+    expect(small).toBeGreaterThan(big);
+  });
+
+  it("marks the selected garment", () => {
     render(<RegionOverlay regions={regions} selected={1} onSelect={() => {}} />);
 
     expect(screen.getByRole("button", { name: "Search for garment 1" })).toHaveAttribute("aria-pressed", "false");
     expect(screen.getByRole("button", { name: "Search for garment 2" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("reports which dot was clicked", async () => {
+  it("reports which garment was clicked", async () => {
     const onSelect = vi.fn();
     render(<RegionOverlay regions={regions} selected={-1} onSelect={onSelect} />);
 

@@ -9,6 +9,7 @@ from angel.core.errors import (
     CART_ITEM_NOT_FOUND_TYPE,
     INSUFFICIENT_STOCK_TYPE,
     INVALID_SIZE_TYPE,
+    ORDER_NOT_FOUND_TYPE,
     PRODUCT_NOT_FOUND_TYPE,
     ProblemError,
 )
@@ -16,7 +17,16 @@ from angel.core.security import hash_token
 from angel.models import Cart, CartItem, Product
 from angel.repositories.catalog.products import ProductRepository
 from angel.repositories.commerce.carts import CartRepository
-from angel.schemas.commerce.cart import CartIssue, CartItemIn, CartLineOut, CartOut
+from angel.repositories.commerce.orders import OrderRepository
+from angel.schemas.commerce.cart import (
+    CartIssue,
+    CartItemIn,
+    CartLineOut,
+    CartOut,
+    ReorderOut,
+    ReorderReason,
+    ReorderSkipped,
+)
 from angel.services.catalog.sizes import sizes_for
 from angel.services.mappers import to_product_out
 from angel.storage import Storage
@@ -43,15 +53,15 @@ def validate_size(product: Product, size: str) -> None:
     if sizes and size not in sizes:
         raise ProblemError(
             HTTPStatus.UNPROCESSABLE_ENTITY,
-            "Choose a size",
-            f"Available sizes: {', '.join(sizes)}.",
+            "Хэмжээгээ сонгоно уу",
+            f"Боломжит хэмжээ: {', '.join(sizes)}.",
             type_=INVALID_SIZE_TYPE,
             extensions={"sizes": list(sizes)},
         )
     if not sizes and size:
         raise ProblemError(
             HTTPStatus.UNPROCESSABLE_ENTITY,
-            "This product has no sizes",
+            "Энэ бараанд хэмжээ байхгүй",
             type_=INVALID_SIZE_TYPE,
             extensions={"sizes": []},
         )
@@ -81,6 +91,7 @@ def build_cart(
                 line_total_cents=product.price_cents * item.quantity,
                 max_quantity=ceiling,
                 issue=issue,
+                price_when_added_cents=item.price_cents_at_add,
             )
         )
     return CartOut(
@@ -126,6 +137,7 @@ async def merge_guest_cart(
                 size=item.size,
                 quantity=merged - already,
                 cap=max(ceiling, already),
+                unit_price_cents=item.price_cents_at_add,
             )
     await carts.delete_cart(guest)
 
@@ -149,8 +161,8 @@ class CartService:
             if product is None or not product.is_active:
                 raise ProblemError(
                     HTTPStatus.NOT_FOUND,
-                    "Product not found",
-                    f"No product with id {request.product_id}.",
+                    "Бараа олдсонгүй",
+                    f"{request.product_id} дугаартай бараа байхгүй байна.",
                     type_=PRODUCT_NOT_FOUND_TYPE,
                 )
             validate_size(product, request.size)
@@ -162,8 +174,8 @@ class CartService:
             if existing is None and len(cart.items) >= self._settings.cart_max_lines:
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
-                    "Your cart is full",
-                    f"A cart holds at most {self._settings.cart_max_lines} different items.",
+                    "Сагс дүүрсэн",
+                    f"Сагсанд хамгийн ихдээ {self._settings.cart_max_lines} төрлийн бараа багтана.",
                     type_=CART_FULL_TYPE,
                 )
             wanted = (existing.quantity if existing else 0) + request.quantity
@@ -176,8 +188,74 @@ class CartService:
                 size=request.size,
                 quantity=request.quantity,
                 cap=limit,
+                unit_price_cents=product.price_cents,
             )
             return await self._render(await self._find(owner))
+
+    async def reorder(self, user_id: int, number: str) -> ReorderOut:
+        """Өмнөх захиалгын мөр бүрийг ижил размер, тоогоор сагсанд нэмнэ. Бүх мөр нэг transaction-д:
+        аль нэг нь зогсоохгүй, нэмэгдэхгүй зүйлийг шалтгаантай нь буцаана (дууссан, хасагдсан,
+        размер өөрчлөгдсөн, сагс дүүрсэн, эсвэл нөөцөөр цөөрсөн)."""
+        limit = self._settings.cart_max_quantity
+        skipped: list[ReorderSkipped] = []
+        added = 0
+        owner = CartOwner(user_id=user_id)
+        async with self._session.begin():
+            order = await OrderRepository(self._session).get_for_user(user_id, number)
+            if order is None:
+                raise ProblemError(
+                    HTTPStatus.NOT_FOUND,
+                    "Захиалга олдсонгүй",
+                    type_=ORDER_NOT_FOUND_TYPE,
+                )
+            products = await self._products.get_many([item.product_id for item in order.items])
+            cart = await self._get_or_create(owner)
+            in_bag = {(i.product_id, i.size): i.quantity for i in cart.items}
+            lines = len(in_bag)
+
+            def skip(name: str, reason: ReorderReason) -> None:
+                skipped.append(ReorderSkipped(name=name, reason=reason))
+
+            for item in order.items:
+                product = products.get(item.product_id)
+                if product is None or not product.is_active:
+                    skip(item.product_name, "unavailable")
+                    continue
+                available = sellable_quantity(product, limit)
+                if available == 0:
+                    skip(item.product_name, "out_of_stock")
+                    continue
+                try:
+                    validate_size(product, item.size)
+                except ProblemError:
+                    skip(item.product_name, "size")
+                    continue
+                key = (product.id, item.size)
+                already = in_bag.get(key, 0)
+                if key not in in_bag and lines >= self._settings.cart_max_lines:
+                    skip(item.product_name, "bag_full")
+                    continue
+                room = available - already
+                quantity = min(item.quantity, room)
+                if quantity <= 0:
+                    skip(item.product_name, "reduced")
+                    continue
+                await self._carts.add_quantity(
+                    cart_id=cart.id,
+                    product_id=product.id,
+                    size=item.size,
+                    quantity=quantity,
+                    cap=limit,
+                    unit_price_cents=product.price_cents,
+                )
+                if key not in in_bag:
+                    lines += 1
+                in_bag[key] = already + quantity
+                added += 1
+                if quantity < item.quantity:
+                    skip(item.product_name, "reduced")
+            rendered = await self._render(await self._find(owner))
+        return ReorderOut(cart=rendered, added=added, skipped=skipped)
 
     async def set_quantity(self, owner: CartOwner, item_id: int, quantity: int) -> CartOut:
         async with self._session.begin():
@@ -231,22 +309,22 @@ class CartService:
         if cart is None or item is None:
             raise ProblemError(
                 HTTPStatus.NOT_FOUND,
-                "Cart item not found",
+                "Сагсан дахь бараа олдсонгүй",
                 type_=CART_ITEM_NOT_FOUND_TYPE,
             )
         return cart, item
 
     @staticmethod
     def _insufficient_stock(product: Product | None, available: int) -> ProblemError:
-        name = product.name if product else "This product"
+        name = product.name if product else "Энэ бараа"
         detail = (
-            f"{name} is sold out."
+            f"{name} дууссан байна."
             if available == 0
-            else f"Only {available} of {name} can be added."
+            else f"{name}-аас зөвхөн {available} ширхэг нэмэх боломжтой."
         )
         return ProblemError(
             HTTPStatus.CONFLICT,
-            "Not enough stock",
+            "Үлдэгдэл хүрэлцэхгүй",
             detail,
             type_=INSUFFICIENT_STOCK_TYPE,
             extensions={"available": available},

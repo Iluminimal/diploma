@@ -1,9 +1,5 @@
 """Account, сагс, checkout тестүүдийн туслахууд."""
 
-import hashlib
-import hmac
-import json
-import time
 import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -14,15 +10,25 @@ from httpx import ASGITransport, AsyncClient, Response
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tests.conftest import WEBHOOK_SECRET, Api
+from tests.conftest import Api
 
 PASSWORD = "correct horse battery"
 ADDRESS: dict[str, Any] = {
-    "full_name": "Ada Lovelace",
-    "line1": "12 Analytical Way",
-    "city": "London",
-    "postal_code": "N1 9GU",
-    "country": "gb",
+    "full_name": "Болд Батбаяр",
+    "region": "Улаанбаатар",
+    "city": "Баянгол",
+    "khoroo": "3-р хороо",
+    "line1": "Энхтайваны өргөн чөлөө 12",
+    "country": "mn",
+    "phone": "99112233",
+}
+# Орон нутгийн (аймгийн) хаяг: шуурхай хүргэлт болдоггүй бүс.
+RURAL_ADDRESS: dict[str, Any] = {
+    **ADDRESS,
+    "region": "Дархан-Уул",
+    "city": "Дархан",
+    "khoroo": "5-р баг",
+    "line1": "10-р дэнж, 4-р байр",
 }
 
 
@@ -127,47 +133,6 @@ async def set_product(engine: AsyncEngine, product_id: int, **columns: Any) -> N
         )
 
 
-def webhook(
-    kind: str,
-    intent_id: str,
-    *,
-    amount: int,
-    currency: str = "usd",
-    event_id: str | None = None,
-    secret: str = WEBHOOK_SECRET,
-    message: str | None = None,
-    event_type: str | None = None,
-) -> tuple[bytes, dict[str, str]]:
-    """Stripe хэлбэрийн webhook body, хүчинтэй signature header-тэй. `kind` нь succeeded, failed
-    эсвэл canceled; `event_type` Stripe event-ийн бүтэн нэрийг дарна.
-    """
-    stripe_name = {"failed": "payment_failed"}.get(kind, kind)
-    intent: dict[str, Any] = {
-        "id": intent_id,
-        "object": "payment_intent",
-        "amount": amount,
-        "currency": currency,
-    }
-    if message:
-        intent["last_payment_error"] = {"message": message}
-    body = json.dumps(
-        {
-            "id": event_id or f"evt_{uuid.uuid4().hex}",
-            "object": "event",
-            "type": event_type or f"payment_intent.{stripe_name}",
-            "data": {"object": intent},
-        }
-    ).encode()
-    timestamp = int(time.time())
-    signature = hmac.new(
-        secret.encode(), f"{timestamp}.".encode() + body, hashlib.sha256
-    ).hexdigest()
-    return body, {
-        "Stripe-Signature": f"t={timestamp},v1={signature}",
-        "Content-Type": "application/json",
-    }
-
-
-async def send_webhook(client: AsyncClient, kind: str, intent_id: str, **kwargs: Any) -> Response:
-    body, headers = webhook(kind, intent_id, **kwargs)
-    return await client.post("/api/v1/webhooks/stripe", content=body, headers=headers)
+async def qpay_callback(client: AsyncClient, order_number: str, method: str = "GET") -> Response:
+    """QPay-ийн мэдэгдлийг дуурайна: гарын үсэггүй, session-гүй, зөвхөн захиалгын дугаартай."""
+    return await client.request(method, "/api/v1/webhooks/qpay", params={"order": order_number})

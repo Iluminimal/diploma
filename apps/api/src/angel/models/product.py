@@ -42,6 +42,13 @@ class Product(TimestampMixin, Base):
         Index("ix_products_created_at", "created_at"),
         Index("ix_products_category_id", "category_id"),
         Index("ix_products_search_vector", "search_vector", postgresql_using="gin"),
+        # Үсгийн алдаатай хайлт (pg_trgm `<%`): яг таарах хайлт хоосон үед ашиглана.
+        Index(
+            "ix_products_name_trgm",
+            "name",
+            postgresql_using="gin",
+            postgresql_ops={"name": "gin_trgm_ops"},
+        ),
         Index(
             "ix_products_embedding_hnsw",
             "embedding",
@@ -68,9 +75,9 @@ class Product(TimestampMixin, Base):
     usage: Mapped[str | None] = mapped_column(String(50))
     year: Mapped[int | None] = mapped_column(SmallInteger)
 
-    # Мөнгийг бүхэл минор нэгжээр (cent): float-ийн дугуйруулалтгүй, Stripe-тай таарна.
-    price_cents: Mapped[int] = mapped_column(Integer)
-    currency: Mapped[str] = mapped_column(String(3), server_default="USD")
+    # Мөнгийг бүхэл минор нэгжээр (cent): float-ийн дугуйруулалтгүй.
+    price_cents: Mapped[int] = mapped_column(BigInteger)
+    currency: Mapped[str] = mapped_column(String(3), server_default="MNT")
     stock_quantity: Mapped[int] = mapped_column(Integer, server_default="0")
     is_active: Mapped[bool] = mapped_column(Boolean, server_default="true")
     # Нийтлэгдсэн review-тэй нийцүүлж, тэдгээрийг өөрчилдөг transaction-д нь хамт шинэчилнэ.

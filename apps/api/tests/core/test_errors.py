@@ -18,7 +18,7 @@ async def test_unknown_route_is_problem_json(settings: Settings) -> None:
     body = response.json()
     assert response.status_code == 404
     assert response.headers["content-type"] == "application/problem+json"
-    assert body["title"] == "Not Found"
+    assert body["title"] == "Олдсонгүй"
     assert body["status"] == 404
     assert body["instance"] == "/nope"
     assert body["request_id"] == response.headers["x-request-id"]

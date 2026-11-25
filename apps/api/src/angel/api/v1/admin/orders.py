@@ -1,4 +1,5 @@
-"""Захиалга: бүх customer-ийн захиалга, мөн захиалгыг дараагийн төлөвт шилжүүлэх үйлдлүүд."""
+"""Захиалга: бүх customer-ийн захиалга (аль ч ажилтан харна), ачилт (ship/deliver) нь агуулахын
+ажилтных, цуцлалт, буцаалт, тэмдэглэл нь админых."""
 
 from typing import Annotated, Any
 
@@ -8,6 +9,8 @@ from angel.core.deps import (
     AdminDep,
     AdminOrderServiceDep,
     FulfillmentServiceDep,
+    StaffDep,
+    WarehouseDep,
 )
 from angel.schemas.admin.orders import (
     AdminOrderListQuery,
@@ -20,7 +23,7 @@ from angel.schemas.admin.orders import (
 )
 from angel.schemas.problem import ProblemDetail
 
-# Rate limit, role шалгалт нь __init__.py дахь router-т нэг дор хийгддэг (эхлээд rate limit).
+# Rate limit, ажилтан мөн эсэх нь __init__.py дахь router-т нэг дор хийгддэг (эхлээд rate limit).
 
 router = APIRouter()
 
@@ -32,7 +35,9 @@ _CONFLICT: dict[int | str, dict[str, Any]] = {
 
 @router.get("/orders", summary="Every customer's orders, newest first")
 async def list_orders(
-    query: Annotated[AdminOrderListQuery, Query()], service: AdminOrderServiceDep
+    query: Annotated[AdminOrderListQuery, Query()],
+    _staff: StaffDep,
+    service: AdminOrderServiceDep,
 ) -> AdminOrderPage:
     return await service.list(query)
 
@@ -43,7 +48,9 @@ async def list_orders(
     responses={404: {"model": ProblemDetail, "description": "No such order"}},
 )
 async def get_order(
-    number: Annotated[str, Path(min_length=4, max_length=20)], service: AdminOrderServiceDep
+    number: Annotated[str, Path(min_length=4, max_length=20)],
+    _staff: StaffDep,
+    service: AdminOrderServiceDep,
 ) -> AdminOrderOut:
     return await service.get(number)
 
@@ -52,19 +59,21 @@ async def get_order(
 async def ship_order(
     number: Annotated[str, Path(max_length=20)],
     body: ShipRequest,
-    admin: AdminDep,
+    worker: WarehouseDep,
     service: FulfillmentServiceDep,
 ) -> AdminOrderOut:
-    return await service.ship(number, admin, body)
+    return await service.ship(number, worker, body)
 
 
 @router.post(
     "/orders/{number}/deliver", summary="Mark a shipped order as delivered", responses=_CONFLICT
 )
 async def deliver_order(
-    number: Annotated[str, Path(max_length=20)], admin: AdminDep, service: FulfillmentServiceDep
+    number: Annotated[str, Path(max_length=20)],
+    worker: WarehouseDep,
+    service: FulfillmentServiceDep,
 ) -> AdminOrderOut:
-    return await service.deliver(number, admin)
+    return await service.deliver(number, worker)
 
 
 @router.post(

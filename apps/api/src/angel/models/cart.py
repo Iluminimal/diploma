@@ -50,6 +50,9 @@ class CartItem(TimestampMixin, Base):
     # Size-гүй бараанд "": NULL нь дээрх unique constraint-ийг хоосолчихно.
     size: Mapped[str] = mapped_column(String(16), server_default="")
     quantity: Mapped[int] = mapped_column(SmallInteger)
+    # Мөр анх нэмэгдэх үеийн нэгж үнэ (дараа нь ширхэг нэмэхэд өөрчлөгдөхгүй). Үнэ өөрчлөгдсөнийг
+    # мэдэгдэхэд ашиглана; хуучин мөрд NULL.
+    price_cents_at_add: Mapped[int | None] = mapped_column(BigInteger)
 
     cart: Mapped[Cart] = relationship(back_populates="items", lazy="raise")
 

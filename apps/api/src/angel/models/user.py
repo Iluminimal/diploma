@@ -23,6 +23,9 @@ from angel.models.mixins import TimestampMixin
 
 ROLE_CUSTOMER = "customer"
 ROLE_ADMIN = "admin"
+# Агуулахын ажилтан: бараа, нөөц, захиалгын ачилтыг өөрийн эрхээр хариуцна.
+ROLE_WAREHOUSE = "warehouse"
+STAFF_ROLES = (ROLE_ADMIN, ROLE_WAREHOUSE)
 
 
 class User(TimestampMixin, Base):
@@ -36,7 +39,9 @@ class User(TimestampMixin, Base):
         CheckConstraint(r"phone ~ '^\+[1-9][0-9]{7,14}$'", name="phone_e164"),
         # Утас эсвэл email, аль нэгийг дараа нь хасаж болно, гэхдээ хоёуланг нь хэзээ ч биш.
         CheckConstraint("email IS NOT NULL OR phone IS NOT NULL", name="contact_present"),
-        CheckConstraint(f"role IN ('{ROLE_CUSTOMER}', '{ROLE_ADMIN}')", name="role_valid"),
+        CheckConstraint(
+            f"role IN ('{ROLE_CUSTOMER}', '{ROLE_ADMIN}', '{ROLE_WAREHOUSE}')", name="role_valid"
+        ),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
@@ -62,6 +67,15 @@ class User(TimestampMixin, Base):
     @property
     def is_admin(self) -> bool:
         return self.role == ROLE_ADMIN
+
+    @property
+    def is_warehouse(self) -> bool:
+        return self.role == ROLE_WAREHOUSE
+
+    @property
+    def is_staff(self) -> bool:
+        """Back-office-ийн ажилтан (админ эсвэл агуулахын ажилтан): худалдан авалт хийхгүй."""
+        return self.role in STAFF_ROLES
 
     @property
     def identifier(self) -> str:
@@ -161,7 +175,8 @@ class Address(TimestampMixin, Base):
     line2: Mapped[str | None] = mapped_column(String(200))
     city: Mapped[str] = mapped_column(String(100))
     region: Mapped[str | None] = mapped_column(String(100))
-    postal_code: Mapped[str] = mapped_column(String(20))
+    khoroo: Mapped[str | None] = mapped_column(String(40))
+    postal_code: Mapped[str] = mapped_column(String(20), server_default="")
     country: Mapped[str] = mapped_column(String(2))
     phone: Mapped[str | None] = mapped_column(String(30))
     is_default: Mapped[bool] = mapped_column(Boolean, server_default="false")

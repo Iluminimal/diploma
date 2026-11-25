@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from angel.models import Order, OrderEvent, OrderItem, Payment, StripeEvent
+from angel.models import Order, OrderEvent, OrderItem, Payment, ProcessedPaymentEvent
 from angel.repositories.patterns import contains_pattern, prefix_pattern
 
 _WITH_DETAILS = (selectinload(Order.items), selectinload(Order.payment))
@@ -72,7 +72,7 @@ class OrderRepository:
         result = await self._session.execute(
             select(Order)
             .where(Order.user_id == user_id)
-            .options(selectinload(Order.items))
+            .options(selectinload(Order.items), selectinload(Order.payment))
             .order_by(Order.created_at.desc(), Order.id.desc())
             .limit(limit)
             .offset(offset)
@@ -179,10 +179,13 @@ class OrderRepository:
                 order_id=payment.order_id,
                 provider=payment.provider,
                 provider_payment_id=payment.provider_payment_id,
-                client_secret=payment.client_secret,
+                provider_data=payment.provider_data,
                 status=payment.status,
                 amount_cents=payment.amount_cents,
                 currency=payment.currency,
+                charge_currency=payment.charge_currency,
+                charge_minor=payment.charge_minor,
+                exchange_rate=payment.exchange_rate,
             )
             .on_conflict_do_nothing(index_elements=[Payment.order_id])
         )
@@ -196,9 +199,9 @@ class OrderRepository:
     async def record_event(self, event_id: str, event_type: str) -> bool:
         """Event id анх харагдахад True, дахин хүргэгдэх бүрд False."""
         result = await self._session.execute(
-            insert(StripeEvent)
+            insert(ProcessedPaymentEvent)
             .values(id=event_id, type=event_type)
             .on_conflict_do_nothing()
-            .returning(StripeEvent.id)
+            .returning(ProcessedPaymentEvent.id)
         )
         return result.scalar_one_or_none() is not None

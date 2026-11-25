@@ -18,7 +18,13 @@ from angel.schemas.problem import ProblemDetail
 ALLOWED_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/webp"})
 # Дээрх content type-д харгалзах Pillow-ийн формат нэр.
 ALLOWED_FORMATS = ("JPEG", "PNG", "WEBP")
-UPLOAD_PATHS = ("/search/image", "/search/hybrid", "/admin/products")
+UPLOAD_PATHS = (
+    "/search/image",
+    "/search/garments",
+    "/search/detect",
+    "/search/hybrid",
+    "/admin/products",
+)
 _ADMIN_IMAGE_PATH = re.compile(r"^/admin/products/\d+/image$")
 # Multipart хүрээ болон файлтай хамт ирэх жижиг form талбарууд.
 _FORM_OVERHEAD_BYTES = 64 * 1024
@@ -32,7 +38,7 @@ class UploadTooLargeError(ProblemError):
     def __init__(self, max_bytes: int) -> None:
         super().__init__(
             HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
-            "Image too large",
+            "Зураг хэт том",
             f"The image must be at most {max_bytes // (1024 * 1024)} MB.",
             type_=TOO_LARGE_TYPE,
             extensions={"max_bytes": max_bytes},
@@ -41,7 +47,7 @@ class UploadTooLargeError(ProblemError):
 
 def invalid_image(detail: str) -> ProblemError:
     return ProblemError(
-        HTTPStatus.UNPROCESSABLE_ENTITY, "Invalid image", detail, type_=INVALID_IMAGE_TYPE
+        HTTPStatus.UNPROCESSABLE_ENTITY, "Зураг буруу", detail, type_=INVALID_IMAGE_TYPE
     )
 
 
@@ -51,8 +57,8 @@ async def read_image_upload(file: UploadFile, max_bytes: int) -> bytes:
     if content_type not in ALLOWED_CONTENT_TYPES:
         raise ProblemError(
             HTTPStatus.UNSUPPORTED_MEDIA_TYPE,
-            "Unsupported image type",
-            "Upload a JPEG, PNG or WebP image.",
+            "Дэмжигдээгүй зургийн төрөл",
+            "JPEG, PNG эсвэл WebP зураг оруулна уу.",
             type_=UNSUPPORTED_TYPE,
             extensions={"allowed": sorted(ALLOWED_CONTENT_TYPES)},
         )
@@ -60,7 +66,7 @@ async def read_image_upload(file: UploadFile, max_bytes: int) -> bytes:
     if len(data) > max_bytes:
         raise UploadTooLargeError(max_bytes)
     if not data:
-        raise invalid_image("The uploaded file is empty.")
+        raise invalid_image("Оруулсан файл хоосон байна.")
     return data
 
 
@@ -93,9 +99,12 @@ class BodySizeLimitMiddleware:
         if declared is not None and declared > self.limit:
             problem = ProblemDetail(
                 type=TOO_LARGE_TYPE,
-                title="Image too large",
+                title="Зураг хэт том",
                 status=HTTPStatus.REQUEST_ENTITY_TOO_LARGE,
-                detail=f"The image must be at most {self.max_file_bytes // (1024 * 1024)} MB.",
+                detail=(
+                    f"Зургийн хэмжээ {self.max_file_bytes // (1024 * 1024)} MB-аас "
+                    "ихгүй байх ёстой."
+                ),
                 max_bytes=self.max_file_bytes,
             )
             await problem_response(Request(scope), problem)(scope, receive, send)

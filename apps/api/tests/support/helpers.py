@@ -9,6 +9,7 @@ from angel.core.config import Settings
 from angel.main import create_app
 from angel.ml.embeddings import EmbeddingService
 from angel.ml.fake import FakeEmbedder
+from angel.ml.localizer import GarmentLocalizer
 from angel.payments import PaymentGateway
 
 
@@ -18,13 +19,19 @@ async def running_app(
     *,
     embedder: EmbeddingService | None = None,
     payment_gateway: PaymentGateway | None = None,
+    localizer: GarmentLocalizer | None = None,
     raise_app_exceptions: bool = True,
 ) -> AsyncIterator[tuple[AsyncClient, FastAPI]]:
     """Жинхэнэ апп-ыг (lifespan-тай) in-process HTTP client-ийн ард ажиллуулна.
 
     Model нь өөр өгөөгүй бол хурдан fake: тест FashionCLIP-ийг хэзээ ч татахгүй, ачаалахгүй.
     """
-    app = create_app(settings, embedder=embedder or FakeEmbedder(), payment_gateway=payment_gateway)
+    app = create_app(
+        settings,
+        embedder=embedder or FakeEmbedder(),
+        payment_gateway=payment_gateway,
+        localizer=localizer,
+    )
     async with LifespanManager(app):
         transport = ASGITransport(app=app, raise_app_exceptions=raise_app_exceptions)
         async with AsyncClient(transport=transport, base_url="http://test") as client:

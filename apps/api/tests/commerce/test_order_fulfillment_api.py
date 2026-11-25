@@ -10,9 +10,9 @@ from httpx import Response
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from tests.admin.test_admin_orders_api import administrator, in_stock, place_order
-from tests.conftest import WEBHOOK_SECRET, Api, ApiFactory
-from tests.support.commerce import Shopper, send_webhook, stock_of
+from tests.admin.test_admin_orders_api import administrator, in_stock, place_order, warehouse_worker
+from tests.conftest import Api, ApiFactory
+from tests.support.commerce import Shopper, qpay_callback, stock_of
 from tests.support.fakes import RecordingGateway, RecordingMailer
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
@@ -23,12 +23,18 @@ SHIP = {"carrier": "DHL", "tracking_number": "JD0146 0000 1234"}
 
 
 class Shop:
-    """Бичдэг gateway ба mailer, администратор, захиалгатай ажиллаж буй апп."""
+    """Бичдэг gateway ба mailer, администратор, агуулахын ажилтан, захиалгатай ажиллаж буй апп."""
 
     def __init__(
-        self, api: Api, admin: Shopper, gateway: RecordingGateway, mailer: RecordingMailer
+        self,
+        api: Api,
+        admin: Shopper,
+        worker: Shopper,
+        gateway: RecordingGateway,
+        mailer: RecordingMailer,
     ):
-        self.api, self.admin, self.gateway, self.mailer = api, admin, gateway, mailer
+        self.api, self.admin, self.worker = api, admin, worker
+        self.gateway, self.mailer = gateway, mailer
 
     async def order(self, *, pay: bool = True, skip: int = 0) -> tuple[Shopper, str, int]:
         product = in_stock(self.api, skip)
@@ -36,8 +42,10 @@ class Shop:
         return customer, number, product.product_id
 
     async def act(self, number: str, action: str, **body: object) -> Response:
+        """Ачилтыг (ship, deliver) агуулахын ажилтан, бусдыг (цуцлах, буцаах, тэмдэглэл) админ."""
+        actor = self.worker if action in ("ship", "deliver") else self.admin
         return await self.api.client.post(
-            f"{ADMIN}/{number}/{action}", json=body or None, headers=self.admin.auth
+            f"{ADMIN}/{number}/{action}", json=body or None, headers=actor.auth
         )
 
     async def get(self, number: str) -> dict[str, Any]:
@@ -51,11 +59,17 @@ class Shop:
 async def shop(
     api_factory: ApiFactory, db_engine: AsyncEngine, tmp_path: Path
 ) -> AsyncIterator[Shop]:
-    gateway = RecordingGateway(WEBHOOK_SECRET)
+    gateway = RecordingGateway()
     async with api_factory(media_dir=tmp_path, gateway=gateway) as api:
         mailer = RecordingMailer()
         api.app.state.mailer = mailer
-        yield Shop(api, await administrator(api, db_engine), gateway, mailer)
+        yield Shop(
+            api,
+            await administrator(api, db_engine),
+            await warehouse_worker(api, db_engine),
+            gateway,
+            mailer,
+        )
 
 
 def event_types(order: dict[str, Any]) -> list[str]:
@@ -76,8 +90,8 @@ async def test_a_paid_order_can_be_shipped_with_a_tracking_number(shop: Shop) ->
     assert (body["carrier"], body["tracking_number"]) == ("DHL", "JD0146 0000 1234")
     assert body["shipped_at"] is not None
     assert event_types(body) == ["placed", "paid", "shipped"]
-    assert body["events"][-1]["data"]["actor"] == shop.admin.email
-    [email] = [m for m in shop.mailer.sent if "on its way" in m.subject]
+    assert body["events"][-1]["data"]["actor"] == shop.worker.email
+    [email] = [m for m in shop.mailer.sent if "замдаа гарлаа" in m.subject]
     assert email.to == customer.email
     assert "JD0146 0000 1234" in email.body
     assert "DHL" in email.body
@@ -101,7 +115,7 @@ async def test_the_customer_sees_tracking_and_a_timeline_without_internal_detail
     assert [e["type"] for e in body["events"]] == ["placed", "paid", "shipped"]
     assert body["events"][-1]["data"] == {"carrier": "DHL", "tracking_number": "JD0146 0000 1234"}
     assert "gift box" not in response.text
-    assert shop.admin.email not in response.text
+    assert shop.worker.email not in response.text
 
 
 async def test_a_shipped_order_can_be_marked_delivered(shop: Shop) -> None:
@@ -114,7 +128,7 @@ async def test_a_shipped_order_can_be_marked_delivered(shop: Shop) -> None:
     assert response.status_code == 200, response.text
     assert (body["status"], event_types(body)[-1]) == ("delivered", "delivered")
     assert body["delivered_at"] is not None
-    assert any("was delivered" in m.subject for m in shop.mailer.sent)
+    assert any("хүргэгдлээ" in m.subject for m in shop.mailer.sent)
 
 
 @pytest.mark.parametrize(
@@ -161,7 +175,7 @@ async def test_shipping_needs_a_carrier_and_a_tracking_number(
     assert (await shop.get(number))["status"] == "paid"
 
 
-async def test_two_administrators_shipping_at_once_ship_it_once(shop: Shop) -> None:
+async def test_two_warehouse_workers_shipping_at_once_ship_it_once(shop: Shop) -> None:
     _, number, _ = await shop.order()
 
     first, second = await asyncio.gather(
@@ -193,7 +207,7 @@ async def test_cancelling_an_unpaid_order_gives_the_stock_back_and_cancels_the_p
     assert event_types(body) == ["placed", "cancelled", "note"]
     assert body["events"][1]["data"] == {"reason": "admin", "actor": shop.admin.email}
     assert "Customer called" in body["events"][2]["data"]["text"]
-    assert any("was cancelled" in m.subject for m in shop.mailer.sent)
+    assert any("цуцлагдлаа" in m.subject for m in shop.mailer.sent)
 
 
 async def test_a_paid_order_cannot_be_cancelled_only_refunded(shop: Shop) -> None:
@@ -235,9 +249,11 @@ async def test_a_payment_that_arrives_after_an_admin_cancel_is_refunded(shop: Sh
     intent = before["payment"]["provider_payment_id"]
     await shop.act(number, "cancel")
 
-    response = await send_webhook(
-        shop.api.client, "succeeded", intent, amount=before["total_cents"]
+    # Худалдан авагч хуучин QR-аар төлчихсөн: QPay мэдэгдэнэ.
+    shop.gateway.pay(
+        intent, before["payment"]["charge_minor"], before["payment"]["charge_currency"]
     )
+    response = await qpay_callback(shop.api.client, number)
 
     body = await shop.get(number)
     assert response.status_code == 200, response.text
@@ -274,7 +290,7 @@ async def test_a_refund_returns_the_money_and_closes_the_order(shop: Shop, befor
         event["data"]["amount_cents"]
         == body["total_cents"] - body["shipping_cents"] + body["shipping_cents"]
     )
-    [email] = [m for m in shop.mailer.sent if "was refunded" in m.subject]
+    [email] = [m for m in shop.mailer.sent if "буцаагдлаа" in m.subject]
     assert email.to == customer.email
 
 
@@ -378,6 +394,39 @@ async def test_only_administrators_can_act_on_orders(shop: Shop, action: str) ->
 
     assert (anonymous.status_code, as_customer.status_code) == (401, 403)
     assert (await shop.get(number))["status"] == "paid"
+
+
+@pytest.mark.parametrize(
+    ("action", "allowed"),
+    [
+        ("ship", "worker"),
+        ("deliver", "worker"),
+        ("cancel", "admin"),
+        ("refund", "admin"),
+        ("notes", "admin"),
+    ],
+)
+async def test_each_order_action_belongs_to_one_staff_role(
+    shop: Shop, action: str, allowed: str
+) -> None:
+    _, number, _ = await shop.order()
+    other = shop.admin if allowed == "worker" else shop.worker
+
+    refused = await shop.api.client.post(f"{ADMIN}/{number}/{action}", json={}, headers=other.auth)
+
+    assert refused.status_code == 403
+    assert refused.json()["type"] == "urn:angel:problem:forbidden"
+    assert (await shop.get(number))["status"] == "paid"
+
+
+async def test_both_staff_roles_can_read_orders(shop: Shop) -> None:
+    _, number, _ = await shop.order()
+
+    for staff in (shop.admin, shop.worker):
+        listing = await shop.api.client.get(ADMIN, headers=staff.auth)
+        one = await shop.api.client.get(f"{ADMIN}/{number}", headers=staff.auth)
+
+        assert (listing.status_code, one.status_code) == (200, 200)
 
 
 async def test_acting_on_an_unknown_order_is_a_404(shop: Shop) -> None:

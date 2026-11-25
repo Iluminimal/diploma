@@ -11,5 +11,7 @@
 | `e2e_clean.py` | `make e2e-clean` | End-to-end тестийн үлдээсэн өгөгдлийг dev өгөгдлийн сангаас цэвэрлэнэ |
 | `check_recall.py` | | HNSW индексийг яг (exact) хайлттай харьцуулна (recall) |
 | `evaluate_map.py` | | Хайлтын чанар: mAP@K, P@K, recall, hit rate, nDCG; санамсаргүй эрэмбэтэй харьцуулна (`docs/ml-pipeline.md`, үр дүн `docs/perf/map*.json`) |
+| `benchmark_models.py` | `make benchmark` | FashionCLIP, Marqo-FashionSigLIP, ResNet-50 загваруудыг офлайнаар харьцуулна: mAP, nDCG, хурд, bootstrap итгэлийн завсар (`docs/ml-comparison.md`) |
+| `evaluate_detection.py` | `make evaluate-detection` | Олон хувцастай синтетик зураг дээр YOLO detector хайлтыг хэр сайжруулдгийг хэмжинэ (`docs/ml-comparison.md`) |
 | `measure_latency.py`, `measure_api_latency.py` | | Хайлтын query болон бүтэн endpoint-ийн хугацаа |
 | `benchmark_ml.py` | | Зураг боловсруулалт болон embedding загварын хурд |

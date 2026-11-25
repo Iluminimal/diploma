@@ -2,8 +2,16 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, Path
 
-from angel.core.deps import CheckoutServiceDep, CurrentUserDep, no_store
-from angel.schemas.commerce.order import CheckoutOut, CheckoutRequest, OrderOut, ShippingMethodList
+from angel.core.deps import CheckoutServiceDep, CurrentUserDep, ShoppingGuard, no_store
+from angel.core.rate_limit import rate_limit
+from angel.schemas.commerce.order import (
+    CheckoutOut,
+    CheckoutRequest,
+    OrderOut,
+    PaymentMethodOut,
+    ShippingMethodList,
+    ShippingZone,
+)
 from angel.schemas.problem import ProblemDetail
 
 router = APIRouter(prefix="/checkout", tags=["checkout"], dependencies=[Depends(no_store)])
@@ -28,9 +36,23 @@ _CHECKOUT_ERRORS: dict[int | str, dict[str, Any]] = {
 }
 
 
-@router.get("/shipping-methods", summary="Shipping options and prices")
-async def shipping_methods(service: CheckoutServiceDep) -> ShippingMethodList:
-    return service.shipping_methods()
+@router.get(
+    "/shipping-methods",
+    summary="Shipping options and prices for a zone",
+    description=(
+        "`zone=ub` is Ulaanbaatar (standard, same-day express, pickup); `zone=rural` is the "
+        "aimags (standard by regional carrier, pickup). Defaults to `ub`."
+    ),
+)
+async def shipping_methods(
+    service: CheckoutServiceDep, zone: ShippingZone = "ub"
+) -> ShippingMethodList:
+    return service.shipping_methods(zone)
+
+
+@router.get("/payment-method", summary="How checkout takes payment (QPay or offline demo)")
+async def payment_method(service: CheckoutServiceDep) -> PaymentMethodOut:
+    return service.payment_method()
 
 
 @router.post(
@@ -46,6 +68,7 @@ async def shipping_methods(service: CheckoutServiceDep) -> ShippingMethodList:
 async def create_checkout(
     body: CheckoutRequest,
     user_id: CurrentUserDep,
+    _guard: ShoppingGuard,
     service: CheckoutServiceDep,
     idempotency_key: IdempotencyKey,
 ) -> CheckoutOut:
@@ -60,6 +83,25 @@ async def create_checkout(
     },
 )
 async def simulate_payment(
-    number: OrderNumber, user_id: CurrentUserDep, service: CheckoutServiceDep
+    number: OrderNumber, user_id: CurrentUserDep, _guard: ShoppingGuard, service: CheckoutServiceDep
 ) -> OrderOut:
     return await service.simulate_payment(user_id, number)
+
+
+@router.post(
+    "/orders/{number}/check-payment",
+    summary="Ask the payment provider whether the order has been paid",
+    description=(
+        'Called when the shopper presses "check my payment" or comes back to the page. '
+        "Settles the order if the provider confirms the payment; safe to repeat."
+    ),
+    dependencies=[Depends(rate_limit("payment_check"))],
+    responses={
+        404: {"model": ProblemDetail, "description": "No such order"},
+        502: {"model": ProblemDetail, "description": "The payment provider failed"},
+    },
+)
+async def check_payment(
+    number: OrderNumber, user_id: CurrentUserDep, service: CheckoutServiceDep
+) -> OrderOut:
+    return await service.check_payment(user_id, number)

@@ -16,6 +16,7 @@
 import contextlib
 import secrets
 from collections import defaultdict
+from decimal import Decimal
 from http import HTTPStatus
 from typing import Any
 from uuid import uuid4
@@ -26,6 +27,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from angel.core.config import Settings
 from angel.core.errors import (
     ADDRESS_NOT_FOUND_TYPE,
+    ATTEMPT_EXPIRED_TYPE,
     CART_EMPTY_TYPE,
     CHECKOUT_BUSY_TYPE,
     CONTACT_EMAIL_REQUIRED_TYPE,
@@ -34,11 +36,12 @@ from angel.core.errors import (
     PAYMENT_IN_PROGRESS_TYPE,
     PAYMENT_PROVIDER_TYPE,
     PAYMENTS_UNAVAILABLE_TYPE,
+    SHIPPING_UNAVAILABLE_TYPE,
     ProblemError,
 )
 from angel.core.logging import get_logger
 from angel.models import Order, OrderItem, Payment
-from angel.payments import PaymentEvent, PaymentGateway, PaymentProviderError
+from angel.payments import IntentInfo, PaymentEvent, PaymentGateway, PaymentProviderError
 from angel.repositories.accounts.users import AddressRepository, UserRepository
 from angel.repositories.catalog.products import ProductRepository
 from angel.repositories.commerce.carts import CartRepository
@@ -48,14 +51,22 @@ from angel.schemas.commerce.order import (
     CheckoutOut,
     CheckoutRequest,
     OrderOut,
+    PaymentMethodOut,
     PaymentOut,
+    QPayCheckoutOut,
     ShippingMethodList,
+    ShippingZone,
 )
 from angel.services.commerce.cart import validate_size
 from angel.services.commerce.order_lifecycle import release_order
 from angel.services.commerce.payments import PaymentSettlement
-from angel.services.commerce.shipping import shipping_cost, shipping_methods
-from angel.services.mappers import to_order_out
+from angel.services.commerce.shipping import (
+    available_methods,
+    shipping_cost,
+    shipping_methods,
+    zone_for,
+)
+from angel.services.mappers import to_charge_out, to_order_out
 from angel.storage import Storage
 
 log = get_logger(__name__)
@@ -88,8 +99,16 @@ class CheckoutService:
         self._carts = CartRepository(session)
         self._addresses = AddressRepository(session)
 
-    def shipping_methods(self) -> ShippingMethodList:
-        return shipping_methods(self._settings)
+    def shipping_methods(self, zone: ShippingZone = "ub") -> ShippingMethodList:
+        return shipping_methods(self._settings, zone)
+
+    def payment_method(self) -> PaymentMethodOut:
+        gateway = self._gateway
+        return PaymentMethodOut(
+            provider=gateway.mode if gateway else None,
+            charge_currency=(gateway.charge_currency if gateway else None)
+            or self._settings.currency,
+        )
 
     async def create_checkout(
         self, user_id: int, request: CheckoutRequest, idempotency_key: str
@@ -113,8 +132,8 @@ class CheckoutService:
             else:
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
-                    "Checkout is busy",
-                    "Several checkouts ran at once. Please try again.",
+                    "Захиалга боловсруулагдаж байна",
+                    "Хэд хэдэн захиалга зэрэг хийгдлээ. Дахин оролдоно уу.",
                     type_=CHECKOUT_BUSY_TYPE,
                 )
 
@@ -124,7 +143,7 @@ class CheckoutService:
         """Зөвхөн offline горим: provider баталгаажуулсан мэт захиалгыг төлнө."""
         gateway = self._require_gateway()
         if gateway.mode != "offline" or self._settlement is None:
-            raise ProblemError(HTTPStatus.NOT_FOUND, "Not found")
+            raise ProblemError(HTTPStatus.NOT_FOUND, "Олдсонгүй")
         async with self._session.begin():
             order = await self._orders.get_for_user(user_id, number)
             if order is None:
@@ -132,15 +151,14 @@ class CheckoutService:
             if order.status == "cancelled" or order.payment is None:
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
-                    "This order can no longer be paid",
+                    "Энэ захиалгыг төлөх боломжгүй болсон",
                     type_=PAYMENT_IN_PROGRESS_TYPE,
                 )
             event = PaymentEvent(
                 id=f"evt_offline_{uuid4().hex}",
-                kind="succeeded",
                 intent_id=order.payment.provider_payment_id,
-                amount_cents=order.total_cents,
-                currency=order.currency,
+                amount=order.payment.charge_minor,
+                currency=order.payment.charge_currency,
             )
             already_paid = order.status == "paid"
         if not already_paid:
@@ -148,7 +166,38 @@ class CheckoutService:
         async with self._session.begin():
             fresh = await self._orders.get_for_user(user_id, number)
             assert fresh is not None
-            return to_order_out(fresh, self._storage)
+            return to_order_out(
+                fresh, self._storage, pending_ttl_minutes=self._settings.order_pending_ttl_minutes
+            )
+
+    async def check_payment(self, user_id: int, number: str) -> OrderOut:
+        """Худалдан авагч "Төлбөрөө шалгах" дарсан эсвэл хуудас руу буцаж ирсэн: provider-оос
+        төлвийг асуугаад төлөгдсөн бол захиалгыг шийднэ. Олон дахин дуудахад аюулгүй."""
+        gateway = self._require_gateway()
+        async with self._session.begin():
+            order = await self._orders.get_for_user(user_id, number)
+            if order is None:
+                raise self._order_not_found()
+            intent_id = order.payment.provider_payment_id if order.payment else None
+            open_payment = order.status in ("pending", "cancelled") and intent_id is not None
+        if open_payment and intent_id is not None and self._settlement is not None:
+            try:
+                event = await gateway.check(intent_id)
+            except PaymentProviderError as exc:
+                raise ProblemError(
+                    HTTPStatus.BAD_GATEWAY,
+                    "Төлбөрийн үйлчилгээ боломжгүй",
+                    "Төлбөрийг одоо шалгаж чадсангүй. Дахин оролдоно уу.",
+                    type_=PAYMENT_PROVIDER_TYPE,
+                ) from exc
+            if event is not None:
+                await self._settlement.handle(event)
+        async with self._session.begin():
+            fresh = await self._orders.get_for_user(user_id, number)
+            assert fresh is not None
+            return to_order_out(
+                fresh, self._storage, pending_ttl_minutes=self._settings.order_pending_ttl_minutes
+            )
 
     # --- алхмууд ---
 
@@ -191,9 +240,9 @@ class CheckoutService:
                 if cancelled.get(old.id) == "succeeded":
                     raise ProblemError(
                         HTTPStatus.CONFLICT,
-                        "A payment is already going through",
-                        "Your previous order was just paid. Check your orders before "
-                        "placing another.",
+                        "Төлбөр хийгдэж байна",
+                        "Таны өмнөх захиалга дөнгөж төлөгдлөө. Өөр захиалга хийхээсээ өмнө "
+                        "захиалгуудаа шалгана уу.",
                         type_=PAYMENT_IN_PROGRESS_TYPE,
                     )
                 stale.append(locked)
@@ -203,24 +252,32 @@ class CheckoutService:
             if address is None:
                 raise ProblemError(
                     HTTPStatus.NOT_FOUND,
-                    "Address not found",
-                    "Choose one of your saved addresses.",
+                    "Хаяг олдсонгүй",
+                    "Хадгалсан хаягуудын аль нэгийг сонгоно уу.",
                     type_=ADDRESS_NOT_FOUND_TYPE,
+                )
+            zone = zone_for(address.region)
+            if request.shipping_method not in available_methods(zone):
+                raise ProblemError(
+                    HTTPStatus.UNPROCESSABLE_ENTITY,
+                    "Энэ хүргэлтийг сонгох боломжгүй",
+                    "Шуурхай хүргэлт зөвхөн Улаанбаатарт. Өөр хүргэлт сонгоно уу.",
+                    type_=SHIPPING_UNAVAILABLE_TYPE,
                 )
             assert user is not None  # token-ийн subject; хэрэглэгч хэзээ ч устгагддаггүй
             contact_email = request.contact_email or user.email
             if contact_email is None:
                 raise ProblemError(
                     HTTPStatus.UNPROCESSABLE_ENTITY,
-                    "An email is needed for the order",
-                    "Enter the email address that should receive the order updates.",
+                    "Захиалгад имэйл шаардлагатай",
+                    "Захиалгын мэдээлэл хүлээн авах имэйл хаягаа оруулна уу.",
                     type_=CONTACT_EMAIL_REQUIRED_TYPE,
                 )
             cart = await self._carts.find(user_id=user_id)
             if cart is None or not cart.items:
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
-                    "Your cart is empty",
+                    "Сагс хоосон байна",
                     type_=CART_EMPTY_TYPE,
                 )
 
@@ -255,8 +312,8 @@ class CheckoutService:
             if problems:
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
-                    "Some items are no longer available",
-                    "Update your cart and try again.",
+                    "Зарим бараа дууссан байна",
+                    "Сагсаа шинэчлээд дахин оролдоно уу.",
                     type_=INSUFFICIENT_STOCK_TYPE,
                     extensions={"issues": problems},
                 )
@@ -276,7 +333,7 @@ class CheckoutService:
                 for line in cart.items
             ]
             subtotal = sum(item.unit_price_cents * item.quantity for item in items)
-            shipping = shipping_cost(self._settings, request.shipping_method, subtotal)
+            shipping = shipping_cost(self._settings, request.shipping_method, subtotal, zone)
             order = Order(
                 number=new_order_number(),
                 user_id=user_id,
@@ -301,59 +358,109 @@ class CheckoutService:
         async with self._session.begin():
             order = await self._orders.get_by_id(order_id)
             assert order is not None
+            if order.status == "cancelled":
+                # Ижил түлхүүрээр давтсан хүсэлт, гэхдээ захиалга хугацаа нь дууссан (эсвэл
+                # цуцлагдсан): шинэ оролдлого хийх ёстой.
+                raise ProblemError(
+                    HTTPStatus.CONFLICT,
+                    "Захиалгын хугацаа дууссан",
+                    "Энэ захиалга цуцлагдсан байна. Дахин захиална уу.",
+                    type_=ATTEMPT_EXPIRED_TYPE,
+                )
             number, total, currency = order.number, order.total_cents, order.currency
             needs_payment = order.status == "pending" and order.payment is None
 
         if needs_payment:
-            try:
-                intent = await gateway.create_intent(
-                    amount_cents=total,
-                    currency=currency,
-                    order_number=number,
-                    # Ижил захиалгад дуудлагыг давтавал ижил PaymentIntent буцна.
-                    idempotency_key=f"order-{order_id}",
-                )
-            except PaymentProviderError as exc:
-                log.error("payment_setup_failed", order=number, error=str(exc))
-                await self._abort(order_id)
-                raise ProblemError(
-                    HTTPStatus.BAD_GATEWAY,
-                    "Payment provider unavailable",
-                    "We could not start the payment. Your cart is unchanged, please try again.",
-                    type_=PAYMENT_PROVIDER_TYPE,
-                ) from exc
-            async with self._session.begin():
-                current = await self._orders.get_for_update(order_id)
-                still_open = current is not None and current.status == "pending"
-                await self._orders.add_payment_if_missing(
-                    Payment(
-                        order_id=order_id,
-                        provider=gateway.mode,
-                        provider_payment_id=intent.id,
-                        client_secret=intent.client_secret if still_open else None,
-                        status="requires_payment" if still_open else "canceled",
-                        amount_cents=total,
-                        currency=currency,
-                    )
-                )
-            if not still_open:
-                # Intent үүсч байх хооронд шинэ checkout-оор солигдсон: хаа.
-                with contextlib.suppress(PaymentProviderError):
-                    await gateway.cancel_intent(intent.id)
+            await self._create_payment(order_id, number, total, currency, gateway)
 
         async with self._session.begin():
             final = await self._orders.get_for_user(user_id, number)
             assert final is not None
             payment = final.payment
+            data = payment.provider_data if payment and final.status == "pending" else None
             return CheckoutOut(
-                order=to_order_out(final, self._storage),
+                order=to_order_out(
+                    final,
+                    self._storage,
+                    pending_ttl_minutes=self._settings.order_pending_ttl_minutes,
+                ),
                 payment=PaymentOut(
                     provider=gateway.mode,
-                    client_secret=(
-                        payment.client_secret if payment and final.status == "pending" else None
-                    ),
+                    charge=to_charge_out(payment),
+                    qpay=QPayCheckoutOut.model_validate(data) if data else None,
                 ),
             )
+
+    async def _create_payment(
+        self, order_id: int, number: str, total: int, currency: str, gateway: PaymentGateway
+    ) -> None:
+        """Захиалгын төлбөрийг provider дээр үүсгэж хадгална, захиалга тутамд яг нэг удаа.
+
+        QPay ижил дугаартай хоёр дахь нэхэмжлэхийг татгалздаг тул давхар товшилтын зэрэг хүсэлтүүд
+        энд захиалгын advisory lock дээр дараалж хүлээнэ: хоёр дахь нь хадгалагдсан төлбөрийг олж
+        шинээр үүсгэхгүй. Түгжээ зөвхөн энэ захиалгынх, захиалгын мөрийг сүлжээ хүлээх хооронд
+        түгжихгүй (expiry, админ саатахгүй)."""
+        intent: IntentInfo | None = None
+        failure: PaymentProviderError | None = None
+        still_open = False
+        async with self._session.begin():
+            await self._session.execute(
+                text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+                {"key": f"payment:{order_id}"},
+            )
+            order = await self._orders.get_by_id(order_id)
+            if order is None or order.status != "pending" or order.payment is not None:
+                return  # өөр хүсэлт аль хэдийн үүсгэсэн, эсвэл захиалга хаагдсан
+            # Дэлгүүр төгрөгөөр үнэлдэг тул хөрвүүлэлт байхгүй: худалдан авагчид харуулсан дүн яг
+            # provider-т илгээгдэнэ. Provider өөр валют шаардвал тохиргоо буруу.
+            charge_currency = gateway.charge_currency or currency
+            charge_minor = total
+            if charge_currency != currency:
+                failure = PaymentProviderError(
+                    f"{gateway.mode} charges in {charge_currency}, the shop prices in {currency}"
+                )
+            else:
+                try:
+                    intent = await gateway.create_intent(
+                        amount=charge_minor,
+                        currency=charge_currency,
+                        order_number=number,
+                        idempotency_key=f"order-{order_id}",
+                    )
+                except PaymentProviderError as exc:
+                    failure = exc
+                else:
+                    current = await self._orders.get_for_update(order_id)
+                    still_open = current is not None and current.status == "pending"
+                    await self._orders.add_payment_if_missing(
+                        Payment(
+                            order_id=order_id,
+                            provider=gateway.mode,
+                            provider_payment_id=intent.id,
+                            provider_data=(
+                                intent.checkout if still_open and intent.checkout else None
+                            ),
+                            status="requires_payment" if still_open else "canceled",
+                            amount_cents=total,
+                            currency=currency,
+                            charge_currency=charge_currency,
+                            charge_minor=charge_minor,
+                            exchange_rate=Decimal(1),
+                        )
+                    )
+        if failure is not None:
+            log.error("payment_setup_failed", order=number, error=str(failure))
+            await self._abort(order_id)
+            raise ProblemError(
+                HTTPStatus.BAD_GATEWAY,
+                "Төлбөрийн үйлчилгээ боломжгүй",
+                "Төлбөрийг эхлүүлж чадсангүй. Таны сагс хэвээр байна, дахин оролдоно уу.",
+                type_=PAYMENT_PROVIDER_TYPE,
+            ) from failure
+        if intent is not None and not still_open:
+            # Төлбөр үүсч байх хооронд захиалга хаагдсан (дууссан, солигдсон): нэхэмжлэхийг хаа.
+            with contextlib.suppress(PaymentProviderError):
+                await gateway.cancel_intent(intent.id)
 
     async def _abort(self, order_id: int) -> None:
         """Provider төлбөр үүсгэхээс татгалзсан: нөөцийг буцаа."""
@@ -368,8 +475,8 @@ class CheckoutService:
         except PaymentProviderError as exc:
             raise ProblemError(
                 HTTPStatus.BAD_GATEWAY,
-                "Payment provider unavailable",
-                "We could not replace your previous unpaid order. Please try again.",
+                "Төлбөрийн үйлчилгээ боломжгүй",
+                "Өмнөх төлөгдөөгүй захиалгыг солиж чадсангүй. Дахин оролдоно уу.",
                 type_=PAYMENT_PROVIDER_TYPE,
             ) from exc
 
@@ -385,12 +492,12 @@ class CheckoutService:
         if self._gateway is None:
             raise ProblemError(
                 HTTPStatus.SERVICE_UNAVAILABLE,
-                "Payments are not available",
-                "Card payments are not configured on this server.",
+                "Төлбөр боломжгүй байна",
+                "Энэ серверт төлбөр тохируулагдаагүй байна.",
                 type_=PAYMENTS_UNAVAILABLE_TYPE,
             )
         return self._gateway
 
     @staticmethod
     def _order_not_found() -> ProblemError:
-        return ProblemError(HTTPStatus.NOT_FOUND, "Order not found", type_=ORDER_NOT_FOUND_TYPE)
+        return ProblemError(HTTPStatus.NOT_FOUND, "Захиалга олдсонгүй", type_=ORDER_NOT_FOUND_TYPE)

@@ -1,5 +1,6 @@
-"""Үйл ажиллагааны command-ууд. Эхний administrator-ыг `make create-admin EMAIL=you@example.com`-оор
-үүсгэнэ: API-аар бүртгүүлбэл үргэлж customer болдог."""
+"""Үйл ажиллагааны command-ууд. Ажилтныг API-аар бүртгүүлэх боломжгүй (бүртгүүлбэл үргэлж customer
+болдог): администраторыг `make create-admin EMAIL=you@example.com`, агуулахын ажилтныг
+`make create-warehouse EMAIL=you@example.com`-оор үүсгэнэ."""
 
 import argparse
 import asyncio
@@ -11,9 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from angel.core.config import get_settings
 from angel.db.engine import create_engine
-from angel.models.user import ROLE_CUSTOMER
+from angel.models.user import ROLE_ADMIN, ROLE_CUSTOMER, ROLE_WAREHOUSE
 from angel.schemas.accounts.auth import FullName, Password
-from angel.services.admin.users import provision_admin, set_role
+from angel.services.admin.users import provision_staff, set_role
 
 PASSWORD_ENV = "ADMIN_PASSWORD"  # noqa: S105 - the variable's name, not a secret
 
@@ -31,9 +32,28 @@ def build_parser() -> argparse.ArgumentParser:
         help="promote an existing account without asking for a new password",
     )
 
-    revoke = sub.add_parser("revoke-admin", help="turn an administrator back into a customer")
-    revoke.add_argument("--email", required=True)
+    warehouse = sub.add_parser(
+        "create-warehouse", help="create a warehouse worker or promote an account"
+    )
+    warehouse.add_argument("--email", required=True)
+    warehouse.add_argument("--name", default="Warehouse", help="display name for a new account")
+    warehouse.add_argument(
+        "--keep-password",
+        action="store_true",
+        help="promote an existing account without asking for a new password",
+    )
+
+    for name, who in (
+        ("revoke-admin", "an administrator"),
+        ("revoke-warehouse", "a warehouse worker"),
+    ):
+        revoke = sub.add_parser(name, help=f"turn {who} back into a customer")
+        revoke.add_argument("--email", required=True)
     return parser
+
+
+CREATE_ROLES = {"create-admin": ROLE_ADMIN, "create-warehouse": ROLE_WAREHOUSE}
+ROLE_LABELS = {ROLE_ADMIN: "administrator", ROLE_WAREHOUSE: "warehouse worker"}
 
 
 def _password(args: argparse.Namespace) -> str | None:
@@ -53,20 +73,22 @@ def _password(args: argparse.Namespace) -> str | None:
 
 
 async def _run(args: argparse.Namespace) -> str:
-    password = _password(args) if args.command == "create-admin" else None
+    password = _password(args) if args.command in CREATE_ROLES else None
     engine = create_engine(get_settings().database_url)
     try:
         sessions = async_sessionmaker[AsyncSession](engine, expire_on_commit=False)
         async with sessions() as session:
-            if args.command == "create-admin":
+            if args.command in CREATE_ROLES:
+                role = CREATE_ROLES[args.command]
                 name = TypeAdapter(FullName).validate_python(args.name)
                 try:
-                    user, created = await provision_admin(
-                        session, email=args.email, password=password, full_name=name
+                    user, created = await provision_staff(
+                        session, email=args.email, password=password, full_name=name, role=role
                     )
                 except ValueError as error:
                     raise SystemExit(str(error)) from None
-                return f"{'created' if created else 'promoted'} administrator {user.identifier}"
+                action = "created" if created else "promoted"
+                return f"{action} {ROLE_LABELS[role]} {user.identifier}"
             demoted = await set_role(session, email=args.email, role=ROLE_CUSTOMER)
             if demoted is None:
                 raise SystemExit(f"no account for {args.email}")

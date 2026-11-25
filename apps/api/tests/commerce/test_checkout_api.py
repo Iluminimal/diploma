@@ -4,12 +4,14 @@ import uuid
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.conftest import Api, ApiFactory
 from tests.support.accounts import install_sms, sign_in_with_phone
 from tests.support.catalogue import Entry
 from tests.support.commerce import (
     PASSWORD,
+    RURAL_ADDRESS,
     Shopper,
     add_address,
     add_to_cart,
@@ -17,6 +19,7 @@ from tests.support.commerce import (
     checkout,
     register,
     set_product,
+    set_role,
     stock_of,
     unique_email,
 )
@@ -55,7 +58,7 @@ async def orders_in_db(api: Api, **where: str | int) -> list[dict[str, object]]:
 
 @pytest.fixture
 def gateway() -> RecordingGateway:
-    return RecordingGateway("whsec_test_secret")
+    return RecordingGateway()
 
 
 async def test_checkout_reserves_stock_snapshots_prices_and_starts_the_payment(
@@ -77,15 +80,22 @@ async def test_checkout_reserves_stock_snapshots_prices_and_starts_the_payment(
         assert (item["product_id"], item["size"], item["quantity"]) == (product.product_id, "M", 2)
         assert item["unit_price_cents"] == product.price_cents
         assert order["subtotal_cents"] == 2 * product.price_cents
-        assert order["shipping_cents"] == api.settings.shipping_standard_cents
+        assert order["shipping_cents"] == api.settings.shipping_standard_ub_cents
         assert order["total_cents"] == order["subtotal_cents"] + order["shipping_cents"]
-        assert order["shipping_address"]["line1"] == "12 Analytical Way"
+        assert order["shipping_address"]["line1"] == "Энхтайваны өргөн чөлөө 12"
+        assert order["shipping_address"]["phone"] == "+97699112233"
         assert order["contact_email"] == shopper.email
         assert body["payment"]["provider"] == "offline"
-        assert body["payment"]["client_secret"]
+        # Offline: дэлгүүрийн үндсэн валютаар; QR байхгүй.
+        assert body["payment"]["charge"] == {
+            "currency": "MNT",
+            "amount_minor": order["total_cents"],
+        }
+        assert body["payment"]["qpay"] is None
         assert gateway.created == [
             {
                 "amount": order["total_cents"],
+                "currency": "MNT",
                 "order": order["number"],
                 "key": gateway.created[0]["key"],
             }
@@ -101,14 +111,14 @@ async def test_shipping_cost_depends_on_the_method_and_the_subtotal(
 ) -> None:
     async with api_factory(gateway=gateway) as api:
         cheap, pricey = in_stock(api), in_stock(api, 1)
-        await set_product(api.app.state.engine, pricey.product_id, price_cents=6000)
+        await set_product(api.app.state.engine, pricey.product_id, price_cents=8_000_000)
         shopper, address_id = await shopper_with_cart(api, cheap, quantity=1)
         await add_to_cart(shopper.client, pricey.product_id, quantity=2, token=shopper.token)
 
         express = (await checkout(shopper, address_id, method="express")).json()["order"]
         standard = (await checkout(shopper, address_id, method="standard")).json()["order"]
 
-        assert express["shipping_cents"] == api.settings.shipping_express_cents
+        assert express["shipping_cents"] == api.settings.shipping_express_ub_cents
         assert standard["subtotal_cents"] >= api.settings.free_shipping_threshold_cents
         assert standard["shipping_cents"] == 0  # босгоос дээш бол үнэгүй
         assert standard["total_cents"] == standard["subtotal_cents"]
@@ -120,9 +130,16 @@ async def test_shipping_methods_endpoint(api_factory: ApiFactory) -> None:
 
         body = response.json()
         assert response.status_code == 200
-        assert [m["id"] for m in body["items"]] == ["standard", "express"]
-        assert body["items"][0]["price_cents"] == 499
-        assert body["free_shipping_threshold_cents"] == 10_000
+        assert [m["id"] for m in body["items"]] == ["standard", "express", "pickup"]
+        assert [m["price_cents"] for m in body["items"]] == [500_000, 1_200_000, 0]
+        assert body["free_shipping_threshold_cents"] == 15_000_000
+        assert body["currency"] == "MNT"
+
+        rural = (
+            await api.client.get(f"{CHECKOUT}/shipping-methods", params={"zone": "rural"})
+        ).json()
+        assert [m["id"] for m in rural["items"]] == ["standard", "pickup"]
+        assert rural["items"][0]["price_cents"] == 1_000_000
 
 
 async def test_checkout_input_and_authentication(
@@ -244,7 +261,8 @@ async def test_parallel_requests_with_one_key_create_one_order_and_one_payment(
 
         assert {r.status_code for r in responses} == {200}
         assert len({r.json()["order"]["number"] for r in responses}) == 1
-        assert len({r.json()["payment"]["client_secret"] for r in responses}) == 1
+        assert len({str(r.json()["payment"]["charge"]) for r in responses}) == 1
+        assert len(gateway.created) == 1
         assert len(await orders_in_db(api)) == 1
         assert await stock_of(api.app.state.engine, product.product_id) == 5
 
@@ -262,7 +280,10 @@ async def test_a_replay_finishes_a_checkout_that_died_before_the_payment_was_sto
 
         assert replay.status_code == 200
         assert replay.json()["order"]["number"] == first.json()["order"]["number"]
-        assert replay.json()["payment"]["client_secret"]
+        assert (
+            replay.json()["payment"]["charge"]["amount_minor"]
+            == first.json()["order"]["total_cents"]
+        )
         assert len(await orders_in_db(api)) == 1
 
 
@@ -401,12 +422,12 @@ async def test_the_order_keeps_the_address_it_was_shipped_to(
         placed = (await checkout(shopper, address_id)).json()["order"]
 
         await api.client.patch(
-            f"/api/v1/addresses/{address_id}", json={"city": "Elsewhere"}, headers=shopper.auth
+            f"/api/v1/addresses/{address_id}", json={"city": "Сүхбаатар"}, headers=shopper.auth
         )
         await api.client.delete(f"/api/v1/addresses/{address_id}", headers=shopper.auth)
         shown = await api.client.get(f"{ORDERS}/{placed['number']}", headers=shopper.auth)
 
-        assert shown.json()["shipping_address"]["city"] == "London"
+        assert shown.json()["shipping_address"]["city"] == "Баянгол"
 
 
 async def test_offline_payment_completes_the_order_and_clears_only_what_was_bought(
@@ -433,10 +454,16 @@ async def test_offline_payment_completes_the_order_and_clears_only_what_was_boug
         cart = (await api.client.get("/api/v1/cart", headers=shopper.auth)).json()
         assert [line["product"]["id"] for line in cart["lines"]] == [later.product_id]
         assert await stock_of(api.app.state.engine, bought.product_id) == 5
-        confirmations = [m for m in mailer.sent if "confirmed" in m.subject]
+        confirmations = [m for m in mailer.sent if "баталгаажлаа" in m.subject]
         assert [m.subject for m in confirmations] == [
-            f"Order {number} confirmed"
+            f"{number} дугаартай захиалга баталгаажлаа"
         ]  # нэг л удаа илгээсэн
+        body = confirmations[0].body
+        assert paid.json()["items"][0]["name"] in body  # юу авсан
+        assert "Энхтайваны өргөн чөлөө 12" in body  # хаашаа
+        assert "+97699112233" in body
+        assert "Нийт:" in body
+        assert "MNT" in body
         assert confirmations[0].to == shopper.email
 
 
@@ -451,7 +478,7 @@ async def test_simulated_payment_only_exists_in_offline_mode_and_for_your_own_or
             foreign = await browser.post(
                 f"{CHECKOUT}/orders/{number}/simulate-payment", headers=stranger.auth
             )
-        gateway.mode = "stripe"
+        gateway.mode = "qpay"
 
         live = await api.client.post(
             f"{CHECKOUT}/orders/{number}/simulate-payment", headers=shopper.auth
@@ -464,7 +491,7 @@ async def test_simulated_payment_only_exists_in_offline_mode_and_for_your_own_or
 async def test_without_payment_configuration_checkout_is_unavailable_but_the_shop_works(
     api_factory: ApiFactory,
 ) -> None:
-    async with api_factory(payments_mode="stripe", stripe_secret_key="") as api:
+    async with api_factory(payments_mode="qpay", qpay_client_id="") as api:
         shopper, address_id = await shopper_with_cart(api, in_stock(api))
 
         response = await checkout(shopper, address_id)
@@ -554,3 +581,40 @@ async def test_a_customer_who_signed_up_with_a_phone_gives_an_email_for_the_orde
         assert placed.status_code == 200, placed.text
         (order,) = await orders_in_db(api, user_id=shopper.user_id)
         assert order["contact_email"] == "ada@example.com"
+
+
+@pytest.mark.parametrize("role", ["admin", "warehouse"])
+async def test_staff_cannot_check_out(
+    api_factory: ApiFactory, gateway: RecordingGateway, db_engine: AsyncEngine, role: str
+) -> None:
+    async with api_factory(gateway=gateway) as api:
+        shopper = await register(api.client)
+        address_id = await add_address(shopper)
+        await add_to_cart(api.client, in_stock(api).product_id, token=shopper.token)
+        await set_role(db_engine, shopper.user_id, role)
+
+        response = await checkout(shopper, address_id)
+
+        assert response.status_code == 403
+        assert response.json()["type"] == "urn:angel:problem:forbidden"
+        assert await orders_in_db(api) == []
+
+
+async def test_express_is_only_for_ulaanbaatar_and_pickup_is_free_everywhere(
+    api_factory: ApiFactory, gateway: RecordingGateway
+) -> None:
+    async with api_factory(gateway=gateway) as api:
+        shopper, _ = await shopper_with_cart(api, in_stock(api))
+        rural_id = await add_address(shopper, **RURAL_ADDRESS)
+
+        express = await checkout(shopper, rural_id, method="express")
+        pickup = await checkout(shopper, rural_id, method="pickup")
+        standard = await checkout(shopper, rural_id, method="standard", key="rural-standard")
+
+        assert express.status_code == 422
+        assert express.json()["type"] == "urn:angel:problem:shipping-unavailable"
+        assert pickup.json()["order"]["shipping_cents"] == 0
+        assert standard.status_code == 200
+        assert (
+            standard.json()["order"]["shipping_cents"] == api.settings.shipping_standard_rural_cents
+        )

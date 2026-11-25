@@ -30,3 +30,14 @@ def describe_device(user_agent: str | None) -> str:
     if browser and system:
         return f"{browser} on {system}"
     return browser or system or "Unknown device"
+
+
+def mask_ip(ip: str | None) -> str | None:
+    """Үйл явдлын журналд харуулах IP: сүүлийн хэсгийг нууцална ("203.0.113.x", "2001:db8:1::").
+    Бүтэн хаяг хэзээ ч API-аар гарахгүй: тухайн төхөөрөмж, хотыг таних хангалттай."""
+    if not ip:
+        return None
+    if ":" in ip:
+        return ":".join(ip.split(":")[:3]) + "::"
+    parts = ip.split(".")
+    return ".".join(parts[:3]) + ".x" if len(parts) == 4 else None

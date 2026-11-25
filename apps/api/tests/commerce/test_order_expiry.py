@@ -14,14 +14,14 @@ from tests.support.commerce import (
     register,
     stock_of,
 )
-from tests.support.fakes import RecordingGateway
+from tests.support.fakes import RecordingGateway, RecordingMailer
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 
 
 @pytest.fixture
 def gateway() -> RecordingGateway:
-    return RecordingGateway("whsec_test_secret")
+    return RecordingGateway()
 
 
 def expirer(api: Api, gateway: RecordingGateway | None) -> OrderExpirer:
@@ -72,9 +72,9 @@ async def test_unpaid_orders_past_the_deadline_give_their_stock_back(
         assert len(gateway.cancelled) == 1  # төлбөрийг дахин дуусгах боломжгүй
         async with api.app.state.engine.connect() as connection:
             payment = (
-                await connection.execute(text("SELECT status, client_secret FROM payments"))
+                await connection.execute(text("SELECT status, provider_data FROM payments"))
             ).one()
-        assert (payment.status, payment.client_secret) == ("canceled", None)
+        assert (payment.status, payment.provider_data) == ("canceled", None)
 
 
 async def test_orders_inside_the_deadline_and_paid_orders_are_left_alone(
@@ -179,3 +179,38 @@ async def test_stale_guest_carts_are_deleted_but_accounts_and_fresh_guests_are_k
                 await connection.execute(text("SELECT user_id IS NULL AS guest FROM carts"))
             ).all()
         assert sorted(r.guest for r in rows) == [False, True]  # account-ынх ба шинэ зочных
+
+
+async def test_the_customer_is_emailed_when_an_unpaid_order_expires(
+    api_factory: ApiFactory, gateway: RecordingGateway
+) -> None:
+    async with api_factory(gateway=gateway) as api:
+        number, _, shopper = await pending_order(api)
+        await age_orders(api, api.settings.order_pending_ttl_minutes + 1)
+        mailer = RecordingMailer()
+
+        await OrderExpirer(api.app.state.sessions, gateway, api.settings, mailer).run_once()
+
+        [email] = mailer.sent
+        assert number in email.subject
+        assert email.to == shopper.email
+        assert "мөнгө авагдаагүй" in email.body
+
+
+async def test_replaying_the_key_of_an_expired_order_says_the_attempt_expired(
+    api_factory: ApiFactory, gateway: RecordingGateway
+) -> None:
+    async with api_factory(gateway=gateway) as api:
+        product = next(e for e in api.entries if e.in_stock and e.article_type != "Casual Shoes")
+        shopper = await register(api.client)
+        await add_to_cart(api.client, product.product_id, size="M", token=shopper.token)
+        address_id = await add_address(shopper)
+        first = await checkout(shopper, address_id, key="same-key")
+        await age_orders(api, api.settings.order_pending_ttl_minutes + 1)
+        await expirer(api, gateway).run_once()
+
+        replay = await checkout(shopper, address_id, key="same-key")
+
+        assert first.status_code == 200
+        assert replay.status_code == 409
+        assert replay.json()["type"] == "urn:angel:problem:attempt-expired"

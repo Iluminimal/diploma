@@ -5,12 +5,24 @@ from typing import Any, Literal
 
 import numpy as np
 from numpy.typing import NDArray
-from sqlalchemy import ColumnElement, UnaryExpression, func, literal_column, or_, select, text
+from sqlalchemy import (
+    ColumnElement,
+    Select,
+    Subquery,
+    UnaryExpression,
+    case,
+    func,
+    literal,
+    literal_column,
+    or_,
+    select,
+    text,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import defer
 from sqlalchemy.sql.base import ExecutableOption
 
-from angel.models import Product
+from angel.models import Order, OrderItem, Product
 from angel.repositories.patterns import contains_pattern
 
 # Бүтэн catalogue дээр хэмжсэн (docs/ml-pipeline.md): 200 нь 80-тай ижил хугацаанд recall@10 = 1.0
@@ -63,7 +75,27 @@ class SearchFilters:
         return clauses
 
 
-ProductSort = Literal["newest", "price_asc", "price_desc", "relevance"]
+ProductSort = Literal["newest", "price_asc", "price_desc", "relevance", "rating", "popular"]
+
+# Зарагдсан гэж тооцох захиалгын төлөв (орлогын тооцоотой ижил: буцаагдсан, цуцлагдсан биш).
+SOLD_STATUSES = ("paid", "shipped", "delivered")
+# Ойролцоо хайлтын босго: pg_trgm `word_similarity`. Хэт бага бол хамааралгүй бараа орно.
+FUZZY_THRESHOLD = 0.4
+
+
+def _sold_units() -> Subquery:
+    """Бараа бүрийн зарагдсан нийт ширхэг (`popular` эрэмбэд)."""
+    return (
+        select(
+            OrderItem.product_id.label("product_id"),
+            func.sum(OrderItem.quantity).label("units"),
+        )
+        .join(Order, Order.id == OrderItem.order_id)
+        .where(Order.status.in_(SOLD_STATUSES))
+        .group_by(OrderItem.product_id)
+        .subquery()
+    )
+
 
 # Мөрүүд карт болон JSON болж харагддаг: 2 KB vector болон tsvector хэрэггүй, ачаалбал нэг үр дүнд
 # уншигдах байт ойролцоогоор хоёр дахин нэмэгдэнэ.
@@ -139,28 +171,96 @@ class ProductRepository:
             clauses.append(Product.search_vector.op("@@")(query))
             rank = func.ts_rank(Product.search_vector, query)
 
-        order: list[UnaryExpression[Any]]
-        if sort == "price_asc":
-            order = [Product.price_cents.asc(), Product.id.asc()]
-        elif sort == "price_desc":
-            order = [Product.price_cents.desc(), Product.id.asc()]
-        elif sort == "relevance" and rank is not None:
-            order = [rank.desc(), Product.id.asc()]
-        else:
-            order = [Product.created_at.desc(), Product.id.desc()]
-
+        statement, order = self._sorted(select(Product).where(*clauses), sort, rank)
         total = (
             await self._session.execute(select(func.count()).select_from(Product).where(*clauses))
         ).scalar_one()
         rows = await self._session.execute(
+            statement.order_by(*order).offset(offset).limit(limit).options(*_LIGHT_ROWS)
+        )
+        return list(rows.scalars()), total
+
+    async def list_products_fuzzy(
+        self,
+        *,
+        filters: SearchFilters,
+        text_query: str,
+        sort: ProductSort,
+        offset: int,
+        limit: int,
+    ) -> tuple[list[Product], int]:
+        """`list_products`-тай ижил, гэхдээ `text_query`-г барааны нэрэнд үсгийн алдаа тэсвэрлэн
+        таардаг (trigram). Яг таарах хайлт хоосон үед л дуудна: энэ нь зөв үгэнд хайлтыг
+        удаашруулахгүй, алдаатай үгэнд ч хоосон хуудас үлдээхгүй."""
+        # `<%` оператор нь session-ийн босгыг ашигладаг: transaction-д л хүчинтэй.
+        await self._session.execute(
+            text(f"SET LOCAL pg_trgm.word_similarity_threshold = {FUZZY_THRESHOLD}")
+        )
+        clauses = filters.clauses()
+        clauses.append(literal(text_query).op("<%")(Product.name))
+        rank = func.word_similarity(text_query, Product.name)
+        statement, order = self._sorted(select(Product).where(*clauses), sort, rank)
+        total = (
+            await self._session.execute(select(func.count()).select_from(Product).where(*clauses))
+        ).scalar_one()
+        rows = await self._session.execute(
+            statement.order_by(*order).offset(offset).limit(limit).options(*_LIGHT_ROWS)
+        )
+        return list(rows.scalars()), total
+
+    @staticmethod
+    def _sorted(
+        statement: Select[Any], sort: ProductSort, rank: Any
+    ) -> tuple[Select[Any], list[UnaryExpression[Any]]]:
+        """Эрэмбийн дараалал (болон `popular`-д шаардлагатай join). Үргэлж `id`-ээр төгсдөг."""
+        if sort == "price_asc":
+            return statement, [Product.price_cents.asc(), Product.id.asc()]
+        if sort == "price_desc":
+            return statement, [Product.price_cents.desc(), Product.id.asc()]
+        if sort == "relevance" and rank is not None:
+            return statement, [rank.desc(), Product.id.asc()]
+        if sort == "rating":
+            return statement, [
+                Product.rating_average.desc(),
+                Product.rating_count.desc(),
+                Product.id.asc(),
+            ]
+        if sort == "popular":
+            sold = _sold_units()
+            joined = statement.outerjoin(sold, sold.c.product_id == Product.id)
+            return joined, [
+                func.coalesce(sold.c.units, 0).desc(),
+                Product.created_at.desc(),
+                Product.id.desc(),
+            ]
+        return statement, [Product.created_at.desc(), Product.id.desc()]
+
+    async def complementary(
+        self,
+        *,
+        sub_category: str,
+        genders: Sequence[str],
+        usage: str | None,
+        limit: int,
+    ) -> list[Product]:
+        """Тухайн дэд ангилалын зарагдаж буй, нөөцтэй бараа: ижил `usage`-тай нь түрүүлж, дараа нь
+        хамгийн их зарагдсан нь. Look-ийг гүйцээхэд ашиглана."""
+        sold = _sold_units()
+        same_usage = case((Product.usage == usage, 1), else_=0) if usage else literal(0)
+        rows = await self._session.execute(
             select(Product)
-            .where(*clauses)
-            .order_by(*order)
-            .offset(offset)
+            .outerjoin(sold, sold.c.product_id == Product.id)
+            .where(
+                Product.is_active.is_(True),
+                Product.stock_quantity > 0,
+                Product.sub_category == sub_category,
+                Product.gender.in_(genders),
+            )
+            .order_by(same_usage.desc(), func.coalesce(sold.c.units, 0).desc(), Product.id.asc())
             .limit(limit)
             .options(*_LIGHT_ROWS)
         )
-        return list(rows.scalars()), total
+        return list(rows.scalars())
 
     async def sitemap_entries(
         self, *, offset: int, limit: int

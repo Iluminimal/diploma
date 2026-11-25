@@ -32,7 +32,7 @@ async def release_order(
     payment = order.payment
     if payment is not None and payment.status in ("requires_payment", "failed"):
         payment.status = "canceled"
-        payment.client_secret = None
+        payment.provider_data = None
     data: dict[str, object] = {"reason": reason}
     if actor is not None:
         data["actor"] = actor[1]

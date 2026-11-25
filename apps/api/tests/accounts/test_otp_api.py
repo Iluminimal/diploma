@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import text
 
+from angel.core.mail import Email, MailDeliveryError
 from angel.core.sms import SmsDeliveryError
 from tests.conftest import Api, ApiFactory
 from tests.support.accounts import OTP_REQUEST, OTP_VERIFY, install_sms, unique_phone
@@ -235,7 +236,7 @@ async def test_an_email_code_signs_up_and_verifies_the_address(api_factory: ApiF
         email = unique_email()
 
         assert await request_code(api, f" {email.upper()} ") == 202
-        code = mailer.sent[0].body.split("code is ")[1][:6]
+        code = mailer.last_code()
         response = await verify(api, email, code)
 
         body = response.json()
@@ -258,7 +259,7 @@ async def test_an_email_code_for_an_unverified_password_account_removes_the_pass
         mailer.sent.clear()
 
         await request_code(api, email)
-        code = mailer.sent[0].body.split("code is ")[1][:6]
+        code = mailer.last_code()
         response = await verify(api, email, code)
 
         assert response.json()["user"]["id"] == shopper.user_id
@@ -296,3 +297,29 @@ async def test_a_failed_text_message_is_reported(api_factory: ApiFactory) -> Non
 
         assert response.status_code == 503
         assert response.json()["type"] == "urn:angel:problem:sms-unavailable"
+
+
+class BrokenMailer:
+    async def send(self, email: Email) -> None:
+        raise MailDeliveryError("down")
+
+
+async def test_a_failed_email_is_reported(api_factory: ApiFactory) -> None:
+    async with api_factory(seed_count=0) as api:
+        api.app.state.mailer = BrokenMailer()
+
+        response = await api.client.post(OTP_REQUEST, json={"destination": unique_email()})
+
+        assert response.status_code == 503
+        assert response.json()["type"] == "urn:angel:problem:email-unavailable"
+
+
+async def test_a_failed_welcome_email_does_not_break_registration(
+    api_factory: ApiFactory,
+) -> None:
+    async with api_factory(seed_count=0) as api:
+        api.app.state.mailer = BrokenMailer()
+
+        shopper = await register(api.client)
+
+        assert shopper.email

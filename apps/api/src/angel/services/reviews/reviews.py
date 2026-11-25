@@ -26,7 +26,7 @@ from angel.schemas.reviews.reviews import (
     ReviewUpdate,
     ReviewViewer,
 )
-from angel.services.accounts.account import DELETED_NAME
+from angel.services.accounts.account import DELETED_NAME, LEGACY_DELETED_NAME
 from angel.services.cache import SearchCache
 from angel.services.mappers import product_image
 from angel.storage import Storage
@@ -37,8 +37,12 @@ log = get_logger(__name__)
 def author_name(user: User) -> str:
     """ "Ada Lovelace" нь "Ada L." гэж харагдана; нэг нэр эсвэл устгасан бүртгэл хэвээрээ."""
     parts = user.full_name.split()
-    if user.full_name == DELETED_NAME or len(parts) < 2:
-        return user.full_name or DELETED_NAME
+    if user.full_name in (DELETED_NAME, LEGACY_DELETED_NAME) or len(parts) < 2:
+        return (
+            DELETED_NAME
+            if user.full_name == LEGACY_DELETED_NAME
+            else user.full_name or DELETED_NAME
+        )
     return f"{parts[0]} {parts[-1][0].upper()}."
 
 
@@ -58,8 +62,8 @@ def to_review_out(review: Review, user: User) -> ReviewOut:
 def _no_product(product_id: int) -> ProblemError:
     return ProblemError(
         HTTPStatus.NOT_FOUND,
-        "Product not found",
-        f"There is no product with id {product_id}.",
+        "Бараа олдсонгүй",
+        f"{product_id} дугаартай бараа байхгүй байна.",
         type_=PRODUCT_NOT_FOUND_TYPE,
     )
 
@@ -67,8 +71,8 @@ def _no_product(product_id: int) -> ProblemError:
 def _no_review(review_id: int) -> ProblemError:
     return ProblemError(
         HTTPStatus.NOT_FOUND,
-        "Review not found",
-        f"There is no review {review_id}.",
+        "Сэтгэгдэл олдсонгүй",
+        f"{review_id} дугаартай сэтгэгдэл байхгүй байна.",
         type_=REVIEW_NOT_FOUND_TYPE,
     )
 
@@ -132,16 +136,16 @@ class ReviewService:
             if await self._reviews.of_user(product_id, user_id) is not None:
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
-                    "Already reviewed",
-                    "You have already reviewed this product. Edit your review instead.",
+                    "Сэтгэгдэл бичсэн байна",
+                    "Та энэ бараанд сэтгэгдэл бичсэн байна. Өмнөх сэтгэгдлээ засна уу.",
                     type_=REVIEW_EXISTS_TYPE,
                 )
             order_id = await self._reviews.buyer_order_id(user_id, product_id)
             if order_id is None:
                 raise ProblemError(
                     HTTPStatus.FORBIDDEN,
-                    "Only buyers can review",
-                    "You can review a product once you have bought it.",
+                    "Зөвхөн худалдан авагч сэтгэгдэл бичнэ",
+                    "Барааг худалдан авсны дараа сэтгэгдэл бичих боломжтой.",
                     type_=REVIEW_NOT_ALLOWED_TYPE,
                 )
             review = Review(

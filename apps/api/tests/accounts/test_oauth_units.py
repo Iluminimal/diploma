@@ -271,9 +271,11 @@ class TestProviders:
                 app_env="prod",
                 oauth_mode="fake",
                 jwt_secret=SECRET,
-                payments_mode="stripe",
-                stripe_secret_key="k",
-                stripe_webhook_secret="w",
+                payments_mode="qpay",
+                qpay_base_url="https://merchant.qpay.mn",
+                qpay_client_id="ANGEL",
+                qpay_client_secret="secret",
+                qpay_invoice_code="ANGEL_INVOICE",
             )
 
 

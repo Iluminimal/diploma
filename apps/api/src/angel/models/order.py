@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import (
@@ -8,7 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     Identity,
     Index,
-    Integer,
+    Numeric,
     SmallInteger,
     String,
     UniqueConstraint,
@@ -53,9 +54,9 @@ class Order(TimestampMixin, Base):
     idempotency_key: Mapped[str] = mapped_column(String(100))
 
     currency: Mapped[str] = mapped_column(String(3))
-    subtotal_cents: Mapped[int] = mapped_column(Integer)
-    shipping_cents: Mapped[int] = mapped_column(Integer)
-    total_cents: Mapped[int] = mapped_column(Integer)
+    subtotal_cents: Mapped[int] = mapped_column(BigInteger)
+    shipping_cents: Mapped[int] = mapped_column(BigInteger)
+    total_cents: Mapped[int] = mapped_column(BigInteger)
     shipping_method: Mapped[str] = mapped_column(String(20))
     # Заагаагүй, хуулсан: хадгалсан хаягийг засах/устгах нь өмнөх захиалгыг өөрчилж болохгүй.
     shipping_address: Mapped[dict[str, Any]] = mapped_column(JSONB)
@@ -116,7 +117,7 @@ class OrderItem(TimestampMixin, Base):
     product_slug: Mapped[str] = mapped_column(String(200))
     image_key: Mapped[str] = mapped_column(String(200))
     size: Mapped[str] = mapped_column(String(16), server_default="")
-    unit_price_cents: Mapped[int] = mapped_column(Integer)
+    unit_price_cents: Mapped[int] = mapped_column(BigInteger)
     quantity: Mapped[int] = mapped_column(SmallInteger)
 
     order: Mapped[Order] = relationship(back_populates="items", lazy="raise")
@@ -130,30 +131,38 @@ class Payment(TimestampMixin, Base):
             name="status_valid",
         ),
         CheckConstraint("amount_cents >= 0", name="amount_non_negative"),
+        CheckConstraint("charge_minor >= 0", name="charge_non_negative"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
     order_id: Mapped[int] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"), unique=True)
     provider: Mapped[str] = mapped_column(String(20))
-    # Stripe PaymentIntent id (`pi_...`): webhook-ууд үүнийг заадаг.
+    # Provider дээрх төлбөрийн id (QPay-д invoice_id): мэдэгдэл, шалгалт үүнийг заана.
     provider_payment_id: Mapped[str] = mapped_column(String(100), unique=True)
-    # Checkout хүсэлт давтагдахад ижил PaymentIntent буцаахад хэрэгтэй. Төлбөр шийдэгдсэний дараа
-    # цэвэрлэнэ: цаашид хэрэггүй.
-    client_secret: Mapped[str | None] = mapped_column(String(200))
+    # Browser төлөхөд хэрэгтэй зүйл (QPay: QR зураг, банкны апп-ын холбоос). Checkout давтагдахад
+    # ижил QR-ыг буцаана; төлбөр шийдэгдсэний дараа цэвэрлэнэ.
+    provider_data: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     status: Mapped[str] = mapped_column(String(20))
-    amount_cents: Mapped[int] = mapped_column(Integer)
+    # Захиалгын үндсэн валютаар (USD) дүн.
+    amount_cents: Mapped[int] = mapped_column(BigInteger)
     currency: Mapped[str] = mapped_column(String(3))
+    # Бодитоор авах дүн, төлбөр үүсэх үед түгжсэн ханшаар (Amazon Currency Converter шиг): ханш
+    # хожим өөрчлөгдсөн ч энэ дүн, буцаалт өөрчлөгдөхгүй. `charge_minor` нь минор нэгжээр
+    # (MNT: төгрөг x 100), `exchange_rate` нь 1 `currency` = ? `charge_currency`.
+    charge_currency: Mapped[str] = mapped_column(String(3))
+    charge_minor: Mapped[int] = mapped_column(BigInteger)
+    exchange_rate: Mapped[Decimal] = mapped_column(Numeric(14, 6))
     last_error: Mapped[str | None] = mapped_column(String(300))
     refund_id: Mapped[str | None] = mapped_column(String(100))
 
     order: Mapped[Order] = relationship(back_populates="payment", lazy="raise")
 
 
-class StripeEvent(TimestampMixin, Base):
-    """Боловсруулсан webhook event бүрийн id. Төлөв өөрчилсөн transaction-д нь хамт бичдэг тул
-    Stripe хэдэн ч удаа дахин илгээсэн event яг нэг л удаа хэрэгжинэ."""
+class ProcessedPaymentEvent(TimestampMixin, Base):
+    """Боловсруулсан төлбөрийн event бүрийн id (QPay-д payment_id). Төлөв өөрчилсөн transaction-д
+    нь хамт бичдэг тул мэдэгдэл, шалгалт хэдэн ч удаа давтагдсан event яг нэг л удаа хэрэгжинэ."""
 
-    __tablename__ = "stripe_events"
+    __tablename__ = "payment_events"
 
     id: Mapped[str] = mapped_column(String(100), primary_key=True)
     type: Mapped[str] = mapped_column(String(100))

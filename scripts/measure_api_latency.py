@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import io
 import itertools
 import time
 from pathlib import Path
@@ -21,6 +22,7 @@ from typing import Any
 
 from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
+from PIL import Image
 from redis.asyncio import Redis
 
 from angel.core.config import Settings, get_settings
@@ -36,6 +38,8 @@ from angel.ml.evaluation import (
 
 TARGET_IMAGE_P95_MS = 400.0
 TARGET_SIMILAR_P95_MS = 50.0
+TARGET_DETECT_P95_MS = 150.0  # камерын live preview-ийн нэг кадр
+LIVE_INTERVAL_S = 0.35  # вэбийн `use-live-detection`-ийн завсар
 WARMUP = 10
 API = "/api/v1"
 
@@ -113,6 +117,18 @@ async def main_async(args: argparse.Namespace) -> int:
     return 0 if report.ok else 1
 
 
+def collage(paths: list[Path], width: int) -> bytes:
+    """Нэг мөрөнд зэрэгцүүлсэн бүтээгдэхүүний зургууд (олон хувцастай зургийн орлуулагч)."""
+    cell = width // len(paths)
+    canvas = Image.new("RGB", (cell * len(paths), cell * 4 // 3), (240, 240, 240))
+    for slot, path in enumerate(paths):
+        with Image.open(path) as photo:
+            canvas.paste(photo.convert("RGB").resize((cell, cell * 4 // 3)), (cell * slot, 0))
+    buffer = io.BytesIO()
+    canvas.save(buffer, format="JPEG", quality=85)
+    return buffer.getvalue()
+
+
 async def run(
     client: AsyncClient, args: argparse.Namespace, paths: list[Path], ids: list[int], report: Report
 ) -> None:
@@ -165,6 +181,75 @@ async def run(
             filtered.append(elapsed)
     print("== POST /search/image with 5 filters (phone-style upload)")
     report.check("  END TO END", filtered, TARGET_IMAGE_P95_MS)
+    print()
+
+    # Олон хувцастай зураг: гурван бүтээгдэхүүний зургийг нэг эгнээнд нааж (collage), хувцас бүрийн
+    # үр дүнг нэг хүсэлтээр авна. `LOCALIZER=yolo` үед detection + batch embed + хувцас тутмын
+    # хайлт.
+    collages = [collage(paths[i : i + 3], 1280) for i in range(0, len(paths) - 2, 3)]
+    garment_wall, garment_count = [], []
+    for index, data in enumerate(collages):
+        elapsed, body = await timed(
+            client,
+            "POST",
+            f"{API}/search/garments",
+            files={"file": ("q.jpg", data, "image/jpeg")},
+            data={"limit": "6"},
+        )
+        garment_count.append(len(body["garments"]))
+        if index >= WARMUP:
+            garment_wall.append(elapsed)
+    print(
+        f"== POST /search/garments, 3-product collage (1280 px), {len(garment_wall)} requests, "
+        f"{sum(garment_count) / len(garment_count):.1f} garments per photo on average"
+    )
+    report.check("  END TO END", garment_wall, TARGET_IMAGE_P95_MS)
+    print()
+
+    # Камерын live preview: 480 px-ийн кадрыг `/search/detect` руу (хайлтгүй).
+    frames = [collage(paths[i : i + 3], 480) for i in range(0, len(paths) - 2, 3)]
+    detect_wall = []
+    for index, data in enumerate(frames):
+        elapsed, _ = await timed(
+            client, "POST", f"{API}/search/detect", files={"file": ("f.jpg", data, "image/jpeg")}
+        )
+        if index >= WARMUP:
+            detect_wall.append(elapsed)
+    print(f"== POST /search/detect, 480 px camera frame, {len(detect_wall)} requests")
+    report.check("  END TO END", detect_wall, TARGET_DETECT_P95_MS)
+    print()
+
+    # Live давталт явж байхад жинхэнэ хайлт удаашрах уу: хайлтуудыг frame-ийн давталттай зэрэг.
+    stop_live = asyncio.Event()
+
+    async def live_preview() -> None:
+        for data in itertools.cycle(frames):
+            if stop_live.is_set():
+                return
+            await timed(
+                client,
+                "POST",
+                f"{API}/search/detect",
+                files={"file": ("f.jpg", data, "image/jpeg")},
+            )
+            await asyncio.sleep(LIVE_INTERVAL_S)
+
+    live = asyncio.create_task(live_preview())
+    during_live = []
+    for index, data in enumerate(uploads[: WARMUP + 60]):
+        elapsed, _ = await timed(
+            client,
+            "POST",
+            f"{API}/search/image",
+            files={"file": ("q.jpg", data, "image/jpeg")},
+            data={"limit": "24"},
+        )
+        if index >= WARMUP:
+            during_live.append(elapsed)
+    stop_live.set()
+    await live
+    print("== POST /search/image (phone-style) WHILE a live camera preview is running")
+    report.check("  END TO END", during_live, TARGET_IMAGE_P95_MS)
     print()
 
     queries = distinct_queries(n + WARMUP)

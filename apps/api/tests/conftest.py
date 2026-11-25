@@ -17,11 +17,11 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 from angel.core.config import Settings
 from angel.ml.fake import FakeEmbedder
+from angel.ml.localizer import GarmentLocalizer
 from angel.payments import PaymentGateway
 from tests.support.catalogue import Entry, seed_catalogue
 from tests.support.helpers import running_app
 
-WEBHOOK_SECRET = "whsec_test_secret"
 UNREACHABLE_DATABASE_URL = "postgresql+asyncpg://nobody:nobody@127.0.0.1:1/nothing"
 UNREACHABLE_REDIS_URL = "redis://127.0.0.1:1/0"
 
@@ -100,7 +100,7 @@ async def db_engine(migrated_database_url: str) -> AsyncIterator[AsyncEngine]:
         # CASCADE нь foreign key-г дагана: users-тэй хамт cart, order, payment, address,
         # refresh token, products-тай хамт cart, wishlist, захиалгын мөр устана.
         await connection.execute(
-            text("TRUNCATE users, products, categories, stripe_events RESTART IDENTITY CASCADE")
+            text("TRUNCATE users, products, categories, payment_events RESTART IDENTITY CASCADE")
         )
     yield engine
     await engine.dispose()
@@ -136,6 +136,7 @@ async def api_factory(
         seed_count: int = 40,
         embedder: "FakeEmbedder | None" = None,
         gateway: PaymentGateway | None = None,
+        localizer: GarmentLocalizer | None = None,
         **overrides: object,
     ) -> AsyncIterator[Api]:
         model = embedder or FakeEmbedder(version=f"fake-{uuid.uuid4().hex[:8]}")
@@ -149,6 +150,7 @@ async def api_factory(
             "rate_limit_register": "10000/60",
             "rate_limit_login": "10000/60",
             "rate_limit_login_email": "10000/60",
+            "rate_limit_login_email_daily": "10000/60",
             "rate_limit_refresh": "10000/60",
             "rate_limit_admin": "10000/60",
             "rate_limit_oauth": "10000/60",
@@ -159,19 +161,29 @@ async def api_factory(
             "otp_max_sends_per_hour": 1000,
             "otp_dev_code": "",
             "sms_mode": "console",
+            "mail_mode": "console",
             "default_phone_region": "US",
             # .env юу гэсэн ч (preview fake ашиглаж болно) тест Google унтраасан эхэлнэ.
             "oauth_mode": "google",
             "google_client_id": "",
             "google_client_secret": "",
-            # Commerce: тогтмол signing key ба in-process payment gateway.
+            # Commerce: тогтмол signing key, in-process payment gateway (сүлжээгүй).
             "jwt_secret": "test-jwt-secret-0123456789-0123456789",
             "payments_mode": "offline",
-            "stripe_webhook_secret": WEBHOOK_SECRET,
+            # Тест YOLO weights татахгүй: бүтэн зургаар хайна (эсвэл `localizer=` fake дамжуулна).
+            "localizer": "whole",
+            # Үнэ, хүргэлтийн тариф .env-ээс хамаарахгүй: тест үргэлж ижил дүнтэй.
+            "currency": "MNT",
+            "shipping_standard_ub_cents": 500_000,
+            "shipping_express_ub_cents": 1_200_000,
+            "shipping_standard_rural_cents": 1_000_000,
+            "free_shipping_threshold_cents": 15_000_000,
             "order_sweep_interval_seconds": 3600,
         }
         config = settings.model_copy(update={**values, **overrides})
-        async with running_app(config, embedder=model, payment_gateway=gateway) as (client, app):
+        async with running_app(
+            config, embedder=model, payment_gateway=gateway, localizer=localizer
+        ) as (client, app):
             yield Api(client, app, model, entries, config)
 
     return start

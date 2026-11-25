@@ -39,14 +39,14 @@ class WishlistService:
             if product is None or not product.is_active:
                 raise ProblemError(
                     HTTPStatus.NOT_FOUND,
-                    "Product not found",
+                    "Бараа олдсонгүй",
                     type_=PRODUCT_NOT_FOUND_TYPE,
                 )
             if await self._wishlist.count(user_id) >= MAX_WISHLIST_ITEMS:
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
-                    "Your wishlist is full",
-                    f"A wishlist holds at most {MAX_WISHLIST_ITEMS} products.",
+                    "Хадгалсан бараа дүүрсэн",
+                    f"Хамгийн ихдээ {MAX_WISHLIST_ITEMS} бараа хадгалах боломжтой.",
                     type_=WISHLIST_FULL_TYPE,
                 )
             await self._wishlist.add(user_id, product_id)

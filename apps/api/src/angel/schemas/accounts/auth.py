@@ -4,6 +4,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, StringConstraints, field_validator
 
+# Хэрэглэгчийн role: customer худалдан авна; admin, warehouse нь back-office-ийн ажилтан.
+Role = Literal["customer", "admin", "warehouse"]
 FullName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 # Зөвхөн урт нь дүрэм: найрлагын дүрэм ("нэг цифр, нэг тэмдэгт") хүмүүсийг сул, таамаглахад амархан
 # нууц үг сонгоход түлхдэг. 10 тэмдэгт доод хязгаар, 128 нь hash хийх хугацааг хязгаарлана.
@@ -50,7 +52,7 @@ class UserOut(BaseModel):
     email_verified: bool
     phone_verified: bool
     full_name: str
-    role: Literal["customer", "admin"]
+    role: Role
     avatar_url: str | None
     # Зөвхөн Google-ээр нэвтэрдэг бүртгэлд False (профайл хуудсан дээр нэмж болно).
     has_password: bool
@@ -198,3 +200,26 @@ class DeviceSession(BaseModel):
     last_used_at: datetime
     # Энэ хүсэлтийг илгээсэн нэвтрэлт.
     current: bool
+
+
+SecurityEventType = Literal[
+    "login",
+    "login_failed",
+    "new_device",
+    "password_changed",
+    "password_reset",
+    "sessions_revoked",
+    "email_changed",
+    "phone_changed",
+]
+
+
+class SecurityEventOut(BaseModel):
+    """Бүртгэлийн аюулгүй байдлын нэг үйл явдал. IP-ийн сүүлийн хэсгийг нууцалсан."""
+
+    id: int
+    type: SecurityEventType
+    method: Literal["password", "otp", "google"] | None
+    device: str
+    ip: str | None
+    created_at: datetime

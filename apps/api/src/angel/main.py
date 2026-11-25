@@ -16,7 +16,7 @@ from angel.api.v1.router import router as v1_router
 from angel.core.config import Settings, get_settings
 from angel.core.errors import register_exception_handlers
 from angel.core.logging import configure_logging, get_logger
-from angel.core.mail import ConsoleMailer
+from angel.core.mail import BestEffortMailer, build_mailer
 from angel.core.request_context import REQUEST_ID_HEADER, RequestContextMiddleware
 from angel.core.security_headers import SecurityHeadersMiddleware
 from angel.core.sms import build_sms_sender
@@ -27,11 +27,12 @@ from angel.ml.classifier import (
     CategoryClassifier,
     CategoryLabel,
     LazyCategoryClassifier,
-    WholeImageLocalizer,
     ZeroShotCategoryClassifier,
 )
 from angel.ml.embeddings import EmbeddingService
 from angel.ml.fashion_clip import FashionClipEmbedder, select_device
+from angel.ml.localizer import GarmentLocalizer, WholeImageLocalizer
+from angel.ml.yolo import YoloGarmentLocalizer
 from angel.models import Category
 from angel.oauth import build_oauth_provider
 from angel.payments import PaymentGateway, build_gateway
@@ -57,6 +58,31 @@ async def _load_embedder(settings: Settings) -> EmbeddingService:
     )
     await asyncio.to_thread(embedder.load)
     return embedder
+
+
+async def _load_localizer(settings: Settings) -> GarmentLocalizer:
+    if settings.localizer == "whole":
+        log.info("localizer_disabled", hint="LOCALIZER=whole: searching the whole image")
+        return WholeImageLocalizer()
+    if settings.localizer == "fake":
+        from angel.ml.fake import FakeLocalizer
+        from angel.ml.localizer import Box
+
+        log.warning("fake_localizer", hint="LOCALIZER=fake: regions are the top and bottom halves")
+        return FakeLocalizer(
+            [Box(0.0, 0.0, 1.0, 0.5), Box(0.0, 0.5, 1.0, 1.0)], ["top, t-shirt, sweatshirt", "shoe"]
+        )
+    localizer = YoloGarmentLocalizer(
+        device=select_device(settings.localizer_device),
+        confidence=settings.yolo_confidence,
+        max_regions=settings.yolo_max_regions,
+        min_area=settings.yolo_min_area,
+        padding=settings.yolo_padding,
+    )
+    await asyncio.to_thread(localizer.load)
+    # Эхний inference-ийн kernel compile-ийг хэрэглэгчийн хүсэлт дээр биш эндээс хийнэ.
+    await localizer.alocate(Image.new("RGB", (64, 64), "white"))
+    return localizer
 
 
 async def _warm_up(embedder: EmbeddingService) -> None:
@@ -96,9 +122,10 @@ def create_app(
     settings: Settings | None = None,
     embedder: EmbeddingService | None = None,
     payment_gateway: PaymentGateway | None = None,
+    localizer: GarmentLocalizer | None = None,
 ) -> FastAPI:
-    """`embedder`, `payment_gateway` нь тестэд зориулсан: FashionCLIP ачаалах, тохиргооноос gateway
-    үүсгэхийн оронд бэлэн объектоо дамжуулна."""
+    """`embedder`, `payment_gateway`, `localizer` нь тестэд зориулсан: FashionCLIP, YOLO ачаалах,
+    тохиргооноос gateway үүсгэхийн оронд бэлэн объектоо дамжуулна."""
     settings = settings or get_settings()
     configure_logging(settings.log_level, json_logs=settings.log_json)
 
@@ -114,7 +141,7 @@ def create_app(
             socket_timeout=settings.redis_op_timeout_seconds,
         )
         app.state.storage = LocalStorage(settings.media_dir, settings.media_base_url)
-        app.state.mailer = ConsoleMailer(log_body=settings.app_env != "prod")
+        app.state.mailer = build_mailer(settings)
         app.state.sms = build_sms_sender(settings)
         app.state.payment_gateway = payment_gateway or build_gateway(settings)
         app.state.oauth_provider = build_oauth_provider(settings)
@@ -130,14 +157,18 @@ def create_app(
             )
         app.state.jwt_secret = settings.jwt_secret or secrets.token_urlsafe(48)
         if app.state.payment_gateway is None:
-            log.warning("payments_disabled", hint="set STRIPE_SECRET_KEY or PAYMENTS_MODE=offline")
+            log.warning(
+                "payments_disabled",
+                hint="set QPAY_CLIENT_ID, QPAY_CLIENT_SECRET, QPAY_INVOICE_CODE "
+                "or PAYMENTS_MODE=offline",
+            )
 
         # Model-ийг эндээс нэг л удаа ачаална; ачаалагдтал /readyz улаан байна. Inference нь
         # embedder-ийн өөрийн worker thread дээр ажиллана, event loop дээр хэзээ ч биш.
         model = embedder or await _load_embedder(settings)
         await _warm_up(model)
         app.state.embedding_service = model
-        app.state.localizer = WholeImageLocalizer()
+        app.state.localizer = detector = localizer or await _load_localizer(settings)
         app.state.classifier = LazyCategoryClassifier(
             _classifier_factory(model, app.state.sessions)
         )
@@ -156,7 +187,12 @@ def create_app(
         except Exception as exc:  # database хараахан асаагүй: эхний хүсэлтүүд хүлээнэ
             log.warning("database_warm_up_skipped", error=type(exc).__name__)
         log.info("startup", app_env=settings.app_env, embedding_version=model.version)
-        expirer = OrderExpirer(app.state.sessions, app.state.payment_gateway, settings)
+        expirer = OrderExpirer(
+            app.state.sessions,
+            app.state.payment_gateway,
+            settings,
+            BestEffortMailer(app.state.mailer),
+        )
         expiry_task = asyncio.create_task(expirer.run_forever(), name="order-expiry")
         try:
             yield
@@ -164,9 +200,15 @@ def create_app(
             expiry_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await expiry_task
+            close_gateway = getattr(app.state.payment_gateway, "aclose", None)
+            if payment_gateway is None and callable(close_gateway):
+                await close_gateway()
             close = getattr(model, "close", None)
             if embedder is None and callable(close):
                 await asyncio.to_thread(close)
+            close_detector = getattr(detector, "close", None)
+            if localizer is None and callable(close_detector):
+                await asyncio.to_thread(close_detector)
             await app.state.redis.aclose()
             await app.state.engine.dispose()
             log.info("shutdown")
@@ -189,7 +231,14 @@ def create_app(
         api_prefix=settings.api_v1_prefix,
     )
     # Сүүлд нэмсэн нь хамгийн гаднах: CORS preflight-ийг бусдаас өмнө хараад шууд хариулах ёстой.
-    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(
+        SecurityHeadersMiddleware,
+        hsts=settings.cookie_secure,
+        docs_paths=(
+            f"{settings.api_v1_prefix}/docs",
+            f"{settings.api_v1_prefix}/docs/oauth2-redirect",
+        ),
+    )
     app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,

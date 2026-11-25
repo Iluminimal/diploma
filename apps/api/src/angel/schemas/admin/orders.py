@@ -48,13 +48,16 @@ class AdminOrderPage(BaseModel):
 
 
 class AdminPaymentOut(BaseModel):
-    """Төлбөрийн бичлэг. Client secret server-ээс хэзээ ч гадагш гарахгүй."""
+    """Төлбөрийн бичлэг. QR зураг гэх мэт provider-ийн өгөгдөл энд гарахгүй. `charge_*` нь бодитоор
+    авсан дүн (минор нэгжээр) ба түгжсэн ханш."""
 
     provider: str
     provider_payment_id: str
     status: str
     amount_cents: int
     currency: str
+    charge_currency: str
+    charge_minor: int
     last_error: str | None
     refund_id: str | None
 

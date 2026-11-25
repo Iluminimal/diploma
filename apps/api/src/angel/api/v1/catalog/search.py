@@ -6,6 +6,10 @@ from angel.core.deps import SearchServiceDep, SettingsDep
 from angel.core.rate_limit import rate_limit
 from angel.core.uploads import read_image_upload
 from angel.schemas.catalog.search import (
+    DetectForm,
+    DetectResponse,
+    GarmentForm,
+    GarmentSearchResponse,
     HybridSearchForm,
     ImageSearchForm,
     SearchResponse,
@@ -36,7 +40,48 @@ async def search_by_image(
     settings: SettingsDep,
 ) -> SearchResponse:
     data = await read_image_upload(form.file, settings.max_upload_bytes)
-    return await service.search_by_image(data, to_search_filters(form), form.limit)
+    return await service.search_by_image(
+        data, to_search_filters(form), form.limit, region=form.region
+    )
+
+
+@router.post(
+    "/garments",
+    summary="Find products for every garment in a photo",
+    description=(
+        "Detects the garments in the photo (shirt, trousers, shoes ...) and returns the similar "
+        "products of each one, most prominent first. A photo with one garment (or none found) "
+        "returns a single entry equal to `/search/image`."
+    ),
+    dependencies=[Depends(rate_limit("image"))],
+    responses=_UPLOAD_ERRORS,
+)
+async def search_garments(
+    form: Annotated[GarmentForm, Form()],
+    service: SearchServiceDep,
+    settings: SettingsDep,
+) -> GarmentSearchResponse:
+    data = await read_image_upload(form.file, settings.max_upload_bytes)
+    return await service.search_garments(data, to_search_filters(form), form.limit)
+
+
+@router.post(
+    "/detect",
+    summary="Find the garments in a camera frame (no search)",
+    description=(
+        "Lightweight detection for a live camera preview: returns the garment boxes of a frame "
+        "without embedding or searching. Frames are never stored. Has its own, higher rate limit."
+    ),
+    dependencies=[Depends(rate_limit("detect"))],
+    responses=_UPLOAD_ERRORS,
+)
+async def detect_garments(
+    form: Annotated[DetectForm, Form()],
+    service: SearchServiceDep,
+    settings: SettingsDep,
+) -> DetectResponse:
+    data = await read_image_upload(form.file, settings.max_upload_bytes)
+    return await service.detect_garments(data)
 
 
 @router.post(
@@ -46,7 +91,9 @@ async def search_by_image(
     responses={422: _UPLOAD_ERRORS[422], 429: _UPLOAD_ERRORS[429]},
 )
 async def search_by_text(body: TextSearchRequest, service: SearchServiceDep) -> SearchResponse:
-    return await service.search_by_text(body.query, to_search_filters(body.filters), body.limit)
+    return await service.search_by_text(
+        body.query, to_search_filters(body.filters), body.limit, interpret=body.interpret
+    )
 
 
 @router.post(
@@ -62,5 +109,11 @@ async def search_hybrid(
 ) -> SearchResponse:
     data = await read_image_upload(form.file, settings.max_upload_bytes)
     return await service.search_hybrid(
-        data, form.query, form.text_weight, to_search_filters(form), form.limit
+        data,
+        form.query,
+        form.text_weight,
+        to_search_filters(form),
+        form.limit,
+        interpret=form.interpret,
+        region=form.region,
     )

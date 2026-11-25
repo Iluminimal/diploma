@@ -136,7 +136,7 @@ async def test_a_google_email_that_has_a_password_account_links_and_removes_the_
             "/api/v1/auth/login", json={"email": email, "password": PASSWORD}
         )
         assert login.status_code == 401
-        assert login.json()["title"] == "Invalid email or password"
+        assert login.json()["title"] == "Имэйл эсвэл нууц үг буруу байна"
 
 
 async def test_password_login_for_a_google_only_account_looks_like_any_wrong_password(
@@ -202,14 +202,15 @@ async def test_the_person_lands_where_they_came_from_and_never_on_another_site(
         assert response.headers["location"] == f"{WEB}{expected}"
 
 
-async def test_an_administrator_lands_in_the_admin_area_unless_they_asked_for_a_page(
-    api_factory: ApiFactory, db_engine: AsyncEngine
+@pytest.mark.parametrize("role", ["admin", "warehouse"])
+async def test_staff_land_in_the_admin_area_unless_they_asked_for_a_page(
+    api_factory: ApiFactory, db_engine: AsyncEngine, role: str
 ) -> None:
     async with api_factory(seed_count=0, oauth_mode="fake") as api:
         email = unique_email()
         customer = await sign_in(api.client, email)
         user_id = await scalar(api, "SELECT id FROM users WHERE email = :e", e=email)
-        await set_role(db_engine, int(str(user_id)), "admin")
+        await set_role(db_engine, int(str(user_id)), role)
 
         by_default = await sign_in(api.client, email)
         asked_for_orders = await sign_in(api.client, email, next="/account/orders")

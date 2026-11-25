@@ -106,21 +106,22 @@ class OAuthService:
                 if profile.picture and user.avatar_url != profile.picture:
                     user.avatar_url = profile.picture
                     self._session.add(user)
-                issued = await self._auth.start_session(user, guest_cart_token)
+                issued = await self._auth.start_session(user, guest_cart_token, method="google")
         except IntegrityError:
             # Нэг хүн хоёр удаа зэрэг нэвтэрч хожигдсон: дахин оролдоход хангалттай.
             log.warning("oauth_race")
             raise OAuthFailure("google_failed") from None
+        await self._auth.deliver_notices()
         if created:
             await self._mailer.send(
                 Email(
                     to=email,
-                    subject="Welcome to Angel",
-                    body=f"Hi {user.full_name}, your account is ready.",
+                    subject="Angel-д тавтай морил",
+                    body=f"Сайн байна уу, {user.full_name}! Таны бүртгэл бэлэн боллоо.",
                 )
             )
         # Тодорхой хуудас хүсээгүй administrator admin хэсэгт очно.
-        next_path = "/admin" if user.is_admin and flow.next_path == "/" else flow.next_path
+        next_path = "/admin" if user.is_staff and flow.next_path == "/" else flow.next_path
         return SignInResult(issued, next_path)
 
     async def _link_or_create(

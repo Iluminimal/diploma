@@ -90,7 +90,9 @@ async def test_the_fake_embedder_is_chosen_by_setting_and_refused_in_production(
             app_env="prod",
             embedder="fake",
             jwt_secret="x" * 40,
-            payments_mode="stripe",
-            stripe_secret_key="sk_test_x",
-            stripe_webhook_secret="whsec_x",
+            payments_mode="qpay",
+            qpay_base_url="https://merchant.qpay.mn",
+            qpay_client_id="ANGEL",
+            qpay_client_secret="secret",
+            qpay_invoice_code="ANGEL_INVOICE",
         )

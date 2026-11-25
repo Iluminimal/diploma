@@ -1,7 +1,9 @@
 """ORM мөр болон request model-ийг DTO, repository-ийн оролт болгоно."""
 
+from datetime import timedelta
+
 from angel.ingestion.images import thumbnail_key
-from angel.models import Order, OrderEvent, OrderItem, Product
+from angel.models import Order, OrderEvent, OrderItem, Payment, Product
 from angel.repositories.catalog.products import SearchFilters
 from angel.schemas.accounts.address import AddressSnapshot
 from angel.schemas.admin.orders import (
@@ -12,7 +14,14 @@ from angel.schemas.admin.orders import (
 )
 from angel.schemas.admin.products import AdminProductOut
 from angel.schemas.catalog.product import FilterParams, ProductImage, ProductOut
-from angel.schemas.commerce.order import OrderEventOut, OrderItemOut, OrderOut, OrderSummary
+from angel.schemas.commerce.order import (
+    ChargeOut,
+    OrderEventOut,
+    OrderItemOut,
+    OrderOut,
+    OrderSummary,
+    QPayCheckoutOut,
+)
 from angel.storage import Storage
 
 
@@ -22,6 +31,11 @@ def product_image(image_key: str, blur_data_url: str | None, storage: Storage) -
         thumb_800=storage.url(thumbnail_key(image_key, 800)),
         blur_data_url=blur_data_url,
     )
+
+
+# Худалдан авагчид "Цөөхөн үлдсэн" гэж харуулах босго (админы dashboard-ын `LOW_STOCK_THRESHOLD`-той
+# ижил өгөгдмөл).
+STOREFRONT_LOW_STOCK = 5
 
 
 def to_product_out(product: Product, storage: Storage) -> ProductOut:
@@ -40,6 +54,7 @@ def to_product_out(product: Product, storage: Storage) -> ProductOut:
         price_cents=product.price_cents,
         currency=product.currency,
         in_stock=product.stock_quantity > 0,
+        low_stock=0 < product.stock_quantity <= STOREFRONT_LOW_STOCK,
         image=product_image(product.image_key, product.blur_data_url, storage),
         rating_average=float(product.rating_average) if product.rating_count else None,
         rating_count=product.rating_count,
@@ -122,8 +137,33 @@ def to_public_events(order: Order) -> list[OrderEventOut]:
     ]
 
 
-def to_order_out(order: Order, storage: Storage) -> OrderOut:
+def to_charge_out(payment: Payment | None) -> ChargeOut | None:
+    if payment is None:
+        return None
+    return ChargeOut(
+        currency=payment.charge_currency,
+        amount_minor=payment.charge_minor,
+    )
+
+
+def to_order_out(
+    order: Order, storage: Storage, *, pending_ttl_minutes: int | None = None
+) -> OrderOut:
+    """`pending_ttl_minutes` өгвөл төлбөр хүлээж буй захиалгад дуусах хугацаа ба QR (төлбөрийг
+    үргэлжлүүлэхэд) орно."""
+    pending = order.status == "pending"
+    payment = order.payment
     return OrderOut(
+        expires_at=(
+            order.created_at + timedelta(minutes=pending_ttl_minutes)
+            if pending and pending_ttl_minutes
+            else None
+        ),
+        qpay=(
+            QPayCheckoutOut.model_validate(payment.provider_data)
+            if pending and payment is not None and payment.provider_data
+            else None
+        ),
         shipped_at=order.shipped_at,
         delivered_at=order.delivered_at,
         refunded_at=order.refunded_at,
@@ -142,6 +182,7 @@ def to_order_out(order: Order, storage: Storage) -> OrderOut:
         shipping_address=AddressSnapshot.model_validate(order.shipping_address),
         contact_email=order.contact_email,
         items=[to_order_item_out(item, storage) for item in order.items],
+        charge=to_charge_out(order.payment),
     )
 
 
@@ -152,6 +193,7 @@ def to_order_summary(order: Order, storage: Storage) -> OrderSummary:
         created_at=order.created_at,
         currency=order.currency,
         total_cents=order.total_cents,
+        charge=to_charge_out(order.payment),
         item_count=sum(item.quantity for item in order.items),
         images=[product_image(item.image_key, None, storage) for item in order.items[:4]],
     )
@@ -164,6 +206,7 @@ def to_admin_order_summary(order: Order) -> AdminOrderSummary:
         created_at=order.created_at,
         currency=order.currency,
         total_cents=order.total_cents,
+        charge=to_charge_out(order.payment),
         item_count=sum(item.quantity for item in order.items),
         customer_email=order.contact_email,
         customer_name=order.shipping_address.get("full_name", ""),
@@ -175,7 +218,7 @@ def to_admin_order_out(order: Order, storage: Storage) -> AdminOrderOut:
     base = to_order_out(order, storage)
     payment = order.payment
     return AdminOrderOut(
-        **base.model_dump(exclude={"events"}),
+        **base.model_dump(exclude={"events", "qpay"}),
         events=[
             AdminOrderEventOut(type=e.type, at=e.created_at, data=e.data)
             for e in _loaded_events(order)
@@ -189,6 +232,8 @@ def to_admin_order_out(order: Order, storage: Storage) -> AdminOrderOut:
             status=payment.status,
             amount_cents=payment.amount_cents,
             currency=payment.currency,
+            charge_currency=payment.charge_currency,
+            charge_minor=payment.charge_minor,
             last_error=payment.last_error,
             refund_id=payment.refund_id,
         )

@@ -39,6 +39,8 @@ class CartLineOut(BaseModel):
     # хязгаарлана; яг нөөцийн түвшинг ил гаргахгүй.
     max_quantity: int
     issue: CartIssue | None = None
+    # Мөр сагсанд нэмэгдэх үеийн нэгж үнэ; одоогийн үнээс өөр бол үнэ өөрчлөгдсөн. Хуучин мөрд null.
+    price_when_added_cents: int | None = None
 
 
 class CartOut(BaseModel):
@@ -47,3 +49,21 @@ class CartOut(BaseModel):
     subtotal_cents: int
     currency: str
     has_issues: bool
+
+
+ReorderReason = Literal["unavailable", "out_of_stock", "size", "bag_full", "reduced"]
+
+
+class ReorderSkipped(BaseModel):
+    """Өмнөх захиалгын мөр, сагсанд бүрэн нэмэгдээгүй: шалтгаан нь `reduced` бол цөөн ширхэг
+    нэмэгдсэн, бусад үед огт нэмэгдээгүй."""
+
+    name: str
+    reason: ReorderReason
+
+
+class ReorderOut(BaseModel):
+    cart: CartOut
+    # Сагсанд нэмэгдсэн мөрийн тоо (бүрэн ба цөөрсөн).
+    added: int
+    skipped: list[ReorderSkipped]

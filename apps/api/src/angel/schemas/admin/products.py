@@ -12,7 +12,9 @@ ProductName = Annotated[str, StringConstraints(strip_whitespace=True, min_length
 ShortText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
 # $100,000.00: дэлгүүрийн зардаг ямар ч зүйлээс хамаагүй их, харин таслалын алдааг барих хэмжээний
 # бага.
-PriceCents = Annotated[int, Field(ge=0, le=10_000_000, description="Price in cents.")]
+PriceCents = Annotated[
+    int, Field(ge=0, le=1_000_000_000, description="Price in minor units (togrog x 100).")
+]
 StockQuantity = Annotated[int, Field(ge=0, le=100_000)]
 Year = Annotated[int, Field(ge=1900, le=2100)]
 

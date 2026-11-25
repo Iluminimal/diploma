@@ -50,12 +50,23 @@ class CartRepository:
         return result.scalar_one_or_none()
 
     async def add_quantity(
-        self, *, cart_id: int, product_id: int, size: str, quantity: int, cap: int
+        self,
+        *,
+        cart_id: int,
+        product_id: int,
+        size: str,
+        quantity: int,
+        cap: int,
+        unit_price_cents: int | None = None,
     ) -> None:
         """Atomic нэмэх эсвэл өсгөх: зэрэг хийсэн "cart-д нэмэх" дарлт давхар мөр үүсгэхгүй,
         өсгөлт алдагдахгүй, мөр хэзээ ч `cap`-аас хэтрэхгүй."""
         statement = insert(CartItem).values(
-            cart_id=cart_id, product_id=product_id, size=size, quantity=min(quantity, cap)
+            cart_id=cart_id,
+            product_id=product_id,
+            size=size,
+            quantity=min(quantity, cap),
+            price_cents_at_add=unit_price_cents,
         )
         await self._session.execute(
             statement.on_conflict_do_update(

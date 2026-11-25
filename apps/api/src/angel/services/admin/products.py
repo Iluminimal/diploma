@@ -21,7 +21,8 @@ from angel.ingestion.images import (
 )
 from angel.ml.embeddings import EmbeddingService
 from angel.ml.preprocess import InvalidImageError, load_image
-from angel.models import Product
+from angel.models import Product, User
+from angel.repositories.admin.audit import AuditRepository
 from angel.repositories.catalog.categories import CategoryRepository, LeafCategory
 from angel.repositories.catalog.products import ProductRepository
 from angel.schemas.admin.products import (
@@ -54,8 +55,8 @@ class PreparedImage:
 def _not_found(product_id: int) -> ProblemError:
     return ProblemError(
         HTTPStatus.NOT_FOUND,
-        "Product not found",
-        f"There is no product {product_id}.",
+        "Бараа олдсонгүй",
+        f"{product_id} дугаартай бараа байхгүй байна.",
         type_=PRODUCT_NOT_FOUND_TYPE,
     )
 
@@ -81,6 +82,7 @@ class AdminProductService:
         self._low_stock = low_stock_threshold
         self._products = ProductRepository(session)
         self._categories = CategoryRepository(session)
+        self._audit = AuditRepository(session)
 
     # --- унших ---
 
@@ -128,7 +130,7 @@ class AdminProductService:
     # --- бичих ---
 
     async def create(
-        self, data: bytes, fields: ProductFields, *, is_active: bool
+        self, data: bytes, fields: ProductFields, *, is_active: bool, actor: User
     ) -> AdminProductOut:
         """Зургаас шинэ бараа: thumbnail, blur placeholder, FashionCLIP embedding-ийг upload-аас
         тооцоолно, тиймээс visual search-ээр тэр даруй олдоно."""
@@ -161,28 +163,37 @@ class AdminProductService:
                         embedding_version=self._embedder.version,
                     )
                 )
+                self._audit.record(
+                    actor,
+                    "product.create",
+                    "product",
+                    product.id,
+                    {"name": fields.name, "stock": fields.stock_quantity, "active": is_active},
+                )
         except Exception:
             await self._discard(key)
             raise
         await self._cache.invalidate_catalogue()
-        log.info("admin_product_created", product_id=product.id)
+        log.info("product_created", product_id=product.id, actor_id=actor.id)
         return to_admin_product_out(product, self._storage)
 
-    async def update(self, product_id: int, changes: AdminProductUpdate) -> AdminProductOut:
+    async def update(
+        self, product_id: int, changes: AdminProductUpdate, *, actor: User
+    ) -> AdminProductOut:
         values = changes.model_dump(exclude_unset=True)
         if "category_id" in values and values["category_id"] is None:
             raise ProblemError(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
-                "Invalid category",
-                "A product needs a category.",
+                "Ангилал буруу",
+                "Барааг ангилалд хамруулах ёстой.",
                 type_=INVALID_CATEGORY_TYPE,
             )
         for required in ("name", "gender", "price_cents", "stock_quantity"):
             if required in values and values[required] is None:
                 raise ProblemError(
                     HTTPStatus.UNPROCESSABLE_ENTITY,
-                    "Invalid value",
-                    f"{required} cannot be cleared.",
+                    "Утга буруу",
+                    f"{required} талбарыг хоосон болгох боломжгүй.",
                 )
         async with self._session.begin():
             product = await self._products.get_any(product_id, for_update=True)
@@ -197,10 +208,14 @@ class AdminProductService:
             for name, value in values.items():
                 setattr(product, name, value)
             await self._products.save(product)
+            self._audit.record(
+                actor, "product.update", "product", product_id, {"fields": sorted(values)}
+            )
         await self._cache.invalidate_catalogue()
+        log.info("product_updated", product_id=product_id, fields=sorted(values), actor_id=actor.id)
         return to_admin_product_out(product, self._storage)
 
-    async def replace_image(self, product_id: int, data: bytes) -> AdminProductOut:
+    async def replace_image(self, product_id: int, data: bytes, *, actor: User) -> AdminProductOut:
         """Шинэ зураг, шинэ embedding. Файлууд шинэ key авна, ингэвэл browser болон cache хуучин
         зургийг хэзээ ч үзүүлсээр байхгүй."""
         async with self._session.begin():
@@ -219,15 +234,17 @@ class AdminProductService:
                 product.embedding = prepared.embedding.tolist()
                 product.embedding_version = self._embedder.version
                 await self._products.save(product)
+                self._audit.record(actor, "product.image", "product", product_id)
         except Exception:
             await self._discard(key)
             raise
         if old_key.startswith(ADMIN_IMAGE_PREFIX):
             await self._discard(old_key)
         await self._cache.invalidate_catalogue()
+        log.info("product_image_replaced", product_id=product_id, actor_id=actor.id)
         return to_admin_product_out(product, self._storage)
 
-    async def set_active(self, product_id: int, *, active: bool) -> AdminProductOut:
+    async def set_active(self, product_id: int, *, active: bool, actor: User) -> AdminProductOut:
         """Барааг татах эсвэл сэргээх. Бараа хэзээ ч устгагдахгүй: захиалгууд түүнийг заадаг."""
         async with self._session.begin():
             product = await self._products.get_any(product_id, for_update=True)
@@ -236,11 +253,17 @@ class AdminProductService:
             if product.is_active != active:
                 product.is_active = active
                 await self._products.save(product)
+                self._audit.record(
+                    actor,
+                    "product.activate" if active else "product.deactivate",
+                    "product",
+                    product_id,
+                )
         await self._cache.invalidate_catalogue()
-        log.info("admin_product_active_changed", product_id=product_id, active=active)
+        log.info("product_active_changed", product_id=product_id, active=active, actor_id=actor.id)
         return to_admin_product_out(product, self._storage)
 
-    async def set_stock(self, product_id: int, quantity: int) -> AdminProductOut:
+    async def set_stock(self, product_id: int, quantity: int, *, actor: User) -> AdminProductOut:
         """Тавиур дээрх тоог тохируулна. Мөрийг түгжинэ (checkout нөөц нөөцлөхдөө түгжихтэй
         адил), ингэвэл тооллого зэрэг явагдаж буй борлуулалтад алдагдахгүй, борлуулалтыг ч
         алдахгүй."""
@@ -251,8 +274,22 @@ class AdminProductService:
             previous = product.stock_quantity
             product.stock_quantity = quantity
             await self._products.save(product)
+            if quantity != previous:
+                self._audit.record(
+                    actor,
+                    "product.stock",
+                    "product",
+                    product_id,
+                    {"previous": previous, "quantity": quantity},
+                )
         await self._cache.invalidate_catalogue()
-        log.info("admin_stock_set", product_id=product_id, previous=previous, quantity=quantity)
+        log.info(
+            "product_stock_set",
+            product_id=product_id,
+            previous=previous,
+            quantity=quantity,
+            actor_id=actor.id,
+        )
         return to_admin_product_out(product, self._storage)
 
     # --- алхмууд ---
@@ -262,8 +299,8 @@ class AdminProductService:
         if not leaves:
             raise ProblemError(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
-                "Invalid category",
-                f"Category {category_id} does not exist or is not an article type.",
+                "Ангилал буруу",
+                f"{category_id} дугаартай ангилал байхгүй эсвэл барааны төрөл биш байна.",
                 type_=INVALID_CATEGORY_TYPE,
             )
         return leaves[0]
@@ -280,7 +317,7 @@ class AdminProductService:
         except InvalidImageError as exc:
             log.info("upload_rejected", reason=str(exc)[:200])
             raise invalid_image(
-                "The file is not a valid JPEG, PNG or WebP image, or its dimensions are too large."
+                "Файл нь JPEG, PNG эсвэл WebP зураг биш, эсвэл хэт өндөр нягтралтай байна."
             ) from exc
         thumbnails = await asyncio.to_thread(build_thumbnails, image)
         embedding = (await self._embedder.aembed_images([image]))[0]

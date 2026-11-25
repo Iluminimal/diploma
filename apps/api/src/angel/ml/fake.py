@@ -10,6 +10,7 @@ from PIL import Image
 
 from angel.ml.embeddings import Embeddings, ImageArrays
 from angel.ml.fashion_clip import DIMENSION
+from angel.ml.localizer import Box, Region
 
 
 class FakeEmbedder:
@@ -58,3 +59,28 @@ class FakeEmbedder:
         seed = int.from_bytes(hashlib.sha256(raw).digest()[:8], "big")
         vector = np.random.default_rng(seed).standard_normal(DIMENSION)
         return vector / np.linalg.norm(vector)
+
+
+class FakeLocalizer:
+    """Тогтмол хайрцгуудаар зургийг тайрна (detector-гүйгээр олон хэсэгтэй хайлтыг шалгахад).
+
+    `labels` нь хайрцаг бүрийн анги; өгөөгүй бол `item-<n>`. Дуудлагын тоог `calls` хэмждэг."""
+
+    def __init__(self, boxes: Sequence[Box], labels: Sequence[str] | None = None) -> None:
+        if not boxes:
+            raise ValueError("at least one box is required")
+        self._boxes = list(boxes)
+        self._labels = list(labels) if labels else [f"item-{n}" for n in range(len(boxes))]
+        self.calls = 0
+
+    async def alocate(self, image: Image.Image) -> list[Region]:
+        self.calls += 1
+        return [
+            Region(
+                image=image.crop(box.to_pixels(*image.size)),
+                box=box,
+                label=label,
+                score=round(1.0 - 0.1 * n, 2),
+            )
+            for n, (box, label) in enumerate(zip(self._boxes, self._labels, strict=True))
+        ]

@@ -19,8 +19,8 @@ _SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 def _forbidden() -> ProblemError:
     return ProblemError(
         403,
-        "Cross-site request refused",
-        "This request did not come from an allowed origin.",
+        "Хүсэлтээс татгалзлаа",
+        "Энэ хүсэлт зөвшөөрөгдсөн эх сурвалжаас ирээгүй байна.",
         type_=FORBIDDEN_ORIGIN_TYPE,
     )
 

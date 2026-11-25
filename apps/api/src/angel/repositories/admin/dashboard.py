@@ -68,6 +68,123 @@ class DashboardRepository:
         )
         return {row[0].date(): (int(row[1]), int(row[2])) for row in rows.all()}
 
+    async def daily_units(self, start: datetime, end: datetime) -> dict[date, int]:
+        day = func.date_trunc("day", func.timezone("UTC", Order.paid_at))
+        rows = await self._session.execute(
+            select(day, func.sum(OrderItem.quantity))
+            .join(Order, Order.id == OrderItem.order_id)
+            .where(*_paid_between(start, end))
+            .group_by(day)
+        )
+        return {row[0].date(): int(row[1]) for row in rows.all()}
+
+    async def daily_new_customers(self, start: datetime, end: datetime) -> dict[date, int]:
+        day = func.date_trunc("day", func.timezone("UTC", User.created_at))
+        rows = await self._session.execute(
+            select(day, func.count())
+            .where(
+                User.role == "customer",
+                _NOT_DELETED,
+                User.created_at >= start,
+                User.created_at < end,
+            )
+            .group_by(day)
+        )
+        return {row[0].date(): int(row[1]) for row in rows.all()}
+
+    async def funnel(self, start: datetime, end: datetime) -> dict[str, int]:
+        """Хугацаанд үүссэн захиалгуудаас аль шатанд хүрснийг (шат бүрийн цаг тэмдэглэгдсэн эсэхээр)
+        тоолно."""
+        row = (
+            await self._session.execute(
+                select(
+                    func.count(),
+                    func.count().filter(Order.paid_at.is_not(None)),
+                    func.count().filter(Order.shipped_at.is_not(None)),
+                    func.count().filter(Order.delivered_at.is_not(None)),
+                    func.count().filter(Order.status == "cancelled"),
+                    func.count().filter(Order.refunded_at.is_not(None)),
+                ).where(Order.created_at >= start, Order.created_at < end)
+            )
+        ).one()
+        names = ("created", "paid", "shipped", "delivered", "cancelled", "refunded")
+        return {name: int(value) for name, value in zip(names, row, strict=True)}
+
+    async def sales_by_category(self, start: datetime, end: datetime) -> list[tuple[str, int, int]]:
+        revenue = func.sum(OrderItem.unit_price_cents * OrderItem.quantity)
+        rows = await self._session.execute(
+            select(Product.master_category, revenue, func.sum(OrderItem.quantity))
+            .join(Order, Order.id == OrderItem.order_id)
+            .join(Product, Product.id == OrderItem.product_id)
+            .where(*_paid_between(start, end))
+            .group_by(Product.master_category)
+            .order_by(revenue.desc(), Product.master_category)
+        )
+        return [(r[0], int(r[1]), int(r[2])) for r in rows.all()]
+
+    async def buyers(self, start: datetime, end: datetime) -> tuple[int, int]:
+        """Хугацаанд худалдан авсан хүмүүсийн тоо, тэдний дотор 2+ захиалгатай нь."""
+        per_buyer = (
+            select(Order.user_id, func.count().label("orders"))
+            .where(*_paid_between(start, end))
+            .group_by(Order.user_id)
+            .subquery()
+        )
+        row = (
+            await self._session.execute(
+                select(func.count(), func.count().filter(per_buyer.c.orders >= 2)).select_from(
+                    per_buyer
+                )
+            )
+        ).one()
+        return int(row[0]), int(row[1])
+
+    async def refunded_of_paid(self, start: datetime, end: datetime) -> tuple[int, int]:
+        """Хугацаанд төлөгдсөн захиалгын тоо (буцаагдсан ч орно), тэдгээрээс буцаагдсан нь."""
+        paid_in_period = [
+            Order.status.in_(BOUGHT_STATUSES),
+            Order.paid_at >= start,
+            Order.paid_at < end,
+        ]
+        row = (
+            await self._session.execute(
+                select(func.count(), func.count().filter(Order.status == "refunded")).where(
+                    *paid_in_period
+                )
+            )
+        ).one()
+        return int(row[0]), int(row[1])
+
+    async def cancelled_of_created(self, start: datetime, end: datetime) -> tuple[int, int]:
+        row = (
+            await self._session.execute(
+                select(func.count(), func.count().filter(Order.status == "cancelled")).where(
+                    Order.created_at >= start, Order.created_at < end
+                )
+            )
+        ).one()
+        return int(row[0]), int(row[1])
+
+    async def average_ship_hours(self, start: datetime, end: datetime) -> float | None:
+        seconds = (
+            await self._session.execute(
+                select(func.avg(func.extract("epoch", Order.shipped_at - Order.paid_at))).where(
+                    Order.shipped_at >= start,
+                    Order.shipped_at < end,
+                    Order.paid_at.is_not(None),
+                )
+            )
+        ).scalar_one()
+        return None if seconds is None else round(float(seconds) / 3600, 1)
+
+    async def overdue_to_ship(self, before: datetime) -> int:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(Order)
+            .where(Order.status == "paid", Order.paid_at < before)
+        )
+        return int(result.scalar_one())
+
     async def status_counts(self) -> dict[str, int]:
         rows = await self._session.execute(
             select(Order.status, func.count()).group_by(Order.status)

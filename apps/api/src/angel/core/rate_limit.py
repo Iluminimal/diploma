@@ -24,6 +24,7 @@ log = get_logger(__name__)
 RATE_LIMITED_TYPE = "urn:angel:problem:rate-limited"
 LimitName = Literal[
     "image",
+    "detect",
     "text",
     "similar",
     "register",
@@ -34,6 +35,8 @@ LimitName = Literal[
     "review",
     "otp_send",
     "otp_verify",
+    "payment_check",
+    "csp_report",
 ]
 
 _SCRIPT = """
@@ -135,6 +138,7 @@ def _rate_for(settings: Settings, name: LimitName) -> Rate:
     return Rate.parse(
         {
             "image": settings.rate_limit_image,
+            "detect": settings.rate_limit_detect,
             "text": settings.rate_limit_text,
             "similar": settings.rate_limit_similar,
             "register": settings.rate_limit_register,
@@ -144,7 +148,9 @@ def _rate_for(settings: Settings, name: LimitName) -> Rate:
             "oauth": settings.rate_limit_oauth,
             "review": settings.rate_limit_review,
             "otp_send": settings.rate_limit_otp_send,
+            "payment_check": settings.rate_limit_payment_check,
             "otp_verify": settings.rate_limit_otp_verify,
+            "csp_report": settings.rate_limit_csp_report,
         }[name]
     )
 
@@ -169,9 +175,9 @@ def rate_limit(name: LimitName) -> Callable[[Request, Response], Awaitable[None]
         if not decision.allowed:
             raise ProblemError(
                 HTTPStatus.TOO_MANY_REQUESTS,
-                "Too many requests",
-                f"Limit of {decision.limit} requests exceeded. "
-                f"Try again in {decision.reset_seconds} s.",
+                "Хэт олон хүсэлт",
+                f"{decision.limit} хүсэлтийн хязгаарт хүрлээ. "
+                f"{decision.reset_seconds} секундийн дараа дахин оролдоно уу.",
                 type_=RATE_LIMITED_TYPE,
                 headers={**headers, "Retry-After": str(decision.reset_seconds)},
             )

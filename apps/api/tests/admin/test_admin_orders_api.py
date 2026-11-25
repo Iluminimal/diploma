@@ -39,6 +39,13 @@ async def administrator(api: Api, engine: AsyncEngine) -> Shopper:
     return admin
 
 
+async def warehouse_worker(api: Api, engine: AsyncEngine) -> Shopper:
+    """Агуулахын ажилтан: бараа, нөөц, ачилтыг хариуцна."""
+    worker = await register(api.client)
+    await set_role(engine, worker.user_id, "warehouse")
+    return worker
+
+
 @pytest.mark.parametrize("path", ["", "/LK-ABCD2345"])
 async def test_only_administrators_can_read_orders(
     api_factory: ApiFactory, tmp_path: Path, path: str
@@ -72,7 +79,7 @@ async def test_the_list_shows_every_customers_orders_newest_first(
         assert (newest["status"], newest["payment_status"]) == ("pending", "requires_payment")
         assert (oldest["status"], oldest["payment_status"]) == ("paid", "succeeded")
         assert newest["customer_email"] == second_customer.email
-        assert newest["customer_name"] == "Ada Lovelace"
+        assert newest["customer_name"] == "Болд Батбаяр"
         assert oldest["customer_email"] == first_customer.email
         assert oldest["item_count"] == 2
         assert oldest["total_cents"] > 0
@@ -130,7 +137,7 @@ async def test_the_list_paginates(
         assert [o["number"] for o in first["items"] + second["items"]] == placed[::-1]
 
 
-async def test_an_order_shows_its_items_address_and_payment_but_never_the_client_secret(
+async def test_an_order_shows_its_items_address_and_payment_but_never_the_payment_qr(
     api_factory: ApiFactory, db_engine: AsyncEngine, tmp_path: Path
 ) -> None:
     async with api_factory(media_dir=tmp_path) as api:
@@ -146,14 +153,15 @@ async def test_an_order_shows_its_items_address_and_payment_but_never_the_client
         assert body["status"] == "paid"
         assert body["user_id"] == customer.user_id
         assert body["contact_email"] == customer.email
-        assert body["shipping_address"]["city"] == "London"
+        assert body["shipping_address"]["city"] == "Баянгол"
         [item] = body["items"]
         assert (item["product_id"], item["quantity"]) == (product.product_id, 2)
         assert item["unit_price_cents"] == product.price_cents
         assert body["payment"]["provider"] == "offline"
         assert body["payment"]["status"] == "succeeded"
         assert body["payment"]["amount_cents"] == body["total_cents"]
-        assert "client_secret" not in response.text
+        assert "provider_data" not in response.text
+        assert body["payment"]["charge_currency"] == body["currency"]
         assert body["cancel_reason"] is None
 
 

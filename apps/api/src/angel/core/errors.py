@@ -32,6 +32,8 @@ PAYMENT_PROVIDER_TYPE = f"{_PREFIX}payment-provider-error"
 PAYMENT_IN_PROGRESS_TYPE = f"{_PREFIX}payment-in-progress"
 INVALID_SIGNATURE_TYPE = f"{_PREFIX}invalid-signature"
 ADDRESS_LIMIT_TYPE = f"{_PREFIX}address-limit"
+SHIPPING_UNAVAILABLE_TYPE = f"{_PREFIX}shipping-unavailable"
+ATTEMPT_EXPIRED_TYPE = f"{_PREFIX}attempt-expired"
 WISHLIST_FULL_TYPE = f"{_PREFIX}wishlist-full"
 INVALID_CATEGORY_TYPE = f"{_PREFIX}invalid-category"
 CATEGORY_NOT_FOUND_TYPE = f"{_PREFIX}category-not-found"
@@ -42,9 +44,11 @@ REVIEW_EXISTS_TYPE = f"{_PREFIX}review-exists"
 CONTACT_EMAIL_REQUIRED_TYPE = f"{_PREFIX}contact-email-required"
 INVALID_DESTINATION_TYPE = f"{_PREFIX}invalid-destination"
 OTP_INVALID_TYPE = f"{_PREFIX}otp-invalid"
+WEAK_PASSWORD_TYPE = f"{_PREFIX}weak-password"
 OTP_EXPIRED_TYPE = f"{_PREFIX}otp-expired"
 OTP_TOO_MANY_ATTEMPTS_TYPE = f"{_PREFIX}otp-too-many-attempts"
 SMS_UNAVAILABLE_TYPE = f"{_PREFIX}sms-unavailable"
+EMAIL_UNAVAILABLE_TYPE = f"{_PREFIX}email-unavailable"
 PHONE_TAKEN_TYPE = f"{_PREFIX}phone-taken"
 LAST_SIGN_IN_METHOD_TYPE = f"{_PREFIX}last-sign-in-method"
 
@@ -104,14 +108,34 @@ async def _handle_problem_error(request: Request, exc: ProblemError) -> JSONResp
     return problem_response(request, problem, dict(exc.headers or {}))
 
 
+# Тусгай `type`-гүй, framework-ийн өөрийн алдааны (route олдсонгүй, method буруу...) гарчиг.
+_STATUS_TITLES = {
+    400: "Хүсэлт буруу байна",
+    401: "Нэвтрээгүй байна",
+    403: "Хандах эрхгүй",
+    404: "Олдсонгүй",
+    405: "Зөвшөөрөгдөөгүй арга",
+    409: "Зөрчил гарлаа",
+    413: "Хүсэлт хэт том",
+    415: "Дэмжигдээгүй төрөл",
+    422: "Өгөгдөл буруу байна",
+    429: "Хэт олон хүсэлт",
+    500: "Серверийн алдаа",
+    502: "Гаднын үйлчилгээ хариу өгсөнгүй",
+    503: "Үйлчилгээ түр боломжгүй",
+}
+
+
 async def _handle_http_exception(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     try:
-        title = HTTPStatus(exc.status_code).phrase
+        phrase = HTTPStatus(exc.status_code).phrase
     except ValueError:
-        title = "Error"
-    problem = ProblemDetail(
-        title=title, status=exc.status_code, detail=str(exc.detail) if exc.detail else None
-    )
+        phrase = ""
+    title = _STATUS_TITLES.get(exc.status_code) or phrase or "Алдаа"
+    # Starlette өөрийн анхдагч `detail`-ыг англи хэллэгээр ("Not Found") өгдөг: гарчиг аль хэдийн
+    # монголоор хэлж байгаа тул давтахгүй.
+    detail = str(exc.detail) if exc.detail and str(exc.detail) != phrase else None
+    problem = ProblemDetail(title=title, status=exc.status_code, detail=detail)
     return problem_response(request, problem, dict(exc.headers or {}))
 
 
@@ -123,9 +147,9 @@ async def _handle_validation_error(request: Request, exc: RequestValidationError
         for err in exc.errors()
     ]
     problem = ProblemDetail(
-        title="Request validation failed",
+        title="Хүсэлтийн өгөгдөл буруу байна",
         status=HTTPStatus.UNPROCESSABLE_ENTITY,
-        detail="One or more fields are invalid.",
+        detail="Нэг буюу хэд хэдэн талбар буруу байна.",
         errors=errors,
     )
     return problem_response(request, problem)
@@ -133,7 +157,7 @@ async def _handle_validation_error(request: Request, exc: RequestValidationError
 
 async def _handle_unexpected_error(request: Request, exc: Exception) -> JSONResponse:
     log.error("unhandled_exception", exc_info=exc)
-    problem = ProblemDetail(title="Internal Server Error", status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    problem = ProblemDetail(title="Серверийн алдаа", status=HTTPStatus.INTERNAL_SERVER_ERROR)
     return problem_response(request, problem)
 
 

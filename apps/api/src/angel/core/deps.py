@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from http import HTTPStatus
 from typing import Annotated
 
@@ -15,13 +15,15 @@ from angel.core.errors import (
     UNAUTHENTICATED_TYPE,
     ProblemError,
 )
-from angel.core.mail import Mailer
+from angel.core.mail import BestEffortMailer, Mailer
 from angel.core.rate_limit import RateLimiter, client_address
 from angel.core.security import decode_access_token, new_opaque_token
 from angel.core.sms import SmsSender
-from angel.ml.classifier import GarmentLocalizer, LazyCategoryClassifier
+from angel.ml.classifier import LazyCategoryClassifier
 from angel.ml.embeddings import EmbeddingService
+from angel.ml.localizer import GarmentLocalizer
 from angel.models import User
+from angel.models.user import ROLE_ADMIN, ROLE_WAREHOUSE, STAFF_ROLES
 from angel.oauth import OAuthProvider
 from angel.payments import PaymentGateway
 from angel.repositories.accounts.users import UserRepository
@@ -33,7 +35,9 @@ from angel.services.accounts.oauth import OAuthService
 from angel.services.accounts.otp import OtpService
 from angel.services.accounts.otp_login import OtpLoginService
 from angel.services.accounts.password_reset import PasswordResetService
+from angel.services.admin.audit import AdminAuditService
 from angel.services.admin.dashboard import AdminDashboardService
+from angel.services.admin.fulfillment import FulfillmentBoardService
 from angel.services.admin.orders import AdminOrderService
 from angel.services.admin.products import AdminProductService
 from angel.services.cache import SearchCache
@@ -105,12 +109,17 @@ HealthServiceDep = Annotated[HealthService, Depends(get_health_service)]
 
 
 def get_search_service(
-    request: Request, settings: SettingsDep, session: SessionDep, storage: StorageDep
+    request: Request,
+    settings: SettingsDep,
+    session: SessionDep,
+    storage: StorageDep,
 ) -> SearchService:
     embedder: EmbeddingService | None = request.app.state.embedding_service
     if embedder is None or not embedder.is_loaded():
         raise ProblemError(
-            HTTPStatus.SERVICE_UNAVAILABLE, "Search unavailable", "The model is not loaded yet."
+            HTTPStatus.SERVICE_UNAVAILABLE,
+            "Хайлт боломжгүй",
+            "Загвар хараахан ачаалагдаагүй байна.",
         )
     classifier: LazyCategoryClassifier = request.app.state.classifier
     localizer: GarmentLocalizer = request.app.state.localizer
@@ -138,7 +147,9 @@ def get_admin_product_service(
     embedder: EmbeddingService | None = request.app.state.embedding_service
     if embedder is None or not embedder.is_loaded():
         raise ProblemError(
-            HTTPStatus.SERVICE_UNAVAILABLE, "Model unavailable", "The model is not loaded yet."
+            HTTPStatus.SERVICE_UNAVAILABLE,
+            "Загвар боломжгүй",
+            "Загвар хараахан ачаалагдаагүй байна.",
         )
     cache: SearchCache = request.app.state.search_cache
     return AdminProductService(
@@ -162,6 +173,24 @@ def get_admin_dashboard_service(
 
 
 AdminDashboardServiceDep = Annotated[AdminDashboardService, Depends(get_admin_dashboard_service)]
+
+
+def get_admin_audit_service(session: SessionDep) -> AdminAuditService:
+    return AdminAuditService(session)
+
+
+AdminAuditServiceDep = Annotated[AdminAuditService, Depends(get_admin_audit_service)]
+
+
+def get_fulfillment_board_service(
+    session: SessionDep, storage: StorageDep, settings: SettingsDep
+) -> FulfillmentBoardService:
+    return FulfillmentBoardService(session, storage, settings)
+
+
+FulfillmentBoardServiceDep = Annotated[
+    FulfillmentBoardService, Depends(get_fulfillment_board_service)
+]
 
 
 def get_admin_order_service(session: SessionDep, storage: StorageDep) -> AdminOrderService:
@@ -198,7 +227,7 @@ BearerDep = Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)]
 def _unauthenticated(detail: str) -> ProblemError:
     return ProblemError(
         HTTPStatus.UNAUTHORIZED,
-        "Not signed in",
+        "Нэвтрээгүй байна",
         detail,
         type_=UNAUTHENTICATED_TYPE,
         headers={"WWW-Authenticate": "Bearer"},
@@ -212,13 +241,13 @@ def get_optional_user_id(request: Request, credentials: BearerDep) -> int | None
         return None
     user_id = decode_access_token(credentials.credentials, request.app.state.jwt_secret)
     if user_id is None:
-        raise _unauthenticated("Your session has expired.")
+        raise _unauthenticated("Нэвтрэлтийн хугацаа дууссан байна.")
     return user_id
 
 
 def get_current_user_id(user_id: Annotated[int | None, Depends(get_optional_user_id)]) -> int:
     if user_id is None:
-        raise _unauthenticated("Sign in to continue.")
+        raise _unauthenticated("Үргэлжлүүлэхийн тулд нэвтэрнэ үү.")
     return user_id
 
 
@@ -226,24 +255,65 @@ OptionalUserDep = Annotated[int | None, Depends(get_optional_user_id)]
 CurrentUserDep = Annotated[int, Depends(get_current_user_id)]
 
 
-async def get_current_admin(user_id: CurrentUserDep, session: SessionDep) -> User:
-    """Нэвтэрсэн администратор. Role-ийг хүсэлт бүрт database-аас уншдаг (token-д байхгүй) тул
-    эрхийг хураах, хэрэглэгчийг идэвхгүй болгох нь тэр дороо хүчинтэй болно."""
-    async with session.begin():
-        user = await UserRepository(session).get(user_id)
-        if user is None or not user.is_active:
-            raise _unauthenticated("Please sign in again.")
-        if not user.is_admin:
-            raise ProblemError(
-                HTTPStatus.FORBIDDEN,
-                "Administrators only",
-                "Your account is not allowed to use the admin area.",
-                type_=FORBIDDEN_TYPE,
-            )
-    return user
+def require_roles(*roles: str, title: str, detail: str) -> Callable[..., Awaitable[User]]:
+    """Заасан role-той нэвтэрсэн хэрэглэгчийг шаардах dependency үүсгэнэ. Role-ийг хүсэлт бүрт
+    database-аас уншдаг (token-д байхгүй) тул эрхийг хураах, хэрэглэгчийг идэвхгүй болгох нь тэр
+    дороо хүчинтэй болно."""
 
+    async def dependency(user_id: CurrentUserDep, session: SessionDep) -> User:
+        async with session.begin():
+            user = await UserRepository(session).get(user_id)
+            if user is None or not user.is_active:
+                raise _unauthenticated("Дахин нэвтэрнэ үү.")
+            if user.role not in roles:
+                raise ProblemError(HTTPStatus.FORBIDDEN, title, detail, type_=FORBIDDEN_TYPE)
+        return user
+
+    return dependency
+
+
+# Админ: хэрэглэгч, сэтгэгдэл, статистик, захиалгын цуцлалт/буцаалт.
+get_current_admin = require_roles(
+    ROLE_ADMIN,
+    title="Зөвхөн админ",
+    detail="Таны бүртгэл энэ үйлдлийг хийх эрхгүй байна: зөвхөн админ хийнэ.",
+)
+# Агуулахын ажилтан: бараа, нөөц, захиалгын ачилт (ship/deliver).
+get_current_warehouse = require_roles(
+    ROLE_WAREHOUSE,
+    title="Зөвхөн агуулахын ажилтан",
+    detail="Таны бүртгэл энэ үйлдлийг хийх эрхгүй байна: зөвхөн агуулахын ажилтан хийнэ.",
+)
+# Аль ч ажилтан: админ самбарын нэвтрэх хаалга ба зөвхөн харах (read-only) endpoint-ууд.
+get_current_staff = require_roles(
+    *STAFF_ROLES,
+    title="Зөвхөн ажилтан",
+    detail="Таны бүртгэл админ хэсэг ашиглах эрхгүй байна.",
+)
 
 AdminDep = Annotated[User, Depends(get_current_admin)]
+WarehouseDep = Annotated[User, Depends(get_current_warehouse)]
+StaffDep = Annotated[User, Depends(get_current_staff)]
+
+
+async def forbid_staff_shopping(user_id: OptionalUserDep, session: SessionDep) -> None:
+    """Админ, агуулахын ажилтан бол back-office-ийн хэрэглэгч: сагс өөрчлөх, захиалга өгөх эрхгүй.
+    Зочин болон энгийн хэрэглэгчид нөлөөлөхгүй. Role-ийг `require_roles`-тай адил DB-ээс уншина."""
+    if user_id is None:
+        return
+    async with session.begin():
+        user = await UserRepository(session).get(user_id)
+    if user is not None and user.is_staff:
+        raise ProblemError(
+            HTTPStatus.FORBIDDEN,
+            "Ажилтан худалдан авалт хийх боломжгүй",
+            "Ажилтны бүртгэлээр сагс болон захиалга ашиглах боломжгүй. Худалдан авахдаа "
+            "хэрэглэгчийн бүртгэлээр нэвтэрнэ үү.",
+            type_=FORBIDDEN_TYPE,
+        )
+
+
+ShoppingGuard = Annotated[None, Depends(forbid_staff_shopping)]
 
 
 def get_cart_owner(request: Request, user_id: OptionalUserDep) -> CartOwner:
@@ -253,9 +323,14 @@ def get_cart_owner(request: Request, user_id: OptionalUserDep) -> CartOwner:
 
 
 def get_cart_writer(
-    request: Request, response: Response, settings: SettingsDep, user_id: OptionalUserDep
+    request: Request,
+    response: Response,
+    settings: SettingsDep,
+    user_id: OptionalUserDep,
+    _guard: ShoppingGuard,
 ) -> CartOwner:
-    """`get_cart_owner`-тэй адил, гэхдээ анх удаа ирсэн зочинд сагсны cookie өгнө."""
+    """`get_cart_owner`-тэй адил, гэхдээ анх удаа ирсэн зочинд сагсны cookie өгнө. Ажилтан сагс
+    өөрчилж болохгүй (`forbid_staff_shopping`)."""
     token = request.cookies.get(CART_COOKIE)
     if user_id is None and not token:
         token = new_opaque_token()
@@ -275,9 +350,15 @@ def no_store(response: Response) -> None:
 # --- commerce service-үүд ---------------------------------------------------------------------
 
 
-def get_mailer(request: Request) -> Mailer:
+def get_strict_mailer(request: Request) -> Mailer:
+    """Алдааг шиднэ: нэг удаагийн код хүргэгдээгүй бол хэрэглэгч мэдэх ёстой (503)."""
     mailer: Mailer = request.app.state.mailer
     return mailer
+
+
+def get_mailer(request: Request) -> Mailer:
+    """Мэдэгдлийн имэйл: SMTP унасан ч commit хийгдсэн хүсэлт амжилттай үлдэнэ."""
+    return BestEffortMailer(get_strict_mailer(request))
 
 
 def get_payment_gateway(request: Request) -> PaymentGateway | None:
@@ -315,7 +396,7 @@ def get_otp_service(
     request: Request,
     settings: SettingsDep,
     session: SessionDep,
-    mailer: Annotated[Mailer, Depends(get_mailer)],
+    mailer: Annotated[Mailer, Depends(get_strict_mailer)],
     sms: Annotated[SmsSender, Depends(get_sms_sender)],
 ) -> OtpService:
     return OtpService(session, settings, request.app.state.jwt_secret, mailer, sms)
@@ -427,8 +508,10 @@ def get_checkout_service(
 CheckoutServiceDep = Annotated[CheckoutService, Depends(get_checkout_service)]
 
 
-def get_order_service(session: SessionDep, storage: StorageDep) -> OrderService:
-    return OrderService(session, storage)
+def get_order_service(
+    session: SessionDep, storage: StorageDep, settings: SettingsDep, gateway: GatewayDep
+) -> OrderService:
+    return OrderService(session, storage, settings, gateway)
 
 
 OrderServiceDep = Annotated[OrderService, Depends(get_order_service)]
@@ -443,10 +526,10 @@ def get_webhook_service(
     if gateway is None:
         raise ProblemError(
             HTTPStatus.SERVICE_UNAVAILABLE,
-            "Payments are not available",
+            "Төлбөр боломжгүй байна",
             type_=PAYMENTS_UNAVAILABLE_TYPE,
         )
-    return WebhookService(gateway, PaymentSettlement(session, gateway, settings, mailer))
+    return WebhookService(session, gateway, PaymentSettlement(session, gateway, settings, mailer))
 
 
 WebhookServiceDep = Annotated[WebhookService, Depends(get_webhook_service)]

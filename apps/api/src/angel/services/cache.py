@@ -71,15 +71,29 @@ class SearchCache:
 
     # --- төстэй бараа ---
 
-    def _similar_key(self, product_id: int, filters: SearchFilters, limit: int) -> str:
-        spec = json.dumps(asdict(filters), sort_keys=True)
+    def _similar_key(
+        self,
+        product_id: int,
+        filters: SearchFilters,
+        limit: int,
+        refinement: tuple[str, float] | None = None,
+    ) -> str:
+        parts: dict[str, Any] = asdict(filters)
+        if refinement is not None:
+            # Текст, жин өөр бол үр дүн өөр: key-д орно (текстийн том жижиг үсэг хамаагүй).
+            parts["refinement"] = [normalize_query(refinement[0]), round(refinement[1], 4)]
+        spec = json.dumps(parts, sort_keys=True)
         digest = hashlib.sha256(spec.encode()).hexdigest()[:16]
         return f"sim:{self._version}:{product_id}:{limit}:{digest}"
 
     async def get_similar(
-        self, product_id: int, filters: SearchFilters, limit: int
+        self,
+        product_id: int,
+        filters: SearchFilters,
+        limit: int,
+        refinement: tuple[str, float] | None = None,
     ) -> list[SearchHit] | None:
-        raw = await self._get(self._similar_key(product_id, filters, limit))
+        raw = await self._get(self._similar_key(product_id, filters, limit, refinement))
         if raw is None:
             return None
         try:
@@ -89,10 +103,15 @@ class SearchCache:
             return None
 
     async def set_similar(
-        self, product_id: int, filters: SearchFilters, limit: int, hits: list[SearchHit]
+        self,
+        product_id: int,
+        filters: SearchFilters,
+        limit: int,
+        hits: list[SearchHit],
+        refinement: tuple[str, float] | None = None,
     ) -> None:
         await self._set(
-            self._similar_key(product_id, filters, limit),
+            self._similar_key(product_id, filters, limit, refinement),
             _HITS.dump_json(hits),
             self._similar_ttl,
         )

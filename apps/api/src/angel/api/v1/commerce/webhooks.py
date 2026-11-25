@@ -1,42 +1,28 @@
-from fastapi import APIRouter, Header, Request
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Query
 
 from angel.core.deps import WebhookServiceDep
-from angel.core.errors import ProblemError
+from angel.core.rate_limit import rate_limit
 from angel.schemas.problem import ProblemDetail
 
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
 
-# Stripe-ийн төлбөрийн event хэдхэн KB. Signature шалгахын тулд body-г бүтнээр нь уншдаг тул
-# хэмжээг хязгаарлана.
-MAX_WEBHOOK_BYTES = 256 * 1024
+OrderQuery = Annotated[str, Query(min_length=4, max_length=20, pattern=r"^[A-Za-z0-9\-]+$")]
 
 
-async def _read_limited(request: Request) -> bytes:
-    body = bytearray()
-    async for chunk in request.stream():
-        body.extend(chunk)
-        if len(body) > MAX_WEBHOOK_BYTES:
-            raise ProblemError(413, "Webhook body too large")
-    return bytes(body)
-
-
-@router.post(
-    "/stripe",
-    summary="Stripe webhook (payment_intent.succeeded / payment_failed / canceled)",
+@router.api_route(
+    "/qpay",
+    methods=["GET", "POST"],
+    summary="QPay payment notification (callback_url)",
     description=(
-        "Server-to-server: authenticated by the `Stripe-Signature` header, not by a session. "
-        "Idempotent by event id, so redeliveries are acknowledged and ignored."
+        "Server-to-server, no session. QPay calls this after a payment; the notification is not "
+        "signed, so it is only a trigger: the payment is always confirmed with QPay's "
+        "`payment/check` before the order changes. Repeated notifications are harmless."
     ),
-    responses={
-        400: {"model": ProblemDetail, "description": "Bad or missing signature"},
-        503: {"model": ProblemDetail, "description": "Payments not configured"},
-    },
+    dependencies=[Depends(rate_limit("payment_check"))],
+    responses={503: {"model": ProblemDetail, "description": "Payment check failed, retry later"}},
 )
-async def stripe_webhook(
-    request: Request,
-    service: WebhookServiceDep,
-    stripe_signature: str | None = Header(default=None, alias="Stripe-Signature"),
-) -> dict[str, bool]:
-    # Parse хийсэн model биш raw bytes: signature нь Stripe-ийн илгээсэн яг bytes дээр бодогддог.
-    await service.handle(await _read_limited(request), stripe_signature)
+async def qpay_callback(order: OrderQuery, service: WebhookServiceDep) -> dict[str, bool]:
+    await service.payment_callback(order)
     return {"received": True}

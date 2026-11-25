@@ -1,7 +1,6 @@
-"""Хувцасны байршил тогтоох, zero-shot аргаар category таамаглах.
+"""Zero-shot аргаар зургийн category-г таамаглах (embedding-ийг category нэртэй харьцуулна).
 
-Хоёулаа жижиг interface-ийн ард байгаа: дараа нь detector (жишээ нь YOLO) хэд хэдэн хувцасны
-хэсэг буцааж, тус бүрийг тусад нь embed, classify хийж болно. Одоогоор "хэсэг" нь бүтэн зураг.
+Хувцасны хэсгийг олох нь `ml/localizer.py`-д байна; ангилагч нь тэр хэсгийн embedding-ийг авна.
 """
 
 import asyncio
@@ -11,7 +10,6 @@ from typing import Protocol
 
 import numpy as np
 from numpy.typing import NDArray
-from PIL import Image
 
 from angel.ml.embeddings import EmbeddingService
 
@@ -31,19 +29,6 @@ class CategoryLabel:
 class CategoryPrediction:
     label: CategoryLabel
     score: float  # бүх label дээрх softmax магадлал, [0, 1]
-
-
-class GarmentLocalizer(Protocol):
-    def locate(self, image: Image.Image) -> list[Image.Image]:
-        """Хайх хувцасны хэсгүүд. Хэзээ ч хоосон биш."""
-        ...
-
-
-class WholeImageLocalizer:
-    """Detection хийхгүй: бүтэн зургийг хувцас гэж үзнэ."""
-
-    def locate(self, image: Image.Image) -> list[Image.Image]:
-        return [image]
 
 
 class CategoryClassifier(Protocol):

@@ -8,8 +8,11 @@ import hashlib
 import math
 import random
 
-CURRENCY = "USD"
+CURRENCY = "MNT"
 DEFAULT_SEED = 20240607
+# Суурь үнийг доллароор бодоод төгрөгт шилжүүлэх жишиг ханш (зөвхөн үнэ үүсгэхэд; дэлгүүр
+# төгрөгөөр л ажиллана). `…_usd_to_mnt` migration ижил томьёог ашигласан.
+TOGROG_PER_DOLLAR = 3.5  # мянган төгрөг
 
 # Ердийн үнэ (бүхэл доллар). Хамгийн тодорхой таарсныг эхэлж авна: article type, sub, master.
 _BY_ARTICLE_TYPE = {
@@ -49,13 +52,15 @@ def generate_price_and_stock(
     master_category: str,
     seed: int = DEFAULT_SEED,
 ) -> tuple[int, int]:
-    """`(price_cents, stock_quantity)` буцаана. Үнэ .99-өөр төгсөнө; бүтээгдэхүүний ~8% дууссан."""
+    """`(price_cents, stock_quantity)` буцаана. Үнэ бага нэгжээр (төгрөг x 100) ба `…900 ₮`-өөр
+    төгсөнө (жишээ нь 84,900 ₮); бүтээгдэхүүний ~8% дууссан."""
     digest = hashlib.sha256(f"{seed}:{source_id}".encode()).digest()
     rng = random.Random(int.from_bytes(digest[:8], "big"))  # noqa: S311 - not security related
     base = base_price_dollars(article_type, sub_category, master_category)
     factor = min(3.0, max(0.4, math.exp(rng.gauss(0.0, 0.35))))
     dollars = max(5, round(base * factor))
-    price_cents = dollars * 100 - 1
+    thousands = max(10, int(dollars * TOGROG_PER_DOLLAR + 0.5))
+    price_cents = (thousands * 1000 - 100) * 100
     if rng.random() < OUT_OF_STOCK_RATE:
         return price_cents, 0
     return price_cents, min(MAX_STOCK, 1 + int(rng.expovariate(1 / 25)))

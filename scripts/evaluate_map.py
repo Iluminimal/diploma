@@ -33,14 +33,18 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from angel.core.config import get_settings
 from angel.db.engine import create_engine
-from angel.ml import metrics
+from angel.ml.benchmark.retrieval import (
+    RELEVANCE,
+    build_codes,
+    exact_neighbours,
+    random_neighbours,
+    score,
+)
 from angel.ml.evaluation import make_upload
 from angel.ml.fashion_clip import FashionClipEmbedder, select_device
 from angel.ml.preprocess import load_image
 from angel.models import Product
 from angel.repositories.catalog.products import DEFAULT_EF_SEARCH, ProductRepository
-
-LEVELS = ("category", "colour", "strict")
 
 
 class Catalogue:
@@ -53,11 +57,7 @@ class Catalogue:
         article = [r.article_type for r in rows]
         colour = [r.base_colour for r in rows]
         gender = [r.gender for r in rows]
-        self.codes = {
-            "category": metrics.encode_labels(article),
-            "colour": metrics.encode_labels(article, colour),
-            "strict": metrics.encode_labels(article, colour, gender),
-        }
+        self.codes = build_codes(article, colour, gender)
         self.row_of_id = {int(i): row for row, i in enumerate(self.ids)}
 
 
@@ -76,31 +76,6 @@ async def load_catalogue(engine: Any) -> Catalogue:
             )
         ).all()
     return Catalogue(rows)
-
-
-def exact_neighbours(
-    catalogue: Catalogue, queries: NDArray[np.int64], k: int, batch: int = 1000
-) -> NDArray[np.int64]:
-    """Query мөр бүрт хамгийн ойр k бүтээгдэхүүний мөр (cosine), өөрийг нь оруулахгүй."""
-    ranked = np.empty((len(queries), k), dtype=np.int64)
-    for start in range(0, len(queries), batch):
-        rows = queries[start : start + batch]
-        similarity = catalogue.embeddings[rows] @ catalogue.embeddings.T
-        similarity[np.arange(len(rows)), rows] = -np.inf
-        top = np.argpartition(-similarity, k, axis=1)[:, :k]
-        order = np.argsort(-np.take_along_axis(similarity, top, axis=1), axis=1)
-        ranked[start : start + batch] = np.take_along_axis(top, order, axis=1)
-    return ranked
-
-
-def random_neighbours(
-    catalogue: Catalogue, queries: NDArray[np.int64], k: int, seed: int
-) -> NDArray[np.int64]:
-    """Baseline: санамсаргүй сонгосон k бүтээгдэхүүн (query-г хэзээ ч оруулахгүй)."""
-    rng = np.random.default_rng(seed)
-    size = len(catalogue.ids)
-    draws = rng.integers(0, size - 1, size=(len(queries), k))
-    return np.where(draws >= queries[:, None], draws + 1, draws)
 
 
 async def hnsw_neighbours(
@@ -140,34 +115,6 @@ async def hnsw_neighbours(
     print()
     await engine.dispose()
     return ranked
-
-
-def score(
-    catalogue: Catalogue, queries: NDArray[np.int64], ranked: NDArray[np.int64], ks: list[int]
-) -> dict[str, dict[str, dict[str, float | int]]]:
-    """Relevance түвшин бүрийн, K бүрийн бүх metric."""
-    results: dict[str, dict[str, dict[str, float | int]]] = {}
-    for level in LEVELS:
-        codes = catalogue.codes[level]
-        total = metrics.relevant_counts(codes)[queries]
-        relevance = metrics.relevance_at_ranks(codes, queries, ranked)
-        per_k: dict[str, dict[str, float | int]] = {}
-        for k in ks:
-            average, skipped = metrics.mean_valid(metrics.average_precision(relevance, total, k))
-            per_k[str(k)] = {
-                "mAP": average,
-                "mAP_retrieved_norm": metrics.mean_valid(
-                    metrics.average_precision(relevance, total, k, normalise="retrieved")
-                )[0],
-                "P": metrics.mean_valid(metrics.precision_at_k(relevance, total, k))[0],
-                "recall": metrics.mean_valid(metrics.recall_at_k(relevance, total, k))[0],
-                "hit_rate": metrics.mean_valid(metrics.hit_rate_at_k(relevance, total, k))[0],
-                "nDCG": metrics.mean_valid(metrics.ndcg_at_k(relevance, total, k))[0],
-                "queries_scored": int(len(queries) - skipped),
-                "queries_skipped": skipped,
-            }
-        results[level] = per_k
-    return results
 
 
 def print_table(title: str, results: dict[str, dict[str, dict[str, float | int]]]) -> None:
@@ -215,12 +162,12 @@ async def main_async(args: argparse.Namespace) -> int:
     print(f"mode={args.mode}  queries={len(queries)}  seed={args.seed}  K up to {args.k}")
 
     if args.mode == "stored":
-        ranked = exact_neighbours(catalogue, queries, args.k)
+        ranked = exact_neighbours(catalogue.embeddings, queries, args.k)
     else:
         ranked = await hnsw_neighbours(catalogue, args, queries)
-    results = score(catalogue, queries, ranked, ks)
+    results = score(catalogue.codes, queries, ranked, ks)
     baseline = score(
-        catalogue, queries, random_neighbours(catalogue, queries, args.k, args.seed), ks
+        catalogue.codes, queries, random_neighbours(size, queries, args.k, args.seed), ks
     )
 
     print_table("FashionCLIP + pgvector", results)
@@ -233,11 +180,7 @@ async def main_async(args: argparse.Namespace) -> int:
         "catalogue_size": size,
         "seed": args.seed,
         "ks": ks,
-        "relevance": {
-            "category": "same article type",
-            "colour": "same article type and base colour",
-            "strict": "same article type, base colour and gender",
-        },
+        "relevance": RELEVANCE,
         "map_normalisation": (
             "sum of P@i * rel_i over the top K, divided by "
             "min(K, relevant products in the catalogue)"

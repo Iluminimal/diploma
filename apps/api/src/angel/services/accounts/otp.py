@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from angel.core.config import Settings
 from angel.core.errors import (
+    EMAIL_UNAVAILABLE_TYPE,
     INVALID_DESTINATION_TYPE,
     OTP_EXPIRED_TYPE,
     OTP_INVALID_TYPE,
@@ -26,7 +27,7 @@ from angel.core.errors import (
     ProblemError,
 )
 from angel.core.logging import get_logger
-from angel.core.mail import Email, Mailer
+from angel.core.mail import Email, MailDeliveryError, Mailer
 from angel.core.phone import InvalidPhoneError, normalize_phone
 from angel.core.rate_limit import RATE_LIMITED_TYPE
 from angel.core.sms import Sms, SmsDeliveryError, SmsSender
@@ -41,12 +42,12 @@ OtpPurpose = Literal[
 _EMAIL = TypeAdapter(EmailStr)
 
 _SUBJECTS: dict[str, str] = {
-    "login": "Your Angel sign-in code",
-    "verify_email": "Confirm your email for Angel",
-    "verify_phone": "Confirm your phone for Angel",
-    "change_email": "Confirm your new email for Angel",
-    "change_phone": "Confirm your new phone for Angel",
-    "reset_password": "Reset your Angel password",
+    "login": "Таны Angel нэвтрэх код",
+    "verify_email": "Angel-д имэйлээ баталгаажуулна уу",
+    "verify_phone": "Angel-д утсаа баталгаажуулна уу",
+    "change_email": "Angel-д шинэ имэйлээ баталгаажуулна уу",
+    "change_phone": "Angel-д шинэ утсаа баталгаажуулна уу",
+    "reset_password": "Angel нууц үгээ сэргээх",
 }
 
 
@@ -65,8 +66,8 @@ def normalize_destination(raw: str, default_region: str) -> str:
     except (ValidationError, InvalidPhoneError):
         raise ProblemError(
             HTTPStatus.UNPROCESSABLE_ENTITY,
-            "Not a valid phone number or email",
-            "Enter a valid phone number or email address.",
+            "Утасны дугаар эсвэл имэйл буруу байна",
+            "Зөв утасны дугаар эсвэл имэйл хаяг оруулна уу.",
             type_=INVALID_DESTINATION_TYPE,
         ) from None
 
@@ -77,8 +78,8 @@ def normalize_phone_number(raw: str, default_region: str) -> str:
     except InvalidPhoneError:
         raise ProblemError(
             HTTPStatus.UNPROCESSABLE_ENTITY,
-            "Not a valid phone number",
-            "Enter a valid phone number.",
+            "Утасны дугаар буруу байна",
+            "Зөв утасны дугаар оруулна уу.",
             type_=INVALID_DESTINATION_TYPE,
         ) from None
 
@@ -89,8 +90,8 @@ def normalize_email(raw: str) -> str:
     except ValidationError:
         raise ProblemError(
             HTTPStatus.UNPROCESSABLE_ENTITY,
-            "Not a valid email",
-            "Enter a valid email address.",
+            "Имэйл буруу байна",
+            "Зөв имэйл хаяг оруулна уу.",
             type_=INVALID_DESTINATION_TYPE,
         ) from None
 
@@ -98,8 +99,8 @@ def normalize_email(raw: str) -> str:
 def _invalid() -> ProblemError:
     return ProblemError(
         HTTPStatus.BAD_REQUEST,
-        "That code is not right",
-        "Check the code and try again, or ask for a new one.",
+        "Код буруу байна",
+        "Кодоо шалгаад дахин оролдоно уу, эсвэл шинэ код авна уу.",
         type_=OTP_INVALID_TYPE,
     )
 
@@ -144,7 +145,9 @@ class OtpService:
                     raise _too_soon(wait)
             recent = await self._otps.count_since(destination, now - timedelta(hours=1))
             if recent >= self._settings.otp_max_sends_per_hour:
-                raise _too_soon(3600, "Too many codes were sent to this address. Try again later.")
+                raise _too_soon(
+                    3600, "Энэ хаяг руу хэт олон код илгээсэн байна. Дараа дахин оролдоно уу."
+                )
             await self._otps.consume_open(purpose, destination, now)
             await self._otps.add(
                 purpose=purpose,
@@ -177,8 +180,8 @@ class OtpService:
                 row.consumed_at = now
                 failure = ProblemError(
                     HTTPStatus.BAD_REQUEST,
-                    "That code has expired",
-                    "Ask for a new code.",
+                    "Кодын хугацаа дууссан",
+                    "Шинэ код авна уу.",
                     type_=OTP_EXPIRED_TYPE,
                 )
             elif user_id is not None and row.user_id != user_id:
@@ -208,34 +211,42 @@ class OtpService:
     async def _deliver(self, purpose: OtpPurpose, destination: str, code: str) -> None:
         minutes = max(1, self._settings.otp_ttl_seconds // 60)
         if is_phone(destination):
-            body = f"{code} is your Angel code. It expires in {minutes} minutes. Don't share it."
+            body = f"{code} - Angel баталгаажуулах код. {minutes} минут хүчинтэй. Бусдад бүү өг."
             try:
                 await self._sms.send(Sms(to=destination, body=body))
             except SmsDeliveryError:
                 raise ProblemError(
                     HTTPStatus.SERVICE_UNAVAILABLE,
-                    "We couldn't send the text message",
-                    "Try again in a moment.",
+                    "Мессеж илгээж чадсангүй",
+                    "Хэсэг хүлээгээд дахин оролдоно уу.",
                     type_=SMS_UNAVAILABLE_TYPE,
                 ) from None
             return
-        await self._mailer.send(
-            Email(
-                to=destination,
-                subject=_SUBJECTS[purpose],
-                body=(
-                    f"Your code is {code}. It expires in {minutes} minutes.\n"
-                    "If you didn't ask for it, you can ignore this email."
-                ),
+        try:
+            await self._mailer.send(
+                Email(
+                    to=destination,
+                    subject=_SUBJECTS[purpose],
+                    body=(
+                        f"Таны код: {code}. {minutes} минут хүчинтэй.\n"
+                        "Хэрэв та код хүсээгүй бол энэ имэйлийг үл тооно уу."
+                    ),
+                )
             )
-        )
+        except MailDeliveryError:
+            raise ProblemError(
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                "Имэйл илгээж чадсангүй",
+                "Хэсэг хүлээгээд дахин оролдоно уу.",
+                type_=EMAIL_UNAVAILABLE_TYPE,
+            ) from None
 
 
 def _too_soon(seconds: int, detail: str | None = None) -> ProblemError:
     return ProblemError(
         HTTPStatus.TOO_MANY_REQUESTS,
-        "Please wait before asking for another code",
-        detail or f"You can ask for a new code in {seconds} s.",
+        "Шинэ код авахаас өмнө хүлээнэ үү",
+        detail or f"{seconds} секундийн дараа шинэ код авч болно.",
         type_=RATE_LIMITED_TYPE,
         headers={"Retry-After": str(seconds)},
     )
@@ -244,7 +255,7 @@ def _too_soon(seconds: int, detail: str | None = None) -> ProblemError:
 def _too_many_attempts() -> ProblemError:
     return ProblemError(
         HTTPStatus.TOO_MANY_REQUESTS,
-        "Too many wrong codes",
-        "Ask for a new code.",
+        "Олон удаа буруу код оруулсан",
+        "Шинэ код авна уу.",
         type_=OTP_TOO_MANY_ATTEMPTS_TYPE,
     )

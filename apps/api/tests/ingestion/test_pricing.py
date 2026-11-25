@@ -28,10 +28,13 @@ def test_values_do_not_depend_on_generation_order() -> None:
     assert forward == backward
 
 
-def test_prices_are_realistic_integers_ending_in_99() -> None:
+def test_prices_are_whole_togrog_ending_in_900() -> None:
     prices = [_generate(i)[0] for i in range(2000)]
-    assert all(isinstance(p, int) and p % 100 == 99 and 499 <= p <= 25_000 for p in prices)
-    assert 1500 < statistics.median(prices) < 3500  # Tshirts-ийн суурь үнэ $25
+    # Бага нэгжээр (төгрөг x 100): 84,900 ₮ = 8_490_000.
+    assert all(
+        isinstance(p, int) and p % 100_000 == 90_000 and 990_000 <= p <= 126_000_000 for p in prices
+    )
+    assert 5_000_000 < statistics.median(prices) < 12_500_000  # Tshirts-ийн суурь ≈ 88,000 ₮
 
 
 def test_prices_follow_the_category() -> None:

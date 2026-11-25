@@ -9,10 +9,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from angel.core.config import Settings
 from angel.core.logging import get_logger
+from angel.core.mail import Email, Mailer
 from angel.payments import PaymentGateway, PaymentProviderError
 from angel.repositories.commerce.carts import CartRepository
 from angel.repositories.commerce.orders import OrderRepository
 from angel.services.commerce.order_lifecycle import release_order
+from angel.services.commerce.order_text import expired_body
 
 log = get_logger(__name__)
 
@@ -25,7 +27,9 @@ class OrderExpirer:
         sessions: async_sessionmaker[AsyncSession],
         gateway: PaymentGateway | None,
         settings: Settings,
+        mailer: Mailer | None = None,
     ) -> None:
+        self._mailer = mailer
         self._sessions = sessions
         self._gateway = gateway
         self._settings = settings
@@ -63,8 +67,19 @@ class OrderExpirer:
             if order is None:
                 return False
             released = await release_order(session, order, "expired")
+            email = (
+                Email(
+                    to=order.contact_email,
+                    subject=f"{order.number} дугаартай захиалгын хугацаа дууслаа",
+                    body=expired_body(order),
+                )
+                if released
+                else None
+            )
         if released:
             log.info("order_expired", order_id=order_id)
+            if email is not None and self._mailer is not None:
+                await self._mailer.send(email)
         return released
 
     async def run_forever(self) -> None:

@@ -43,6 +43,7 @@ from angel.schemas.accounts.auth import (
     RegisterRequest,
     RemoveContactRequest,
     ResetPasswordRequest,
+    SecurityEventOut,
     SessionOut,
     UpdateProfileRequest,
     UserOut,
@@ -344,6 +345,17 @@ async def list_sessions(
     return await service.sessions(user_id, refresh_token)
 
 
+@router.get(
+    "/security-events",
+    summary="Recent security events on this account (sign-ins, password changes, devices)",
+    responses=_UNAUTHORIZED,
+)
+async def security_events(
+    user_id: CurrentUserDep, service: AccountServiceDep
+) -> list[SecurityEventOut]:
+    return await service.security_events(user_id)
+
+
 @router.post(
     "/sessions/revoke-others",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -456,7 +468,7 @@ async def google_start(
     login_hint: Annotated[str | None, Query(max_length=320, include_in_schema=False)] = None,
 ) -> RedirectResponse:
     if service is None:
-        raise ProblemError(404, "Not available", "Sign in with Google is not configured.")
+        raise ProblemError(404, "Боломжгүй", "Google-ээр нэвтрэх тохируулагдаагүй байна.")
     start = service.begin(next, login_hint)
     response = _redirect(start.url)
     set_oauth_cookie(response, settings, start.cookie_value, start.cookie_max_age)

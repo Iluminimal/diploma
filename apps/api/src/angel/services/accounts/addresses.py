@@ -3,6 +3,7 @@ from http import HTTPStatus
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from angel.core.errors import ADDRESS_LIMIT_TYPE, ADDRESS_NOT_FOUND_TYPE, ProblemError
+from angel.core.mongolia import check_region_and_district
 from angel.models import Address
 from angel.repositories.accounts.users import AddressRepository
 from angel.schemas.accounts.address import AddressIn, AddressList, AddressOut, AddressUpdate
@@ -10,11 +11,11 @@ from angel.schemas.accounts.address import AddressIn, AddressList, AddressOut, A
 MAX_ADDRESSES = 10
 # Хэзээ ч хоосон байж болохгүй баганууд (PATCH-ийн null-аар цэвэрлэж болох нэмэлт баганаас
 # ялгаатай).
-_REQUIRED = {"full_name", "line1", "city", "postal_code", "country"}
+_REQUIRED = {"full_name", "line1", "region", "city", "country", "phone"}
 
 
 def _not_found() -> ProblemError:
-    return ProblemError(HTTPStatus.NOT_FOUND, "Address not found", type_=ADDRESS_NOT_FOUND_TYPE)
+    return ProblemError(HTTPStatus.NOT_FOUND, "Хаяг олдсонгүй", type_=ADDRESS_NOT_FOUND_TYPE)
 
 
 class AddressService:
@@ -33,8 +34,8 @@ class AddressService:
             if existing >= MAX_ADDRESSES:
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
-                    "Address book is full",
-                    f"You can save up to {MAX_ADDRESSES} addresses.",
+                    "Хаягийн жагсаалт дүүрсэн",
+                    f"Хамгийн ихдээ {MAX_ADDRESSES} хаяг хадгалах боломжтой.",
                     type_=ADDRESS_LIMIT_TYPE,
                 )
             # Эхний хаяг нь default болно; default хүсвэл өмнөхийг нь орлоно.
@@ -51,18 +52,30 @@ class AddressService:
         if invalid:
             raise ProblemError(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
-                "Required address fields cannot be empty",
+                "Хаягийн заавал бөглөх талбар хоосон байж болохгүй",
                 ", ".join(sorted(invalid)),
             )
         async with self._session.begin():
             address = await self._addresses.get(user_id, address_id)
             if address is None:
                 raise _not_found()
+            # Аймаг, дүүргийн хослолыг нэгтгэсэн хаяг дээр шалгана (зөвхөн нэгийг нь өөрчилсөн ч).
+            try:
+                check_region_and_district(
+                    changes.get("region") or address.region or "",
+                    changes.get("city") or address.city,
+                )
+            except ValueError as error:
+                raise ProblemError(
+                    HTTPStatus.UNPROCESSABLE_ENTITY, "Хаяг буруу байна", str(error)
+                ) from error
             if changes.get("is_default"):
                 await self._addresses.clear_default(user_id)
             for key, value in changes.items():
                 if key == "is_default" and value is None:
                     continue
+                if key == "postal_code" and value is None:
+                    value = ""
                 setattr(address, key, value)
             await self._session.flush()
             return AddressOut.model_validate(address)

@@ -84,19 +84,20 @@ class OtpLoginService:
             elif not user.is_active:
                 raise ProblemError(
                     HTTPStatus.FORBIDDEN,
-                    "This account is disabled",
-                    "Contact us if you think this is a mistake.",
+                    "Энэ бүртгэл идэвхгүй болсон",
+                    "Алдаа гэж үзвэл бидэнтэй холбогдоно уу.",
                     type_=FORBIDDEN_TYPE,
                 )
             else:
                 await self._stamp_verified(user, phone=phone, now=now)
-            issued = await self._auth.start_session(user, guest_cart_token)
+            issued = await self._auth.start_session(user, guest_cart_token, method="otp")
+        await self._auth.deliver_notices()
         if created and not phone:
             await self._mailer.send(
                 Email(
                     to=destination,
-                    subject="Welcome to Angel",
-                    body="Your account is ready.",
+                    subject="Angel-д тавтай морил",
+                    body="Таны бүртгэл бэлэн боллоо.",
                 )
             )
         return replace(issued, is_new_user=created)

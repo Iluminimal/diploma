@@ -24,9 +24,11 @@ from angel.core.errors import (
 )
 from angel.core.logging import get_logger
 from angel.core.mail import Email, Mailer
+from angel.core.money import format_minor
 from angel.models import Order, User
 from angel.payments import PaymentGateway
 from angel.payments.gateway import PaymentProviderError
+from angel.repositories.admin.audit import AuditRepository
 from angel.repositories.catalog.products import ProductRepository
 from angel.repositories.commerce.orders import OrderRepository
 from angel.schemas.admin.orders import (
@@ -44,7 +46,7 @@ log = get_logger(__name__)
 
 
 def _money(order: Order) -> str:
-    return f"{order.total_cents / 100:.2f} {order.currency}"
+    return format_minor(order.total_cents, order.currency)
 
 
 class OrderFulfillmentService:
@@ -60,6 +62,7 @@ class OrderFulfillmentService:
         self._mailer = mailer
         self._storage = storage
         self._orders = OrderRepository(session)
+        self._audit = AuditRepository(session)
 
     # --- үйлдлүүд ---
 
@@ -81,11 +84,19 @@ class OrderFulfillmentService:
                 },
                 admin.id,
             )
+            self._audit.record(
+                admin,
+                "order.ship",
+                "order",
+                number,
+                {"carrier": request.carrier, "tracking_number": request.tracking_number},
+            )
             email = Email(
                 to=order.contact_email,
-                subject=f"Order {order.number} is on its way",
-                body=f"Good news: order {order.number} has shipped with {request.carrier}.\n"
-                f"Tracking number: {request.tracking_number}",
+                subject=f"{order.number} дугаартай захиалга замдаа гарлаа",
+                body=f"Баярт мэдээ: {order.number} дугаартай захиалгыг "
+                f"{request.carrier}-ээр илгээлээ.\n"
+                f"Хяналтын дугаар: {request.tracking_number}",
             )
         log.info("order_shipped", order=number, admin_id=admin.id)
         await self._mailer.send(email)
@@ -98,10 +109,12 @@ class OrderFulfillmentService:
             order.status = "delivered"
             order.delivered_at = datetime.now(UTC)
             self._orders.add_event(order.id, "delivered", _by(admin), admin.id)
+            self._audit.record(admin, "order.deliver", "order", number)
             email = Email(
                 to=order.contact_email,
-                subject=f"Order {order.number} was delivered",
-                body=f"Order {order.number} has been delivered. We hope you love it!",
+                subject=f"{order.number} дугаартай захиалга хүргэгдлээ",
+                body=f"{order.number} дугаартай захиалга хүргэгдлээ. "
+                "Танд таалагдана гэж найдаж байна!",
             )
         log.info("order_delivered", order=number, admin_id=admin.id)
         await self._mailer.send(email)
@@ -122,8 +135,8 @@ class OrderFulfillmentService:
             if outcome == "succeeded":
                 raise ProblemError(
                     HTTPStatus.CONFLICT,
-                    "The order was just paid",
-                    "The payment went through a moment ago. Refresh the order to see it.",
+                    "Захиалга дөнгөж төлөгдлөө",
+                    "Төлбөр хэсэг хугацааны өмнө хийгдсэн. Захиалгаа шинэчилж харна уу.",
                     type_=INVALID_TRANSITION_TYPE,
                 )
         async with self._session.begin():
@@ -133,10 +146,14 @@ class OrderFulfillmentService:
                 raise _conflict(order, "cancel")
             if request.reason:
                 await self._annotate_last_event(order, request.reason)
+            self._audit.record(
+                admin, "order.cancel", "order", number, {"reason": request.reason or None}
+            )
             email = Email(
                 to=order.contact_email,
-                subject=f"Order {order.number} was cancelled",
-                body=f"Order {order.number} has been cancelled and you were not charged.",
+                subject=f"{order.number} дугаартай захиалга цуцлагдлаа",
+                body=f"{order.number} дугаартай захиалга цуцлагдсан бөгөөд "
+                "танаас мөнгө авагдаагүй.",
             )
         log.info("order_cancelled_by_admin", order=number, admin_id=admin.id)
         await self._mailer.send(email)
@@ -148,8 +165,8 @@ class OrderFulfillmentService:
         if self._gateway is None:
             raise ProblemError(
                 HTTPStatus.SERVICE_UNAVAILABLE,
-                "Payments are not available",
-                "No payment provider is configured, so nothing can be refunded.",
+                "Төлбөр боломжгүй байна",
+                "Төлбөрийн үйлчилгээ тохируулагдаагүй тул буцаан олгох боломжгүй.",
                 type_=PAYMENTS_UNAVAILABLE_TYPE,
             )
         async with self._session.begin():
@@ -166,7 +183,7 @@ class OrderFulfillmentService:
             except PaymentProviderError as exc:
                 raise _provider_error(exc) from exc
             payment.status = "refunded"
-            payment.client_secret = None
+            payment.provider_data = None
             payment.last_error = "admin_refund"
             if request.restock:
                 await self._restock(order)
@@ -183,11 +200,22 @@ class OrderFulfillmentService:
                 },
                 admin.id,
             )
+            self._audit.record(
+                admin,
+                "order.refund",
+                "order",
+                number,
+                {
+                    "reason": request.reason,
+                    "restock": request.restock,
+                    "amount_cents": payment.amount_cents,
+                },
+            )
             email = Email(
                 to=order.contact_email,
-                subject=f"Order {order.number} was refunded",
-                body=f"We refunded {_money(order)} for order {order.number}. "
-                "It can take a few days to appear on your statement.",
+                subject=f"{order.number} дугаартай захиалгын төлбөр буцаагдлаа",
+                body=f"{order.number} дугаартай захиалгын {_money(order)}-ийг буцаан олголоо. "
+                "Таны дансны хуулгад харагдахад хэдэн хоног шаардагдаж болно.",
             )
         log.info("order_refunded", order=number, admin_id=admin.id, restock=request.restock)
         await self._mailer.send(email)
@@ -200,6 +228,7 @@ class OrderFulfillmentService:
             if order_id is None:
                 raise _not_found(number)
             self._orders.add_event(order_id, "note", {"text": request.text, **_by(admin)}, admin.id)
+            self._audit.record(admin, "order.note", "order", number)
         return await self._read(number)
 
     # --- туслах функцууд ---
@@ -252,17 +281,35 @@ def _by(admin: User) -> dict[str, object]:
 def _not_found(number: str) -> ProblemError:
     return ProblemError(
         HTTPStatus.NOT_FOUND,
-        "Order not found",
-        f"There is no order {number}.",
+        "Захиалга олдсонгүй",
+        f"{number} дугаартай захиалга байхгүй байна.",
         type_=ORDER_NOT_FOUND_TYPE,
     )
+
+
+# Үйлдэл, төлөвийн монгол нэр (алдааны мэссэжид): `_require`-ийн `action` англи түлхүүр хэвээр.
+_ACTIONS = {
+    "ship": "илгээх",
+    "mark as delivered": "хүргэгдсэн гэж тэмдэглэх",
+    "cancel": "цуцлах",
+    "refund": "буцаан олгох",
+}
+_STATUSES = {
+    "pending": "хүлээгдэж буй",
+    "paid": "төлөгдсөн",
+    "shipped": "илгээсэн",
+    "delivered": "хүргэгдсэн",
+    "cancelled": "цуцлагдсан",
+    "refunded": "буцаагдсан",
+}
 
 
 def _conflict(order: Order, action: str) -> ProblemError:
     return ProblemError(
         HTTPStatus.CONFLICT,
-        f"Cannot {action} this order",
-        f"Order {order.number} is {order.status}, which this action does not apply to.",
+        f"Захиалгыг {_ACTIONS.get(action, action)} боломжгүй",
+        f'{order.number} дугаартай захиалгын төлөв "{_STATUSES.get(order.status, order.status)}" '
+        "тул энэ үйлдэл хамаарахгүй.",
         type_=INVALID_TRANSITION_TYPE,
     )
 
@@ -271,7 +318,7 @@ def _provider_error(exc: Exception) -> ProblemError:
     log.warning("order_action_provider_error", error=str(exc))
     return ProblemError(
         HTTPStatus.BAD_GATEWAY,
-        "The payment provider did not answer",
-        "Nothing was changed. Try again in a moment.",
+        "Төлбөрийн үйлчилгээ хариу өгсөнгүй",
+        "Юу ч өөрчлөгдөөгүй. Хэсэг хүлээгээд дахин оролдоно уу.",
         type_=PAYMENT_PROVIDER_TYPE,
     )

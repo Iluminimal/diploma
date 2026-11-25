@@ -2,6 +2,7 @@ import asyncio
 
 import pytest
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncEngine
 
 from tests.conftest import Api, ApiFactory
 from tests.support.catalogue import Entry
@@ -11,6 +12,7 @@ from tests.support.commerce import (
     another_client,
     register,
     set_product,
+    set_role,
     unique_email,
 )
 
@@ -40,7 +42,7 @@ async def test_empty_cart_for_a_new_visitor_and_no_cookie_is_handed_out(
             "lines": [],
             "item_count": 0,
             "subtotal_cents": 0,
-            "currency": "USD",
+            "currency": "MNT",
             "has_issues": False,
         }
         assert "set-cookie" not in response.headers
@@ -373,3 +375,38 @@ async def test_a_failed_login_leaves_the_guest_cart_alone(api_factory: ApiFactor
 
         assert failed.status_code == 401
         assert (await api.client.get(CART)).json()["item_count"] == 2
+
+
+async def test_an_administrator_cannot_change_the_cart(
+    api_factory: ApiFactory, db_engine: AsyncEngine
+) -> None:
+    async with api_factory() as api:
+        product = pick(api)
+        admin = await register(api.client)
+        await set_role(db_engine, admin.user_id, "admin")
+
+        added = await add_to_cart(api.client, product.product_id, token=admin.token)
+        cleared = await api.client.delete(CART, headers=admin.auth)
+        cart = await api.client.get(CART, headers=admin.auth)
+
+        assert added.status_code == 403
+        assert cleared.status_code == 403
+        assert cart.status_code == 200
+        assert cart.json()["item_count"] == 0
+
+
+async def test_a_customer_demoted_from_admin_can_shop_again(
+    api_factory: ApiFactory, db_engine: AsyncEngine
+) -> None:
+    async with api_factory() as api:
+        product = pick(api)
+        user = await register(api.client)
+        await set_role(db_engine, user.user_id, "admin")
+        assert (
+            await add_to_cart(api.client, product.product_id, token=user.token)
+        ).status_code == 403
+
+        await set_role(db_engine, user.user_id, "customer")
+
+        added = await add_to_cart(api.client, product.product_id, token=user.token)
+        assert added.status_code == 200

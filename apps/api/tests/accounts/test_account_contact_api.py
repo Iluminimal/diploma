@@ -1,7 +1,5 @@
 """Утас, имэйл нэмэх, солих, баталгаажуулах, устгах; нууц үгээ мартсан тохиолдол."""
 
-import re
-
 import pytest
 from httpx import AsyncClient, Response
 from sqlalchemy import text
@@ -27,9 +25,7 @@ LAST_METHOD = "urn:angel:problem:last-sign-in-method"
 
 
 def code_in(mailer: RecordingMailer) -> str:
-    match = re.search(r"code is (\d{6})", mailer.sent[-1].body)
-    assert match, mailer.sent[-1].body
-    return match.group(1)
+    return mailer.last_code()
 
 
 async def delete(shopper: Shopper, url: str, **body: object) -> Response:

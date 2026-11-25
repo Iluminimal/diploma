@@ -5,7 +5,7 @@ from http import HTTPStatus
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from angel.core.errors import CATEGORY_NOT_FOUND_TYPE, PRODUCT_NOT_FOUND_TYPE, ProblemError
-from angel.models import Category
+from angel.models import Category, Product
 from angel.repositories.catalog.categories import CategoryRepository
 from angel.repositories.catalog.products import ProductRepository, ProductSort, SearchFilters
 from angel.schemas.catalog.catalog import (
@@ -40,6 +40,43 @@ def build_category_tree(categories: list[Category]) -> list[CategoryNode]:
     return roots
 
 
+# Look-ийг гүйцээх дэд ангилал: юутай хамт өмсдөг вэ. Жагсаалтад байхгүй дэд ангилал (дотуур хувцас,
+# оймс, үнэртэн...) нь look үүсгэхгүй. Дарааллаар нь хамгийн тохиромжтойгоос.
+COMPLEMENTS: dict[str, tuple[str, ...]] = {
+    "Topwear": ("Bottomwear", "Shoes", "Bags", "Watches", "Belts"),
+    "Bottomwear": ("Topwear", "Shoes", "Belts", "Bags", "Watches"),
+    "Dress": ("Shoes", "Bags", "Jewellery", "Watches"),
+    "Saree": ("Jewellery", "Bags", "Sandal", "Watches"),
+    "Apparel Set": ("Shoes", "Bags", "Watches"),
+    "Shoes": ("Topwear", "Bottomwear", "Bags", "Watches"),
+    "Sandal": ("Topwear", "Bottomwear", "Bags"),
+    "Flip Flops": ("Topwear", "Bottomwear", "Bags"),
+    "Bags": ("Topwear", "Bottomwear", "Shoes", "Watches"),
+    "Watches": ("Topwear", "Bottomwear", "Shoes"),
+    "Belts": ("Topwear", "Bottomwear", "Shoes"),
+    "Jewellery": ("Dress", "Topwear", "Bags"),
+    "Eyewear": ("Topwear", "Bottomwear", "Shoes"),
+    "Wallets": ("Topwear", "Bottomwear", "Shoes"),
+}
+# Нэг дэд ангилалаас дээд тал нь ингэх бараа (look олон төрлөөс бүрдэнэ).
+PER_COMPLEMENT = 2
+
+
+def outfit_genders(gender: str) -> tuple[str, ...]:
+    """Look-д таарах хүйс: Unisex бүхэнд, бусад нь өөрийн хүйс ба Unisex."""
+    return ("Men", "Women", "Boys", "Girls", "Unisex") if gender == "Unisex" else (gender, "Unisex")
+
+
+def interleave(groups: list[list[Product]], limit: int) -> list[Product]:
+    """Бүлэг бүрээс ээлжлэн нэг нэгийг аваад `limit` хүртэл. Нэг ангилал look-ийг эзлэхгүй."""
+    out: list[Product] = []
+    for rank in range(max((len(g) for g in groups), default=0)):
+        for group in groups:
+            if rank < len(group) and len(out) < limit:
+                out.append(group[rank])
+    return out
+
+
 class CatalogService:
     def __init__(self, session: AsyncSession, storage: Storage, cache: SearchCache) -> None:
         self._session = session
@@ -51,28 +88,42 @@ class CatalogService:
         if sort == "relevance" and not query.q:
             raise ProblemError(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
-                "Invalid sort",
-                "Sorting by relevance needs a search term (q).",
+                "Эрэмбэлэлт буруу",
+                "Хамаарлаар эрэмбэлэхэд хайх үг (q) шаардлагатай.",
             )
         filters = await self._navigation_filters(query)
         if filters is None:
             return ProductPage(
                 items=[], total=0, page=query.page, page_size=query.page_size, pages=0
             )
+        offset = (query.page - 1) * query.page_size
+        fuzzy = False
         async with self._session.begin():
-            products, total = await ProductRepository(self._session).list_products(
+            repository = ProductRepository(self._session)
+            products, total = await repository.list_products(
                 filters=filters,
                 text_query=query.q,
                 sort=sort,
-                offset=(query.page - 1) * query.page_size,
+                offset=offset,
                 limit=query.page_size,
             )
+            if total == 0 and query.q:
+                # Яг таарах зүйл алга: үсгийн алдаатай бичсэн байж магадгүй.
+                products, total = await repository.list_products_fuzzy(
+                    filters=filters,
+                    text_query=query.q,
+                    sort=sort,
+                    offset=offset,
+                    limit=query.page_size,
+                )
+                fuzzy = total > 0
         return ProductPage(
             items=[to_product_out(p, self._storage) for p in products],
             total=total,
             page=query.page,
             page_size=query.page_size,
             pages=math.ceil(total / query.page_size),
+            fuzzy=fuzzy,
         )
 
     async def _navigation_filters(self, query: ProductListQuery) -> SearchFilters | None:
@@ -82,7 +133,7 @@ class CatalogService:
         if query.department is not None:
             department = DEPARTMENT_BY_SLUG.get(query.department)
             if department is None:
-                raise _category_not_found(f"There is no department {query.department!r}.")
+                raise _category_not_found(f"{query.department!r} гэсэн хэлтэс байхгүй байна.")
             genders = (
                 tuple(g for g in filters.genders if g in department.genders)
                 if filters.genders
@@ -95,7 +146,7 @@ class CatalogService:
             snapshot = await self.taxonomy()
             ids = snapshot.category_ids.get(query.category.strip("/"))
             if ids is None:
-                raise _category_not_found(f"There is no category {query.category!r}.")
+                raise _category_not_found(f"{query.category!r} гэсэн ангилал байхгүй байна.")
             filters = replace(filters, category_ids=tuple(ids))
         return filters
 
@@ -105,11 +156,36 @@ class CatalogService:
         if product is None:
             raise ProblemError(
                 HTTPStatus.NOT_FOUND,
-                "Product not found",
-                f"There is no product with id {product_id}.",
+                "Бараа олдсонгүй",
+                f"{product_id} дугаартай бараа байхгүй байна.",
                 type_=PRODUCT_NOT_FOUND_TYPE,
             )
         return to_product_out(product, self._storage)
+
+    async def complete_the_look(self, product_id: int, limit: int) -> list[ProductOut]:
+        """Энэ бараатай хамт өмсөх бараа: нэмэлт дэд ангилал бүрээс хамгийн их зарагдсан нь,
+        ангилал хооронд ээлжлэн. Нөөцгүй, идэвхгүй бараа, барааг өөрийг нь оруулахгүй."""
+        async with self._session.begin():
+            repository = ProductRepository(self._session)
+            product = await repository.get_by_id(product_id)
+            if product is None:
+                raise ProblemError(
+                    HTTPStatus.NOT_FOUND,
+                    "Бараа олдсонгүй",
+                    f"{product_id} дугаартай бараа байхгүй байна.",
+                    type_=PRODUCT_NOT_FOUND_TYPE,
+                )
+            groups: list[list[Product]] = []
+            for sub_category in COMPLEMENTS.get(product.sub_category, ()):
+                groups.append(
+                    await repository.complementary(
+                        sub_category=sub_category,
+                        genders=outfit_genders(product.gender),
+                        usage=product.usage,
+                        limit=PER_COMPLEMENT,
+                    )
+                )
+        return [to_product_out(p, self._storage) for p in interleave(groups, limit)]
 
     async def sitemap(self, query: SitemapQuery) -> SitemapPage:
         async with self._session.begin():
@@ -167,5 +243,5 @@ class CatalogService:
 
 def _category_not_found(detail: str) -> ProblemError:
     return ProblemError(
-        HTTPStatus.NOT_FOUND, "Category not found", detail, type_=CATEGORY_NOT_FOUND_TYPE
+        HTTPStatus.NOT_FOUND, "Ангилал олдсонгүй", detail, type_=CATEGORY_NOT_FOUND_TYPE
     )

@@ -2,6 +2,7 @@ import asyncio
 import uuid
 from datetime import UTC, datetime
 from http import HTTPStatus
+from typing import Literal, cast
 
 from sqlalchemy import delete
 from sqlalchemy.exc import IntegrityError
@@ -18,16 +19,26 @@ from angel.core.errors import (
     ProblemError,
 )
 from angel.core.logging import get_logger
+from angel.core.mail import Email
 from angel.core.security import hash_password, hash_token, verify_password
 from angel.models import Address, Cart, OAuthIdentity, User, WishlistItem
+from angel.models import security as events
+from angel.repositories.accounts.security_events import SecurityEventRepository
 from angel.repositories.accounts.users import RefreshTokenRepository, UserRepository
 from angel.schemas.accounts.auth import (
     ChangePasswordRequest,
     DeleteAccountRequest,
     DeviceSession,
+    SecurityEventOut,
+    SecurityEventType,
 )
-from angel.services.accounts.auth import AuthService, IssuedSession, UserView
-from angel.services.accounts.devices import describe_device
+from angel.services.accounts.auth import (
+    AuthService,
+    IssuedSession,
+    UserView,
+    ensure_strong_password,
+)
+from angel.services.accounts.devices import describe_device, mask_ip
 from angel.services.accounts.otp import (
     OtpService,
     normalize_email,
@@ -36,17 +47,22 @@ from angel.services.accounts.otp import (
 
 log = get_logger(__name__)
 
-DELETED_NAME = "Deleted user"
+DELETED_NAME = "Устгасан хэрэглэгч"
+# Монгол болохоос өмнө устгагдсан бүртгэлийн хадгалсан нэр: харуулахдаа DELETED_NAME болгоно.
+LEGACY_DELETED_NAME = "Deleted user"
 
 
 def _wrong_password() -> ProblemError:
     # 403, 401 биш: хэрэглэгч нэвтэрсэн байгаа, мөн web app 401-ийг session дууссан гэж ойлгодог.
     return ProblemError(
         HTTPStatus.FORBIDDEN,
-        "Incorrect password",
-        "The password you entered is not right.",
+        "Нууц үг буруу",
+        "Таны оруулсан нууц үг буруу байна.",
         type_=INVALID_CREDENTIALS_TYPE,
     )
+
+
+SECURITY_EVENTS_SHOWN = 30
 
 
 class AccountService:
@@ -62,6 +78,7 @@ class AccountService:
         self._settings = settings
         self._users = UserRepository(session)
         self._tokens = RefreshTokenRepository(session)
+        self._events = SecurityEventRepository(session)
 
     async def update_name(self, user_id: int, full_name: str) -> UserView:
         async with self._session.begin():
@@ -76,6 +93,7 @@ class AccountService:
         async with self._session.begin():
             user = await self._active_user(user_id)
         await self._check_password(user, request.current_password)
+        ensure_strong_password(request.new_password, email=user.email, full_name=user.full_name)
         new_hash = await asyncio.to_thread(hash_password, request.new_password)
         async with self._session.begin():
             user = await self._active_user(user_id)
@@ -83,7 +101,18 @@ class AccountService:
             self._session.add(user)
             await self._tokens.revoke_all_for_user(user.id, datetime.now(UTC))
             issued = await self._auth.issue_session(user)
-        await self._auth.clear_failures(user.identifier)
+            self._auth.record_event(user.id, events.PASSWORD_CHANGED)
+            if user.email:
+                self._auth.queue_notice(
+                    Email(
+                        to=user.email,
+                        subject="Таны нууц үг солигдлоо",
+                        body="Таны бүртгэлийн нууц үг солигдож, бусад бүх нэвтрэлт дууслаа. "
+                        "Хэрэв энэ та биш бол бидэнтэй яаралтай холбогдоно уу.",
+                    )
+                )
+        await self._auth.deliver_notices()
+        await self._auth.clear_failures(user.identifier, include_daily=True)
         log.info("password_changed", user_id=user_id, had_password=user.password_hash is not None)
         return issued
 
@@ -93,17 +122,18 @@ class AccountService:
         хэн байсныг мөн ингэж хэлэхээ больсон."""
         async with self._session.begin():
             user = await self._active_user(user_id)
-        if user.is_admin:
+        if user.is_staff:
             raise ProblemError(
                 HTTPStatus.FORBIDDEN,
-                "Administrator accounts cannot be deleted here",
+                "Ажилтны бүртгэлийг эндээс устгах боломжгүй",
                 type_=FORBIDDEN_TYPE,
             )
         if request.confirm != user.identifier:
             raise ProblemError(
                 HTTPStatus.UNPROCESSABLE_ENTITY,
-                "Confirmation does not match",
-                "Type the email address or phone number of this account to delete it.",
+                "Баталгаажуулалт таарахгүй байна",
+                "Бүртгэлийг устгахын тулд энэ бүртгэлийн имэйл хаяг эсвэл "
+                "утасны дугаарыг бичнэ үү.",
             )
         await self._check_password(user, request.password)
         async with self._session.begin():
@@ -142,6 +172,23 @@ class AccountService:
             for token, began in rows
         ]
 
+    async def security_events(self, user_id: int) -> list[SecurityEventOut]:
+        """Бүртгэлийн сүүлийн аюулгүй байдлын үйл явдлууд (30): эзэн өөрийнхөө бүртгэлд юу
+        болсныг харна. IP-ийн сүүлийн хэсгийг нууцлана."""
+        async with self._session.begin():
+            rows = await self._events.recent(user_id, SECURITY_EVENTS_SHOWN)
+        return [
+            SecurityEventOut(
+                id=row.id,
+                type=cast(SecurityEventType, row.type),
+                method=cast(Literal["password", "otp", "google"] | None, row.method),
+                device=describe_device(row.user_agent),
+                ip=mask_ip(row.ip),
+                created_at=row.created_at,
+            )
+            for row in rows
+        ]
+
     async def revoke_session(
         self, user_id: int, family_id: uuid.UUID, refresh_token: str | None
     ) -> bool:
@@ -149,8 +196,12 @@ class AccountService:
         async with self._session.begin():
             current = await self._current_family(user_id, refresh_token)
             ended = await self._tokens.revoke_family_of_user(user_id, family_id, datetime.now(UTC))
+            if ended:
+                self._auth.record_event(user_id, events.SESSIONS_REVOKED)
         if not ended:
-            raise ProblemError(HTTPStatus.NOT_FOUND, "Session not found", "That login is over.")
+            raise ProblemError(
+                HTTPStatus.NOT_FOUND, "Нэвтрэлт олдсонгүй", "Тэр нэвтрэлт дууссан байна."
+            )
         return family_id == current
 
     async def revoke_other_sessions(self, user_id: int, refresh_token: str | None) -> None:
@@ -160,12 +211,13 @@ class AccountService:
             if current is None:
                 raise ProblemError(
                     HTTPStatus.UNAUTHORIZED,
-                    "Not signed in",
-                    "Please sign in again.",
+                    "Нэвтрээгүй байна",
+                    "Дахин нэвтэрнэ үү.",
                     type_=UNAUTHENTICATED_TYPE,
                     headers={"WWW-Authenticate": "Bearer"},
                 )
             await self._tokens.revoke_others(user_id, current, datetime.now(UTC))
+            self._auth.record_event(user_id, events.SESSIONS_REVOKED)
 
     async def _current_family(self, user_id: int, refresh_token: str | None) -> uuid.UUID | None:
         if not refresh_token:
@@ -180,7 +232,7 @@ class AccountService:
         phone = normalize_phone_number(raw_phone, self._settings.default_phone_region)
         user = await self._checked_user(user_id, password)
         if user.phone == phone:
-            raise _already_yours("phone number")
+            raise _already_yours("утасны дугаар")
         async with self._session.begin():
             if await self._users.get_by_phone(phone) is not None:
                 raise _phone_taken()
@@ -199,6 +251,7 @@ class AccountService:
                 user.phone_verified_at = datetime.now(UTC)
                 self._session.add(user)
                 await self._session.flush()
+                self._auth.record_event(user.id, events.PHONE_CHANGED)
                 return UserView(user, await self._users.providers(user.id))
         except IntegrityError:  # шалгалт болон бичилтийн хооронд өөр хүн авчихсан
             raise _phone_taken() from None
@@ -210,7 +263,7 @@ class AccountService:
             if user.phone is None:
                 return UserView(user, await self._users.providers(user.id))
             if user.email is None:
-                raise _last_method("phone number")
+                raise _last_method("утасны дугаар")
             user.phone = None
             user.phone_verified_at = None
             self._session.add(user)
@@ -220,7 +273,7 @@ class AccountService:
         email = normalize_email(raw_email)
         user = await self._checked_user(user_id, password)
         if user.email == email:
-            raise _already_yours("email address")
+            raise _already_yours("имэйл хаяг")
         async with self._session.begin():
             if await self._users.get_by_email(email) is not None:
                 raise _email_taken()
@@ -235,13 +288,27 @@ class AccountService:
                 other = await self._users.get_by_email(email)
                 if other is not None and other.id != user.id:
                     raise _email_taken()
+                previous = user.email
                 user.email = email
                 user.email_verified_at = datetime.now(UTC)
                 self._session.add(user)
                 await self._session.flush()
-                return UserView(user, await self._users.providers(user.id))
+                self._auth.record_event(user.id, events.EMAIL_CHANGED)
+                if previous and previous != email:
+                    # Хуучин хаяг руу: булаан авсан хүн хаягийг нууцаар сольж чадахгүй.
+                    self._auth.queue_notice(
+                        Email(
+                            to=previous,
+                            subject="Таны бүртгэлийн имэйл хаяг солигдлоо",
+                            body="Таны бүртгэлийн имэйл хаяг өөр хаяг болж солигдлоо. "
+                            "Хэрэв энэ та биш бол бидэнтэй яаралтай холбогдоно уу.",
+                        )
+                    )
+                view = UserView(user, await self._users.providers(user.id))
         except IntegrityError:
             raise _email_taken() from None
+        await self._auth.deliver_notices()
+        return view
 
     async def remove_email(self, user_id: int, password: str | None) -> UserView:
         user = await self._checked_user(user_id, password)
@@ -250,7 +317,7 @@ class AccountService:
             if user.email is None:
                 return UserView(user, await self._users.providers(user.id))
             if user.phone is None:
-                raise _last_method("email address")
+                raise _last_method("имэйл хаяг")
             # Нууц үгээр нэвтрэхэд email хэрэгтэй: email-гүй бол нууц үг хэрэггүй ачаа болно.
             user.email = None
             user.email_verified_at = None
@@ -269,7 +336,7 @@ class AccountService:
         async with self._session.begin():
             user = await self._active_user(user_id)
         if user.email is None:
-            raise _already_yours("email address")
+            raise _already_yours("имэйл хаяг")
         await self._otp.verify("verify_email", user.email, code, user_id=user.id)
         async with self._session.begin():
             user = await self._active_user(user_id)
@@ -291,8 +358,8 @@ class AccountService:
         if user is None or not user.is_active:
             raise ProblemError(
                 HTTPStatus.UNAUTHORIZED,
-                "Not signed in",
-                "Please sign in again.",
+                "Нэвтрээгүй байна",
+                "Дахин нэвтэрнэ үү.",
                 type_=UNAUTHENTICATED_TYPE,
                 headers={"WWW-Authenticate": "Bearer"},
             )
@@ -311,16 +378,16 @@ class AccountService:
 def _already_yours(what: str) -> ProblemError:
     return ProblemError(
         HTTPStatus.CONFLICT,
-        f"That is already your {what}",
-        f"Enter a different {what}.",
+        f"Энэ нь таны одоогийн {what} байна",
+        f"Өөр {what} оруулна уу.",
     )
 
 
 def _phone_taken() -> ProblemError:
     return ProblemError(
         HTTPStatus.CONFLICT,
-        "Phone number already in use",
-        "Another account uses this phone number.",
+        "Утасны дугаар ашиглагдаж байна",
+        "Өөр бүртгэл энэ утасны дугаарыг ашиглаж байна.",
         type_=PHONE_TAKEN_TYPE,
     )
 
@@ -328,8 +395,8 @@ def _phone_taken() -> ProblemError:
 def _email_taken() -> ProblemError:
     return ProblemError(
         HTTPStatus.CONFLICT,
-        "Email already registered",
-        "Another account uses this email address.",
+        "Имэйл бүртгэлтэй байна",
+        "Өөр бүртгэл энэ имэйл хаягийг ашиглаж байна.",
         type_=EMAIL_TAKEN_TYPE,
     )
 
@@ -337,7 +404,7 @@ def _email_taken() -> ProblemError:
 def _last_method(what: str) -> ProblemError:
     return ProblemError(
         HTTPStatus.CONFLICT,
-        "You need a way to sign in",
-        f"Add an email address or a phone number before removing your {what}.",
+        "Нэвтрэх нэг арга байх ёстой",
+        f"{what} хасахын өмнө өөр нэвтрэх арга (имэйл хаяг эсвэл утасны дугаар) нэмнэ үү.",
         type_=LAST_SIGN_IN_METHOD_TYPE,
     )

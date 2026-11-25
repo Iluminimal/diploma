@@ -7,7 +7,8 @@ from angel.schemas.accounts.address import AddressSnapshot
 from angel.schemas.catalog.product import ProductImage
 
 OrderStatus = Literal["pending", "paid", "shipped", "delivered", "cancelled", "refunded"]
-ShippingMethodId = Literal["standard", "express"]
+ShippingMethodId = Literal["standard", "express", "pickup"]
+ShippingZone = Literal["ub", "rural"]
 
 
 class ShippingMethodOut(BaseModel):
@@ -59,6 +60,31 @@ class OrderEventOut(BaseModel):
     data: dict[str, Any]
 
 
+class ChargeOut(BaseModel):
+    """Бодитоор авсан (авах) дүн. `amount_minor` нь бага нэгжээр (MNT: төгрөг x 100)."""
+
+    currency: str
+    amount_minor: int
+
+
+class QPayBankOut(BaseModel):
+    """Банкны апп-ын холбоос (утсан дээр шууд тухайн апп-ыг нээнэ)."""
+
+    name: str
+    description: str
+    logo: str
+    link: str
+
+
+class QPayCheckoutOut(BaseModel):
+    """QPay нэхэмжлэх: компьютер дээр QR-ыг банкны апп-аар уншуулна, утсан дээр холбоосоор."""
+
+    qr_image: str = Field(description="Base64 PNG of the QR code")
+    qr_text: str
+    short_url: str
+    banks: list[QPayBankOut]
+
+
 class OrderOut(BaseModel):
     number: str
     status: OrderStatus
@@ -78,6 +104,11 @@ class OrderOut(BaseModel):
     shipping_address: AddressSnapshot
     contact_email: str
     items: list[OrderItemOut]
+    charge: ChargeOut | None
+    # Төлбөр хүлээж буй (pending) захиалгад л: төлөхгүй бол нөөц энэ хугацаанд буцна ба QR-г
+    # дахин харуулж төлбөрийг үргэлжлүүлнэ.
+    expires_at: datetime | None = None
+    qpay: QPayCheckoutOut | None = None
 
 
 class OrderSummary(BaseModel):
@@ -86,6 +117,7 @@ class OrderSummary(BaseModel):
     created_at: datetime
     currency: str
     total_cents: int
+    charge: ChargeOut | None
     item_count: int
     # Эхний хэдэн барааны зураг, түүхийн жагсаалтад.
     images: list[ProductImage]
@@ -100,11 +132,21 @@ class OrderPage(BaseModel):
 
 
 class PaymentOut(BaseModel):
-    """Browser төлбөр авахад хэрэгтэй зүйл. `stripe`: `client_secret`-ээр Stripe.js-ээр
-    PaymentIntent-ийг баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна."""
+    """Browser төлбөр авахад хэрэгтэй зүйл. `qpay`: QR болон банкны холбоосыг харуулж, дараа нь
+    `check-payment`-аар баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна."""
 
-    provider: Literal["stripe", "offline"]
-    client_secret: str | None
+    provider: Literal["qpay", "offline"]
+    # Захиалга төлбөр үүсгэхээс өмнө цуцлагдсан бол None.
+    charge: ChargeOut | None
+    qpay: QPayCheckoutOut | None
+
+
+class PaymentMethodOut(BaseModel):
+    """Checkout ямар аргаар төлүүлэх вэ, захиалга үүсэхээс өмнө (хуудас зөв алхмыг харуулна).
+    `provider` None бол төлбөр тохируулаагүй. `charge_currency` нь бодитоор авах валют."""
+
+    provider: Literal["qpay", "offline"] | None
+    charge_currency: str
 
 
 class CheckoutOut(BaseModel):

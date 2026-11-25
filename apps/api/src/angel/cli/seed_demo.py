@@ -13,6 +13,7 @@ import random
 from collections import Counter
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from typing import Any
 
 from sqlalchemy import text
@@ -34,7 +35,7 @@ from angel.models import (
 from angel.models.user import ROLE_CUSTOMER
 from angel.schemas.commerce.order import ShippingMethodId
 from angel.services.catalog.sizes import sizes_for
-from angel.services.commerce.shipping import shipping_cost
+from angel.services.commerce.shipping import shipping_cost, zone_for
 
 # Хүргэгдсэн бараа бүрийн хэдэн хувьд нь худалдан авагч review бичих вэ.
 REVIEW_CHANCE = 0.5
@@ -44,98 +45,73 @@ DEMO_PASSWORD = "DemoPass12345"  # noqa: S105 - development only, printed by the
 EMAIL_PREFIX = "demo-"
 EMAIL_DOMAIN = "@example.com"
 CARRIERS = {
-    "DHL": lambda r: f"JD{r.randrange(10**11, 10**12)}",
-    "UPS": lambda r: f"1Z{r.randrange(10**15, 10**16)}",
-    "FedEx": lambda r: str(r.randrange(10**11, 10**12)),
-    "USPS": lambda r: f"94{r.randrange(10**19, 10**20)}",
-    "Royal Mail": lambda r: f"RM{r.randrange(10**8, 10**9)}GB",
+    "Монгол шуудан": lambda r: f"MP{r.randrange(10**8, 10**9)}MN",
+    "Өөрийн хүргэлт": lambda r: f"LK{r.randrange(10**6, 10**7)}",
 }
 
-FIRST = [
-    "Ada",
-    "Bruno",
-    "Chloe",
-    "Daniel",
-    "Elena",
-    "Felix",
-    "Grace",
-    "Hugo",
-    "Iris",
-    "Jonas",
-    "Kira",
-    "Liam",
-    "Maya",
-    "Noah",
-    "Olivia",
-    "Pavel",
-    "Quinn",
-    "Rosa",
-    "Sam",
-    "Tara",
-    "Uma",
-    "Victor",
-    "Wren",
-    "Xavier",
-    "Yara",
-    "Zoe",
-    "Amir",
-    "Bea",
-    "Cleo",
-    "Dev",
-]
-LAST = [
-    "Anders",
-    "Brooks",
-    "Chen",
-    "Diaz",
-    "Evans",
-    "Fischer",
-    "Garcia",
-    "Hughes",
-    "Ito",
-    "Jensen",
-    "Khan",
-    "Lopez",
-    "Meyer",
-    "Novak",
-    "Okafor",
-    "Patel",
-    "Quinn",
-    "Rossi",
-    "Silva",
-    "Tanaka",
-    "Usman",
-    "Vega",
-    "Weber",
-    "Young",
-    "Zhang",
-]
-CITIES = (
-    ("12 Market Street", "London", None, "N1 9GU", "GB"),
-    ("48 Elm Avenue", "Boston", "MA", "02108", "US"),
-    ("7 Rue des Fleurs", "Lyon", None, "69001", "FR"),
-    ("301 Pine Road", "Portland", "OR", "97205", "US"),
-    ("22 Hauptstrasse", "Berlin", None, "10115", "DE"),
-    ("5 Harbour Lane", "Dublin", None, "D02 X285", "IE"),
-    ("90 Lake Drive", "Chicago", "IL", "60601", "US"),
-    ("14 Via Roma", "Milan", None, "20121", "IT"),
+# Нэрийг имэйлд латинаар, дэлгэцэнд кириллээр хадгална.
+FIRST = {
+    "Bilguun": "Билгүүн",
+    "Enkhjin": "Энхжин",
+    "Temuulen": "Тэмүүлэн",
+    "Nomin": "Номин",
+    "Ganbold": "Ганболд",
+    "Oyun": "Оюун",
+    "Tuvshin": "Түвшин",
+    "Saruul": "Саруул",
+    "Anand": "Ананд",
+    "Khulan": "Хулан",
+    "Dorj": "Дорж",
+    "Munkh": "Мөнх",
+    "Altan": "Алтан",
+    "Narantuya": "Нарантуяа",
+    "Batsaikhan": "Батсайхан",
+    "Zaya": "Заяа",
+}
+LAST = {
+    "Batbayar": "Батбаяр",
+    "Ganbat": "Ганбат",
+    "Erdene": "Эрдэнэ",
+    "Dorjsuren": "Доржсүрэн",
+    "Purev": "Пүрэв",
+    "Tumur": "Төмөр",
+    "Sukhbat": "Сүхбат",
+    "Bold": "Болд",
+    "Chuluun": "Чулуун",
+    "Damdin": "Дамдин",
+    "Lkhagva": "Лхагва",
+    "Naran": "Наран",
+}
+# (аймаг/хот, дүүрэг/сум, хороо/баг, гудамж-байр-тоот, нэмэлт)
+ADDRESSES = (
+    ("Улаанбаатар", "Баянгол", "3-р хороо", "Энхтайваны өргөн чөлөө 12", "45 тоот, 3-р орц"),
+    ("Улаанбаатар", "Сүхбаатар", "1-р хороо", "Жигжиджавын гудамж 7", "12 тоот"),
+    ("Улаанбаатар", "Хан-Уул", "11-р хороо", "Зайсан, 25-р байр", "2-р давхар"),
+    ("Улаанбаатар", "Баянзүрх", "20-р хороо", "Нарны зам 31", "8 тоот"),
+    ("Улаанбаатар", "Чингэлтэй", "4-р хороо", "Бага тойруу 14", None),
+    ("Улаанбаатар", "Сонгинохайрхан", "9-р хороо", "Дунд гол, 3-р байр", "67 тоот"),
+    ("Дархан-Уул", "Дархан", "5-р баг", "10-р дэнж, 4-р байр", "21 тоот"),
+    ("Орхон", "Баян-Өндөр", "2-р баг", "Найрамдлын гудамж 9", None),
+    ("Өмнөговь", "Даланзадгад", "1-р баг", "Төв талбайн хойд 5", "3 тоот"),
+    ("Хөвсгөл", "Мөрөн", "3-р баг", "Сүхбаатарын гудамж 18", None),
+    ("Төв", "Зуунмод", "2-р баг", "Хотхон, 6-р байр", "14 тоот"),
 )
 REVIEW_TEXT: dict[int, list[tuple[str, str]]] = {
     5: [
-        ("Love it", "Exactly as pictured and the fabric feels great. Would buy again."),
-        ("Perfect fit", "True to size and arrived quickly. Very happy with it."),
-        ("Great quality", "Better than I expected for the price."),
+        ("Маш таалагдлаа", "Зурагтай яг адилхан, даавуу нь сайн. Дахин авна."),
+        ("Яг тохирлоо", "Хэмжээ нь яг таарсан, хурдан ирсэн. Маш их баяртай байна."),
+        ("Чанартай", "Үнэндээ хүлээснээс илүү сайн чанартай байлаа."),
     ],
     4: [
-        ("Really good", "Nice quality. The colour is slightly different from the photo."),
-        ("Happy overall", "Fits well and looks good, delivery took a day longer than expected."),
+        ("Сайн байна", "Чанар сайн. Өнгө нь зурагнаас бага зэрэг өөр байна."),
+        ("Ерөнхийдөө сайн", "Таарч байна, гоё харагдана. Хүргэлт нэг өдөр хоцорсон."),
     ],
     3: [
-        ("It is fine", "Does the job, but nothing special for the price."),
-        ("Okay", "Runs a little small, otherwise as described."),
+        ("Дунд зэрэг", "Хэрэгтэй ч үнэдээ онцгой зүйл алга."),
+        ("Болж байна", "Бага зэрэг жижиг сайтай, бусад нь тайлбарын дагуу."),
     ],
-    2: [("Disappointed", "The material feels thinner than it looks online.")],
-    1: [("Not for me", "Poor fit and the stitching came loose after one wash.")],
+    2: [("Бага зэрэг урам хугарав", "Даавуу нь онлайнаар харагдсанаасаа нимгэн байна.")],
+    1: [("Надад таарсангүй", "Хэмжээ таараагүй, нэг удаа угаахад оёдол нь суларсан.")],
 }
 
 
@@ -179,9 +155,13 @@ async def seed_demo(
         pool = await _products(session)
         if not pool:
             raise SystemExit("there are no products to order: run `make ingest` first")
+        # Захиалгын event-ийн "хэн": ачилтыг агуулахын ажилтан хийдэг тул түүнийг, үгүй бол админыг.
         admin = (
             await session.execute(
-                text("SELECT id, email FROM users WHERE role = 'admin' ORDER BY id LIMIT 1")
+                text(
+                    "SELECT id, email FROM users WHERE role IN ('warehouse', 'admin') "
+                    "ORDER BY (role = 'warehouse') DESC, id LIMIT 1"
+                )
             )
         ).first()
         rng = random.Random(seed)  # noqa: S311 - demo data, not security
@@ -324,7 +304,7 @@ class _Maker:
         names: set[str] = set()
         people: list[_Person] = []
         while len(people) < count:
-            first, last = self.rng.choice(FIRST), self.rng.choice(LAST)
+            first, last = self.rng.choice(list(FIRST)), self.rng.choice(list(LAST))
             if (first, last) in {(p.first, p.last) for p in people}:
                 continue
             email = f"{EMAIL_PREFIX}{first}.{last}{EMAIL_DOMAIN}".lower()
@@ -341,7 +321,7 @@ class _Maker:
             user = User(
                 email=email,
                 password_hash=password_hash,
-                full_name=f"{first} {last}",
+                full_name=f"{LAST[last]} {FIRST[first]}",
                 role=ROLE_CUSTOMER,
                 is_active=len(people) != count - 1 or count < 5,
                 created_at=joined,
@@ -349,15 +329,20 @@ class _Maker:
             )
             self.session.add(user)
             await self.session.flush()
-            street, city, region, postal, country = self.rng.choice(CITIES)
+            region, city, khoroo, street, extra = self.rng.choice(ADDRESSES)
+            prefix = self.rng.choice((99, 95, 94, 91, 88, 85, 80))
+            phone = f"+976{prefix}{self.rng.randrange(10**5, 10**6)}"
             address = Address(
                 user_id=user.id,
                 full_name=user.full_name,
-                line1=street,
-                city=city,
                 region=region,
-                postal_code=postal,
-                country=country,
+                city=city,
+                khoroo=khoroo,
+                line1=street,
+                line2=extra,
+                postal_code="",
+                country="MN",
+                phone=phone,
                 is_default=True,
                 created_at=joined,
                 updated_at=joined,
@@ -443,8 +428,13 @@ class _Maker:
         number = self._number()
 
         subtotal = sum(i.product.price_cents * i.quantity for i in items)
-        method: ShippingMethodId = "express" if rng.random() < 0.2 else "standard"
-        shipping = shipping_cost(self.settings, method, subtotal)
+        zone = zone_for(person.address.region)
+        method: ShippingMethodId = rng.choice(
+            ("standard", "standard", "express", "pickup")
+            if zone == "ub"
+            else ("standard", "standard", "pickup")
+        )
+        shipping = shipping_cost(self.settings, method, subtotal, zone)
         # Үйл явдал хэзээ болсон. Ирээдүйд таарах алхамд хараахан хүрээгүй гэж үзнэ.
         paid_at = created + timedelta(minutes=rng.uniform(1, 6))
         shipped_at = paid_at + timedelta(hours=rng.uniform(3, 30))
@@ -478,13 +468,14 @@ class _Maker:
             shipping_method=method,
             shipping_address={
                 "full_name": person.address.full_name,
-                "line1": person.address.line1,
-                "line2": None,
-                "city": person.address.city,
                 "region": person.address.region,
+                "city": person.address.city,
+                "khoroo": person.address.khoroo,
+                "line1": person.address.line1,
+                "line2": person.address.line2,
                 "postal_code": person.address.postal_code,
                 "country": person.address.country,
-                "phone": None,
+                "phone": person.address.phone,
             },
             contact_email=person.user.identifier,
             created_at=created,
@@ -562,13 +553,14 @@ class _Maker:
             Payment(
                 order_id=order.id,
                 provider="offline",
-                provider_payment_id=f"pi_offline_demo_{number.lower()}",
-                client_secret=f"pi_offline_demo_{number.lower()}_secret_offline"
-                if status == "pending"
-                else None,
+                provider_payment_id=f"pay_offline_demo_{number.lower()}",
                 status=payment_status,
                 amount_cents=order.total_cents,
                 currency=order.currency,
+                # Offline demo төлбөр дэлгүүрийн үндсэн валютаар, 1:1 ханшаар.
+                charge_currency=order.currency,
+                charge_minor=order.total_cents,
+                exchange_rate=Decimal(1),
                 refund_id=f"re_offline_demo_{number.lower()}" if status == "refunded" else None,
                 created_at=created,
                 updated_at=last,

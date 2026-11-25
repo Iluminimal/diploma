@@ -1,7 +1,7 @@
-from datetime import date, datetime
-from typing import Annotated, Literal
+from datetime import UTC, date, datetime, timedelta
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from angel.schemas.admin.orders import AdminOrderSummary
 from angel.schemas.catalog.product import ProductImage
@@ -11,6 +11,31 @@ class StatsQuery(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     days: Annotated[int, Field(ge=1, le=366, description="Length of the period, ending today")] = 30
+    start: Annotated[date | None, Field(description="First day of a custom period")] = None
+    end: Annotated[date | None, Field(description="Last day of a custom period (inclusive)")] = None
+
+    @model_validator(mode="after")
+    def _custom_period(self) -> Self:
+        if (self.start is None) != (self.end is None):
+            raise ValueError("start and end go together")
+        if self.start is not None and self.end is not None:
+            if self.start > self.end:
+                raise ValueError("start must not be after end")
+            if self.end > datetime.now(UTC).date():
+                raise ValueError("end must not be in the future")
+            span = (self.end - self.start).days + 1
+            if span > 366:
+                raise ValueError("a period is at most 366 days")
+            self.days = span
+        return self
+
+    def window(self) -> tuple[datetime, datetime]:
+        """Тооцох хугацааны [эхлэл, төгсгөл) (UTC-ийн бүтэн өдрүүд): тусгай хугацаа, эсвэл өнөөдрөөр
+        төгсөх `days` өдөр."""
+        midnight = datetime.min.time()
+        last = self.end or datetime.now(UTC).date()
+        end = datetime.combine(last + timedelta(days=1), midnight, UTC)
+        return end - timedelta(days=self.days), end
 
 
 class Delta(BaseModel):
@@ -24,6 +49,26 @@ class DailyPoint(BaseModel):
     date: date
     revenue_cents: int
     orders: int
+    units: int
+    new_customers: int
+
+
+class Funnel(BaseModel):
+    """Хугацаанд үүссэн захиалгуудаас аль шатанд хүрсэн нь."""
+
+    created: int
+    paid: int
+    shipped: int
+    delivered: int
+    cancelled: int
+    refunded: int
+
+
+class CategorySales(BaseModel):
+    # None нь "бусад" (дээд ангилалд багтаагүй үлдсэн нийлбэр).
+    name: str | None
+    revenue_cents: int
+    units: int
 
 
 class LowStockProduct(BaseModel):
@@ -64,6 +109,18 @@ class AdminStats(BaseModel):
     out_of_stock_total: int
     top_products: list[TopProduct]
     recent_orders: list[AdminOrderSummary]
+    start: date
+    end: date
+    funnel: Funnel
+    by_category: list[CategorySales]
+    # Хугацаанд 2+ захиалгатай худалдан авагч / төлсөн худалдан авагч. Хугацаанд худалдан авалт
+    # байхгүй бол None. Бусад хувь (0..1) мөн адил.
+    repeat_customer_rate: float | None
+    refund_rate: float | None
+    cancel_rate: float | None
+    avg_ship_hours: float | None
+    overdue_to_ship: int
+    ship_sla_hours: int
 
 
 # --- хэрэглэгчид ---

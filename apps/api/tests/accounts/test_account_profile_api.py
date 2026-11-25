@@ -131,7 +131,7 @@ async def test_the_current_password_must_be_right_and_that_is_not_a_401(
 
         # 403: хэрэглэгч нэвтэрсэн байна. 401 бол web апп session дууссан гэж ойлгоно.
         assert wrong.status_code == missing.status_code == 403
-        assert wrong.json()["title"] == "Incorrect password"
+        assert wrong.json()["title"] == "Нууц үг буруу"
         assert (
             await api.client.post(LOGIN, json={"email": shopper.email, "password": PASSWORD})
         ).status_code == 200
@@ -244,7 +244,7 @@ async def test_deleting_an_account_anonymizes_it_and_keeps_the_orders(
             "SELECT email || '|' || full_name || '|' || is_active::text FROM users WHERE id = :i",
             i=shopper.user_id,
         )
-        assert row == f"deleted-{shopper.user_id}@deleted.invalid|Deleted user|false"
+        assert row == f"deleted-{shopper.user_id}@deleted.invalid|Устгасан хэрэглэгч|false"
         for table in ("addresses", "wishlist_items", "carts", "refresh_tokens"):
             assert (
                 await scalar(
@@ -302,12 +302,13 @@ async def test_a_google_only_account_deletes_with_just_the_typed_email(
         assert (await api.client.get(ME, headers=bearer(token))).status_code == 401
 
 
-async def test_an_administrator_cannot_delete_their_account_here(api_factory: ApiFactory) -> None:
+@pytest.mark.parametrize("role", ["admin", "warehouse"])
+async def test_staff_cannot_delete_their_account_here(api_factory: ApiFactory, role: str) -> None:
     async with api_factory(seed_count=0) as api:
         shopper = await register(api.client)
         async with api.app.state.engine.begin() as connection:
             await connection.execute(
-                text("UPDATE users SET role = 'admin' WHERE id = :i"), {"i": shopper.user_id}
+                text("UPDATE users SET role = :r WHERE id = :i"), {"r": role, "i": shopper.user_id}
             )
 
         response = await delete(api.client, shopper.token, confirm=shopper.email, password=PASSWORD)

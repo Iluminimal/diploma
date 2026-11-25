@@ -1,4 +1,5 @@
-"""Бүтээгдэхүүн ба stock: дэлгүүрийн ажилтны харах каталог (хассан бараа орно)."""
+"""Бүтээгдэхүүн ба stock: ажилтны харах каталог (хассан бараа орно). Харахыг аль ч ажилтан, нэмэх,
+засах, хасах, нөөц тохируулахыг зөвхөн агуулахын ажилтан хийнэ."""
 
 from typing import Annotated, Any
 
@@ -7,6 +8,8 @@ from fastapi import APIRouter, Form, Path, Query, status
 from angel.core.deps import (
     AdminProductServiceDep,
     SettingsDep,
+    StaffDep,
+    WarehouseDep,
 )
 from angel.core.uploads import read_image_upload
 from angel.schemas.admin.dashboard import (
@@ -24,7 +27,9 @@ from angel.schemas.admin.products import (
 )
 from angel.schemas.problem import ProblemDetail
 
-# Rate limit, role шалгалт нь __init__.py дахь router-т нэг дор хийгддэг (эхлээд rate limit).
+# Rate limit, ажилтан мөн эсэх нь __init__.py дахь router-т нэг дор хийгддэг (эхлээд rate limit).
+# Бичих endpoint бүр агуулахын ажилтныг (`WarehouseDep`) шаардаж, хэн өөрчилснийг service-д
+# дамжуулна.
 
 router = APIRouter()
 
@@ -40,19 +45,23 @@ _UPLOAD: dict[int | str, dict[str, Any]] = {
 
 
 @router.get("/categories", summary="Article types a product can be filed under")
-async def list_categories(service: AdminProductServiceDep) -> list[AdminCategory]:
+async def list_categories(_staff: StaffDep, service: AdminProductServiceDep) -> list[AdminCategory]:
     return await service.categories()
 
 
 @router.get("/products", summary="All products, withdrawn ones included")
 async def list_products(
-    query: Annotated[AdminProductListQuery, Query()], service: AdminProductServiceDep
+    query: Annotated[AdminProductListQuery, Query()],
+    _staff: StaffDep,
+    service: AdminProductServiceDep,
 ) -> AdminProductPage:
     return await service.list_products(query)
 
 
 @router.get("/products/{product_id}", summary="One product", responses=_NOT_FOUND)
-async def get_product(product_id: int, service: AdminProductServiceDep) -> AdminProductOut:
+async def get_product(
+    product_id: int, _staff: StaffDep, service: AdminProductServiceDep
+) -> AdminProductOut:
     return await service.get(product_id)
 
 
@@ -65,12 +74,13 @@ async def get_product(product_id: int, service: AdminProductServiceDep) -> Admin
 )
 async def create_product(
     form: Annotated[AdminProductCreateForm, Form()],
+    worker: WarehouseDep,
     service: AdminProductServiceDep,
     settings: SettingsDep,
 ) -> AdminProductOut:
     data = await read_image_upload(form.file, settings.max_upload_bytes)
     fields = ProductFields.model_validate(form.model_dump(exclude={"file", "is_active"}))
-    return await service.create(data, fields, is_active=form.is_active)
+    return await service.create(data, fields, is_active=form.is_active, actor=worker)
 
 
 @router.patch(
@@ -79,9 +89,12 @@ async def create_product(
     responses={**_NOT_FOUND, 422: _UPLOAD[422]},
 )
 async def update_product(
-    product_id: int, changes: AdminProductUpdate, service: AdminProductServiceDep
+    product_id: int,
+    changes: AdminProductUpdate,
+    worker: WarehouseDep,
+    service: AdminProductServiceDep,
 ) -> AdminProductOut:
-    return await service.update(product_id, changes)
+    return await service.update(product_id, changes, actor=worker)
 
 
 @router.put(
@@ -92,11 +105,12 @@ async def update_product(
 async def replace_image(
     product_id: int,
     form: Annotated[AdminProductImageForm, Form()],
+    worker: WarehouseDep,
     service: AdminProductServiceDep,
     settings: SettingsDep,
 ) -> AdminProductOut:
     data = await read_image_upload(form.file, settings.max_upload_bytes)
-    return await service.replace_image(product_id, data)
+    return await service.replace_image(product_id, data, actor=worker)
 
 
 @router.post(
@@ -105,13 +119,17 @@ async def replace_image(
     description="Hidden from listing, search and similar products; existing orders keep it.",
     responses=_NOT_FOUND,
 )
-async def deactivate_product(product_id: int, service: AdminProductServiceDep) -> AdminProductOut:
-    return await service.set_active(product_id, active=False)
+async def deactivate_product(
+    product_id: int, worker: WarehouseDep, service: AdminProductServiceDep
+) -> AdminProductOut:
+    return await service.set_active(product_id, active=False, actor=worker)
 
 
 @router.post("/products/{product_id}/activate", summary="Put a product back", responses=_NOT_FOUND)
-async def activate_product(product_id: int, service: AdminProductServiceDep) -> AdminProductOut:
-    return await service.set_active(product_id, active=True)
+async def activate_product(
+    product_id: int, worker: WarehouseDep, service: AdminProductServiceDep
+) -> AdminProductOut:
+    return await service.set_active(product_id, active=True, actor=worker)
 
 
 @router.put(
@@ -122,6 +140,7 @@ async def activate_product(product_id: int, service: AdminProductServiceDep) -> 
 async def set_product_stock(
     product_id: Annotated[int, Path(ge=1, le=2**63 - 1)],
     body: StockUpdate,
+    worker: WarehouseDep,
     service: AdminProductServiceDep,
 ) -> AdminProductOut:
-    return await service.set_stock(product_id, body.quantity)
+    return await service.set_stock(product_id, body.quantity, actor=worker)

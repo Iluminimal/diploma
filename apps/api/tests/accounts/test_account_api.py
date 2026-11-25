@@ -3,7 +3,14 @@ import asyncio
 import pytest
 
 from tests.conftest import ApiFactory
-from tests.support.commerce import ADDRESS, add_address, another_client, register, set_product
+from tests.support.commerce import (
+    ADDRESS,
+    RURAL_ADDRESS,
+    add_address,
+    another_client,
+    register,
+    set_product,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 
@@ -106,7 +113,7 @@ async def test_address_book_basics(api_factory: ApiFactory) -> None:
         listing = await api.client.get(ADDRESSES, headers=shopper.auth)
 
         assert first.status_code == second.status_code == 201
-        assert first.json()["country"] == "GB"  # улсын код стандарт хэлбэрт орсон
+        assert first.json()["country"] == "MN"  # улсын код стандарт хэлбэрт орсон
         assert first.json()["is_default"] is True  # эхний хаяг автоматаар үндсэн болно
         assert second.json()["is_default"] is False
         assert [a["id"] for a in listing.json()["items"]] == [
@@ -142,18 +149,20 @@ async def test_address_update_clears_optional_fields_but_not_required_ones(
 ) -> None:
     async with api_factory() as api:
         shopper = await register(api.client)
-        address_id = await add_address(shopper, line2="Flat 4", phone="+44 20 7946 0958")
+        address_id = await add_address(shopper, line2="45 тоот", phone="+976 9911 2233")
 
         cleared = await api.client.patch(
-            f"{ADDRESSES}/{address_id}", json={"line2": None, "city": "Leeds"}, headers=shopper.auth
+            f"{ADDRESSES}/{address_id}",
+            json={"line2": None, "city": "Хан-Уул"},
+            headers=shopper.auth,
         )
         required = await api.client.patch(
             f"{ADDRESSES}/{address_id}", json={"line1": None}, headers=shopper.auth
         )
 
         assert cleared.json()["line2"] is None
-        assert cleared.json()["city"] == "Leeds"
-        assert cleared.json()["phone"] == "+44 20 7946 0958"  # утас өөрчлөгдөөгүй
+        assert cleared.json()["city"] == "Хан-Уул"
+        assert cleared.json()["phone"] == "+97699112233"  # утас өөрчлөгдөөгүй
         assert required.status_code == 422
 
 
@@ -162,11 +171,16 @@ async def test_address_input_is_validated(api_factory: ApiFactory) -> None:
         shopper = await register(api.client)
         bad = [
             {**ADDRESS, "country": "GBR"},
-            {**ADDRESS, "country": "1G"},
+            {**ADDRESS, "country": "US"},  # зөвхөн Монгол
             {**ADDRESS, "line1": "  "},
             {**ADDRESS, "phone": "call me"},
+            {**ADDRESS, "phone": "+44 20 7946 0958"},  # Монголын биш дугаар
+            {**ADDRESS, "region": "Atlantis"},
+            {**ADDRESS, "city": "Дархан"},  # нийслэлд дүүрэг заавал
+            {**ADDRESS, "postal_code": "12"},
             {**ADDRESS, "is_admin": True},
             {k: v for k, v in ADDRESS.items() if k != "city"},
+            {k: v for k, v in ADDRESS.items() if k != "phone"},
         ]
 
         codes = [
@@ -199,7 +213,7 @@ async def test_nobody_can_read_change_or_delete_someone_elses_address(
             bob = await register(browser)
 
             patch = await browser.patch(
-                f"{ADDRESSES}/{address_id}", json={"city": "Mallory"}, headers=bob.auth
+                f"{ADDRESSES}/{address_id}", json={"city": "Сүхбаатар"}, headers=bob.auth
             )
             delete = await browser.delete(f"{ADDRESSES}/{address_id}", headers=bob.auth)
             listing = await browser.get(ADDRESSES, headers=bob.auth)
@@ -207,4 +221,48 @@ async def test_nobody_can_read_change_or_delete_someone_elses_address(
         assert patch.status_code == delete.status_code == 404
         assert listing.json()["items"] == []
         mine = (await api.client.get(ADDRESSES, headers=ann.auth)).json()["items"]
-        assert mine[0]["city"] == "London"
+        assert mine[0]["city"] == "Баянгол"
+
+
+async def test_a_mongolian_address_is_stored_in_a_courier_friendly_shape(
+    api_factory: ApiFactory,
+) -> None:
+    async with api_factory() as api:
+        shopper = await register(api.client)
+
+        created = await api.client.post(
+            ADDRESSES, json={**ADDRESS, "phone": "+976 9911-2233"}, headers=shopper.auth
+        )
+        rural = await api.client.post(ADDRESSES, json=RURAL_ADDRESS, headers=shopper.auth)
+
+        body = created.json()
+        assert created.status_code == rural.status_code == 201
+        assert (body["region"], body["city"], body["khoroo"]) == (
+            "Улаанбаатар",
+            "Баянгол",
+            "3-р хороо",
+        )
+        assert body["phone"] == "+97699112233"  # E.164
+        assert body["postal_code"] == ""  # шуудангийн код заавал биш
+        assert rural.json()["region"] == "Дархан-Уул"  # аймагт сум чөлөөтэй
+
+
+async def test_changing_only_the_region_or_district_is_checked_against_the_stored_address(
+    api_factory: ApiFactory,
+) -> None:
+    async with api_factory() as api:
+        shopper = await register(api.client)
+        address_id = await add_address(shopper)
+
+        moved = await api.client.patch(
+            f"{ADDRESSES}/{address_id}", json={"city": "Дархан"}, headers=shopper.auth
+        )
+        valid = await api.client.patch(
+            f"{ADDRESSES}/{address_id}",
+            json={"region": "Орхон", "city": "Баян-Өндөр"},
+            headers=shopper.auth,
+        )
+
+        assert moved.status_code == 422  # нийслэлд дүүрэг биш
+        assert valid.status_code == 200
+        assert valid.json()["region"] == "Орхон"

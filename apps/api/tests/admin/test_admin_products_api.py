@@ -1,4 +1,5 @@
-"""Админы бүтээгдэхүүний удирдлага: жагсаах, зургаас үүсгэх, засах, зураг солих, хасах."""
+"""Агуулахын ажилтны бүтээгдэхүүний удирдлага: жагсаах, зургаас үүсгэх, засах, зураг солих, хасах.
+Админ зөвхөн харна."""
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -13,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from angel.repositories.catalog.products import ProductRepository
 from tests.conftest import Api, ApiFactory
 from tests.support.catalogue import make_jpeg
-from tests.support.commerce import Shopper, register, set_role
+from tests.support.commerce import Shopper, register, set_role, stock_of
 
 pytestmark = [pytest.mark.integration, pytest.mark.usefixtures("require_infra")]
 
@@ -30,12 +31,12 @@ async def admin_api(
     api_factory: ApiFactory, db_engine: AsyncEngine, media: Path, **settings: Any
 ) -> AsyncIterator[tuple[Api, Shopper]]:
     """Ажиллаж буй API (thumbnail `media` дор бичигдэнэ, жинхэнэ data хавтас биш) ба
-    нэвтэрсэн админ.
+    нэвтэрсэн агуулахын ажилтан (бараа өөрчлөх эрхтэй цорын ганц role).
     """
     async with api_factory(media_dir=media, **settings) as api:
-        admin = await register(api.client)
-        await set_role(db_engine, admin.user_id, "admin")
-        yield api, admin
+        worker = await register(api.client)
+        await set_role(db_engine, worker.user_id, "warehouse")
+        yield api, worker
 
 
 def fields(category_id: int, **overrides: Any) -> dict[str, Any]:
@@ -100,9 +101,10 @@ def media_files(media: Path) -> list[Path]:
         ("PUT", "/products/1/image"),
         ("POST", "/products/1/deactivate"),
         ("POST", "/products/1/activate"),
+        ("PUT", "/products/1/stock"),
     ],
 )
-async def test_only_administrators_can_manage_products(
+async def test_only_staff_can_use_the_product_endpoints(
     api_factory: ApiFactory, tmp_path: Path, method: str, path: str
 ) -> None:
     async with api_factory(seed_count=3, media_dir=tmp_path) as api:
@@ -114,6 +116,60 @@ async def test_only_administrators_can_manage_products(
         assert anonymous.status_code == 401
         assert as_customer.status_code == 403
         assert as_customer.json()["type"] == "urn:angel:problem:forbidden"
+
+
+READ_ONLY = {("GET", "/categories"), ("GET", "/products"), ("GET", "/products/1")}
+
+
+@pytest.mark.parametrize(
+    ("method", "path"),
+    [
+        ("GET", "/categories"),
+        ("GET", "/products"),
+        ("GET", "/products/1"),
+        ("POST", "/products"),
+        ("PATCH", "/products/1"),
+        ("PUT", "/products/1/image"),
+        ("POST", "/products/1/deactivate"),
+        ("POST", "/products/1/activate"),
+        ("PUT", "/products/1/stock"),
+    ],
+)
+async def test_an_administrator_can_look_at_products_but_not_change_them(
+    api_factory: ApiFactory, db_engine: AsyncEngine, tmp_path: Path, method: str, path: str
+) -> None:
+    async with api_factory(seed_count=3, media_dir=tmp_path) as api:
+        admin = await register(api.client)
+        await set_role(db_engine, admin.user_id, "admin")
+
+        response = await api.client.request(method, ADMIN + path, headers=admin.auth)
+
+        if (method, path) in READ_ONLY:
+            assert response.status_code == 200, response.text
+        else:
+            assert response.status_code == 403
+            assert response.json()["type"] == "urn:angel:problem:forbidden"
+
+
+async def test_a_refused_administrator_changes_nothing(
+    api_factory: ApiFactory, db_engine: AsyncEngine, tmp_path: Path
+) -> None:
+    async with api_factory(seed_count=3, media_dir=tmp_path) as api:
+        admin = await register(api.client)
+        await set_role(db_engine, admin.user_id, "admin")
+        product = api.entries[0]
+        before = await stock_of(db_engine, product.product_id)
+
+        stock = await api.client.put(
+            f"{PRODUCTS}/{product.product_id}/stock", json={"quantity": 1}, headers=admin.auth
+        )
+        withdrawn = await api.client.post(
+            f"{PRODUCTS}/{product.product_id}/deactivate", headers=admin.auth
+        )
+
+        assert (stock.status_code, withdrawn.status_code) == (403, 403)
+        assert await stock_of(db_engine, product.product_id) == before
+        assert product.product_id in await search_ids(api, product.jpeg)
 
 
 async def test_admin_requests_are_rate_limited(
@@ -567,11 +623,13 @@ async def test_a_product_withdrawn_here_can_no_longer_be_added_to_a_cart(
     api_factory: ApiFactory, db_engine: AsyncEngine, tmp_path: Path
 ) -> None:
     async with admin_api(api_factory, db_engine, tmp_path, seed_count=5) as (api, admin):
+        # Админ сагс ашиглаж чадахгүй: худалдан авагчаар шалгана.
+        shopper = await register(api.client)
         item = {"product_id": 2, "size": "M", "quantity": 1}
-        before = await api.client.post("/api/v1/cart/items", json=item, headers=admin.auth)
+        before = await api.client.post("/api/v1/cart/items", json=item, headers=shopper.auth)
         await api.client.post(f"{PRODUCTS}/2/deactivate", headers=admin.auth)
 
-        after = await api.client.post("/api/v1/cart/items", json=item, headers=admin.auth)
+        after = await api.client.post("/api/v1/cart/items", json=item, headers=shopper.auth)
 
         assert before.status_code == 200
         assert after.status_code == 404

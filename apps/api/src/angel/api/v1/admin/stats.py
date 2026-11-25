@@ -21,4 +21,4 @@ router = APIRouter()
 async def stats(
     query: Annotated[StatsQuery, Query()], service: AdminDashboardServiceDep
 ) -> AdminStats:
-    return await service.stats(query.days)
+    return await service.stats(query)

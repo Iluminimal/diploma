@@ -250,6 +250,135 @@ async def test_product_ids_are_validated(api: Api, bad_id: str) -> None:
     assert (await api.client.get(f"{PRODUCTS}/{bad_id}")).status_code == 422
 
 
+# --- Текстээс шүүлтүүр задлах (interpret) -----------------------------------------------------
+
+
+async def test_interpret_turns_words_and_a_price_into_filters(api: Api) -> None:
+    response = await api.client.post(
+        f"{SEARCH}/text",
+        json={"query": "цэнхэр цамц 30₮-аас доош", "interpret": True, "limit": 60},
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body["applied"] == [
+        {"key": "color", "value": "Blue"},
+        {"key": "max_price", "value": "3000"},
+    ]
+    assert body["results"]
+    assert all(
+        hit["product"]["base_colour"] == "Blue" and hit["product"]["price_cents"] <= 3000
+        for hit in body["results"]
+    )
+
+
+async def test_without_interpret_the_text_is_only_embedded(api: Api) -> None:
+    response = await api.client.post(f"{SEARCH}/text", json={"query": "blue under $30"})
+
+    assert response.status_code == 200
+    assert response.json()["applied"] == []
+    assert len({hit["product"]["base_colour"] for hit in response.json()["results"]}) > 1
+
+
+async def test_a_text_made_only_of_filters_has_nothing_to_search_for(api: Api) -> None:
+    response = await api.client.post(
+        f"{SEARCH}/text", json={"query": "50$-аас доош", "interpret": True}
+    )
+
+    assert response.status_code == 422
+    assert response.json()["title"] == "Хайх зүйл алга"
+
+
+async def test_hybrid_with_only_filter_words_is_an_image_search_with_those_filters(
+    api: Api,
+) -> None:
+    entry = api.entries[4]
+    filtered = await api.client.post(
+        f"{SEARCH}/image", files=upload(entry.jpeg), data={"color": "Blue", "limit": "20"}
+    )
+    texts_before = api.embedder.texts_embedded  # classifier-ийн ангиллын текстүүдтэй хамт
+    interpreted = await api.client.post(
+        f"{SEARCH}/hybrid",
+        files=upload(entry.jpeg),
+        data={"query": "цэнхэр", "interpret": "true", "limit": "20"},
+    )
+
+    assert interpreted.status_code == 200
+    assert interpreted.json()["applied"] == [{"key": "color", "value": "Blue"}]
+    assert ids(interpreted.json()) == ids(filtered.json())
+    assert api.embedder.texts_embedded == texts_before  # үлдсэн текст байхгүй
+
+
+async def test_interpreted_words_never_override_the_users_own_filter(api: Api) -> None:
+    response = await api.client.post(
+        f"{SEARCH}/hybrid",
+        files=upload(api.entries[4].jpeg),
+        data={"query": "цэнхэр цамц", "interpret": "true", "color": "Red", "limit": "30"},
+    )
+
+    body = response.json()
+    assert body["applied"] == []
+    assert {hit["product"]["base_colour"] for hit in body["results"]} == {"Red"}
+
+
+# --- Төстэй бараа + текст -------------------------------------------------------------------
+
+
+async def test_similar_with_text_moves_the_results_and_leaves_the_product_out(api: Api) -> None:
+    entry = api.entries[9]
+    texts_before = api.embedder.texts_embedded
+    plain = await api.client.get(f"{PRODUCTS}/{entry.product_id}/similar", params={"limit": 12})
+    refined = await api.client.get(
+        f"{PRODUCTS}/{entry.product_id}/similar", params={"query": "long sleeve", "limit": 12}
+    )
+
+    assert refined.status_code == 200
+    assert entry.product_id not in ids(refined.json())
+    assert ids(refined.json()) != ids(plain.json())
+    assert refined.json()["timings"]["embed_ms"] is not None
+    assert api.embedder.texts_embedded == texts_before + 1
+
+
+async def test_similar_with_text_is_cached_per_text_and_weight(api: Api) -> None:
+    entry = api.entries[9]
+    url = f"{PRODUCTS}/{entry.product_id}/similar"
+    texts_before = api.embedder.texts_embedded
+    first = await api.client.get(url, params={"query": "long sleeve"})
+    again = await api.client.get(url, params={"query": "Long  Sleeve"})
+    other_weight = await api.client.get(url, params={"query": "long sleeve", "text_weight": 0.2})
+
+    assert first.json()["cached"] is False
+    assert again.json()["cached"] is True
+    assert ids(again.json()) == ids(first.json())
+    assert other_weight.json()["cached"] is False
+    # хоёр дахь нь үр дүнгийн cache, гурав дахь нь текстийн embedding-ийн cache
+    assert api.embedder.texts_embedded == texts_before + 1
+
+
+async def test_similar_with_interpreted_words_is_a_filtered_similar(api: Api) -> None:
+    entry = api.entries[9]
+    url = f"{PRODUCTS}/{entry.product_id}/similar"
+    texts_before = api.embedder.texts_embedded
+    interpreted = await api.client.get(
+        url, params={"query": "цэнхэр", "interpret": "true", "limit": 20}
+    )
+    filtered = await api.client.get(url, params={"color": "Blue", "limit": 20})
+
+    assert interpreted.json()["applied"] == [{"key": "color", "value": "Blue"}]
+    assert ids(interpreted.json()) == ids(filtered.json())
+    assert api.embedder.texts_embedded == texts_before
+
+
+async def test_similar_text_is_validated(api: Api) -> None:
+    url = f"{PRODUCTS}/{api.entries[0].product_id}/similar"
+
+    assert (await api.client.get(url, params={"query": ""})).status_code == 422
+    assert (await api.client.get(url, params={"query": "a", "text_weight": 2})).status_code == 422
+    assert (
+        await api.client.get(f"{PRODUCTS}/999999/similar", params={"query": "a"})
+    ).status_code == 404
+
+
 # --- Жагсаалт ---------------------------------------------------------------------------------
 
 

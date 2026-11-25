@@ -43,8 +43,8 @@ class AdminOrderService:
             if order is None:
                 raise ProblemError(
                     HTTPStatus.NOT_FOUND,
-                    "Order not found",
-                    f"There is no order {number}.",
+                    "Захиалга олдсонгүй",
+                    f"{number} дугаартай захиалга байхгүй байна.",
                     type_=ORDER_NOT_FOUND_TYPE,
                 )
             return to_admin_order_out(order, self._storage)

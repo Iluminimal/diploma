@@ -29,6 +29,9 @@ class ProductOut(BaseModel):
     price_cents: int
     currency: str
     in_stock: bool
+    # Цөөхөн үлдсэн (0-ээс их, босгоос ихгүй): "Цөөхөн үлдсэн" гэж харуулна, яг тоог нууна. Default
+    # нь хуучин cache-ийн өгөгдлийг уншихад зориулсан.
+    low_stock: bool = False
     image: ProductImage
     # Нийтлэгдсэн сэтгэгдлүүдээс; сэтгэгдэл гарах хүртэл дундаж байхгүй.
     rating_average: float | None
@@ -47,8 +50,8 @@ class FilterParams(BaseModel):
     color: FilterValues = []
     season: FilterValues = []
     usage: FilterValues = []
-    min_price: Annotated[int | None, Field(ge=0, le=10_000_000)] = None
-    max_price: Annotated[int | None, Field(ge=0, le=10_000_000)] = None
+    min_price: Annotated[int | None, Field(ge=0, le=1_000_000_000)] = None
+    max_price: Annotated[int | None, Field(ge=0, le=1_000_000_000)] = None
     in_stock: bool = False
 
     @model_validator(mode="after")
@@ -62,7 +65,7 @@ class FilterParams(BaseModel):
         return self
 
 
-ProductSortKey = Literal["newest", "price_asc", "price_desc", "relevance"]
+ProductSortKey = Literal["newest", "price_asc", "price_desc", "relevance", "rating", "popular"]
 
 
 class ProductListQuery(FilterParams):
@@ -85,3 +88,5 @@ class ProductPage(BaseModel):
     page: int
     page_size: int
     pages: int
+    # `q` яг таараагүй тул үсгийн алдааг тэсвэрлэсэн ойролцоо үр дүнг үзүүлж байна.
+    fuzzy: bool = False

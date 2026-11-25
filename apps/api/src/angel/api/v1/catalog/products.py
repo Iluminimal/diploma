@@ -45,7 +45,27 @@ async def get_product(product_id: ProductId, service: CatalogServiceDep) -> Prod
 async def similar_products(
     product_id: ProductId, query: Annotated[SimilarQuery, Query()], service: SearchServiceDep
 ) -> SearchResponse:
-    return await service.similar_products(product_id, to_search_filters(query), query.limit)
+    return await service.similar_products(
+        product_id,
+        to_search_filters(query),
+        query.limit,
+        query=query.query,
+        text_weight=query.text_weight,
+        interpret=query.interpret,
+    )
+
+
+@router.get(
+    "/{product_id}/complete-the-look",
+    summary="Products that go with this one (other categories, same gender, best sellers)",
+    responses=_NOT_FOUND,
+)
+async def complete_the_look(
+    product_id: ProductId,
+    service: CatalogServiceDep,
+    limit: Annotated[int, Query(ge=1, le=12)] = 8,
+) -> list[ProductOut]:
+    return await service.complete_the_look(product_id, limit)
 
 
 @router.get(

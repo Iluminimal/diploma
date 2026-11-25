@@ -11,6 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from angel.models import User
+from angel.services.accounts.account import DELETED_NAME
 from angel.services.reviews.reviews import author_name
 from tests.admin.test_admin_orders_api import administrator, in_stock, place_order
 from tests.conftest import Api, ApiFactory
@@ -450,8 +451,9 @@ async def test_moderating_an_unknown_review_is_a_404(store: Store) -> None:
         ("Ada Lovelace", "Ada L."),
         ("ada byron king lovelace", "ada L."),
         ("Cher", "Cher"),
-        ("Deleted user", "Deleted user"),
-        ("", "Deleted user"),
+        (DELETED_NAME, DELETED_NAME),
+        ("Deleted user", DELETED_NAME),  # өмнө нь англиар хадгалагдсан устгасан бүртгэл
+        ("", DELETED_NAME),
     ],
 )
 def test_authors_are_shown_by_first_name_and_initial(full_name: str, shown: str) -> None:

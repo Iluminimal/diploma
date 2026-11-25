@@ -9,6 +9,7 @@ from PIL import Image
 from transformers import AutoTokenizer, CLIPModel, PreTrainedTokenizerBase
 
 from angel.ml.embeddings import Embeddings, ImageArrays
+from angel.ml.gpu import GPU_LOCK
 from angel.ml.preprocess import CLIP_SIZE, ResizeMode, to_clip_array
 
 MODEL_ID = "patrickjohncyh/fashion-clip"
@@ -90,7 +91,7 @@ class FashionClipEmbedder:
         model = self._require_model()
         if arrays.ndim != 4 or arrays.shape[1:] != (CLIP_SIZE, CLIP_SIZE, 3):
             raise ValueError(f"expected (n, {CLIP_SIZE}, {CLIP_SIZE}, 3) uint8, got {arrays.shape}")
-        with torch.inference_mode():
+        with GPU_LOCK, torch.inference_mode():
             pixels = torch.from_numpy(np.ascontiguousarray(arrays)).to(self.device)
             pixels = pixels.permute(0, 3, 1, 2).to(self._dtype).div_(255.0)
             pixels = (pixels - self._mean) / self._std
@@ -111,7 +112,7 @@ class FashionClipEmbedder:
         tokens = self._tokenizer(
             list(texts), padding=True, truncation=True, max_length=77, return_tensors="pt"
         ).to(self.device)
-        with torch.inference_mode():
+        with GPU_LOCK, torch.inference_mode():
             features = model.get_text_features(**tokens).pooler_output
             return self._normalize(features)
 

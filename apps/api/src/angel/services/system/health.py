@@ -25,8 +25,8 @@ class HealthService:
             failing = sorted(name for name, value in checks.items() if value == "fail")
             raise ProblemError(
                 HTTPStatus.SERVICE_UNAVAILABLE,
-                "Service not ready",
-                f"Failing checks: {', '.join(failing)}.",
+                "Үйлчилгээ бэлэн болоогүй",
+                f"Амжилтгүй шалгалтууд: {', '.join(failing)}.",
                 extensions={"checks": checks},
             )
         return ReadinessResponse(checks=checks)

@@ -4,7 +4,6 @@ import pytest
 from angel.ml.classifier import (
     CategoryLabel,
     LazyCategoryClassifier,
-    WholeImageLocalizer,
     ZeroShotCategoryClassifier,
 )
 from angel.ml.fake import FakeEmbedder
@@ -92,11 +91,3 @@ async def test_lazy_classifier_builds_once_and_retries_after_failure() -> None:
     assert await lazy.get() is ready
     assert await lazy.get() is ready
     assert attempts == 2
-
-
-def test_whole_image_localizer_returns_the_picture_itself() -> None:
-    from PIL import Image
-
-    image = Image.new("RGB", (10, 10))
-
-    assert WholeImageLocalizer().locate(image) == [image]

@@ -1,59 +1,62 @@
-"""Дэлгүүрт төлбөрийн provider-аас хэрэгтэй зүйл, Stripe-ээс хамаарахгүй.
+"""Дэлгүүрт төлбөрийн provider-аас хэрэгтэй зүйл, тодорхой provider-оос хамаарахгүй.
 
-Service-үүд зөвхөн энэ protocol-оос хамаарна. `StripeGateway` Stripe-тай ярина; `OfflineGateway`
-нь key-гүй хөгжүүлэлт, тестэд зориулсан процесс доторх орлуулагч.
+Service-үүд зөвхөн энэ protocol-оос хамаарна. `QPayGateway` QPay-тэй ярина; `OfflineGateway` нь
+түлхүүргүй хөгжүүлэлт, тестэд зориулсан процесс доторх орлуулагч.
+
+Мөнгөн дүн бүр тухайн валютын минор нэгжээр (USD cent, MNT мөнгө = төгрөг x 100), бүхэл тоогоор.
 """
 
-from dataclasses import dataclass
-from typing import Literal, Protocol
+from dataclasses import dataclass, field
+from typing import Any, Literal, Protocol
 
-PaymentEventKind = Literal["succeeded", "failed", "canceled"]
+PaymentMode = Literal["qpay", "offline"]
 
 
 class PaymentProviderError(Exception):
     """Provider-тэй холбогдсонгүй эсвэл дуудлагыг татгалзсан. Дахин оролдоход аюулгүй."""
 
 
-class InvalidSignatureError(Exception):
-    """Provider гарын үсэг зураагүй (эсвэл буруу бүтэцтэй) webhook body."""
-
-
 @dataclass(frozen=True)
 class IntentInfo:
+    """Provider дээр үүссэн нэг төлбөр (QPay-д нэхэмжлэх). `checkout` нь browser-т төлөхөд
+    хэрэгтэй зүйл (QPay: QR зураг, банкны апп-ын холбоос); offline-д хоосон."""
+
     id: str
-    client_secret: str
     status: str
+    checkout: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
 class PaymentEvent:
-    """Захиалгын логикт хэрэгтэй зүйл болгон хураасан provider webhook."""
+    """Provider дээр баталгаажсан төлбөр. `amount`, `currency` нь provider бодитоор авсан дүн
+    (минор нэгжээр): settlement үүнийг төлбөрийн түгжсэн дүнтэй харьцуулна."""
 
     id: str
-    kind: PaymentEventKind
     intent_id: str
-    amount_cents: int
+    amount: int
     currency: str
-    message: str | None = None
+    kind: Literal["succeeded"] = "succeeded"
 
 
 class PaymentGateway(Protocol):
-    mode: Literal["stripe", "offline"]
+    mode: PaymentMode
+    # Provider ямар валютаар мөнгө авдаг вэ (QPay: зөвхөн MNT). None бол дэлгүүрийн үндсэн валют.
+    charge_currency: str | None
 
     async def create_intent(
-        self, *, amount_cents: int, currency: str, order_number: str, idempotency_key: str
+        self, *, amount: int, currency: str, order_number: str, idempotency_key: str
     ) -> IntentInfo:
         """Нэг захиалгын төлбөрийг үүсгэнэ (`idempotency_key` давтагдвал өмнөхийг нь буцаана)."""
         ...
 
+    async def check(self, intent_id: str) -> PaymentEvent | None:
+        """Provider-оос төлбөрийн төлвийг асууна. Төлөгдсөн бол event, үгүй бол None."""
+        ...
+
     async def cancel_intent(self, intent_id: str) -> Literal["canceled", "succeeded"]:
-        """Төлөгдөөгүй intent-ийг цуцлана. "succeeded" бол ээлжид төлөгдчихсөн гэсэн үг."""
+        """Төлөгдөөгүй төлбөрийг цуцлана. "succeeded" бол ээлжид төлөгдчихсөн гэсэн үг."""
         ...
 
     async def refund(self, intent_id: str, *, idempotency_key: str) -> str:
-        """Төлөгдсөн intent-ийг бүтнээр нь буцаан олгоно; refund id буцаана."""
-        ...
-
-    def parse_event(self, payload: bytes, signature: str | None) -> PaymentEvent | None:
-        """Webhook-ийг шалгаж задлана. Бидний боловсруулдаггүй event төрөлд None."""
+        """Төлөгдсөн төлбөрийг бүтнээр нь буцаан олгоно; refund id буцаана."""
         ...

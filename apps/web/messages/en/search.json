@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "title": "Search by photo",
+    "description": "Upload, drop, paste or capture a photo of clothing and find visually similar products."
+  },
+  "trigger": "Search with a photo",
+  "dialog": {
+    "title": "Search by photo",
+    "description": "Show us something you like and we'll find similar pieces."
+  },
+  "camera": {
+    "blocked": "Camera access is blocked. Allow it in your browser's site settings, or upload a photo instead.",
+    "notFound": "No camera was found on this device. You can upload a photo instead.",
+    "inUse": "The camera is in use by another app.",
+    "failed": "We couldn't start the camera. You can upload a photo instead.",
+    "preview": "Camera preview",
+    "starting": "Starting camera",
+    "cancel": "Cancel",
+    "capture": "Capture",
+    "title": "Take a photo",
+    "description": "Point the camera at the clothing item and capture it.",
+    "live": "Highlight garments",
+    "liveHint": "Preview frames are analysed on our server to outline garments and are never stored.",
+    "liveUnavailable": "Live highlighting is unavailable right now. You can still take the photo.",
+    "liveCount": "{count, plural, one {# garment} other {# garments}}"
+  },
+  "detected": {
+    "category": "Category: {name}",
+    "detected": "Detected: {name}",
+    "change": "{label}. Change category",
+    "menu": "Category",
+    "any": "Any category",
+    "another": "Another category",
+    "choose": "Choose…"
+  },
+  "dropzone": {
+    "preparing": "Preparing photo",
+    "dropToSearch": "Drop to search",
+    "dropHere": "Drop a photo here",
+    "paste": "or paste one with <kbd>⌘/Ctrl V</kbd>",
+    "formats": ". JPEG, PNG, WebP or iPhone HEIC.",
+    "choose": "Choose a photo",
+    "take": "Take a photo",
+    "takeWithCamera": "Take a photo with the camera",
+    "private": "Your photo is used only for this search and is never stored."
+  },
+  "imageErrors": {
+    "not-image": "That file isn't an image. Please choose a photo.",
+    "too-large": "That photo is too large. Please choose one under 40 MB.",
+    "decode-failed": "We couldn't open that photo. Try a JPEG or PNG instead.",
+    "generic": "We couldn't open that photo."
+  },
+  "refine": {
+    "label": "Refine the search with words",
+    "heading": "Refine with words",
+    "placeholder": "like this but in blue",
+    "clear": "Clear refinement",
+    "submit": "Refine"
+  },
+  "applied": {
+    "heading": "Understood from your words",
+    "color": "Colour: {value}",
+    "gender": "For: {value}",
+    "season": "Season: {value}",
+    "usage": "Use: {value}",
+    "minPrice": "From {value}",
+    "maxPrice": "Up to {value}",
+    "inStock": "In stock"
+  },
+  "filters": {
+    "label": "Filters",
+    "inStock": "In stock",
+    "more": "More filters",
+    "moreDescription": "Colour, price, season and occasion.",
+    "done": "Done",
+    "applied": "Applied filters",
+    "remove": "Remove filter",
+    "any": "any"
+  },
+  "view": {
+    "title": "Search by photo",
+    "intro": "Upload a picture of something you like and we'll find similar pieces in our catalogue.",
+    "yourPhoto": "Your photo",
+    "remove": "Remove",
+    "private": "Your photo is used only for this search and is never stored.",
+    "results": "Results",
+    "searching": "Searching…",
+    "count": "{count, plural, one {# similar item} other {# similar items}}",
+    "countFor": "{count, plural, one {# similar item} other {# similar items}} for “{query}”",
+    "timing": "{count} · {ms} ms",
+    "tryAgain": "Try again",
+    "none": "No close matches",
+    "noneHint": "Try removing a filter or the category, or use a clearer photo of a single item.",
+    "preparing": "Preparing…",
+    "replace": "Replace photo",
+    "garmentsFound": "{count, plural, one {# garment found} other {# garments found}}"
+  },
+  "match": "{percent}% match",
+  "matchLabel": "{percent} percent match",
+  "regions": {
+    "group": "Garments found in your photo",
+    "choose": "Search for garment {number}"
+  },
+  "garments": {
+    "title": "Garment {number}",
+    "looksLike": "Looks like: {name}",
+    "seeAll": "See all matches",
+    "none": "No close matches for this garment.",
+    "back": "All garments in this photo"
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
  * хуудсан дээр Lighthouse LCP 88 -> 92). Сумнууд өөрсдөө smooth scroll хүсдэг.
  */
 export function ScrollRail({ children, label }: { children: ReactNode; label: string }) {
+  const t = useTranslations("layout.ui");
   const ref = useRef<HTMLUListElement>(null);
 
   function scrollBy(direction: 1 | -1) {
@@ -27,7 +29,7 @@ export function ScrollRail({ children, label }: { children: ReactNode; label: st
         ref={ref}
         aria-label={label}
         tabIndex={0}
-        className="hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:gap-5 sm:px-6 lg:mx-0 lg:px-0 focus-visible:ring-ring/60 rounded-2xl outline-none focus-visible:ring-3"
+        className="hide-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:gap-5 sm:px-6 lg:mx-0 lg:px-0 focus-visible:ring-ring/50 rounded-2xl outline-none focus-visible:ring-3"
       >
         {children}
       </ul>
@@ -36,7 +38,7 @@ export function ScrollRail({ children, label }: { children: ReactNode; label: st
           type="button"
           variant="outline"
           size="icon-lg"
-          aria-label="Scroll left"
+          aria-label={t("scrollLeft")}
           onClick={() => scrollBy(-1)}
           className="shadow-soft pointer-events-auto rounded-full opacity-0 transition-opacity group-hover/rail:opacity-100 focus-visible:opacity-100"
         >
@@ -46,7 +48,7 @@ export function ScrollRail({ children, label }: { children: ReactNode; label: st
           type="button"
           variant="outline"
           size="icon-lg"
-          aria-label="Scroll right"
+          aria-label={t("scrollRight")}
           onClick={() => scrollBy(1)}
           className="shadow-soft pointer-events-auto rounded-full opacity-0 transition-opacity group-hover/rail:opacity-100 focus-visible:opacity-100"
         >

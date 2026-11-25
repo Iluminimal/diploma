@@ -1,9 +1,11 @@
 import { RecordView } from "@/features/catalog/record-view";
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Fragment, Suspense } from "react";
 import { Price } from "@/components/product/price";
+import { getFormat, getVocab } from "@/i18n/server";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,8 +15,11 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Disclosure } from "@/components/ui/disclosure";
+import { CompleteTheLook } from "@/features/catalog/complete-the-look";
+import { DeliveryEstimate } from "@/features/catalog/delivery-estimate";
 import { DeliveryInfo } from "@/features/catalog/delivery-info";
-import { getProduct, getProductReviews } from "@/features/catalog/api";
+import { ProductRecentlyViewed } from "@/features/catalog/product-recently-viewed";
+import { getCatalogNav, getProduct, getProductReviews } from "@/features/catalog/api";
 import { breadcrumbTrail, productDescription, productJsonLd } from "@/features/catalog/json-ld";
 import { JsonLdScripts } from "@/features/seo/json-ld-scripts";
 import { productPath } from "@/features/catalog/product";
@@ -35,8 +40,8 @@ function parseId(raw: string): number | null {
 export async function generateMetadata({ params }: PageProps<"/products/[id]/[[...slug]]">): Promise<Metadata> {
   const id = parseId((await params).id);
   const product = id ? await getProduct(id) : null;
-  if (!product) return { title: "Product not found", robots: { index: false } };
-  const description = productDescription(product);
+  if (!product) return { title: (await getTranslations("catalog.product"))("notFound"), robots: { index: false } };
+  const description = productDescription(product, await getVocab());
   return {
     title: product.name,
     description,
@@ -61,36 +66,45 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
   // Бараа бүрт нэг canonical URL: slug алга эсвэл хуучирсан бол 308-аар зас.
   if (slug?.join("/") !== product.slug) permanentRedirect(productPath(product));
 
-  const reviews = await getProductReviews(product.id);
+  const [reviews, t, tc, format, tu, vocab, nav] = await Promise.all([
+    getProductReviews(product.id),
+    getTranslations("catalog.product"),
+    getTranslations("catalog"),
+    getFormat(),
+    getTranslations("layout.ui"),
+    getVocab(),
+    // Ангиллын мод унасан ч хуудас унахгүй: breadcrumb шүүлтүүртэй жагсаалт руу буцна.
+    getCatalogNav().catch(() => null),
+  ]);
   const sizes = sizesFor(product);
-  const trail = breadcrumbTrail(product);
+  const trail = breadcrumbTrail(product, nav);
   const details: [string, string | number | null][] = [
-    ["Colour", product.base_colour && product.base_colour !== "NA" ? product.base_colour : null],
-    ["Category", `${product.master_category} / ${product.sub_category}`],
-    ["Type", product.article_type],
-    ["Gender", product.gender],
-    ["Season", product.season],
-    ["Occasion", product.usage && product.usage !== "NA" ? product.usage : null],
-    ["Collection", product.year],
+    [t("colour"), product.base_colour && product.base_colour !== "NA" ? vocab.colour(product.base_colour) : null],
+    [t("category"), `${vocab.category(product.master_category)} / ${vocab.category(product.sub_category)}`],
+    [t("type"), vocab.category(product.article_type)],
+    [t("gender"), vocab.gender(product.gender)],
+    [t("season"), product.season ? vocab.season(product.season) : null],
+    [t("occasion"), product.usage && product.usage !== "NA" ? vocab.usage(product.usage) : null],
+    [t("collection"), product.year],
   ];
 
   return (
     <div className="container-page py-6 md:py-10">
-      <JsonLdScripts nodes={productJsonLd(product)} />
+      <JsonLdScripts nodes={productJsonLd(product, { vocab, nav, homeLabel: tc("home") })} />
       <RecordView product={product} />
-      <Breadcrumb className="mb-6">
+      <Breadcrumb className="mb-6" aria-label={tu("breadcrumb")}>
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink asChild>
-              <Link href="/">Home</Link>
+              <Link href="/">{tc("home")}</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
-          {trail.map((crumb) => (
+          {trail.map((crumb, i) => (
             <Fragment key={crumb.href}>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href={crumb.href}>{crumb.label}</Link>
+                  <Link href={crumb.href}>{i === 0 ? vocab.gender(crumb.label) : vocab.category(crumb.label)}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
             </Fragment>
@@ -112,7 +126,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
               <a href="#reviews" className="type-caption inline-flex items-center gap-2 hover:underline">
                 <RatingStars rating={product.rating_average} />
                 <span className="text-muted-foreground">
-                  {product.rating_average.toFixed(1)} · {product.rating_count} {product.rating_count === 1 ? "review" : "reviews"}
+                  {t("ratingSummary", { rating: format.number(Math.round(product.rating_average * 10) / 10), reviews: t("reviews", { count: product.rating_count }) })}
                 </span>
               </a>
             )}
@@ -120,22 +134,23 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
               <Price cents={product.price_cents} currency={product.currency} className="type-heading" />
               {product.in_stock ? (
                 <span className="text-success type-caption inline-flex items-center gap-1 font-medium">
-                  <Check className="size-4" /> In stock
+                  <Check className="size-4" /> {t("inStock")}
                 </span>
               ) : (
-                <span className="text-muted-foreground type-caption font-medium">Sold out</span>
+                <span className="text-muted-foreground type-caption font-medium">{t("soldOut")}</span>
               )}
             </p>
+            <DeliveryEstimate />
           </header>
 
           <PurchasePanel product={product} sizes={sizes} />
 
           <Link href="/search" className="link-more w-fit">
-            Find more like this with a photo
+            {t("findMore")}
           </Link>
 
           <div>
-            <Disclosure title="Product details" defaultOpen>
+            <Disclosure title={t("details")} defaultOpen>
               <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-2.5">
                 {details
                   .filter(([, v]) => v !== null && v !== "")
@@ -147,7 +162,7 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
                   ))}
               </dl>
             </Disclosure>
-            <Disclosure title="Delivery" className="border-b">
+            <Disclosure title={t("delivery")} className="border-b">
               <DeliveryInfo />
             </Disclosure>
           </div>
@@ -156,9 +171,13 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
 
       <ProductReviews productId={product.id} initial={reviews} />
 
+      <Suspense fallback={null}>
+        <CompleteTheLook productId={product.id} />
+      </Suspense>
+
       <Suspense
         fallback={
-          <section className="mt-20" aria-label="Similar products">
+          <section className="mt-20" aria-label={tc("similarProducts")}>
             <Skeleton className="mb-6 h-7 w-44 rounded" />
             <RailSkeleton />
           </section>
@@ -166,6 +185,8 @@ export default async function ProductPage({ params }: PageProps<"/products/[id]/
       >
         <SimilarProducts productId={product.id} />
       </Suspense>
+
+      <ProductRecentlyViewed excludeId={product.id} />
     </div>
   );
 }

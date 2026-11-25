@@ -1,3 +1,5 @@
+import { createTranslator } from "next-intl";
+import en from "../../../messages/en";
 import type { components } from "./schema";
 
 type ProblemDetail = components["schemas"]["ProblemDetail"];
@@ -21,13 +23,23 @@ const TYPE = {
   forbidden: "urn:angel:problem:forbidden",
   invalidCategory: "urn:angel:problem:invalid-category",
   otpInvalid: "urn:angel:problem:otp-invalid",
+  weakPassword: "urn:angel:problem:weak-password",
   otpExpired: "urn:angel:problem:otp-expired",
   otpTooManyAttempts: "urn:angel:problem:otp-too-many-attempts",
   phoneTaken: "urn:angel:problem:phone-taken",
   lastSignInMethod: "urn:angel:problem:last-sign-in-method",
   invalidDestination: "urn:angel:problem:invalid-destination",
   smsUnavailable: "urn:angel:problem:sms-unavailable",
+  emailUnavailable: "urn:angel:problem:email-unavailable",
   contactEmailRequired: "urn:angel:problem:contact-email-required",
+  wishlistFull: "urn:angel:problem:wishlist-full",
+  cartFull: "urn:angel:problem:cart-full",
+  addressLimit: "urn:angel:problem:address-limit",
+  checkoutBusy: "urn:angel:problem:checkout-busy",
+  reviewExists: "urn:angel:problem:review-exists",
+  invalidTransition: "urn:angel:problem:invalid-order-transition",
+  // Ижил түлхүүрээр давтсан checkout, гэхдээ захиалга хугацаа нь дууссан (409).
+  attemptExpired: "urn:angel:problem:attempt-expired",
 } as const;
 
 /** API-ийн буцаасан RFC 7807 problem, эсвэл дамжуулалтын алдаа (`status` 0). */
@@ -108,72 +120,111 @@ export async function errorFromResponse(response: Response): Promise<ApiError> {
   });
 }
 
-/** Шидэгдсэн дурын утгыг худалдан авагчид харуулахад аюулгүй, хэрэгтэй мессеж болгон хөрвүүлнэ. */
-export function userMessage(error: unknown): string {
-  if (!(error instanceof ApiError)) {
-    return "Something went wrong. Please try again.";
-  }
-  switch (true) {
-    case error.is("invalidCredentials"):
-      return "That email and password don't match. Please try again.";
-    case error.is("emailTaken"):
-      return "An account with this email already exists. Try signing in instead.";
-    case error.is("otpInvalid"):
-      return "That code isn't right. Check it and try again.";
-    case error.is("otpExpired"):
-      return "That code has expired. Ask for a new one.";
-    case error.is("otpTooManyAttempts"):
-      return "Too many wrong codes. Ask for a new one.";
-    case error.is("phoneTaken"):
-      return "Another account already uses this phone number.";
-    case error.is("lastSignInMethod"):
-      return error.detail ?? "Add another way to sign in first.";
-    case error.is("invalidDestination"):
-      return "Enter a valid phone number or email address.";
-    case error.is("smsUnavailable"):
-      return "We couldn't send the text message. Try again in a moment.";
-    case error.is("contactEmailRequired"):
-      return "Enter an email address for your order updates.";
-    case error.is("unauthenticated") || error.status === 401:
-      return "Please sign in to continue.";
-    case error.is("insufficientStock"):
-      return error.detail ?? "Not enough stock for that quantity.";
-    case error.is("cartEmpty"):
-      return "Your Bag is empty.";
-    case error.is("paymentsUnavailable"):
-      return "Payments aren't available right now. Please try again later.";
-    case error.is("paymentProvider"):
-      return "We couldn't reach the payment provider. Your Bag is unchanged, please try again.";
-    case error.is("paymentInProgress"):
-      return error.detail ?? "A payment is already in progress for your last order.";
-    case error.is("forbiddenOrigin"):
-      return "This request was blocked for your safety. Reload the page and try again.";
-    case error.is("forbidden") || error.status === 403:
-      return "Your account isn't allowed to do that.";
-    case error.is("invalidCategory"):
-      return error.detail ?? "Choose a valid category.";
-    case error.status === 0:
-      return "We can't reach the server. Check your connection and try again.";
-    case error.type === TYPE.rateLimited || error.status === 429:
-      return error.retryAfter
-        ? `Too many requests. Try again in ${error.retryAfter} seconds.`
-        : "Too many requests. Please wait a moment and try again.";
-    case error.type === TYPE.tooLarge || error.status === 413:
-      return "That image is too large. Please use one under 8 MB.";
-    case error.type === TYPE.unsupported || error.status === 415:
-      return "Unsupported file type. Please use a JPEG, PNG or WebP image.";
-    case error.type === TYPE.invalidImage:
-      return "We couldn't read that image. Try a different photo.";
-    case error.status === 422:
-      return error.detail ?? "Please check the details you entered.";
-    case error.status === 404:
-      return "We couldn't find that.";
-    case error.status >= 500:
-      return "Our server had a problem. Please try again shortly.";
-    default:
-      return error.detail ?? "Something went wrong. Please try again.";
-  }
+/** `errors` namespace-ийн орчуулагч: `useTranslations("errors")` эсвэл `createTranslator`. */
+export type ErrorTranslator = (key: keyof typeof en.errors, values?: Record<string, string | number>) => string;
+
+/**
+ * Шидэгдсэн дурын утгыг худалдан авагчид харуулахад аюулгүй, хэрэгтэй мессеж болгон хөрвүүлэх функц
+ * үүсгэнэ. Тодорхой төрөлтэй алдаа орчуулсан мессежээ авна; серверийн англи `detail` зөвхөн төрөл нь
+ * үл мэдэгдэх (422, ерөнхий) үед л дамжина.
+ */
+export function createUserMessage(t: ErrorTranslator) {
+  return (error: unknown): string => {
+    if (!(error instanceof ApiError)) return t("generic");
+    switch (true) {
+      case error.is("invalidCredentials"):
+        return t("invalidCredentials");
+      case error.is("emailTaken"):
+        return t("emailTaken");
+      case error.is("otpInvalid"):
+        return t("otpInvalid");
+      case error.is("weakPassword"):
+        return t(
+          error.extensions.reason === "contains_identity"
+            ? "weakPasswordIdentity"
+            : error.extensions.reason === "repeated"
+              ? "weakPasswordRepeated"
+              : "weakPasswordCommon",
+        );
+      case error.is("otpExpired"):
+        return t("otpExpired");
+      case error.is("otpTooManyAttempts"):
+        return t("otpTooManyAttempts");
+      case error.is("phoneTaken"):
+        return t("phoneTaken");
+      case error.is("lastSignInMethod"):
+        return t("lastSignInMethod");
+      case error.is("invalidDestination"):
+        return t("invalidDestination");
+      case error.is("smsUnavailable"):
+        return t("smsUnavailable");
+      case error.is("emailUnavailable"):
+        return t("emailUnavailable");
+      case error.is("contactEmailRequired"):
+        return t("contactEmailRequired");
+      case error.is("wishlistFull"):
+        return t("wishlistFull");
+      case error.is("cartFull"):
+        return t("cartFull");
+      case error.is("addressLimit"):
+        return t("addressLimit");
+      case error.is("checkoutBusy"):
+        return t("checkoutBusy");
+      case error.is("reviewExists"):
+        return t("reviewExists");
+      case error.is("invalidTransition"):
+        return t("invalidTransition");
+      case error.is("invalidSize"):
+        return t("invalidSize");
+      case error.is("unauthenticated") || error.status === 401:
+        return t("unauthenticated");
+      case error.is("insufficientStock"): {
+        const available = error.extensions.available;
+        if (available === 0) return t("soldOut");
+        return typeof available === "number" ? t("onlyAvailable", { available }) : t("insufficientStock");
+      }
+      case error.is("cartEmpty"):
+        return t("cartEmpty");
+      case error.is("paymentsUnavailable"):
+        return t("paymentsUnavailable");
+      case error.is("paymentProvider"):
+        return t("paymentProvider");
+      case error.is("paymentInProgress"):
+        return t("paymentInProgress");
+      case error.is("attemptExpired"):
+        return t("attemptExpired");
+      case error.is("forbiddenOrigin"):
+        return t("forbiddenOrigin");
+      case error.is("forbidden") || error.status === 403:
+        return t("forbidden");
+      case error.is("invalidCategory"):
+        return t("invalidCategory");
+      case error.status === 0:
+        return t("network");
+      case error.type === TYPE.rateLimited || error.status === 429:
+        return error.retryAfter ? t("rateLimitedAfter", { seconds: error.retryAfter }) : t("rateLimited");
+      case error.type === TYPE.tooLarge || error.status === 413:
+        return t("tooLarge");
+      case error.type === TYPE.unsupported || error.status === 415:
+        return t("unsupported");
+      case error.type === TYPE.invalidImage:
+        return t("invalidImage");
+      case error.status === 422:
+        return error.detail ?? t("validation");
+      case error.status === 404:
+        return t("notFound");
+      case error.status >= 500:
+        return t("server");
+      default:
+        return error.detail ?? t("generic");
+    }
+  };
 }
+
+/** Англи хэлээр. Admin (англиар үлдэнэ) болон хэлний контекстгүй газарт; storefront `useUserMessage`-ийг ашиглана. */
+export const userMessage = createUserMessage(
+  createTranslator({ locale: "en", messages: en, namespace: "errors" }) as unknown as ErrorTranslator,
+);
 
 /** Сүлжээний алдааг (fetch reject) status 0-тэй `ApiError` болгож боож өгнө. */
 export function networkError(cause: unknown): ApiError {

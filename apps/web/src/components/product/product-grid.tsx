@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useTranslations } from "next-intl";
+import type { CSSProperties, ReactNode } from "react";
 import { Reveal } from "@/components/motion/reveal";
 import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
 import type { Product } from "@/features/catalog/product";
@@ -24,7 +25,14 @@ export function ProductGrid({
       {products.map((product, i) => {
         const card = <ProductCard product={product} priority={i < priorityCount} headingLevel={headingLevel} />;
         // Эхний мөр хуудасны хэмжигдэх хэсэг: анхны paint-аас эхлэн байна.
-        if (i < priorityCount) return <li key={product.id}>{card}</li>;
+        if (i < priorityCount) {
+          // `translate`/`scale` л (opacity-гүй): эхний мөр хэзээ ч нуугдахгүй, LCP-д саад болохгүй.
+          return (
+            <li key={product.id} className="card-in" style={{ "--i": i } as CSSProperties}>
+              {card}
+            </li>
+          );
+        }
         return (
           // Эхний дэлгэцээс доорх мөрүүд хэрэгтэй болтол render хийгдэхгүй (зургийг нь ч татахгүй),
           // орж ирэхдээ дээш гарна.
@@ -50,11 +58,12 @@ export function ProductGridSkeleton({
   count?: number;
   columns?: 3 | 4;
 }): ReactNode {
+  const t = useTranslations("layout.ui");
   return (
     <div
       className={cn(GRID, columns === 4 && "lg:grid-cols-4")}
       role="status"
-      aria-label="Loading products"
+      aria-label={t("loadingProducts")}
     >
       {Array.from({ length: count }, (_, i) => (
         <ProductCardSkeleton key={i} />

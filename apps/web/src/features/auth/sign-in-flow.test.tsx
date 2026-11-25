@@ -52,8 +52,9 @@ describe("SignInFlow: the first step", () => {
     renderWithQuery(<SignInFlow next="/" social={<p>social slot</p>} />);
 
     expect(await field()).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Sign in or create account" })).toBeInTheDocument();
-    expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Sign in" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Create account" })).toHaveAttribute("aria-selected", "false");
     expect(screen.queryByRole("combobox", { name: "Country" })).not.toBeInTheDocument();
     expect(screen.getByText("social slot")).toBeInTheDocument();
   });
@@ -105,6 +106,48 @@ describe("SignInFlow: the first step", () => {
     renderWithQuery(<SignInFlow next="/" notice="Google sign-in was cancelled." />);
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Google sign-in was cancelled.");
+  });
+});
+
+describe("SignInFlow: signing up", () => {
+  it("opens on the create-account tab when asked to", async () => {
+    renderWithQuery(<SignInFlow next="/" initialMode="register" />);
+
+    expect(await screen.findByRole("heading", { name: "Create your account" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Create account" })).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("switches between the two tabs, with the arrow keys too", async () => {
+    renderWithQuery(<SignInFlow next="/" />);
+
+    await userEvent.click(await screen.findByRole("tab", { name: "Create account" }));
+    expect(screen.getByRole("heading", { name: "Create your account" })).toBeInTheDocument();
+
+    screen.getByRole("tab", { name: "Create account" }).focus();
+    await userEvent.keyboard("{ArrowLeft}");
+    expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Sign in" })).toHaveFocus();
+  });
+
+  it("sends an email a code straight away instead of asking for a password", async () => {
+    const api = stubApi({ "POST /api/v1/auth/otp/request": { status: 202 } });
+    renderWithQuery(<SignInFlow next="/" initialMode="register" />);
+
+    await enter("New@Example.com");
+
+    expect(await screen.findByRole("heading", { name: "Enter the code" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+    expect(api.calls[0]?.body).toEqual({ destination: "new@example.com" });
+  });
+
+  it("keeps the password step when signing in", async () => {
+    const api = stubApi({});
+    renderWithQuery(<SignInFlow next="/" />);
+
+    await enter("ada@example.com");
+
+    expect(await screen.findByRole("heading", { name: "Enter your password" })).toBeInTheDocument();
+    expect(api.calls).toHaveLength(0);
   });
 });
 
@@ -171,7 +214,7 @@ describe("SignInFlow with a phone number", () => {
     await enter("+1 415 555 2671");
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Sign in or create account" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Sign in" })).toBeInTheDocument();
   });
 
   it("asks a brand-new customer for a name, stays on the page until it is saved, then leaves", async () => {

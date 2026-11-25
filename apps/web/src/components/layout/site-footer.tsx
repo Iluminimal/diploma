@@ -1,37 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { categoryHref } from "@/features/catalog/nav";
-
-const COLUMNS = [
-  {
-    title: "Shop",
-    links: [
-      { href: categoryHref("women"), label: "Women" },
-      { href: categoryHref("men"), label: "Men" },
-      { href: categoryHref("kids"), label: "Kids" },
-      { href: "/products?sort=newest", label: "New arrivals" },
-    ],
-  },
-  {
-    title: "Discover",
-    links: [
-      { href: "/search", label: "Search by photo" },
-      { href: "/products", label: "All products" },
-    ],
-  },
-  {
-    title: "Your account",
-    links: [
-      { href: "/account/profile", label: "Profile", private: true },
-      { href: "/account/orders", label: "Orders", private: true },
-      { href: "/account/wishlist", label: "Wishlist", private: true },
-      { href: "/cart", label: "Bag" },
-    ],
-  },
-] as const;
+import { getVocab } from "@/i18n/server";
 
 const LINK =
-  "text-foreground/80 hover:text-foreground focus-visible:ring-ring/60 rounded-sm transition-colors outline-none hover:underline focus-visible:ring-3";
+  "text-foreground/80 hover:text-foreground focus-visible:ring-ring/50 inline-block rounded-sm py-1 transition-colors outline-none hover:underline focus-visible:ring-3";
 
 /**
  * Apple-ийн global footer: цайвар саарал, 12px үсэг, лавлах (баганад бүрт жижиг тод гарчиг ба
@@ -39,15 +14,43 @@ const LINK =
  * 1px hairline. Утсан дээр багана нугарахгүй: зэрэгцсэн хоёр багана холбоос бүрийг нэг товшилтын
  * зайд байлгана.
  */
-export function SiteFooter() {
+export async function SiteFooter() {
+  const [t, vocab] = await Promise.all([getTranslations("layout.footer"), getVocab()]);
+  const columns = [
+    {
+      title: t("shop"),
+      links: [
+        { href: categoryHref("women"), label: vocab.department("Women") },
+        { href: categoryHref("men"), label: vocab.department("Men") },
+        { href: categoryHref("kids"), label: vocab.department("Kids") },
+        { href: "/products?sort=newest", label: t("newArrivals") },
+      ],
+    },
+    {
+      title: t("discover"),
+      links: [
+        { href: "/search", label: t("searchByPhoto") },
+        { href: "/products", label: t("allProducts") },
+      ],
+    },
+    {
+      title: t("account"),
+      links: [
+        { href: "/account/profile", label: t("profile"), private: true },
+        { href: "/account/orders", label: t("orders"), private: true },
+        { href: "/account/wishlist", label: t("wishlist"), private: true },
+        { href: "/cart", label: t("bag") },
+      ],
+    },
+  ];
   return (
     <footer className="bg-secondary text-muted-foreground type-fine mt-16">
       <div className="container-nav pt-4 pb-5 md:pt-5">
         <div className="border-border grid grid-cols-2 gap-x-6 gap-y-8 border-b py-6 md:grid-cols-3 md:py-8">
-          {COLUMNS.map((column) => (
+          {columns.map((column) => (
             <nav key={column.title} aria-label={column.title}>
               <p className="text-foreground mb-2.5 font-semibold">{column.title}</p>
-              <ul className="space-y-2">
+              <ul className="space-y-0.5">
                 {column.links.map((link) => (
                   <li key={link.href}>
                     {/* Нэвтрээгүй зочин account хуудас руу орвол login руу redirect хийгддэг.
@@ -63,19 +66,25 @@ export function SiteFooter() {
           ))}
         </div>
         <p className="border-border border-b py-3">
-          More ways to shop:{" "}
-          <Link href="/search" className="text-brand hover:underline">
-            search with a photo
-          </Link>{" "}
-          or{" "}
-          <Link href="/products" className="text-brand hover:underline">
-            browse everything
-          </Link>
-          .
+          {t.rich("moreWays", {
+            photo: (chunks) => (
+              <Link href="/search" className="text-brand underline underline-offset-2">
+                {chunks}
+              </Link>
+            ),
+            all: (chunks) => (
+              <Link href="/products" className="text-brand underline underline-offset-2">
+                {chunks}
+              </Link>
+            ),
+          })}
         </p>
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 pt-3">
-          <p>Copyright © {new Date().getFullYear()} Angel. All rights reserved.</p>
-          <ThemeToggle />
+          <p>{t("copyright", { year: new Date().getFullYear() })}</p>
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </footer>

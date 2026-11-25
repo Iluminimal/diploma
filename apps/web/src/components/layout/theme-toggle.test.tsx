@@ -18,7 +18,9 @@ beforeAll(() => {
 });
 
 describe("ThemeToggle", () => {
-  it("toggles the dark class on <html>", async () => {
+  it("starts light, and toggles the dark class on <html>", async () => {
+    window.localStorage.clear();
+    document.documentElement.classList.remove("dark");
     render(
       <ThemeProvider>
         <ThemeToggle />

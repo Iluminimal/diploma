@@ -1,6 +1,7 @@
 "use client";
 
 import { Camera } from "lucide-react";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,8 @@ const PhotoSearchDialog = dynamic(() => import("./photo-search-dialog").then((m)
 });
 
 /** Зураг сонгогчийг нээдэг товч, хуудас хаана хүсэх тэнд (нүүр хуудасны hero). */
-export function PhotoSearchTrigger({ className, label = "Search with a photo" }: { className?: string; label?: string }) {
+export function PhotoSearchTrigger({ className, label }: { className?: string; label?: string }) {
+  const t = useTranslations("search");
   const [requested, setRequested] = useState(false);
   const [open, setOpen] = useState(false);
   return (
@@ -25,7 +27,7 @@ export function PhotoSearchTrigger({ className, label = "Search with a photo" }:
           setOpen(true);
         }}
       >
-        <Camera aria-hidden /> {label}
+        <Camera aria-hidden /> {label ?? t("trigger")}
       </Button>
       {requested && <PhotoSearchDialog open={open} onOpenChange={setOpen} />}
     </>

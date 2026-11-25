@@ -6,7 +6,7 @@ import {
   pickProduct,
 } from "./support/ui";
 
-test("adding to the cart confirms on the button, flies to the cart and shows the free-shipping progress", async ({
+test("adding to the cart confirms on the button and shows the free-shipping progress", async ({
   page,
   products,
 }, testInfo) => {
@@ -25,8 +25,6 @@ test("adding to the cart confirms on the button, flies to the cart and shows the
   const drawer = page.getByRole("dialog");
   await expect(drawer.getByText(product.name)).toBeVisible();
   await expect(drawer.getByRole("progressbar", { name: "Progress to free shipping" })).toBeVisible();
-  // Нисэж буй зургийн хуулбар газардсаны дараа алга болно.
-  await expect(page.locator('body > img[aria-hidden="true"]')).toHaveCount(0);
 });
 
 test("a removed line can be brought back with Undo", async ({ page, products }, testInfo) => {
@@ -60,29 +58,22 @@ test("a product photo is replaced by the enlarged view on click", async ({ page,
   await expect(page.getByRole("dialog").getByRole("img", { name: product.name })).toBeVisible();
 });
 
-test("checkout shows its steps done as they are chosen, then covers the page while paying", async ({
+test("checkout shows its steps done as they are chosen, then confirms the order", async ({
   shopperPage: page,
   products,
 }, testInfo) => {
   await addToCartFromProductPage(page, pickProduct(products, testInfo.workerIndex + 4));
   await page.getByRole("dialog").getByRole("link", { name: "Check Out" }).click();
-  await page.getByLabel("Full name").fill("Ada Lovelace");
-  await page.getByLabel("Address", { exact: true }).fill("12 Analytical Way");
-  await page.getByLabel("City").fill("Springfield");
-  await page.getByLabel("Postal code").fill("12345");
+  await page.getByLabel("Full name").fill("Болд Батбаяр");
+  await page.getByLabel("Phone number").fill("99112233");
+  await page.getByLabel("District").selectOption("Баянгол");
+  await page.getByLabel("Street, building, apartment").fill("Энхтайваны өргөн чөлөө 12");
   await page.getByRole("button", { name: "Use this address" }).click();
 
-  await expect(page.getByRole("region", { name: "Delivery address" })).toContainText("12 Analytical Way");
+  await expect(page.getByRole("region", { name: "Delivery address" })).toContainText("Энхтайваны өргөн чөлөө 12");
   await expect(page.getByRole("region", { name: "Shipping method" })).toContainText("business days");
 
-  const card = page.getByLabel("Card number");
-  await card.fill("");
-  await card.pressSequentially("5555555555554444");
-  await expect(card).toHaveValue("5555 5555 5555 4444");
-  await expect(page.getByText("Mastercard")).toBeVisible();
-
   await page.getByRole("button", { name: /pay now/i }).click();
-  await expect(page.getByText("Processing your payment")).toBeVisible();
   await expect(page).toHaveURL(/\/checkout\/confirmation\//);
   await expect(page.getByRole("heading", { name: "Thank you for your order" })).toBeVisible();
   await expect(page.getByRole("region", { name: "What happens next" })).toBeVisible();
@@ -179,13 +170,11 @@ test.describe("on a phone", () => {
   });
 });
 
-test("with reduced motion everything still works, without the flight", async ({ page, products }, testInfo) => {
+test("with reduced motion everything still works", async ({ page, products }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   const product = pickProduct(products, testInfo.workerIndex + 5);
 
   await addToCartFromProductPage(page, product);
 
-  // Нисэлт байхгүй: Bag шууд гарч, хуудас дээр юу ч нисэн үлдэхгүй.
   await expect(page.getByRole("dialog").getByText(product.name)).toBeVisible();
-  await expect(page.locator('body > img[aria-hidden="true"]')).toHaveCount(0);
 });

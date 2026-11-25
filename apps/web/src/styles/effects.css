@@ -1,0 +1,468 @@
+/*
+ * Шинэ үеийн нүүр, жагсаалт, барааны хуудасны эффектүүд. Бүгд цэвэр CSS (JavaScript, animation сан
+ * байхгүй): зөвхөн `transform`, `opacity`, `translate`-ийг хөдөлгөнө, тиймээс compositor дээр
+ * ажиллаж layout, paint-ыг хөдөлгөхгүй. Дүрэм:
+ *   - hover эффект зөвхөн хулгана-тай төхөөрөмж дээр (`hover: hover`), утсан дээр хуурамч hover гацахгүй;
+ *   - scroll-driven зөвхөн дэмждэг browser-т (`@supports (animation-timeline: ...)`);
+ *   - бүх хөдөлгөөн `prefers-reduced-motion: no-preference` дотор: үгүй бол агуулга статик;
+ *   - фон гэрэл статик (animate хийхгүй, filter: blur хэрэглэхгүй).
+ *
+ * Бүгд `@layer components` дотор: Tailwind-ийн utility (`absolute`, `overflow-*`) эдгээрийг дарж
+ * чадна (layer-гүй CSS нь layer-тэй utility-ийг үргэлж дардаг).
+ */
+@layer components {
+
+:root {
+  /* Нүүр хуудасны гэрлийн өнгө: цайвар горимд цайвар пастел, харанхуйд гүн цэнхэр. */
+  --glow-a: oklch(0.86 0.09 250 / 0.55);
+  --glow-b: oklch(0.9 0.07 305 / 0.4);
+  --glow-c: oklch(0.92 0.06 200 / 0.4);
+  --elevation-lift: 0 2px 4px rgb(0 0 0 / 0.04), 0 18px 40px -18px rgb(0 0 0 / 0.28);
+}
+.dark {
+  --glow-a: oklch(0.42 0.15 255 / 0.5);
+  --glow-b: oklch(0.38 0.13 305 / 0.35);
+  --glow-c: oklch(0.4 0.1 215 / 0.3);
+  --elevation-lift: 0 2px 4px rgb(0 0 0 / 0.5), 0 22px 44px -16px rgb(0 0 0 / 0.75);
+}
+
+/*
+ * Аврора: хэсгийн ард гурван зөөлөн радиаль градиент (нэг давхарга, статик). Агуулга дээр гарахын
+ * тулд `isolation` нь stacking context үүсгэнэ.
+ */
+.aurora {
+  position: relative;
+  isolation: isolate;
+}
+.aurora::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 55% at 18% 0%, var(--glow-a), transparent 70%),
+    radial-gradient(50% 50% at 88% 8%, var(--glow-b), transparent 70%),
+    radial-gradient(48% 42% at 55% 100%, var(--glow-c), transparent 72%);
+}
+
+/* Гарчгийн нэг үгийг брэнд градиентаар тодруулна. Дэмжихгүй бол энгийн брэнд өнгө. */
+.text-gradient {
+  color: var(--brand);
+}
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .text-gradient {
+    background-image: linear-gradient(100deg, var(--brand) 10%, oklch(0.62 0.2 305) 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+/* Дээш өргөгдөх карт, tile: зөвхөн хулгана-тай төхөөрөмж дээр. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .lift {
+    transition:
+      transform 500ms var(--ease-out-expo),
+      box-shadow 500ms var(--ease-out-expo);
+  }
+  .lift:is(:hover, :focus-within) {
+    transform: translateY(-4px);
+    box-shadow: var(--elevation-lift);
+  }
+  /* Зураг нь өөрийн хүрээндээ зөөлөн томорно. */
+  .zoom-on-hover img {
+    transition: transform 900ms var(--ease-out-expo);
+  }
+  .zoom-on-hover:is(:hover, :focus-within) img {
+    transform: scale(1.045);
+  }
+}
+
+/*
+ * Гялбаа: hover дээр товч, карт дээгүүр ташуу гэрэл нэг удаа өнгөрнө. Pseudo-элемент
+ * `pointer-events: none` тул товшилтод саад болохгүй.
+ */
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.32) 50%, transparent 62%);
+  transform: translateX(-130%);
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .shine:is(:hover, :focus-visible)::after {
+    transform: translateX(130%);
+    transition: transform 800ms var(--ease-out-expo);
+  }
+}
+
+/* Scroll-driven эффектүүд (Chromium, Safari 26+): дэмжлэггүй бол статик. */
+@keyframes step-on {
+  from {
+    opacity: 0.35;
+    translate: 0 0.75rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes draw-line {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* Алхмууд дэлгэцэд орох үед нэг нэгээр гэрэлтэнэ. */
+    .step-on {
+      animation: step-on linear both;
+      animation-timeline: view();
+      animation-range: entry calc(10% + var(--i, 0) * 8%) entry calc(60% + var(--i, 0) * 8%);
+    }
+    .draw-line {
+      transform-origin: left;
+      animation: draw-line linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 40%;
+    }
+  }
+}
+
+/*
+ * Hero-ийн нээлт. Гарчгийн үг бүр өөрийн mask (`overflow: clip`) дотроос дээшээ гарч ирнэ
+ * (`SplitWords`), мөр, товч зөөлөн өргөгдөнө. Зөвхөн `translate`: `opacity`-гүй тул агуулга DOM-д,
+ * a11y tree-д эхнээс бүрэн, reduced motion үед статик.
+ */
+@keyframes word-up {
+  from {
+    translate: 0 108%;
+  }
+}
+@keyframes hero-rise-in {
+  from {
+    translate: 0 1.25rem;
+  }
+}
+.word-mask {
+  display: inline-block;
+  overflow: clip;
+  vertical-align: top;
+  /* Доош сунасан үсгийн (g, y, р) мөр хайчлагдахгүй. */
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+.word {
+  display: inline-block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .word {
+    animation: word-up 900ms var(--ease-out-expo) both;
+    animation-delay: calc(60ms + var(--w, 0) * 75ms);
+  }
+  .hero-rise {
+    animation: hero-rise-in 900ms var(--ease-out-expo) both;
+    animation-delay: var(--d, 300ms);
+  }
+}
+
+/*
+ * Scroll storytelling ("Зургаар хайх" түүх, features/home/photo-tile.tsx). Section нь өндөр
+ * (260vh), дотор нь sticky тайз: scroll хийх тутам нэг `view-timeline` урагшилна. Тайз хуудасны
+ * дээд талд тогтож байх хугацаа нь subject-ийн `cover` range-ийн 28%-аас 72% (өндөр 260vh, viewport
+ * vh: (vh / 3.6vh) .. (2.6vh / 3.6vh)). Дэмжлэггүй browser, утас, reduced motion үед ямар ч
+ * шинэ дүрэм хэрэглэгдэхгүй: ердийн өндөр, бүх алхам, бараа харагдана.
+ */
+/* Идэвхгүй алхам: opacity 0.7 (текст нь contrast 4.5:1-ээс дээш хэвээр) + бага зэрэг жижиг (scale), идэвхтэй нь 1. */
+@keyframes story-step-1 {
+  0%,
+  26% {
+    opacity: 1;
+    scale: 1;
+  }
+  38%,
+  100% {
+    opacity: 0.7;
+    scale: 0.97;
+  }
+}
+@keyframes story-step-2 {
+  0%,
+  26% {
+    opacity: 0.7;
+    scale: 0.97;
+  }
+  38%,
+  62% {
+    opacity: 1;
+    scale: 1;
+  }
+  74%,
+  100% {
+    opacity: 0.7;
+    scale: 0.97;
+  }
+}
+@keyframes story-step-3 {
+  0%,
+  62% {
+    opacity: 0.7;
+    scale: 0.97;
+  }
+  74%,
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes story-scan {
+  0%,
+  30% {
+    opacity: 0;
+    translate: 0 -105%;
+  }
+  36% {
+    opacity: 1;
+  }
+  58% {
+    opacity: 1;
+    translate: 0 205%;
+  }
+  64%,
+  100% {
+    opacity: 0;
+    translate: 0 205%;
+  }
+}
+@keyframes story-detect {
+  0%,
+  36% {
+    opacity: 0;
+    scale: 0.82;
+  }
+  48%,
+  100% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes story-match {
+  0%,
+  64% {
+    opacity: 0;
+    translate: -2.5rem 0;
+    scale: 0.8;
+  }
+  80%,
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+@keyframes story-photo {
+  0% {
+    scale: 0.9;
+  }
+  18%,
+  100% {
+    scale: 1;
+  }
+}
+@media (min-width: 768px) {
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .story {
+        height: 260vh;
+        view-timeline: --story block;
+      }
+      .story-stage {
+        position: sticky;
+        top: 0;
+        height: 100dvh;
+      }
+      .story-step-1,
+      .story-step-2,
+      .story-step-3,
+      .story-scan,
+      .story-detect,
+      .story-match,
+      .story-photo,
+      .story-progress-bar {
+        animation-timeline: --story;
+        animation-range: cover 28% cover 72%;
+        animation-fill-mode: both;
+        animation-timing-function: linear;
+      }
+      .story-step-1 {
+        animation-name: story-step-1;
+      }
+      .story-step-2 {
+        animation-name: story-step-2;
+      }
+      .story-step-3 {
+        animation-name: story-step-3;
+      }
+      .story-scan {
+        animation-name: story-scan;
+      }
+      .story-detect {
+        animation-name: story-detect;
+      }
+      .story-match {
+        animation-name: story-match;
+        /* Гурван карт дараалан: range-ийн эхлэлийг бага зэрэг хойшлуулна. */
+        animation-range: cover calc(28% + var(--i, 0) * 3%) cover 72%;
+      }
+      .story-photo {
+        animation-name: story-photo;
+      }
+      .story-progress-bar {
+        animation-name: draw-line;
+        transform-origin: left;
+      }
+    }
+  }
+}
+
+/* Bento tile: зураг tile-ийн дотор томоос тогтоно, мөр бүр (гарчиг, тайлбар, товч) дараалан орно. */
+@keyframes scale-settle {
+  from {
+    scale: 1.22;
+  }
+}
+@keyframes line-in {
+  from {
+    opacity: 0;
+    translate: 0 1rem;
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal-scale {
+      animation: scale-settle linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+    .tile-line {
+      animation: line-in linear both;
+      animation-timeline: view();
+      animation-range: entry calc(25% + var(--l, 0) * 10%) entry calc(75% + var(--l, 0) * 10%);
+    }
+  }
+}
+
+/*
+ * Картын 3D хазайлт ба гялбаа, магнит товч (`components/motion/card-tilt.tsx` CSS хувьсагчийг
+ * курсорын дагуу тавина). Зөвхөн жинхэнэ заагчтай, хөдөлгөөн хорьсонгүй үед.
+ */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  [data-tilt] {
+    transition:
+      transform 500ms var(--ease-out-expo),
+      box-shadow 500ms var(--ease-out-expo);
+  }
+  [data-tilt]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    border-radius: inherit;
+    background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgb(255 255 255 / 0.5), transparent 55%);
+    mix-blend-mode: soft-light;
+    transition: opacity 300ms ease-out;
+  }
+  [data-tilt][data-tilting] {
+    transform: perspective(900px) rotateX(var(--ry, 0deg)) rotateY(var(--rx, 0deg)) translateY(-4px);
+    box-shadow: var(--elevation-lift);
+    transition-duration: 140ms, 500ms;
+  }
+  [data-tilt][data-tilting]::after {
+    opacity: 1;
+  }
+  [data-magnetic] {
+    translate: var(--mx, 0px) var(--my, 0px);
+    transition: translate 350ms var(--ease-out-expo);
+  }
+}
+
+/* Жижиг хөдөлгөөнүүд: эхний мөрийн картууд дараалан суух, зүрх хадгалахад цэг тархах, үнэгүй хүргэлт нээгдэх. */
+@keyframes card-in {
+  from {
+    translate: 0 1.1rem;
+    scale: 0.985;
+  }
+}
+@keyframes heart-burst {
+  from {
+    scale: 0;
+    opacity: 1;
+  }
+  to {
+    translate: calc(cos(var(--a) * 1deg) * 1.7rem) calc(sin(var(--a) * 1deg) * 1.7rem);
+    scale: 1;
+    opacity: 0;
+  }
+}
+@keyframes free-glow {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--success) 60%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+.heart-burst {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.heart-burst > i {
+  position: absolute;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 9999px;
+  background: var(--destructive-text, currentColor);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .card-in {
+    animation: card-in 800ms var(--ease-out-expo) both;
+    animation-delay: calc(var(--i, 0) * 55ms);
+  }
+  .heart-burst > i {
+    animation: heart-burst 650ms var(--ease-out-expo) both;
+  }
+  .free-glow {
+    animation: free-glow 1100ms ease-out 1;
+  }
+}
+
+/* Нэг удаагийн зөөлөн лугшилт (анхаарал татах badge). */
+@keyframes soft-pulse {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.08;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .soft-pulse {
+    animation: soft-pulse 1.6s var(--ease-out-expo) 2 600ms;
+  }
+}
+}

@@ -2,12 +2,15 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Wand2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
+import "@/lib/zod-jitless";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useFieldError } from "@/i18n/use-field-error";
 
-const schema = z.object({ text: z.string().trim().max(200, "Keep it under 200 characters") });
+const schema = z.object({ text: z.string().trim().max(200, "max200") });
 type Values = z.infer<typeof schema>;
 
 type Props = {
@@ -21,6 +24,8 @@ type Props = {
  * буцна.
  */
 export function RefineForm({ applied, onSubmit }: Props) {
+  const t = useTranslations("search.refine");
+  const fieldError = useFieldError();
   const {
     register,
     handleSubmit,
@@ -32,10 +37,10 @@ export function RefineForm({ applied, onSubmit }: Props) {
     <form
       onSubmit={handleSubmit(({ text }) => onSubmit(text))}
       className="space-y-2"
-      aria-label="Refine the search with words"
+      aria-label={t("label")}
     >
-      <label htmlFor="refine" className="text-sm font-medium">
-        Refine with words
+      <label htmlFor="refine" className="type-caption font-medium">
+        {t("heading")}
       </label>
       <div className="flex gap-2">
         <div className="relative flex-1">
@@ -43,7 +48,7 @@ export function RefineForm({ applied, onSubmit }: Props) {
             id="refine"
             autoComplete="off"
             enterKeyHint="search"
-            placeholder="like this but in blue"
+            placeholder={t("placeholder")}
             aria-invalid={Boolean(errors.text)}
             aria-describedby={errors.text ? "refine-error" : undefined}
             className="h-10 rounded-xl pr-9"
@@ -52,7 +57,7 @@ export function RefineForm({ applied, onSubmit }: Props) {
           {applied && (
             <button
               type="button"
-              aria-label="Clear refinement"
+              aria-label={t("clear")}
               onClick={() => {
                 reset({ text: "" });
                 onSubmit("");
@@ -64,12 +69,12 @@ export function RefineForm({ applied, onSubmit }: Props) {
           )}
         </div>
         <Button type="submit" size="lg" className="h-10 px-4">
-          <Wand2 /> Refine
+          <Wand2 /> {t("submit")}
         </Button>
       </div>
       {errors.text && (
-        <p id="refine-error" role="alert" className="text-destructive text-xs">
-          {errors.text.message}
+        <p id="refine-error" role="alert" className="text-destructive type-fine">
+          {fieldError(errors.text.message)}
         </p>
       )}
     </form>

@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { translatorFor } from "@/test/intl";
 import { RatingStars, ratingLabel } from "./rating-stars";
+
+const t = translatorFor("reviews") as unknown as Parameters<typeof ratingLabel>[1];
 
 describe("ratingLabel", () => {
   it.each([
@@ -10,7 +13,7 @@ describe("ratingLabel", () => {
     [3.75, "3.8 out of 5 stars"],
     [0, "0 out of 5 stars"],
   ])("writes %s as %s", (rating, label) => {
-    expect(ratingLabel(rating)).toBe(label);
+    expect(ratingLabel(rating, t)).toBe(label);
   });
 });
 

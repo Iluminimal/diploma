@@ -1,0 +1,116 @@
+{
+  "steps": {
+    "address": "Delivery address",
+    "shippingMethod": "Shipping method",
+    "payment": "Payment"
+  },
+  "loading": "Loading checkout",
+  "signInTo": "<link>Sign in</link> to check out.",
+  "empty": "Your Bag is empty",
+  "continueShopping": "Continue shopping",
+  "savedAddresses": "Saved addresses",
+  "default": "Default",
+  "useThisAddress": "Use this address",
+  "addNewAddress": "Add a new address",
+  "emailLabel": "Email for order updates",
+  "emailHint": "Your receipt and shipping updates are sent here.",
+  "emailInvalid": "Enter a valid email address.",
+  "free": "Free",
+  "orderSummary": "Order summary",
+  "items": "Items",
+  "lineMeta": "Qty {quantity}",
+  "lineMetaSize": "Size {size} · Qty {quantity}",
+  "soldOut": "Sold out",
+  "onlyLeft": "Only {count} left",
+  "subtotal": "Subtotal",
+  "shipping": {
+    "standard": {
+      "label": "Standard delivery",
+      "ub": {
+        "description": "Delivered to your door in Ulaanbaatar",
+        "days": "1-2 business days"
+      },
+      "rural": {
+        "description": "By regional carrier to your province",
+        "days": "2-5 business days"
+      }
+    },
+    "express": {
+      "label": "Express delivery",
+      "description": "Same-day in Ulaanbaatar",
+      "days": "Same day"
+    },
+    "pickup": {
+      "label": "Store pickup",
+      "days": "Ready when your order is packed"
+    }
+  },
+  "total": "Total",
+  "unavailable": "Some items are no longer available.",
+  "reviewBag": "Review your Bag",
+  "payNow": "Pay now · {amount}",
+  "demoNote": "Test payment: no real charge.",
+  "shippingSummary": "{label}, {days}",
+  "shippingMeta": "{days} · {description}",
+  "confirmation": {
+    "notFound": "We couldn't find that order",
+    "wentWrong": "Something went wrong",
+    "elsewhere": "It may belong to another account.",
+    "yourOrders": "Your orders",
+    "loading": "Loading your order",
+    "thanks": "Thank you for your order",
+    "confirming": "Confirming your payment…",
+    "cancelled": "This order was cancelled",
+    "leadPaid": "We've emailed a confirmation to {email}.",
+    "leadPending": "This usually takes a few seconds.",
+    "leadCancelled": "Your payment was not taken and the items were released.",
+    "orderLine": "Order <b>{number}</b>. {lead}",
+    "viewAll": "View all orders",
+    "next": {
+      "heading": "What happens next",
+      "confirmationTitle": "Confirmation sent",
+      "confirmationText": "A receipt is on its way to {email}.",
+      "packTitle": "We pack your order",
+      "packText": "You'll get an email with the tracking number when it ships.",
+      "followTitle": "Follow it any time",
+      "followText": "Your order page shows where it is, step by step."
+    },
+    "awaiting": "Waiting for your payment",
+    "leadAwaiting": "Scan the QR code below to pay. Your items are reserved until the invoice expires."
+  },
+  "pageTitle": "Checkout",
+  "confirmationPageTitle": "Order confirmation",
+  "shippingLabel": "Shipping",
+  "qpay": {
+    "method": "Pay with QPay",
+    "methodHint": "After you place the order you'll get a QR code. Scan it with your bank app, or on your phone open your bank app directly.",
+    "note": "Payments are processed by QPay.",
+    "unavailable": "Payments aren't available right now. Please try again later.",
+    "panel": {
+      "title": "Scan to pay",
+      "lead": "Open your bank app and scan this QR code. On your phone, tap your bank below instead.",
+      "order": "Order {number}",
+      "amount": "Amount to pay",
+      "qrAlt": "QPay QR code for order {number}",
+      "banks": "Pay in your bank app",
+      "openQPay": "Open in QPay",
+      "check": "I've paid, check payment",
+      "checking": "Checking payment…",
+      "notYet": "We haven't received the payment yet. If you've just paid, wait a few seconds and check again.",
+      "expired": "This order is no longer open. Your Bag is still here, please check out again.",
+      "validFor": "Invoice valid for {time}",
+      "expiredTitle": "This invoice has expired",
+      "expiredBody": "The stock was released and you have not been charged. Your Bag is still here, check out again to get a new QR code.",
+      "restart": "Check out again",
+      "cancel": "Cancel this order",
+      "cancelTitle": "Cancel this order?",
+      "cancelBody": "The invoice is closed and the items go back on sale. Nothing is charged, and your Bag stays as it is.",
+      "keep": "Keep waiting",
+      "cancelConfirm": "Cancel order"
+    }
+  },
+  "offline": {
+    "title": "Test payment",
+    "body": "Development mode: the order is marked as paid without a card or any real charge."
+  }
+}

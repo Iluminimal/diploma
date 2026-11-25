@@ -35,7 +35,15 @@ function Probe() {
 const state = () => screen.getByTestId("state").textContent;
 
 describe("ThemeProvider", () => {
-  it("follows the system until a theme is picked", () => {
+  it("is light until a theme is picked, whatever the system prefers", () => {
+    systemDark = true;
+    render(<ThemeProvider><Probe /></ThemeProvider>);
+
+    expect(state()).toBe("light/light");
+  });
+
+  it("follows the system once that is what was picked", () => {
+    localStorage.setItem("theme", "system");
     systemDark = true;
     render(<ThemeProvider><Probe /></ThemeProvider>);
 
@@ -64,6 +72,7 @@ describe("ThemeProvider", () => {
   });
 
   it("changes along with the system while on system", () => {
+    localStorage.setItem("theme", "system");
     render(<ThemeProvider><Probe /></ThemeProvider>);
     expect(state()).toBe("system/light");
 

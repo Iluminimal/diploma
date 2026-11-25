@@ -1,6 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Field, fieldAria } from "@/components/forms/form-field";
@@ -19,7 +20,8 @@ import type { SessionUser } from "@/features/auth/auth-store";
 import { OtpInput } from "@/features/auth/otp-input";
 import { DEFAULT_REGION, PhoneInput, toE164, type PhoneValue } from "@/features/auth/phone-input";
 import { useCountdown } from "@/features/auth/use-countdown";
-import { ApiError, userMessage } from "@/lib/api/errors";
+import { ApiError } from "@/lib/api/errors";
+import { useUserMessage } from "@/lib/api/use-user-message";
 import {
   useConfirmEmail,
   useConfirmEmailVerification,
@@ -30,6 +32,7 @@ import {
   useRequestEmailVerification,
   useRequestPhone,
 } from "./use-contact";
+import { FormAlert } from "@/components/ui/form-alert";
 
 export type ContactKind = "phone" | "email" | "verify-email";
 
@@ -50,9 +53,10 @@ export function ContactDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useTranslations("account.contact");
+  const userMessage = useUserMessage();
   const verifying = kind === "verify-email";
   const current = kind === "phone" ? user.phone : user.email;
-  const noun = kind === "phone" ? "phone number" : "email address";
   const requestPhone = useRequestPhone();
   const confirmPhone = useConfirmPhone();
   const requestEmail = useRequestEmail();
@@ -104,11 +108,11 @@ export function ContactDialog({
     event?.preventDefault();
     setProblem(null);
     if (kind === "phone" ? !destination : !EMAIL.test(destination ?? "")) {
-      setProblem(kind === "phone" ? "Enter a valid phone number." : "Enter a valid email address.");
+      setProblem(kind === "phone" ? t("invalidPhone") : t("invalidEmail"));
       return;
     }
     if (user.has_password && !password) {
-      setProblem("Enter your password to continue.");
+      setProblem(t("passwordRequired"));
       return;
     }
     setBusy(true);
@@ -121,9 +125,7 @@ export function ContactDialog({
       setStep("code");
     } catch (error) {
       if (error instanceof ApiError && error.retryAfter) countdown.start(error.retryAfter);
-      setProblem(
-        error instanceof ApiError && error.is("invalidCredentials") ? "That isn't your password." : userMessage(error),
-      );
+      setProblem(error instanceof ApiError && error.is("invalidCredentials") ? t("wrongPassword") : userMessage(error));
     } finally {
       setBusy(false);
     }
@@ -137,7 +139,7 @@ export function ContactDialog({
       if (verifying) await confirmVerification.mutateAsync(entered);
       else if (kind === "phone") await confirmPhone.mutateAsync({ phone: destination!, code: entered });
       else await confirmEmail.mutateAsync({ email: destination!, code: entered });
-      toast.success(verifying ? "Email confirmed." : kind === "phone" ? "Phone number saved." : "Email saved.");
+      toast.success(verifying ? t("emailConfirmed") : kind === "phone" ? t("phoneSaved") : t("emailSaved"));
       close(false);
     } catch (error) {
       setProblem(userMessage(error));
@@ -148,12 +150,10 @@ export function ContactDialog({
   }
 
   const title = verifying
-    ? "Confirm your email"
-    : current
-      ? `Change ${noun}`
-      : kind === "phone"
-        ? "Add a phone number"
-        : "Add an email address";
+    ? t("confirmEmail")
+    : kind === "phone"
+      ? t(current ? "changePhone" : "addPhone")
+      : t(current ? "changeEmail" : "addEmail");
   const shown = verifying ? user.email : kind === "phone" ? (destination ?? phone.text) : email.trim();
 
   return (
@@ -163,19 +163,19 @@ export function ContactDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             {step === "enter"
-              ? `We'll send a 6-digit code to the new ${noun} to make sure it's yours.`
-              : `We sent a 6-digit code to ${shown}.`}
+              ? t(kind === "phone" ? "sendToPhone" : "sendToEmail")
+              : t("sent", { destination: shown ?? "" })}
           </DialogDescription>
         </DialogHeader>
 
         {step === "enter" ? (
-          <form onSubmit={send} noValidate className="space-y-4" aria-label="Where to send the code">
+          <form onSubmit={send} noValidate className="space-y-4" aria-label={t("where")}>
             {kind === "phone" ? (
-              <Field id="contact-phone" label="Phone number">
+              <Field id="contact-phone" label={t("phone")}>
                 <PhoneInput id="contact-phone" value={phone} onChange={setPhone} autoFocus />
               </Field>
             ) : (
-              <Field id="contact-email" label="Email">
+              <Field id="contact-email" label={t("email")}>
                 <Input
                   type="email"
                   autoComplete="email"
@@ -183,33 +183,31 @@ export function ContactDialog({
                   autoFocus
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="h-11 rounded-xl"
                   {...fieldAria("contact-email")}
                 />
               </Field>
             )}
             {user.has_password && (
-              <Field id="contact-password" label="Your password">
+              <Field id="contact-password" label={t("password")}>
                 <PasswordInput
                   autoComplete="current-password"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
-                  className="h-11 rounded-xl"
                   {...fieldAria("contact-password")}
                 />
               </Field>
             )}
             {problem && (
-              <p role="alert" className="bg-destructive/10 text-destructive rounded-xl px-3 py-2.5 text-sm">
+              <FormAlert>
                 {problem}
-              </p>
+              </FormAlert>
             )}
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => close(false)}>
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={busy} className="rounded-full">
-                {busy && <Loader2 className="animate-spin" />} Send code
+                {busy && <Loader2 className="animate-spin" />} {t("send")}
               </Button>
             </DialogFooter>
           </form>
@@ -217,16 +215,16 @@ export function ContactDialog({
           <div className="space-y-4">
             <OtpInput value={code} onChange={setCode} onComplete={confirm} invalid={Boolean(problem)} disabled={busy} autoFocus />
             {problem && (
-              <p role="alert" className="text-destructive text-sm">
+              <p role="alert" className="text-destructive type-caption">
                 {problem}
               </p>
             )}
-            <div className="text-muted-foreground flex items-center justify-between text-sm">
+            <div className="text-muted-foreground flex items-center justify-between type-caption">
               {verifying ? (
                 <span />
               ) : (
                 <button type="button" onClick={() => setStep("enter")} className="underline underline-offset-4">
-                  Use a different {kind === "phone" ? "number" : "address"}
+                  {t(kind === "phone" ? "otherNumber" : "otherAddress")}
                 </button>
               )}
               <button
@@ -235,15 +233,15 @@ export function ContactDialog({
                 onClick={() => (verifying ? requestVerification.mutate(undefined, { onSuccess: () => countdown.start(60) }) : void send())}
                 className="underline underline-offset-4 disabled:no-underline disabled:opacity-60"
               >
-                {countdown.remaining > 0 ? `Resend in ${countdown.remaining}s` : "Resend code"}
+                {countdown.remaining > 0 ? t("resendIn", { seconds: countdown.remaining }) : t("resend")}
               </button>
             </div>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => close(false)}>
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="button" disabled={busy || code.length < 6} onClick={() => void confirm(code)} className="rounded-full">
-                {busy && <Loader2 className="animate-spin" />} Confirm
+                {busy && <Loader2 className="animate-spin" />} {t("confirm")}
               </Button>
             </DialogFooter>
           </div>
@@ -265,11 +263,12 @@ export function RemoveContactDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useTranslations("account.contact");
+  const userMessage = useUserMessage();
   const removePhone = useRemovePhone();
   const removeEmail = useRemoveEmail();
   const [password, setPassword] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
-  const noun = kind === "phone" ? "phone number" : "email address";
   const pending = removePhone.isPending || removeEmail.isPending;
 
   function close(next: boolean) {
@@ -286,12 +285,10 @@ export function RemoveContactDialog({
     try {
       if (kind === "phone") await removePhone.mutateAsync(body);
       else await removeEmail.mutateAsync(body);
-      toast.success(kind === "phone" ? "Phone number removed." : "Email removed.");
+      toast.success(kind === "phone" ? t("phoneRemoved") : t("emailRemoved"));
       close(false);
     } catch (error) {
-      setProblem(
-        error instanceof ApiError && error.is("invalidCredentials") ? "That isn't your password." : userMessage(error),
-      );
+      setProblem(error instanceof ApiError && error.is("invalidCredentials") ? t("wrongPassword") : userMessage(error));
     }
   }
 
@@ -299,31 +296,30 @@ export function RemoveContactDialog({
     <Dialog open={open} onOpenChange={close}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Remove your {noun}?</DialogTitle>
+          <DialogTitle>{t(kind === "phone" ? "removePhoneTitle" : "removeEmailTitle")}</DialogTitle>
           <DialogDescription>
-            You won&apos;t be able to sign in with {kind === "phone" ? user.phone : user.email} any more.
-            {kind === "email" && user.has_password ? " Your password is removed with it." : ""}
+            {t("removeDescription", { destination: (kind === "phone" ? user.phone : user.email) ?? "" })}
+            {kind === "email" && user.has_password ? t("removePasswordToo") : ""}
           </DialogDescription>
         </DialogHeader>
         {user.has_password && (
-          <Field id="remove-password" label="Your password">
+          <Field id="remove-password" label={t("password")}>
             <PasswordInput
               autoComplete="current-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="h-11 rounded-xl"
               {...fieldAria("remove-password")}
             />
           </Field>
         )}
         {problem && (
-          <p role="alert" className="bg-destructive/10 text-destructive rounded-xl px-3 py-2.5 text-sm">
+          <FormAlert>
             {problem}
-          </p>
+          </FormAlert>
         )}
         <DialogFooter>
           <Button variant="ghost" onClick={() => close(false)}>
-            Keep it
+            {t("keep")}
           </Button>
           <Button
             variant="destructive"
@@ -331,7 +327,7 @@ export function RemoveContactDialog({
             onClick={() => void remove()}
             className="rounded-full"
           >
-            {pending && <Loader2 className="animate-spin" />} Remove
+            {pending && <Loader2 className="animate-spin" />} {t("remove")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRef, type ClipboardEvent, type KeyboardEvent } from "react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ export function OtpInput({
   autoFocus?: boolean;
   describedBy?: string;
 }) {
+  const t = useTranslations("auth.otp");
   const refs = useRef<(HTMLInputElement | null)[]>([]);
   const digits = Array.from({ length: LENGTH }, (_, i) => value[i] ?? "");
 
@@ -69,7 +71,7 @@ export function OtpInput({
   return (
     <div
       role="group"
-      aria-label="6-digit code"
+      aria-label={t("label")}
       className={cn("flex justify-between gap-2", invalid && "animate-shake")}
     >
       {digits.map((digit, index) => (
@@ -83,7 +85,7 @@ export function OtpInput({
           autoComplete={index === 0 ? "one-time-code" : "off"}
           pattern="[0-9]*"
           maxLength={LENGTH}
-          aria-label={`Digit ${index + 1} of ${LENGTH}`}
+          aria-label={t("digit", { index: index + 1, total: LENGTH })}
           aria-invalid={invalid}
           aria-describedby={describedBy}
           disabled={disabled}

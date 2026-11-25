@@ -22,17 +22,18 @@ const withPassword: SessionUser = {
 const googleOnly: SessionUser = { ...withPassword, has_password: false, phone: null, email_verified: false, phone_verified: false, providers: ["google"] };
 
 const SESSIONS = "/api/v1/auth/sessions";
+const SECURITY_EVENTS = "/api/v1/auth/security-events";
 
 /**
  * `stubApi` дээр хуудасны үргэлж асуудаг хоосон төхөөрөмжийн жагсаалтыг нэмсэн; `calls` тэр
  * хүсэлтийг оруулдаггүй.
  */
 function stubProfileApi(routes: Parameters<typeof stubApi>[0]) {
-  const api = stubApi({ [`GET ${SESSIONS}`]: respond([]), ...routes });
+  const api = stubApi({ [`GET ${SESSIONS}`]: respond([]), [`GET ${SECURITY_EVENTS}`]: respond([]), ...routes });
   return {
     ...api,
     get calls() {
-      return api.calls.filter((call) => call.path !== SESSIONS);
+      return api.calls.filter((call) => call.path !== SESSIONS && call.path !== SECURITY_EVENTS);
     },
   };
 }

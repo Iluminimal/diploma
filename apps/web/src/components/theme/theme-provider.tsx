@@ -16,9 +16,10 @@ const listeners = new Set<() => void>();
 function readStoredTheme(): Theme {
   try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    return stored === "light" || stored === "dark" ? stored : "system";
+    // Хадгалсан сонголт байхгүй бол цайвар: дэлгүүрийн анхдагч. "system" нь зөвхөн сонгосон үед.
+    return stored === "dark" || stored === "system" ? stored : "light";
   } catch {
-    return "system";
+    return "light";
   }
 }
 
@@ -77,7 +78,7 @@ const Context = createContext<ThemeContext | null>(null);
  * ашигладаггүй.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const theme = useSyncExternalStore(subscribe, readStoredTheme, () => "system" as const);
+  const theme = useSyncExternalStore(subscribe, readStoredTheme, () => "light" as const);
   const systemDark = useSyncExternalStore(subscribe, systemPrefersDark, () => false);
   const value = useMemo<ThemeContext>(
     () => ({

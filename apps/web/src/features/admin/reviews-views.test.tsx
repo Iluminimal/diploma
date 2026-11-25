@@ -49,6 +49,26 @@ describe("ReviewsList", () => {
     expect(awful).toHaveTextContent("Hidden");
   });
 
+  it("hides or publishes several reviews at once from the selection bar", async () => {
+    const visible = makeAdminReview({ id: 21, author: "Cy D." });
+    const other = makeAdminReview({ id: 22, author: "Dee E." });
+    const api = stubApi({
+      "GET /api/v1/admin/reviews": respond(page([visible, other])),
+      "POST /api/v1/admin/reviews/21/hide": { body: { ...visible, status: "hidden" } },
+      "POST /api/v1/admin/reviews/22/hide": { body: { ...other, status: "hidden" } },
+    });
+    renderWithQuery(<ReviewsList params={params} />);
+
+    await userEvent.click(await screen.findByRole("checkbox", { name: "Select the review by Cy D." }));
+    await userEvent.click(screen.getByRole("checkbox", { name: "Select the review by Dee E." }));
+    const bar = within(screen.getByRole("region", { name: "2 selected" }));
+    expect(bar.queryByRole("button", { name: "Publish" })).not.toBeInTheDocument();
+    await userEvent.click(bar.getByRole("button", { name: "Hide" }));
+
+    await waitFor(() => expect(api.count("POST /api/v1/admin/reviews/21/hide")).toBe(1));
+    expect(api.count("POST /api/v1/admin/reviews/22/hide")).toBe(1);
+  });
+
   it("has tabs with counts that keep the other filters", async () => {
     stubApi({ "GET /api/v1/admin/reviews": respond(page()) });
     renderWithQuery(<ReviewsList params={{ ...params, q: "fit", rating: 4 }} />);

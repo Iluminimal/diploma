@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { LogIn, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -36,6 +37,8 @@ type Props = {
  * харуулахад dialog library хэрэггүй.
  */
 export function BagPanel({ open, onOpenChange, count, trigger }: Props) {
+  const t = useTranslations("cart");
+  const tn = useTranslations("account.nav");
   const close = () => onOpenChange(false);
   useBarPanel(open);
   // Bar-ын доор ард байгаа хуудас ба bar ашиглагдсаар байна; утсан дээр бүх дэлгэцийг хучих тул
@@ -59,7 +62,7 @@ export function BagPanel({ open, onOpenChange, count, trigger }: Props) {
           {/* Утсан дээр хуудас bar-ыг хучдаг тул өөрийн X-тэй; md-ээс дээш bar байсаар байна. */}
           <div className="container-nav w-full md:hidden">
             <div className="flex h-12 items-center justify-end">
-              <Dialog.Close className={HEADER_CELL} aria-label="Close Bag">
+              <Dialog.Close className={HEADER_CELL} aria-label={t("closeBag")}>
                 <X className="size-[18px]" strokeWidth={1.25} />
               </Dialog.Close>
             </div>
@@ -67,26 +70,26 @@ export function BagPanel({ open, onOpenChange, count, trigger }: Props) {
           <div className="container-nav flex w-full flex-1 flex-col pt-6 pb-16 md:pt-10 md:pb-20">
             <div className="flex w-full max-w-2xl flex-1 flex-col">
               <Dialog.Title className={cn("type-display mb-8 md:mb-6 md:text-2xl md:leading-7 md:font-semibold md:tracking-normal", count === 0 && "md:sr-only")}>
-                Bag
+                {t("bag")}
                 {count > 0 && <span className="text-muted-foreground ml-3 font-normal">{count}</span>}
               </Dialog.Title>
-              <Dialog.Description className="sr-only">Items you have added, with quantities and subtotal.</Dialog.Description>
+              <Dialog.Description className="sr-only">{t("bagDescription")}</Dialog.Description>
               <MiniCart onNavigate={close} />
-              <nav aria-label="My profile" className="border-border mt-12 border-t pt-8 md:mt-10 md:border-t-0 md:pt-0">
-                <p className="text-muted-foreground mb-3 text-sm">My profile</p>
+              <nav aria-label={t("profile")} className="border-border mt-12 border-t pt-8 md:mt-10 md:border-t-0 md:pt-0">
+                <p className="text-muted-foreground mb-3 type-caption">{t("profile")}</p>
                 <ul className="space-y-1">
                   {signedIn ? (
-                    ACCOUNT_LINKS.map(({ href, label, icon: Icon }) => (
+                    ACCOUNT_LINKS.map(({ href, key, icon: Icon }) => (
                       <li key={href}>
                         <ProfileLink href={href} onClick={close}>
-                          <Icon aria-hidden className="text-muted-foreground size-4" /> {label}
+                          <Icon aria-hidden className="text-muted-foreground size-4" /> {tn(key)}
                         </ProfileLink>
                       </li>
                     ))
                   ) : (
                     <li>
                       <ProfileLink href="/login" onClick={close}>
-                        <LogIn aria-hidden className="text-muted-foreground size-4" /> Sign in
+                        <LogIn aria-hidden className="text-muted-foreground size-4" /> {t("signIn")}
                       </ProfileLink>
                     </li>
                   )}
@@ -109,7 +112,7 @@ function ProfileLink({ href, onClick, children }: { href: string; onClick: () =>
       // Нэвтрээгүй зочин account хуудсанд redirect авдаг: prefetch хийвэл тэр хариу нэвтэрсний
       // дараа дахин тоглогдох байсан.
       prefetch={false}
-      className="hover:text-brand focus-visible:ring-ring/60 -mx-2 flex items-center gap-3 rounded-md px-2 py-2 text-lg font-semibold tracking-tight outline-none transition-colors focus-visible:ring-3 md:py-1.5 md:text-xs md:leading-4 md:tracking-normal"
+      className="hover:text-brand focus-visible:ring-ring/50 -mx-2 flex items-center gap-3 rounded-md px-2 py-2 type-intro font-semibold tracking-tight outline-none transition-colors focus-visible:ring-3 md:py-1.5 md:type-fine md:leading-4 md:tracking-normal"
     >
       {children}
     </Link>

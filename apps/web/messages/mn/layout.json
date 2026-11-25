@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "title": "Angel — зургаар хувцас хайх",
+    "titleTemplate": "%s · Angel",
+    "description": "Таалагдсан хувцасныхаа зургийг оруулаад, түүнтэй төстэй хувцсыг олоорой."
+  },
+  "skip": "Үндсэн агуулга руу очих",
+  "themeToggle": "Бараан горим асаах/унтраах",
+  "language": {
+    "label": "Хэл",
+    "menu": "Хэл"
+  },
+  "localeBanner": {
+    "label": "Хэл сонгох",
+    "message": "Сайтыг өөрт ойлгомжтой хэлээр үзэхийг хүсвэл хэлээ сонгоно уу.",
+    "select": "Хэл",
+    "continue": "Үргэлжлүүлэх",
+    "close": "Хаах"
+  },
+  "header": {
+    "main": "Үндсэн цэс",
+    "new": "Шинэ",
+    "newArrivals": "Шинэ бараа",
+    "searchWithPhoto": "Зургаар хайх",
+    "searchOpen": "Хайх",
+    "searchTitle": "Хайх (/ товчийг дарна уу)",
+    "searchDialog": "Хайлт",
+    "searchClose": "Хайлтыг хаах",
+    "quickLinks": "Түргэн холбоосууд",
+    "quickLinksHeading": "Түргэн холбоосууд",
+    "categoriesOf": "Ангиллууд: {department}",
+    "popularIn": "Эрэлттэй: {department}",
+    "viewAll": "Бүгдийг үзэх: {group}",
+    "menuOpen": "Цэсийг нээх",
+    "menuClose": "Цэсийг хаах",
+    "menu": "Цэс",
+    "backTo": "Буцах: {name}",
+    "shopAll": "Бүгдийг үзэх: {name}"
+  },
+  "searchBar": {
+    "dropPhoto": "Зургаа энд тавиад хайна уу",
+    "placeholderOverlay": "Дэлгүүрээс хайх",
+    "placeholder": "Жишээ нь: “улаан цэцэгтэй даашинз”",
+    "byPhoto": "Зургаар хайх",
+    "suggestions": "Санал болгох хайлт",
+    "noMatches": "“{query}” хайлтад тохирох зүйл олдсонгүй.",
+    "seeAll": "Бүх үр дүнг үзэх: “{query}”",
+    "inContext": "Ангилал: {context}",
+    "recent": "Сүүлд хайсан",
+    "popular": "Одоо алдартай",
+    "categories": "Ангилал",
+    "products": "Бараа",
+    "label": "Бараа хайх"
+  },
+  "footer": {
+    "shop": "Дэлгүүр",
+    "discover": "Хайлт",
+    "account": "Миний бүртгэл",
+    "searchByPhoto": "Зургаар хайх",
+    "allProducts": "Бүх бараа",
+    "newArrivals": "Шинэ бараа",
+    "profile": "Профайл",
+    "orders": "Захиалгууд",
+    "wishlist": "Хадгалсан бараа",
+    "bag": "Сагс",
+    "moreWays": "Бараа хайх өөр арга: <photo>зургаар хайх</photo> эсвэл <all>бүх барааг үзэх</all>.",
+    "copyright": "© {year} Angel. Бүх эрх хуулиар хамгаалагдсан."
+  },
+  "lost": {
+    "searchLabel": "Дэлгүүрээс хайх",
+    "searchPlaceholder": "Дэлгүүрээс хайх",
+    "popular": "Түгээмэл хэсгүүд",
+    "newArrivals": "Шинэ бараа",
+    "searchByPhoto": "Зургаар хайх"
+  },
+  "notFound": {
+    "title": "Энэ хуудас олдсонгүй",
+    "body": "Бараа хасагдсан эсвэл холбоос буруу байж магадгүй. Хайлт хийх эсвэл доорх хэсгүүдээс эхэлнэ үү."
+  },
+  "error": {
+    "mark": "Өө, уучлаарай",
+    "title": "Алдаа гарлаа",
+    "retry": "Дахин оролдох",
+    "globalBody": "Хуудсыг харуулж чадсангүй. Дахин оролдоход ихэнхдээ засагддаг."
+  },
+  "ui": {
+    "breadcrumb": "Хуудасны зам",
+    "hidePassword": "Нууц үгийг нуух",
+    "showPassword": "Нууц үгийг харуулах",
+    "scrollLeft": "Зүүн тийш гүйлгэх",
+    "scrollRight": "Баруун тийш гүйлгэх",
+    "loadingProducts": "Барааг ачаалж байна",
+    "close": "Хаах"
+  }
+}

@@ -40,6 +40,23 @@ export interface paths {
         patch: operations["update_address_api_v1_addresses__address_id__patch"];
         trace?: never;
     };
+    "/api/v1/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who changed what, newest first */
+        get: operations["audit_log_api_v1_admin_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/categories": {
         parameters: {
             query?: never;
@@ -122,6 +139,57 @@ export interface paths {
          * @description They are signed out everywhere and cannot sign in again until reinstated.
          */
         post: operations["deactivate_customer_api_v1_admin_customers__user_id__deactivate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/export/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Orders matching the current filter as CSV, newest first */
+        get: operations["export_orders_api_v1_admin_export_orders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/export/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Daily revenue, orders, units and new customers of a period as CSV */
+        get: operations["export_stats_api_v1_admin_export_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/fulfillment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The warehouse board: what to ship and what to restock */
+        get: operations["fulfillment_board_api_v1_admin_fulfillment_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -796,6 +864,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/security-events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recent security events on this account (sign-ins, password changes, devices) */
+        get: operations["security_events_api_v1_auth_security_events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/sessions": {
         parameters: {
             query?: never;
@@ -977,6 +1062,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkout/orders/{number}/check-payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask the payment provider whether the order has been paid
+         * @description Called when the shopper presses "check my payment" or comes back to the page. Settles the order if the provider confirms the payment; safe to repeat.
+         */
+        post: operations["check_payment_api_v1_checkout_orders__number__check_payment_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/checkout/orders/{number}/simulate-payment": {
         parameters: {
             query?: never;
@@ -994,6 +1099,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/checkout/payment-method": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** How checkout takes payment (QPay or offline demo) */
+        get: operations["payment_method_api_v1_checkout_payment_method_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/checkout/shipping-methods": {
         parameters: {
             query?: never;
@@ -1001,7 +1123,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Shipping options and prices */
+        /**
+         * Shipping options and prices for a zone
+         * @description `zone=ub` is Ulaanbaatar (standard, same-day express, pickup); `zone=rural` is the aimags (standard by regional carrier, pickup). Defaults to `ub`.
+         */
         get: operations["shipping_methods_api_v1_checkout_shipping_methods_get"];
         put?: never;
         post?: never;
@@ -1045,6 +1170,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders/{number}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel an order that is still waiting for payment
+         * @description Releases the reserved stock and closes the payment invoice. Only orders that have not been paid can be cancelled; paid orders are refunded by an administrator.
+         */
+        post: operations["cancel_order_api_v1_orders__number__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{number}/reorder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Put the items of one of your orders back in the bag
+         * @description Each line goes in with the same size and quantity, limited by what is in stock now. Lines that cannot go in (sold out, withdrawn, bag full) or only partly are listed in `skipped`.
+         */
+        post: operations["reorder_api_v1_orders__number__reorder_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/products": {
         parameters: {
             query?: never;
@@ -1071,6 +1236,23 @@ export interface paths {
         };
         /** Get one product */
         get: operations["get_product_api_v1_products__product_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/products/{product_id}/complete-the-look": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Products that go with this one (other categories, same gender, best sellers) */
+        get: operations["complete_the_look_api_v1_products__product_id__complete_the_look_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1132,6 +1314,46 @@ export interface paths {
         patch: operations["update_review_api_v1_reviews__review_id__patch"];
         trace?: never;
     };
+    "/api/v1/search/detect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Find the garments in a camera frame (no search)
+         * @description Lightweight detection for a live camera preview: returns the garment boxes of a frame without embedding or searching. Frames are never stored. Has its own, higher rate limit.
+         */
+        post: operations["detect_garments_api_v1_search_detect_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/search/garments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Find products for every garment in a photo
+         * @description Detects the garments in the photo (shirt, trousers, shoes ...) and returns the similar products of each one, most prominent first. A photo with one garment (or none found) returns a single entry equal to `/search/image`.
+         */
+        post: operations["search_garments_api_v1_search_garments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search/hybrid": {
         parameters: {
             query?: never;
@@ -1183,20 +1405,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/webhooks/stripe": {
+    "/api/v1/webhooks/qpay": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * QPay payment notification (callback_url)
+         * @description Server-to-server, no session. QPay calls this after a payment; the notification is not signed, so it is only a trigger: the payment is always confirmed with QPay's `payment/check` before the order changes. Repeated notifications are harmless.
+         */
+        get: operations["qpay_callback_api_v1_webhooks_qpay_post"];
         put?: never;
         /**
-         * Stripe webhook (payment_intent.succeeded / payment_failed / canceled)
-         * @description Server-to-server: authenticated by the `Stripe-Signature` header, not by a session. Idempotent by event id, so redeliveries are acknowledged and ignored.
+         * QPay payment notification (callback_url)
+         * @description Server-to-server, no session. QPay calls this after a payment; the notification is not signed, so it is only a trigger: the payment is always confirmed with QPay's `payment/check` before the order changes. Repeated notifications are harmless.
          */
-        post: operations["stripe_webhook_api_v1_webhooks_stripe_post"];
+        post: operations["qpay_callback_api_v1_webhooks_qpay_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1280,7 +1506,10 @@ export interface components {
         AddressIn: {
             /** City */
             city: string;
-            /** Country */
+            /**
+             * Country
+             * @default MN
+             */
             country: string;
             /** Full Name */
             full_name: string;
@@ -1289,16 +1518,21 @@ export interface components {
              * @default false
              */
             is_default: boolean;
+            /** Khoroo */
+            khoroo?: string | null;
             /** Line1 */
             line1: string;
             /** Line2 */
             line2?: string | null;
             /** Phone */
-            phone?: string | null;
-            /** Postal Code */
+            phone: string;
+            /**
+             * Postal Code
+             * @default
+             */
             postal_code: string;
             /** Region */
-            region?: string | null;
+            region: string;
         };
         /** AddressList */
         AddressList: {
@@ -1317,6 +1551,8 @@ export interface components {
             id: number;
             /** Is Default */
             is_default: boolean;
+            /** Khoroo */
+            khoroo: string | null;
             /** Line1 */
             line1: string;
             /** Line2 */
@@ -1330,7 +1566,8 @@ export interface components {
         };
         /**
          * AddressSnapshot
-         * @description Захиалга өгөх үеийн хаяг (дараа нь өөрчлөгдсөн ч хэвээр).
+         * @description Захиалга өгөх үеийн хаяг (дараа нь өөрчлөгдсөн ч хэвээр). Хуучин захиалгын snapshot-д
+         *     `khoroo` байхгүй тул default-той.
          */
         AddressSnapshot: {
             /** City */
@@ -1339,20 +1576,26 @@ export interface components {
             country: string;
             /** Full Name */
             full_name: string;
+            /** Khoroo */
+            khoroo?: string | null;
             /** Line1 */
             line1: string;
             /** Line2 */
             line2?: string | null;
             /** Phone */
             phone?: string | null;
-            /** Postal Code */
+            /**
+             * Postal Code
+             * @default
+             */
             postal_code: string;
             /** Region */
             region?: string | null;
         };
         /**
          * AddressUpdate
-         * @description PATCH: зөвхөн илгээсэн талбарууд өөрчлөгдөнө.
+         * @description PATCH: зөвхөн илгээсэн талбарууд өөрчлөгдөнө. Аймаг/дүүргийн хослолыг service нэгтгэсэн
+         *     хаяг дээр шалгана.
          */
         AddressUpdate: {
             /** City */
@@ -1363,6 +1606,8 @@ export interface components {
             full_name?: string | null;
             /** Is Default */
             is_default?: boolean | null;
+            /** Khoroo */
+            khoroo?: string | null;
             /** Line1 */
             line1?: string | null;
             /** Line2 */
@@ -1489,6 +1734,7 @@ export interface components {
             cancelled_at: string | null;
             /** Carrier */
             carrier: string | null;
+            charge: components["schemas"]["ChargeOut"] | null;
             /** Contact Email */
             contact_email: string;
             /**
@@ -1502,6 +1748,8 @@ export interface components {
             delivered_at: string | null;
             /** Events */
             events: components["schemas"]["AdminOrderEventOut"][];
+            /** Expires At */
+            expires_at?: string | null;
             /** Items */
             items: components["schemas"]["OrderItemOut"][];
             /** Number */
@@ -1509,6 +1757,7 @@ export interface components {
             /** Paid At */
             paid_at: string | null;
             payment: components["schemas"]["AdminPaymentOut"] | null;
+            qpay?: components["schemas"]["QPayCheckoutOut"] | null;
             /** Refunded At */
             refunded_at: string | null;
             /** Shipped At */
@@ -1520,7 +1769,7 @@ export interface components {
              * Shipping Method
              * @enum {string}
              */
-            shipping_method: "standard" | "express";
+            shipping_method: "standard" | "express" | "pickup";
             /**
              * Status
              * @enum {string}
@@ -1581,11 +1830,16 @@ export interface components {
         };
         /**
          * AdminPaymentOut
-         * @description Төлбөрийн бичлэг. Client secret server-ээс хэзээ ч гадагш гарахгүй.
+         * @description Төлбөрийн бичлэг. QR зураг гэх мэт provider-ийн өгөгдөл энд гарахгүй. `charge_*` нь бодитоор
+         *     авсан дүн (минор нэгжээр) ба түгжсэн ханш.
          */
         AdminPaymentOut: {
             /** Amount Cents */
             amount_cents: number;
+            /** Charge Currency */
+            charge_currency: string;
+            /** Charge Minor */
+            charge_minor: number;
             /** Currency */
             currency: string;
             /** Last Error */
@@ -1628,7 +1882,7 @@ export interface components {
             name: string;
             /**
              * Price Cents
-             * @description Price in cents.
+             * @description Price in minor units (togrog x 100).
              */
             price_cents: number;
             /** Season */
@@ -1807,12 +2061,24 @@ export interface components {
          */
         AdminStats: {
             average_order_cents: components["schemas"]["Delta"];
+            /** Avg Ship Hours */
+            avg_ship_hours: number | null;
             /** Awaiting Payment */
             awaiting_payment: number;
+            /** By Category */
+            by_category: components["schemas"]["CategorySales"][];
+            /** Cancel Rate */
+            cancel_rate: number | null;
             /** Currency */
             currency: string;
             /** Days */
             days: number;
+            /**
+             * End
+             * Format: date
+             */
+            end: string;
+            funnel: components["schemas"]["Funnel"];
             /** Low Stock */
             low_stock: components["schemas"]["LowStockProduct"][];
             /** Low Stock Threshold */
@@ -1823,11 +2089,24 @@ export interface components {
             orders: components["schemas"]["Delta"];
             /** Out Of Stock Total */
             out_of_stock_total: number;
+            /** Overdue To Ship */
+            overdue_to_ship: number;
             /** Recent Orders */
             recent_orders: components["schemas"]["AdminOrderSummary"][];
+            /** Refund Rate */
+            refund_rate: number | null;
+            /** Repeat Customer Rate */
+            repeat_customer_rate: number | null;
             revenue_cents: components["schemas"]["Delta"];
             /** Series */
             series: components["schemas"]["DailyPoint"][];
+            /** Ship Sla Hours */
+            ship_sla_hours: number;
+            /**
+             * Start
+             * Format: date
+             */
+            start: string;
             /** Status Counts */
             status_counts: {
                 [key: string]: number;
@@ -1837,6 +2116,57 @@ export interface components {
             /** Top Products */
             top_products: components["schemas"]["TopProduct"][];
             units: components["schemas"]["Delta"];
+        };
+        /**
+         * AppliedFilter
+         * @description Текстээс задалж хэрэгжүүлсэн шүүлтүүр. `value`: өнгө, хүйс, улирал, хэрэглээнд англи нэр;
+         *     `min_price`/`max_price`-д cent-ийн тоо; `in_stock`-д "true".
+         */
+        AppliedFilter: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "gender" | "color" | "season" | "usage" | "min_price" | "max_price" | "in_stock";
+            /** Value */
+            value: string;
+        };
+        /** AuditEntry */
+        AuditEntry: {
+            /** Action */
+            action: string;
+            /** Actor Id */
+            actor_id: number | null;
+            /** Actor Label */
+            actor_label: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /** Entity Id */
+            entity_id: string;
+            /** Entity Type */
+            entity_type: string;
+            /** Id */
+            id: number;
+        };
+        /** AuditPage */
+        AuditPage: {
+            /** Items */
+            items: components["schemas"]["AuditEntry"][];
+            /** Page */
+            page: number;
+            /** Page Size */
+            page_size: number;
+            /** Pages */
+            pages: number;
+            /** Total */
+            total: number;
         };
         /** CancelRequest */
         CancelRequest: {
@@ -1873,6 +2203,8 @@ export interface components {
             line_total_cents: number;
             /** Max Quantity */
             max_quantity: number;
+            /** Price When Added Cents */
+            price_when_added_cents?: number | null;
             product: components["schemas"]["ProductOut"];
             /** Quantity */
             quantity: number;
@@ -1937,12 +2269,31 @@ export interface components {
             /** Slug */
             slug: string;
         };
+        /** CategorySales */
+        CategorySales: {
+            /** Name */
+            name: string | null;
+            /** Revenue Cents */
+            revenue_cents: number;
+            /** Units */
+            units: number;
+        };
         /** ChangePasswordRequest */
         ChangePasswordRequest: {
             /** Current Password */
             current_password?: string | null;
             /** New Password */
             new_password: string;
+        };
+        /**
+         * ChargeOut
+         * @description Бодитоор авсан (авах) дүн. `amount_minor` нь бага нэгжээр (MNT: төгрөг x 100).
+         */
+        ChargeOut: {
+            /** Amount Minor */
+            amount_minor: number;
+            /** Currency */
+            currency: string;
         };
         /** CheckoutOut */
         CheckoutOut: {
@@ -1959,7 +2310,7 @@ export interface components {
              * Shipping Method
              * @enum {string}
              */
-            shipping_method: "standard" | "express";
+            shipping_method: "standard" | "express" | "pickup";
         };
         /** DailyPoint */
         DailyPoint: {
@@ -1968,10 +2319,14 @@ export interface components {
              * Format: date
              */
             date: string;
+            /** New Customers */
+            new_customers: number;
             /** Orders */
             orders: number;
             /** Revenue Cents */
             revenue_cents: number;
+            /** Units */
+            units: number;
         };
         /** DeleteAccountRequest */
         DeleteAccountRequest: {
@@ -1989,6 +2344,24 @@ export interface components {
             current: number;
             /** Previous */
             previous: number;
+        };
+        /**
+         * DetectForm
+         * @description Камерын live preview-ийн кадр: зөвхөн хувцсыг олж хайрцгийг нь буцаана (хайлт хийхгүй).
+         */
+        DetectForm: {
+            /**
+             * File
+             * @description JPEG, PNG or WebP, up to 8 MB
+             */
+            file: string;
+        };
+        /** DetectResponse */
+        DetectResponse: {
+            /** Detect Ms */
+            detect_ms: number;
+            /** Regions */
+            regions: components["schemas"]["RegionOut"][];
         };
         /** DetectedCategory */
         DetectedCategory: {
@@ -2112,6 +2485,139 @@ export interface components {
             /** Destination */
             destination: string;
         };
+        /**
+         * FulfillmentBoard
+         * @description Агуулахын ажилтны нүүр: юуг илгээх, нөөц хаана дууссан, өөрийн сүүлийн үйлдлүүд. Орлого,
+         *     хэрэглэгчийн мэдээлэл ороогүй.
+         */
+        FulfillmentBoard: {
+            /** Avg Ship Hours */
+            avg_ship_hours: number | null;
+            /** Delivered Today */
+            delivered_today: number;
+            /** Low Stock */
+            low_stock: number;
+            /** Low Stock Threshold */
+            low_stock_threshold: number;
+            /** My Activity */
+            my_activity: components["schemas"]["AuditEntry"][];
+            /** Oldest Paid At */
+            oldest_paid_at: string | null;
+            /** Out Of Stock */
+            out_of_stock: number;
+            /** Overdue */
+            overdue: number;
+            /** Queue */
+            queue: components["schemas"]["QueuedOrder"][];
+            /** Shipped Today */
+            shipped_today: number;
+            /** Sla Hours */
+            sla_hours: number;
+            /** Stock Alerts */
+            stock_alerts: components["schemas"]["LowStockProduct"][];
+            /** To Ship */
+            to_ship: number;
+        };
+        /**
+         * Funnel
+         * @description Хугацаанд үүссэн захиалгуудаас аль шатанд хүрсэн нь.
+         */
+        Funnel: {
+            /** Cancelled */
+            cancelled: number;
+            /** Created */
+            created: number;
+            /** Delivered */
+            delivered: number;
+            /** Paid */
+            paid: number;
+            /** Refunded */
+            refunded: number;
+            /** Shipped */
+            shipped: number;
+        };
+        /**
+         * GarmentForm
+         * @description Зургаас хувцас бүрийг хайх multipart form: зураг, шүүлтүүр, хувцас тутмын үр дүнгийн тоо.
+         */
+        GarmentForm: {
+            /**
+             * Article Type
+             * @default []
+             */
+            article_type: string[];
+            /**
+             * Color
+             * @default []
+             */
+            color: string[];
+            /**
+             * File
+             * @description JPEG, PNG or WebP, up to 8 MB
+             */
+            file: string;
+            /**
+             * Gender
+             * @default []
+             */
+            gender: string[];
+            /**
+             * In Stock
+             * @default false
+             */
+            in_stock: boolean;
+            /**
+             * Limit
+             * @description Per garment. Defaults to 12.
+             */
+            limit?: number | null;
+            /**
+             * Master Category
+             * @default []
+             */
+            master_category: string[];
+            /** Max Price */
+            max_price?: number | null;
+            /** Min Price */
+            min_price?: number | null;
+            /**
+             * Season
+             * @default []
+             */
+            season: string[];
+            /**
+             * Sub Category
+             * @default []
+             */
+            sub_category: string[];
+            /**
+             * Usage
+             * @default []
+             */
+            usage: string[];
+        };
+        /**
+         * GarmentResult
+         * @description Зурагт олдсон нэг хувцас ба түүнтэй төстэй бараанууд.
+         */
+        GarmentResult: {
+            /** Detected */
+            detected: components["schemas"]["DetectedCategory"][];
+            /**
+             * Index
+             * @description Index to pass as `region` to /search/image.
+             */
+            index: number;
+            region: components["schemas"]["RegionOut"];
+            /** Results */
+            results: components["schemas"]["SearchHit"][];
+        };
+        /** GarmentSearchResponse */
+        GarmentSearchResponse: {
+            /** Garments */
+            garments: components["schemas"]["GarmentResult"][];
+            timings: components["schemas"]["SearchTimings"];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2145,6 +2651,12 @@ export interface components {
              */
             in_stock: boolean;
             /**
+             * Interpret
+             * @description Pull colours, genders, seasons, usages, prices ('under $50', '50000₮-аас доош') and 'in stock' out of the text (Mongolian or English) and apply them as filters. Filters you pass yourself are never overridden. What was applied is listed in `applied`.
+             * @default false
+             */
+            interpret: boolean;
+            /**
              * Limit
              * @description Defaults to 24.
              */
@@ -2160,6 +2672,12 @@ export interface components {
             min_price?: number | null;
             /** Query */
             query: string;
+            /**
+             * Region
+             * @description Which detected garment to search: an index into the `regions` of a previous response (0 = the most prominent one).
+             * @default 0
+             */
+            region: number;
             /**
              * Season
              * @default []
@@ -2225,6 +2743,12 @@ export interface components {
             max_price?: number | null;
             /** Min Price */
             min_price?: number | null;
+            /**
+             * Region
+             * @description Which detected garment to search: an index into the `regions` of a previous response (0 = the most prominent one).
+             * @default 0
+             */
+            region: number;
             /**
              * Season
              * @default []
@@ -2352,6 +2876,7 @@ export interface components {
         OrderOut: {
             /** Carrier */
             carrier: string | null;
+            charge: components["schemas"]["ChargeOut"] | null;
             /** Contact Email */
             contact_email: string;
             /**
@@ -2365,12 +2890,15 @@ export interface components {
             delivered_at: string | null;
             /** Events */
             events: components["schemas"]["OrderEventOut"][];
+            /** Expires At */
+            expires_at?: string | null;
             /** Items */
             items: components["schemas"]["OrderItemOut"][];
             /** Number */
             number: string;
             /** Paid At */
             paid_at: string | null;
+            qpay?: components["schemas"]["QPayCheckoutOut"] | null;
             /** Refunded At */
             refunded_at: string | null;
             /** Shipped At */
@@ -2382,7 +2910,7 @@ export interface components {
              * Shipping Method
              * @enum {string}
              */
-            shipping_method: "standard" | "express";
+            shipping_method: "standard" | "express" | "pickup";
             /**
              * Status
              * @enum {string}
@@ -2410,6 +2938,7 @@ export interface components {
         };
         /** OrderSummary */
         OrderSummary: {
+            charge: components["schemas"]["ChargeOut"] | null;
             /**
              * Created At
              * Format: date-time
@@ -2447,18 +2976,29 @@ export interface components {
             destination: string;
         };
         /**
+         * PaymentMethodOut
+         * @description Checkout ямар аргаар төлүүлэх вэ, захиалга үүсэхээс өмнө (хуудас зөв алхмыг харуулна).
+         *     `provider` None бол төлбөр тохируулаагүй. `charge_currency` нь бодитоор авах валют.
+         */
+        PaymentMethodOut: {
+            /** Charge Currency */
+            charge_currency: string;
+            /** Provider */
+            provider: ("qpay" | "offline") | null;
+        };
+        /**
          * PaymentOut
-         * @description Browser төлбөр авахад хэрэгтэй зүйл. `stripe`: `client_secret`-ээр Stripe.js-ээр
-         *     PaymentIntent-ийг баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна.
+         * @description Browser төлбөр авахад хэрэгтэй зүйл. `qpay`: QR болон банкны холбоосыг харуулж, дараа нь
+         *     `check-payment`-аар баталгаажуулна. `offline` (development): simulate endpoint-ийг дуудна.
          */
         PaymentOut: {
-            /** Client Secret */
-            client_secret: string | null;
+            charge: components["schemas"]["ChargeOut"] | null;
             /**
              * Provider
              * @enum {string}
              */
-            provider: "stripe" | "offline";
+            provider: "qpay" | "offline";
+            qpay: components["schemas"]["QPayCheckoutOut"] | null;
         };
         /**
          * PhoneChangeRequest
@@ -2533,6 +3073,11 @@ export interface components {
             image: components["schemas"]["ProductImage"];
             /** In Stock */
             in_stock: boolean;
+            /**
+             * Low Stock
+             * @default false
+             */
+            low_stock: boolean;
             /** Master Category */
             master_category: string;
             /** Name */
@@ -2556,6 +3101,11 @@ export interface components {
         };
         /** ProductPage */
         ProductPage: {
+            /**
+             * Fuzzy
+             * @default false
+             */
+            fuzzy: boolean;
             /** Items */
             items: components["schemas"]["ProductOut"][];
             /** Page */
@@ -2574,6 +3124,68 @@ export interface components {
         ProvidersOut: {
             /** Google */
             google: boolean;
+        };
+        /**
+         * QPayBankOut
+         * @description Банкны апп-ын холбоос (утсан дээр шууд тухайн апп-ыг нээнэ).
+         */
+        QPayBankOut: {
+            /** Description */
+            description: string;
+            /** Link */
+            link: string;
+            /** Logo */
+            logo: string;
+            /** Name */
+            name: string;
+        };
+        /**
+         * QPayCheckoutOut
+         * @description QPay нэхэмжлэх: компьютер дээр QR-ыг банкны апп-аар уншуулна, утсан дээр холбоосоор.
+         */
+        QPayCheckoutOut: {
+            /** Banks */
+            banks: components["schemas"]["QPayBankOut"][];
+            /**
+             * Qr Image
+             * @description Base64 PNG of the QR code
+             */
+            qr_image: string;
+            /** Qr Text */
+            qr_text: string;
+            /** Short Url */
+            short_url: string;
+        };
+        /** QueueLine */
+        QueueLine: {
+            image: components["schemas"]["ProductImage"];
+            /** Name */
+            name: string;
+            /** Quantity */
+            quantity: number;
+        };
+        /**
+         * QueuedOrder
+         * @description Илгээхийг хүлээж буй (төлөгдсөн) захиалга.
+         */
+        QueuedOrder: {
+            /** Customer Name */
+            customer_name: string;
+            /** Item Count */
+            item_count: number;
+            /** Lines */
+            lines: components["schemas"]["QueueLine"][];
+            /** Number */
+            number: string;
+            /** Overdue */
+            overdue: boolean;
+            /**
+             * Paid At
+             * Format: date-time
+             */
+            paid_at: string;
+            /** Waiting Hours */
+            waiting_hours: number;
         };
         /** RatingSummary */
         RatingSummary: {
@@ -2613,6 +3225,37 @@ export interface components {
             /** Restock */
             restock: boolean;
         };
+        /**
+         * RegionBox
+         * @description Зургийн хэмжээнд харьцуулсан (0..1) хайрцаг: зүүн дээд өнцөг, өргөн, өндөр.
+         */
+        RegionBox: {
+            /** Height */
+            height: number;
+            /** Width */
+            width: number;
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+        };
+        /**
+         * RegionOut
+         * @description Зураг дээр олдсон нэг хувцас (эсвэл гутал, цүнх). Хайлт сонгосон хэсгээрээ явна.
+         */
+        RegionOut: {
+            box: components["schemas"]["RegionBox"];
+            /**
+             * Label
+             * @description Detector class; null for the whole image.
+             */
+            label: string | null;
+            /**
+             * Score
+             * @description Detector confidence.
+             */
+            score: number;
+        };
         /** RegisterRequest */
         RegisterRequest: {
             /**
@@ -2629,6 +3272,28 @@ export interface components {
         RemoveContactRequest: {
             /** Current Password */
             current_password?: string | null;
+        };
+        /** ReorderOut */
+        ReorderOut: {
+            /** Added */
+            added: number;
+            cart: components["schemas"]["CartOut"];
+            /** Skipped */
+            skipped: components["schemas"]["ReorderSkipped"][];
+        };
+        /**
+         * ReorderSkipped
+         * @description Өмнөх захиалгын мөр, сагсанд бүрэн нэмэгдээгүй: шалтгаан нь `reduced` бол цөөн ширхэг
+         *     нэмэгдсэн, бусад үед огт нэмэгдээгүй.
+         */
+        ReorderSkipped: {
+            /** Name */
+            name: string;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "unavailable" | "out_of_stock" | "size" | "bag_full" | "reduced";
         };
         /** ResetPasswordRequest */
         ResetPasswordRequest: {
@@ -2737,6 +3402,11 @@ export interface components {
         /** SearchResponse */
         SearchResponse: {
             /**
+             * Applied
+             * @default []
+             */
+            applied: components["schemas"]["AppliedFilter"][];
+            /**
              * Cached
              * @default false
              */
@@ -2746,8 +3416,15 @@ export interface components {
              * @default []
              */
             detected: components["schemas"]["DetectedCategory"][];
+            /**
+             * Regions
+             * @default []
+             */
+            regions: components["schemas"]["RegionOut"][];
             /** Results */
             results: components["schemas"]["SearchHit"][];
+            /** Selected Region */
+            selected_region?: number | null;
             timings: components["schemas"]["SearchTimings"];
         };
         /** SearchTimings */
@@ -2756,10 +3433,36 @@ export interface components {
             db_ms: number;
             /** Decode Ms */
             decode_ms?: number | null;
+            /** Detect Ms */
+            detect_ms?: number | null;
             /** Embed Ms */
             embed_ms?: number | null;
             /** Total Ms */
             total_ms: number;
+        };
+        /**
+         * SecurityEventOut
+         * @description Бүртгэлийн аюулгүй байдлын нэг үйл явдал. IP-ийн сүүлийн хэсгийг нууцалсан.
+         */
+        SecurityEventOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Device */
+            device: string;
+            /** Id */
+            id: number;
+            /** Ip */
+            ip: string | null;
+            /** Method */
+            method: ("password" | "otp" | "google") | null;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "login" | "login_failed" | "new_device" | "password_changed" | "password_reset" | "sessions_revoked" | "email_changed" | "phone_changed";
         };
         /**
          * SessionOut
@@ -2810,7 +3513,7 @@ export interface components {
              * Id
              * @enum {string}
              */
-            id: "standard" | "express";
+            id: "standard" | "express" | "pickup";
             /** Label */
             label: string;
             /** Price Cents */
@@ -2865,6 +3568,12 @@ export interface components {
              */
             filters: components["schemas"]["FilterParams"];
             /**
+             * Interpret
+             * @description Pull colours, genders, seasons, usages, prices ('under $50', '50000₮-аас доош') and 'in stock' out of the text (Mongolian or English) and apply them as filters. Filters you pass yourself are never overridden. What was applied is listed in `applied`.
+             * @default false
+             */
+            interpret: boolean;
+            /**
              * Limit
              * @description Defaults to 24.
              */
@@ -2915,7 +3624,7 @@ export interface components {
              * Role
              * @enum {string}
              */
-            role: "customer" | "admin";
+            role: "customer" | "admin" | "warehouse";
         };
         /** ValidationError */
         ValidationError: {
@@ -3123,6 +3832,68 @@ export interface operations {
             };
         };
     };
+    audit_log_api_v1_admin_audit_get: {
+        parameters: {
+            query?: {
+                actor_id?: number | null;
+                entity_type?: ("product" | "order") | null;
+                action?: string | null;
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not a staff account, or not allowed for this role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     list_categories_api_v1_admin_categories_get: {
         parameters: {
             query?: never;
@@ -3150,7 +3921,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3204,7 +3975,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3262,7 +4033,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3434,6 +4205,178 @@ export interface operations {
             };
         };
     };
+    export_orders_api_v1_admin_export_orders_get: {
+        parameters: {
+            query?: {
+                /** @description Order number or customer email */
+                q?: string | null;
+                status?: "all" | "pending" | "paid" | "shipped" | "delivered" | "cancelled" | "refunded";
+                page?: number;
+                page_size?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not a staff account, or not allowed for this role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    export_stats_api_v1_admin_export_stats_get: {
+        parameters: {
+            query?: {
+                /** @description Length of the period, ending today */
+                days?: number;
+                /** @description First day of a custom period */
+                start?: string | null;
+                /** @description Last day of a custom period (inclusive) */
+                end?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": unknown;
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not a staff account, or not allowed for this role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    fulfillment_board_api_v1_admin_fulfillment_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FulfillmentBoard"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not a staff account, or not allowed for this role */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     list_orders_api_v1_admin_orders_get: {
         parameters: {
             query?: {
@@ -3467,7 +4410,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3525,7 +4468,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3596,7 +4539,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3672,7 +4615,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3752,7 +4695,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3832,7 +4775,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3921,7 +4864,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4004,7 +4947,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4064,7 +5007,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4140,7 +5083,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4211,7 +5154,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4278,7 +5221,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4345,7 +5288,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4416,7 +5359,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4505,7 +5448,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4577,7 +5520,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4635,7 +5578,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4702,7 +5645,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4745,6 +5688,10 @@ export interface operations {
             query?: {
                 /** @description Length of the period, ending today */
                 days?: number;
+                /** @description First day of a custom period */
+                start?: string | null;
+                /** @description Last day of a custom period (inclusive) */
+                end?: string | null;
             };
             header?: never;
             path?: never;
@@ -4770,7 +5717,7 @@ export interface operations {
                     "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
-            /** @description Not an administrator */
+            /** @description Not a staff account, or not allowed for this role */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5844,6 +6791,35 @@ export interface operations {
             };
         };
     };
+    security_events_api_v1_auth_security_events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SecurityEventOut"][];
+                };
+            };
+            /** @description Not signed in or credentials rejected */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     list_sessions_api_v1_auth_sessions_get: {
         parameters: {
             query?: never;
@@ -6311,6 +7287,55 @@ export interface operations {
             };
         };
     };
+    check_payment_api_v1_checkout_orders__number__check_payment_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description No such order */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The payment provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
     simulate_payment_api_v1_checkout_orders__number__simulate_payment_post: {
         parameters: {
             query?: never;
@@ -6351,7 +7376,7 @@ export interface operations {
             };
         };
     };
-    shipping_methods_api_v1_checkout_shipping_methods_get: {
+    payment_method_api_v1_checkout_payment_method_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -6366,7 +7391,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": components["schemas"]["PaymentMethodOut"];
+                };
+            };
+        };
+    };
+    shipping_methods_api_v1_checkout_shipping_methods_get: {
+        parameters: {
+            query?: {
+                zone?: "ub" | "rural";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": components["schemas"]["ShippingMethodList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -6461,6 +7517,131 @@ export interface operations {
             };
         };
     };
+    cancel_order_api_v1_orders__number__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not one of your orders */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description The order is not waiting for payment */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description The payment provider failed */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    reorder_api_v1_orders__number__reorder_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReorderOut"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Staff accounts do not shop */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not one of your orders */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_products_api_v1_products_get: {
         parameters: {
             query?: {
@@ -6477,7 +7658,7 @@ export interface operations {
                 q?: string | null;
                 department?: string | null;
                 category?: string | null;
-                sort?: ("newest" | "price_asc" | "price_desc" | "relevance") | null;
+                sort?: ("newest" | "price_asc" | "price_desc" | "relevance" | "rating" | "popular") | null;
                 page?: number;
                 page_size?: number;
             };
@@ -6525,6 +7706,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProductOut"];
+                };
+            };
+            /** @description Unknown or inactive product */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_the_look_api_v1_products__product_id__complete_the_look_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                product_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProductOut"][];
                 };
             };
             /** @description Unknown or inactive product */
@@ -6668,6 +7891,11 @@ export interface operations {
                 in_stock?: boolean;
                 /** @description Defaults to 24. */
                 limit?: number | null;
+                query?: string | null;
+                /** @description Share of the text in the combined query (the image gets the rest). */
+                text_weight?: number | null;
+                /** @description Pull colours, genders, seasons, usages, prices ('under $50', '50000₮-аас доош') and 'in stock' out of the text (Mongolian or English) and apply them as filters. Filters you pass yourself are never overridden. What was applied is listed in `applied`. */
+                interpret?: boolean;
             };
             header?: never;
             path: {
@@ -6784,6 +8012,126 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    detect_garments_api_v1_search_detect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["DetectForm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DetectResponse"];
+                };
+            };
+            /** @description Image larger than the upload limit */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not a JPEG, PNG or WebP upload */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Invalid image or parameters */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    search_garments_api_v1_search_garments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/x-www-form-urlencoded": components["schemas"]["GarmentForm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GarmentSearchResponse"];
+                };
+            };
+            /** @description Image larger than the upload limit */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Not a JPEG, PNG or WebP upload */
+            415: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Invalid image or parameters */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+            /** @description Rate limit exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProblemDetail"];
                 };
             };
         };
@@ -6950,12 +8298,12 @@ export interface operations {
             };
         };
     };
-    stripe_webhook_api_v1_webhooks_stripe_post: {
+    qpay_callback_api_v1_webhooks_qpay_post: {
         parameters: {
-            query?: never;
-            header?: {
-                "Stripe-Signature"?: string | null;
+            query: {
+                order: string;
             };
+            header?: never;
             path?: never;
             cookie?: never;
         };
@@ -6972,13 +8320,46 @@ export interface operations {
                     };
                 };
             };
-            /** @description Bad or missing signature */
-            400: {
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Payment check failed, retry later */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["ProblemDetail"];
+                };
+            };
+        };
+    };
+    qpay_callback_api_v1_webhooks_qpay_post: {
+        parameters: {
+            query: {
+                order: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
                 };
             };
             /** @description Validation Error */
@@ -6990,7 +8371,7 @@ export interface operations {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
-            /** @description Payments not configured */
+            /** @description Payment check failed, retry later */
             503: {
                 headers: {
                     [name: string]: unknown;

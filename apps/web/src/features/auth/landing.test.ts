@@ -6,6 +6,15 @@ describe("landingPath", () => {
     expect(landingPath("/", "admin")).toBe("/admin");
   });
 
+  it("sends a warehouse worker with no particular destination to the warehouse board", () => {
+    expect(landingPath("/", "warehouse")).toBe("/admin");
+  });
+
+  it("keeps the page a warehouse worker asked for", () => {
+    expect(landingPath("/admin/orders", "warehouse")).toBe("/admin/orders");
+    expect(landingPath("/account/orders", "warehouse")).toBe("/account/orders");
+  });
+
   it("keeps the page an administrator asked for", () => {
     expect(landingPath("/account/orders", "admin")).toBe("/account/orders");
     expect(landingPath("/admin/orders", "admin")).toBe("/admin/orders");

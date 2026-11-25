@@ -1,10 +1,11 @@
 "use client";
 
 import { Star } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-const WORDS = ["Poor", "Fair", "Good", "Very good", "Excellent"];
+const STARS = [1, 2, 3, 4, 5] as const;
 
 /**
  * 1-5 од сонгоно. Radio button-уудын бүлэг тул сумны товч, label, screen reader бусад сонголттой
@@ -21,17 +22,19 @@ export function RatingInput({
   error?: string;
   name?: string;
 }) {
+  const t = useTranslations("reviews.rating");
+  const word = (stars: number) => t(`words.${String(stars) as "1" | "2" | "3" | "4" | "5"}`);
   const [hover, setHover] = useState(0);
   const shown = hover || value;
   return (
     <fieldset aria-describedby={error ? `${name}-error` : undefined} className="space-y-1.5">
-      <legend className="mb-1.5 text-sm font-medium">Your rating</legend>
+      <legend className="mb-1.5 type-caption font-medium">{t("label")}</legend>
       <div className="flex items-center gap-1" onMouseLeave={() => setHover(0)}>
-        {[1, 2, 3, 4, 5].map((stars) => (
+        {STARS.map((stars) => (
           <label
             key={stars}
             onMouseEnter={() => setHover(stars)}
-            className="focus-within:ring-ring/60 relative cursor-pointer rounded-md p-0.5 focus-within:ring-3"
+            className="focus-within:ring-ring/50 relative cursor-pointer rounded-md p-0.5 focus-within:ring-3"
           >
             <input
               type="radio"
@@ -42,17 +45,17 @@ export function RatingInput({
               className="sr-only"
             />
             <span className="sr-only">
-              {stars} {stars === 1 ? "star" : "stars"}, {WORDS[stars - 1]}
+              {t("option", { stars, word: word(stars) })}
             </span>
-            <Star aria-hidden className={cn("size-7 text-amber-500 transition-colors", stars <= shown ? "fill-current" : "text-muted-foreground/40")} />
+            <Star aria-hidden className={cn("size-7 text-star transition-colors", stars <= shown ? "fill-current" : "text-muted-foreground/40")} />
           </label>
         ))}
-        <span aria-hidden className="text-muted-foreground ml-2 text-sm">
-          {shown ? WORDS[shown - 1] : ""}
+        <span aria-hidden className="text-muted-foreground ml-2 type-caption">
+          {shown ? word(shown) : ""}
         </span>
       </div>
       {error && (
-        <p id={`${name}-error`} role="alert" className="text-destructive text-xs">
+        <p id={`${name}-error`} role="alert" className="text-destructive type-fine">
           {error}
         </p>
       )}

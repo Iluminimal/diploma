@@ -101,3 +101,28 @@ describe("cart lines", () => {
     expect(kurtaRow).not.toHaveClass("animate-highlight");
   });
 });
+
+describe("price changes in the bag", () => {
+  const render = (line: ReturnType<typeof makeCartLine>) => {
+    stubApi({ "GET /api/v1/cart": () => json(makeCart([line])) });
+    return renderWithQuery(<MiniCart onNavigate={() => {}} />);
+  };
+
+  it("tells the customer when the price went up since they added it", async () => {
+    render(makeCartLine({ id: 10, product: kurta, unit_price_cents: 3500, line_total_cents: 3500, price_when_added_cents: 3000 }));
+
+    expect(await screen.findByText("Price changed: it was $30 when you added it.")).toBeInTheDocument();
+  });
+
+  it("tells them when it went down", async () => {
+    render(makeCartLine({ id: 10, product: kurta, unit_price_cents: 2500, line_total_cents: 2500, price_when_added_cents: 3000 }));
+
+    expect(await screen.findByText("Price dropped: it was $30 when you added it.")).toBeInTheDocument();
+  });
+
+  it("says nothing when the price is the same, or was never recorded", async () => {
+    render(makeCartLine({ id: 10, product: kurta, price_when_added_cents: 3000 }));
+    await screen.findByText("Blue Kurta");
+    expect(screen.queryByText(/Price (changed|dropped)/)).not.toBeInTheDocument();
+  });
+});

@@ -15,4 +15,10 @@ describe("JsonLdScripts", () => {
       expect(typeof parsed["@context"]).toBe("string");
     }
   });
+
+  it("carries no nonce: a data block is not executed, and the browser hides the attribute from hydration", () => {
+    const { container } = render(<JsonLdScripts nodes={siteJsonLd()} />);
+
+    expect(container.querySelector("script")?.hasAttribute("nonce")).toBe(false);
+  });
 });

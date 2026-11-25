@@ -10,11 +10,11 @@ export const MULTI_KEYS = [
 ] as const;
 export type MultiKey = (typeof MULTI_KEYS)[number];
 
-export const SORTS = ["newest", "price_asc", "price_desc", "relevance"] as const;
+export const SORTS = ["newest", "price_asc", "price_desc", "relevance", "rating", "popular"] as const;
 export type Sort = (typeof SORTS)[number];
 
 export const MAX_VALUES_PER_KEY = 12;
-export const MAX_PRICE_CENTS = 10_000_000;
+export const MAX_PRICE_CENTS = 1_000_000_000; // 10 сая ₮ (төгрөг x 100)
 
 /** Жагсаалт, төстэй бүтээгдэхүүн, бүх хайлтын endpoint-ын хуваалцдаг шүүлтүүр. Үнэ бүхэл cent. */
 export type CatalogFilters = Record<MultiKey, string[]> & {

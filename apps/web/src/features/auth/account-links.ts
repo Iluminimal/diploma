@@ -1,8 +1,8 @@
 import { Heart, MapPin, Package, UserRound } from "lucide-react";
 
 export const ACCOUNT_LINKS = [
-  { href: "/account/profile", label: "Profile", icon: UserRound },
-  { href: "/account/orders", label: "Orders", icon: Package },
-  { href: "/account/wishlist", label: "Wishlist", icon: Heart },
-  { href: "/account/addresses", label: "Addresses", icon: MapPin },
+  { href: "/account/profile", key: "profile", icon: UserRound },
+  { href: "/account/orders", key: "orders", icon: Package },
+  { href: "/account/wishlist", key: "wishlist", icon: Heart },
+  { href: "/account/addresses", key: "addresses", icon: MapPin },
 ] as const;

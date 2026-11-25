@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useCallback, useRef, useState } from "react";
@@ -28,6 +29,7 @@ function MenuIcon({ open }: { open: boolean }) {
  * тооцогдоно: нээсэн хуудсаа санадаг.
  */
 export function MobileNav() {
+  const t = useTranslations("layout.header");
   const pathname = usePathname();
   const [openedAt, setOpenedAt] = useState<string | null>(null);
   const [requested, setRequested] = useState(false);
@@ -42,7 +44,7 @@ export function MobileNav() {
       <button
         ref={button}
         type="button"
-        aria-label={open ? "Close menu" : "Open menu"}
+        aria-label={open ? t("menuClose") : t("menuOpen")}
         aria-expanded={open}
         aria-controls="mobile-menu"
         onClick={() => {

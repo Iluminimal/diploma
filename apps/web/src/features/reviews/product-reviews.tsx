@@ -1,10 +1,11 @@
 "use client";
 
 import { Pencil, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { selectClass } from "@/components/forms/form-field";
+import { NativeSelect } from "@/components/ui/native-select";
 import { RatingStars } from "@/components/product/rating-stars";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,35 +18,30 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/features/auth/auth-store";
-import { userMessage } from "@/lib/api/errors";
-import { cn } from "@/lib/utils";
+import { useFormat } from "@/i18n/use-format";
+import { useUserMessage } from "@/lib/api/use-user-message";
 import { ReviewForm } from "./review-form";
 import { REVIEW_SORTS, type Review, type ReviewPage, type ReviewSort } from "./reviews-api";
 import { useDeleteReview, useReviews } from "./use-reviews";
 
-const SORT_LABELS: Record<ReviewSort, string> = {
-  newest: "Most recent",
-  highest: "Highest rated",
-  lowest: "Lowest rated",
-};
-
-const day = (iso: string) => new Date(iso).toLocaleDateString("en-US", { dateStyle: "medium" });
+const DAY: Intl.DateTimeFormatOptions = { dateStyle: "medium" };
 
 /** Үнэлгээний хуваарилалт, од бүрт нэг bar, олон одтой нь түрүүнд. */
 function Distribution({ distribution, count }: { distribution: number[]; count: number }) {
+  const t = useTranslations("reviews");
   return (
-    <ul aria-label="Ratings by number of stars" className="space-y-1.5 text-sm">
+    <ul aria-label={t("byStars")} className="space-y-1.5 type-caption">
       {[5, 4, 3, 2, 1].map((stars) => {
         const n = distribution[stars - 1] ?? 0;
         return (
           <li key={stars} className="flex items-center gap-3">
-            <span className="w-14 shrink-0 tabular-nums">{stars} {stars === 1 ? "star" : "stars"}</span>
+            <span className="w-14 shrink-0 tabular-nums">{t("stars", { stars })}</span>
             <span aria-hidden className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
-              <span className="block h-full rounded-full bg-amber-500" style={{ width: count ? `${(n / count) * 100}%` : 0 }} />
+              <span className="block h-full rounded-full bg-star" style={{ width: count ? `${(n / count) * 100}%` : 0 }} />
             </span>
             <span className="text-muted-foreground w-8 shrink-0 text-right tabular-nums">
               {n}
-              <span className="sr-only"> {n === 1 ? "review" : "reviews"}</span>
+              <span className="sr-only"> {t("starsCount", { count: n })}</span>
             </span>
           </li>
         );
@@ -55,6 +51,8 @@ function Distribution({ distribution, count }: { distribution: number[]; count: 
 }
 
 function ReviewItem({ review, mine, productId }: { review: Review; mine: boolean; productId: number }) {
+  const t = useTranslations("reviews");
+  const format = useFormat();
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const remove = useDeleteReview(productId);
@@ -72,37 +70,37 @@ function ReviewItem({ review, mine, productId }: { review: Review; mine: boolean
         <RatingStars rating={review.rating} />
         {review.title && <h3 className="font-semibold">{review.title}</h3>}
       </div>
-      {review.body && <p className="text-sm leading-relaxed break-words whitespace-pre-line">{review.body}</p>}
-      <p className="text-muted-foreground text-xs">
-        {mine ? "You" : review.author} · <time dateTime={review.created_at}>{day(review.created_at)}</time>
+      {review.body && <p className="type-caption leading-relaxed break-words whitespace-pre-line">{review.body}</p>}
+      <p className="text-muted-foreground type-fine">
+        {mine ? t("you") : review.author} · <time dateTime={review.created_at}>{format.date(review.created_at, DAY)}</time>
       </p>
       {mine && review.status === "hidden" && (
-        <p role="status" className="text-muted-foreground bg-muted rounded-lg px-3 py-2 text-xs">
+        <p role="status" className="text-muted-foreground bg-muted rounded-lg px-3 py-2 type-fine">
           <Badge variant="secondary" className="mr-2">
-            Hidden
+            {t("hidden")}
           </Badge>
-          The shop has hidden this review. Only you can see it.
+          {t("hiddenNote")}
         </p>
       )}
       {mine && (
         <div className="flex gap-2 pt-1">
           <Button variant="bordered" onClick={() => setEditing(true)}>
-            <Pencil aria-hidden /> Edit
+            <Pencil aria-hidden /> {t("edit")}
           </Button>
           <Button variant="bordered" onClick={() => setDeleting(true)}>
-            <Trash2 aria-hidden /> Delete
+            <Trash2 aria-hidden /> {t("delete")}
           </Button>
         </div>
       )}
       <Dialog open={deleting} onOpenChange={setDeleting}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete your review?</DialogTitle>
-            <DialogDescription>It disappears from the product page and from its rating. You can write a new one afterwards.</DialogDescription>
+            <DialogTitle>{t("deleteTitle")}</DialogTitle>
+            <DialogDescription>{t("deleteDescription")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleting(false)}>
-              Keep it
+              {t("keep")}
             </Button>
             <Button
               variant="destructive"
@@ -110,13 +108,13 @@ function ReviewItem({ review, mine, productId }: { review: Review; mine: boolean
               onClick={() =>
                 remove.mutate(review.id, {
                   onSuccess: () => {
-                    toast.success("Your review is deleted.");
+                    toast.success(t("deleted"));
                     setDeleting(false);
                   },
                 })
               }
             >
-              Delete review
+              {t("deleteSubmit")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -127,15 +125,22 @@ function ReviewItem({ review, mine, productId }: { review: Review; mine: boolean
 
 /** Зочин сэтгэгдэл бичихэд юу хийж болох: form, эсвэл чадахгүй шалтгаан. */
 function WriteReview({ productId, page }: { productId: number; page: ReviewPage }) {
+  const t = useTranslations("reviews");
   const status = useAuth((state) => state.status);
   const viewer = page.viewer;
   if (status === "signedOut") {
     return (
-      <p className="text-muted-foreground text-sm">
-        <Link href={`/login?next=${encodeURIComponent(`/products/${productId}#reviews`)}`} className="text-brand underline underline-offset-2 hover:no-underline">
-          Sign in
-        </Link>{" "}
-        to review this product if you have bought it.
+      <p className="text-muted-foreground type-caption">
+        {t.rich("signInToReview", {
+          link: (chunks) => (
+            <Link
+              href={`/login?next=${encodeURIComponent(`/products/${productId}#reviews`)}`}
+              className="text-brand underline underline-offset-2 hover:no-underline"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
       </p>
     );
   }
@@ -143,13 +148,13 @@ function WriteReview({ productId, page }: { productId: number; page: ReviewPage 
   if (viewer.can_review) {
     return (
       <div className="bg-secondary/60 rounded-2xl p-4 sm:p-5">
-        <h3 className="mb-4 font-semibold">Write a review</h3>
+        <h3 className="mb-4 font-semibold">{t("write")}</h3>
         <ReviewForm productId={productId} />
       </div>
     );
   }
   if (!viewer.purchased) {
-    return <p className="text-muted-foreground text-sm">Only customers who have bought this product can review it.</p>;
+    return <p className="text-muted-foreground type-caption">{t("onlyBuyers")}</p>;
   }
   return null;
 }
@@ -159,6 +164,8 @@ function WriteReview({ productId, page }: { productId: number; page: ReviewPage 
  * үйлчлүүлэгчид) бичих form. Эхний хуудас хуудастайгаа хамт ирнэ; үлдсэнийг шаардлагатай үед татна.
  */
 export function ProductReviews({ productId, initial }: { productId: number; initial: ReviewPage | null }) {
+  const t = useTranslations("reviews");
+  const userMessage = useUserMessage();
   const [sort, setSort] = useState<ReviewSort>("newest");
   const [pageNumber, setPageNumber] = useState(1);
   const { data, error, refetch, isFetching } = useReviews(productId, sort, pageNumber, initial);
@@ -166,21 +173,21 @@ export function ProductReviews({ productId, initial }: { productId: number; init
   return (
     <section id="reviews" aria-labelledby="reviews-heading" className="defer-render mt-20 scroll-mt-24">
       <h2 id="reviews-heading" className="type-title mb-6 md:mb-8">
-        Customer reviews
+        {t("title")}
       </h2>
       {!data ? (
         error ? (
           <div className="space-y-3">
-            <p role="alert" className="text-muted-foreground text-sm">
+            <p role="alert" className="text-muted-foreground type-caption">
               {userMessage(error)}
             </p>
             <Button variant="outline" onClick={() => void refetch()}>
-              Try again
+              {t("tryAgain")}
             </Button>
           </div>
         ) : (
-          <p aria-busy className="text-muted-foreground text-sm">
-            Loading reviews…
+          <p aria-busy className="text-muted-foreground type-caption">
+            {t("loading")}
           </p>
         )
       ) : (
@@ -192,34 +199,38 @@ export function ProductReviews({ productId, initial }: { productId: number; init
                   <span className="type-display tabular-nums">{data.summary.average.toFixed(1)}</span>
                   <div className="space-y-1">
                     <RatingStars rating={data.summary.average} size="lg" />
-                    <p className="text-muted-foreground text-sm">
-                      {data.summary.count} {data.summary.count === 1 ? "review" : "reviews"}
+                    <p className="text-muted-foreground type-caption">
+                      {t("count", { count: data.summary.count })}
                     </p>
                   </div>
                 </div>
                 <Distribution distribution={data.summary.distribution} count={data.summary.count} />
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">No reviews yet. Be the first to share what you think.</p>
+              <p className="text-muted-foreground type-caption">{t("none")}</p>
             )}
             <WriteReview productId={productId} page={data} />
           </div>
 
           <div className="min-w-0 space-y-4">
             {data.viewer?.review && !data.items.some((item) => item.id === data.viewer?.review?.id) && (
-              <ul aria-label="Your review" className="space-y-4">
+              <ul aria-label={t("yours")} className="space-y-4">
                 <ReviewItem review={data.viewer.review} mine productId={productId} />
               </ul>
             )}
             {data.total > 0 ? (
               <>
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-muted-foreground text-sm">
-                    Showing {(data.page - 1) * data.page_size + 1}–{(data.page - 1) * data.page_size + data.items.length} of {data.total}
+                  <p className="text-muted-foreground type-caption">
+                    {t("showing", {
+                      from: (data.page - 1) * data.page_size + 1,
+                      to: (data.page - 1) * data.page_size + data.items.length,
+                      total: data.total,
+                    })}
                   </p>
-                  <select
-                    aria-label="Sort reviews"
-                    className={cn(selectClass, "w-auto")}
+                  <NativeSelect
+                    variant="pill"
+                    aria-label={t("sortLabel")}
                     value={sort}
                     onChange={(event) => {
                       setSort(event.target.value as ReviewSort);
@@ -228,26 +239,26 @@ export function ProductReviews({ productId, initial }: { productId: number; init
                   >
                     {REVIEW_SORTS.map((value) => (
                       <option key={value} value={value}>
-                        {SORT_LABELS[value]}
+                        {t(`sort.${value}`)}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
-                <ul aria-label="Reviews" aria-busy={isFetching} className="divide-border divide-y">
+                <ul aria-label={t("list")} aria-busy={isFetching} className="divide-border divide-y">
                   {data.items.map((review) => (
                     <ReviewItem key={review.id} review={review} mine={data.viewer?.review?.id === review.id} productId={productId} />
                   ))}
                 </ul>
                 {data.pages > 1 && (
-                  <nav aria-label="Reviews pages" className="flex items-center justify-between text-sm">
+                  <nav aria-label={t("pages")} className="flex items-center justify-between type-caption">
                     <Button variant="bordered" disabled={pageNumber <= 1} onClick={() => setPageNumber(pageNumber - 1)}>
-                      Previous
+                      {t("previous")}
                     </Button>
                     <span className="text-muted-foreground">
-                      Page {data.page} of {data.pages}
+                      {t("pageOf", { page: data.page, pages: data.pages })}
                     </span>
                     <Button variant="bordered" disabled={pageNumber >= data.pages} onClick={() => setPageNumber(pageNumber + 1)}>
-                      Next
+                      {t("next")}
                     </Button>
                   </nav>
                 )}

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext, Cookie } from "@playwright/test";
-import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL, PASSWORD } from "./env";
+import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL, PASSWORD, WAREHOUSE_EMAIL, WAREHOUSE_PASSWORD } from "./env";
 import { makePng } from "./images";
 
 export type CatalogProduct = {
@@ -104,11 +104,13 @@ export async function addAddress(request: APIRequestContext, account: Account): 
     await request.post(`${API_URL}/api/v1/addresses`, {
       headers: bearer(account),
       data: {
-        full_name: "Ada Lovelace",
-        line1: "12 Analytical Way",
-        city: "London",
-        postal_code: "N1 9GU",
-        country: "GB",
+        full_name: "Болд Батбаяр",
+        region: "Улаанбаатар",
+        city: "Баянгол",
+        khoroo: "3-р хороо",
+        line1: "Энхтайваны өргөн чөлөө 12",
+        country: "MN",
+        phone: "99112233",
         is_default: true,
       },
     }),
@@ -149,8 +151,12 @@ export async function saveToWishlist(request: APIRequestContext, account: Accoun
   if (!response.ok()) throw new Error(`saving to the wishlist failed: ${response.status()}`);
 }
 
-/** API-аар нэвтэрсэн e2e админ. */
+/** API-аар нэвтэрсэн e2e админ: захиалга цуцлах, буцаах, хэрэглэгч, статистик. Барааг зөвхөн харна. */
 export const adminSession = (request: APIRequestContext) => signInAccount(request, ADMIN_EMAIL, ADMIN_PASSWORD);
+
+/** API-аар нэвтэрсэн e2e агуулахын ажилтан: бараа нэмэх/засах/хасах, нөөц, захиалгын ачилт (ship/deliver). */
+export const warehouseSession = (request: APIRequestContext) =>
+  signInAccount(request, WAREHOUSE_EMAIL, WAREHOUSE_PASSWORD);
 
 /** Оруулсан боловч төлөгдөөгүй захиалга (төлөх эсвэл хугацаа дуустал нөөцийг нь барьж байна). */
 export async function placePendingOrder(request: APIRequestContext, account: Account, productId: number): Promise<string> {
@@ -173,11 +179,11 @@ export async function placePendingOrder(request: APIRequestContext, account: Acc
  */
 export async function createProduct(
   request: APIRequestContext,
-  admin: Account,
+  worker: Account,
   options: { name?: string; stock?: number } = {},
 ): Promise<{ id: number; name: string }> {
   const categories = await ok<{ id: number; article_type: string }[]>(
-    await request.get(`${API_URL}/api/v1/admin/categories`, { headers: bearer(admin) }),
+    await request.get(`${API_URL}/api/v1/admin/categories`, { headers: bearer(worker) }),
     "listing categories",
   );
   // Хувцас биш: бусад spec "хамгийн сүүлийн нөөцтэй хувцас"-ыг сонгодог, зургаас үүсгэсэн бараа
@@ -186,12 +192,12 @@ export async function createProduct(
   const name = options.name ?? `E2E handbag ${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
   const created = await ok<{ id: number }>(
     await request.post(`${API_URL}/api/v1/admin/products`, {
-      headers: { Authorization: `Bearer ${admin.token}` },
+      headers: { Authorization: `Bearer ${worker.token}` },
       multipart: {
         name,
         category_id: String(category.id),
         gender: "Women",
-        price_cents: "2999",
+        price_cents: "8790000",
         stock_quantity: String(options.stock ?? 20),
         file: { name: "p.png", mimeType: "image/png", buffer: makePng(Math.floor(Math.random() * 1_000_000)) },
       },
@@ -202,8 +208,8 @@ export async function createProduct(
 }
 
 /** Барааг борлуулалтаас хасна (бараа хэзээ ч устгагдахгүй: захиалгууд лавладаг). */
-export async function withdrawProduct(request: APIRequestContext, admin: Account, productId: number) {
-  await request.post(`${API_URL}/api/v1/admin/products/${productId}/deactivate`, { headers: bearer(admin) });
+export async function withdrawProduct(request: APIRequestContext, worker: Account, productId: number) {
+  await request.post(`${API_URL}/api/v1/admin/products/${productId}/deactivate`, { headers: bearer(worker) });
 }
 
 /** Дэлгүүрийн өөрийн бүртгэл барааны талаар юу гэдэг (storefront зөвхөн "нөөцтэй" гэж харуулна). */
@@ -223,16 +229,16 @@ export async function orderOf(request: APIRequestContext, account: Account, numb
   );
 }
 
-/** Админ шиг захиалгыг илгээж, хүргэнэ (тээвэрлэгч ба дугаар зохиомол). */
-export async function shipAndDeliver(request: APIRequestContext, admin: Account, number: string) {
+/** Агуулахын ажилтан шиг захиалгыг илгээж, хүргэнэ (тээвэрлэгч ба дугаар зохиомол). */
+export async function shipAndDeliver(request: APIRequestContext, worker: Account, number: string) {
   await ok(
     await request.post(`${API_URL}/api/v1/admin/orders/${number}/ship`, {
-      headers: bearer(admin),
+      headers: bearer(worker),
       data: { carrier: "DHL", tracking_number: "E2E-0146" },
     }),
     "shipping",
   );
-  await ok(await request.post(`${API_URL}/api/v1/admin/orders/${number}/deliver`, { headers: bearer(admin) }), "delivering");
+  await ok(await request.post(`${API_URL}/api/v1/admin/orders/${number}/deliver`, { headers: bearer(worker) }), "delivering");
 }
 
 export async function postReview(

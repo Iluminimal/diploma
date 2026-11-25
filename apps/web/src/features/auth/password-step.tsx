@@ -1,13 +1,15 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 import { FloatingLabel, floatingInputClass } from "@/components/forms/floating-label";
 import { fieldAria } from "@/components/forms/form-field";
 import { PasswordInput } from "@/components/forms/password-input";
 import { Button } from "@/components/ui/button";
-import { ApiError, userMessage } from "@/lib/api/errors";
+import { ApiError } from "@/lib/api/errors";
+import { useUserMessage } from "@/lib/api/use-user-message";
 import { cn } from "@/lib/utils";
 import { useAuthActions } from "./use-auth-actions";
 
@@ -20,13 +22,18 @@ export function PasswordStep({
   onUseCode,
   codeBusy,
   codeProblem,
+  next = "/",
 }: {
   email: string;
   onSignedIn: () => void;
   onUseCode: () => void;
   codeBusy: boolean;
   codeProblem: string | null;
+  /** Нэвтэрсний дараа очих газар: нууц үг сэргээх хуудсаар дамжиж мөн хадгалагдана. */
+  next?: string;
 }) {
+  const t = useTranslations("auth.password");
+  const userMessage = useUserMessage();
   const { signIn } = useAuthActions();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,7 +41,7 @@ export function PasswordStep({
 
   async function submit(event: { preventDefault: () => void }) {
     event.preventDefault();
-    if (!password) return setProblem("Enter your password.");
+    if (!password) return setProblem(t("empty"));
     setProblem(null);
     setBusy(true);
     try {
@@ -45,7 +52,7 @@ export function PasswordStep({
         error instanceof ApiError && error.is("invalidCredentials")
           ? // Имэйл бүрт ижил үг тул хэнд бүртгэл байгааг ил болгохгүй. Мөн Google эсвэл
             // кодоор бүртгүүлсэн, нууц үггүй хүмүүст гарах замыг өгнө.
-            `${userMessage(error)} No password yet? Get a code by email instead, or use “Continue with Google”.`
+            t("noPassword", { error: userMessage(error) })
           : userMessage(error),
       );
     } finally {
@@ -55,7 +62,7 @@ export function PasswordStep({
 
   const shown = problem ?? codeProblem ?? undefined;
   return (
-    <form onSubmit={submit} noValidate className="space-y-4" aria-label="Sign in">
+    <form onSubmit={submit} noValidate className="space-y-4" aria-label={t("signIn")}>
       {/* Password manager аль бүртгэл болохыг таньж чадна. */}
       <input type="email" name="username" value={email} autoComplete="username" readOnly hidden />
       <div className="space-y-2">
@@ -69,23 +76,23 @@ export function PasswordStep({
             className={cn(floatingInputClass, "pr-11")}
             {...fieldAria("password", shown)}
           />
-          <FloatingLabel htmlFor="password">Password</FloatingLabel>
+          <FloatingLabel htmlFor="password">{t("label")}</FloatingLabel>
         </div>
         {shown && (
-          <p id="password-error" role="alert" className="text-destructive animate-in fade-in slide-in-from-top-1 text-sm duration-300">
+          <p id="password-error" role="alert" className="text-destructive animate-in fade-in slide-in-from-top-1 type-caption duration-300">
             {shown}
           </p>
         )}
       </div>
       <Button type="submit" size="lg" disabled={busy} className="w-full">
-        {busy && <Loader2 className="animate-spin" />} Sign in
+        {busy && <Loader2 className="animate-spin" />} {t("signIn")}
       </Button>
       <Button type="button" variant="outline" size="lg" disabled={codeBusy} onClick={onUseCode} className="w-full">
-        {codeBusy && <Loader2 className="animate-spin" />} Email me a code instead
+        {codeBusy && <Loader2 className="animate-spin" />} {t("emailCode")}
       </Button>
-      <p className="text-center text-sm">
-        <Link href="/forgot-password" className="text-muted-foreground hover:text-foreground underline underline-offset-4">
-          Forgot your password?
+      <p className="text-center type-caption">
+        <Link href={next === "/" ? "/forgot-password" : `/forgot-password?next=${encodeURIComponent(next)}`} className="text-muted-foreground hover:text-foreground underline underline-offset-4">
+          {t("forgot")}
         </Link>
       </p>
     </form>

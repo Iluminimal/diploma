@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "./fixtures";
 import { API_URL, PASSWORD } from "./support/env";
 import { OTP_CODE, signInAccount, signUpWithPhone, uniquePhone } from "./support/api";
+import { ENGLISH } from "./support/locale";
 
 // Эдгээр тест API-г OTP_DEV_CODE=000000-тэй ажиллуулахыг шаарддаг (docs/e2e.md): тэгвэл код болгон
 // 000000 байна.
@@ -96,7 +97,7 @@ test("a phone customer adds an email, changes the number and signs out the other
   await expect(page.getByText(replacement).first()).toBeVisible();
 
   // Хоёр дахь төхөөрөмж нэвтэрч, эхнийхийг нь гаргана.
-  const other = await browser.newContext();
+  const other = await browser.newContext({ storageState: ENGLISH });
   const otherApi = other.request;
   await otherApi.post(`${API_URL}/api/v1/auth/otp/request`, { data: { destination: replacement } });
   await otherApi.post(`${API_URL}/api/v1/auth/otp/verify`, { data: { destination: replacement, code: OTP_CODE } });

@@ -1,3 +1,4 @@
+import type { AuthTranslator } from "./auth-translator";
 import { toE164 } from "./phone-input";
 import type { CountryCode } from "libphonenumber-js/min";
 
@@ -18,15 +19,15 @@ export function looksLikePhone(text: string): boolean {
  * Талбар дахь имэйл эсвэл утасны дугаарыг API-ийн хүссэн хэлбэрээр, эсвэл яагаад болохгүй байгаа
  * шалтгааныг буцаана.
  */
-export function parseIdentifier(text: string, region: CountryCode): Identifier | { error: string } {
+export function parseIdentifier(text: string, region: CountryCode, t: AuthTranslator): Identifier | { error: string } {
   const typed = text.trim();
-  if (!typed) return { error: "Enter your email or phone number." };
+  if (!typed) return { error: t("identifier.empty") };
   if (looksLikePhone(typed)) {
     const destination = toE164(typed, region);
-    return destination ? { kind: "phone", destination, shown: typed } : { error: "Enter a valid phone number." };
+    return destination ? { kind: "phone", destination, shown: typed } : { error: t("identifier.invalidPhone") };
   }
   const email = typed.toLowerCase();
   return /^\S+@\S+\.\S+$/.test(email)
     ? { kind: "email", destination: email, shown: typed }
-    : { error: "Enter a valid email address or phone number." };
+    : { error: t("identifier.invalid") };
 }

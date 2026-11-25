@@ -1,22 +1,24 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ArrowRight, ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { AnimatedPrice } from "@/components/product/animated-price";
+import { Price } from "@/components/product/price";
 import { Button } from "@/components/ui/button";
-import { userMessage } from "@/lib/api/errors";
 import { CartLines, UndoBar } from "./cart-lines";
 import { FreeShippingProgress } from "./free-shipping-progress";
 import { useCart } from "./use-cart";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { QueryError } from "@/components/ui/query-error";
 
 export function CartView() {
+  const t = useTranslations("cart");
   const { data: cart, isPending, error, refetch } = useCart();
 
   if (isPending) {
     return (
-      <div className="grid gap-8 lg:grid-cols-[1fr_22rem]" aria-busy aria-label="Loading your Bag">
+      <div className="grid gap-8 lg:grid-cols-[1fr_22rem]" aria-busy aria-label={t("loading")}>
         <div className="space-y-4">
           {[0, 1, 2].map((n) => (
             <Skeleton key={n} className="h-32 rounded-[var(--radius-tile)]" />
@@ -28,14 +30,7 @@ export function CartView() {
   }
   if (error || !cart) {
     return (
-      <div className="space-y-3">
-        <p role="alert" className="text-destructive">
-          {userMessage(error)}
-        </p>
-        <Button variant="outline" onClick={() => void refetch()}>
-          Try again
-        </Button>
-      </div>
+      <QueryError error={error} onRetry={refetch} retryLabel={t("tryAgain")} />
     );
   }
   if (cart.lines.length === 0) {
@@ -46,15 +41,15 @@ export function CartView() {
         <EmptyState
           icon={ShoppingBag}
           as="p"
-          title="Your Bag is empty"
-          description="Browse the collection or search with a photo."
+          title={t("empty")}
+          description={t("emptyBrowse")}
           className="min-h-[26rem] py-16"
         >
           <Button asChild size="lg">
-            <Link href="/products">Shop all</Link>
+            <Link href="/products">{t("shopAll")}</Link>
           </Button>
           <Button asChild variant="bordered" size="lg">
-            <Link href="/search">Search by photo</Link>
+            <Link href="/search">{t("searchByPhoto")}</Link>
           </Button>
         </EmptyState>
         <div className="mx-auto max-w-sm empty:hidden">
@@ -68,37 +63,43 @@ export function CartView() {
     <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12">
       <CartLines cart={cart} />
       <aside
-        aria-label="Order summary"
+        aria-label={t("orderSummary")}
         className="tile space-y-4 p-6 lg:sticky lg:top-20"
       >
-        <h2 className="type-heading">Summary</h2>
+        <h2 className="type-heading">{t("summary")}</h2>
         <FreeShippingProgress subtotalCents={cart.subtotal_cents} />
         <dl className="type-body space-y-2">
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Subtotal ({cart.item_count} items)</dt>
+            <dt className="text-muted-foreground">{t("subtotalItems", { count: cart.item_count })}</dt>
             <dd>
-              <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} />
+              <Price cents={cart.subtotal_cents} currency={cart.currency} />
             </dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Shipping</dt>
-            <dd className="text-muted-foreground">Calculated at checkout</dd>
+            <dt className="text-muted-foreground">{t("shipping")}</dt>
+            <dd className="text-muted-foreground">{t("calculatedAtCheckout")}</dd>
           </div>
         </dl>
         <div className="border-border flex items-baseline justify-between border-t pt-4">
-          <span className="type-heading">Estimated total</span>
-          <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} className="type-heading" />
+          <span className="type-heading">{t("estimatedTotal")}</span>
+          <Price cents={cart.subtotal_cents} currency={cart.currency} className="type-heading" />
         </div>
         {cart.has_issues && (
-          <p role="status" className="text-destructive text-sm">
-            Some items need your attention before you can check out.
+          <p role="status" className="text-destructive type-caption">
+            {t("needsAttention")}
           </p>
         )}
-        <Button asChild size="xl" className="w-full" aria-disabled={cart.has_issues}>
-          <Link href="/checkout">
-            Checkout <ArrowRight />
-          </Link>
-        </Button>
+        {cart.has_issues ? (
+          <Button size="xl" className="w-full" disabled>
+            {t("checkout")} <ArrowRight />
+          </Button>
+        ) : (
+          <Button asChild size="xl" className="w-full">
+            <Link href="/checkout">
+              {t("checkout")} <ArrowRight />
+            </Link>
+          </Button>
+        )}
       </aside>
     </div>
   );

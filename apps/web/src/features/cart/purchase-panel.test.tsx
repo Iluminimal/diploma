@@ -127,7 +127,7 @@ describe("PurchasePanel", () => {
     await userEvent.click(screen.getByLabelText("M"));
     await userEvent.click(screen.getByRole("button", { name: /add to bag/i }));
 
-    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Only 2 of Alma Women Blue Kurta can be added."));
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Only 2 can be added."));
     expect(useBagPanel.getState().open).toBe(false);
   });
 
@@ -179,5 +179,20 @@ describe("PurchasePanel", () => {
 
       expect(bar()).not.toBeInTheDocument();
     });
+  });
+});
+
+describe("PurchasePanel stock notice", () => {
+  it("says when only a few are left, but not for plenty or for sold out", () => {
+    const { unmount } = renderPanel(makeProduct({ low_stock: true }));
+    expect(screen.getByText("Only a few left")).toBeInTheDocument();
+    unmount();
+
+    const plenty = renderPanel(makeProduct({ low_stock: false }));
+    expect(screen.queryByText("Only a few left")).not.toBeInTheDocument();
+    plenty.unmount();
+
+    renderPanel(makeProduct({ in_stock: false, low_stock: false }));
+    expect(screen.queryByText("Only a few left")).not.toBeInTheDocument();
   });
 });

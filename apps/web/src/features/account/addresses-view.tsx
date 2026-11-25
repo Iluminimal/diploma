@@ -1,6 +1,7 @@
 "use client";
 
 import { MapPin, Pencil, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,13 +13,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { userMessage } from "@/lib/api/errors";
 import { AddressForm, formatAddress } from "./address-form";
+import { displayPhone } from "./mongolia";
 import type { Address } from "./addresses-api";
 import { useAddresses, useCreateAddress, useDeleteAddress, useUpdateAddress } from "./use-addresses";
 import { Skeleton } from "@/components/ui/skeleton";
+import { QueryError } from "@/components/ui/query-error";
 
 export function AddressesView() {
+  const t = useTranslations("account.addresses");
   const { data: addresses, isPending, error, refetch } = useAddresses();
   const create = useCreateAddress();
   const update = useUpdateAddress();
@@ -28,18 +31,11 @@ export function AddressesView() {
   const [deleting, setDeleting] = useState<Address | null>(null);
 
   if (isPending) {
-    return <Skeleton aria-busy aria-label="Loading your addresses" className="h-40 rounded-2xl" />;
+    return <Skeleton aria-busy aria-label={t("loading")} className="h-40 rounded-[var(--radius-tile)]" />;
   }
   if (error || !addresses) {
     return (
-      <div className="space-y-3">
-        <p role="alert" className="text-destructive">
-          {userMessage(error)}
-        </p>
-        <Button variant="outline" onClick={() => void refetch()}>
-          Try again
-        </Button>
-      </div>
+      <QueryError error={error} onRetry={refetch} retryLabel={t("tryAgain")} />
     );
   }
 
@@ -51,69 +47,66 @@ export function AddressesView() {
             <MapPin className="text-muted-foreground size-6" />
           </span>
           <div className="space-y-1">
-            <h2 className="text-lg font-medium">No saved addresses</h2>
-            <p className="text-muted-foreground text-sm">Save one to check out faster.</p>
+            <h2 className="type-intro font-medium">{t("none")}</h2>
+            <p className="text-muted-foreground type-caption">{t("noneHint")}</p>
           </div>
         </div>
       )}
 
-      <ul className="space-y-3" aria-label="Saved addresses">
+      <ul className="space-y-3" aria-label={t("label")}>
         {addresses.map((address) => (
           <li key={address.id} className="tile p-5 sm:p-6">
             {editing === address.id ? (
               <AddressForm
                 initial={address}
-                submitLabel="Save changes"
+                submitLabel={t("saveChanges")}
                 onSubmit={async (values) => {
                   await update.mutateAsync({ id: address.id, changes: values });
                   setEditing(null);
-                  toast.success("Address updated.");
+                  toast.success(t("updated"));
                 }}
                 onCancel={() => setEditing(null)}
               />
             ) : (
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 space-y-1 text-sm">
+                <div className="min-w-0 space-y-1 type-caption">
                   <p className="flex items-center gap-2 font-medium">
                     {address.full_name}
                     {address.is_default && (
-                      <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
-                        Default
+                      <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 type-fine font-medium">
+                        {t("default")}
                       </span>
                     )}
                   </p>
                   <p className="text-muted-foreground">{formatAddress(address)}</p>
-                  {address.phone && <p className="text-muted-foreground">{address.phone}</p>}
+                  {address.phone && <p className="text-muted-foreground tabular-nums">{displayPhone(address.phone)}</p>}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {!address.is_default && (
                     <Button
                       variant="outline"
-                      className="h-9 rounded-lg px-3"
                       disabled={update.isPending}
                       onClick={() => update.mutate({ id: address.id, changes: { is_default: true } })}
                     >
-                      Make default
+                      {t("setDefault")}
                     </Button>
                   )}
                   <Button
                     variant="outline"
-                    className="h-9 rounded-lg px-3"
-                    aria-label={`Edit address for ${address.full_name}, ${address.line1}`}
+                    aria-label={t("editFor", { name: address.full_name, line: address.line1 })}
                     onClick={() => {
                       setAdding(false);
                       setEditing(address.id);
                     }}
                   >
-                    <Pencil /> Edit
+                    <Pencil /> {t("edit")}
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-9 rounded-lg px-3"
-                    aria-label={`Delete address for ${address.full_name}, ${address.line1}`}
+                    aria-label={t("deleteFor", { name: address.full_name, line: address.line1 })}
                     onClick={() => setDeleting(address)}
                   >
-                    <Trash2 /> Delete
+                    <Trash2 /> {t("delete")}
                   </Button>
                 </div>
               </div>
@@ -125,14 +118,14 @@ export function AddressesView() {
       {adding || addresses.length === 0 ? (
         <section aria-labelledby="new-address" className="tile space-y-4 p-5 sm:p-6">
           <h2 id="new-address" className="font-semibold">
-            New address
+            {t("new")}
           </h2>
           <AddressForm
             askDefault={addresses.length > 0}
             onSubmit={async (values) => {
               await create.mutateAsync(values);
               setAdding(false);
-              toast.success("Address saved.");
+              toast.success(t("saved"));
             }}
             onCancel={addresses.length > 0 ? () => setAdding(false) : undefined}
           />
@@ -141,27 +134,26 @@ export function AddressesView() {
         <Button
           variant="outline"
           size="lg"
-          className="h-11 rounded-full px-5"
           onClick={() => {
             setEditing(null);
             setAdding(true);
           }}
         >
-          Add an address
+          {t("add")}
         </Button>
       )}
 
       <Dialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete this address?</DialogTitle>
+            <DialogTitle>{t("deleteTitle")}</DialogTitle>
             <DialogDescription>
-              {deleting ? `${deleting.full_name}, ${deleting.line1}. ` : ""}Past orders keep their own copy.
+              {deleting && t("deleteDescription", { name: deleting.full_name, line: deleting.line1 })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleting(null)}>
-              Keep it
+              {t("keep")}
             </Button>
             <Button
               variant="destructive"
@@ -169,13 +161,13 @@ export function AddressesView() {
               onClick={async () => {
                 if (!deleting) return;
                 await remove.mutateAsync(deleting.id).then(
-                  () => toast.success("Address deleted."),
+                  () => toast.success(t("deleted")),
                   () => undefined, // шалтгааныг hook аль хэдийн харуулсан
                 );
                 setDeleting(null);
               }}
             >
-              Delete
+              {t("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

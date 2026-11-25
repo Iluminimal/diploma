@@ -10,6 +10,10 @@ import type {
 import type { Review, ReviewPage } from "@/features/reviews/reviews-api";
 import type { CatalogNav } from "@/features/catalog/nav";
 import type { CatalogFilterOptions, Product, SearchResponse } from "@/features/catalog/product";
+import type { GarmentSearchResponse } from "@/features/search/search-api";
+import type { components } from "@/lib/api/client";
+
+type RegionOut = components["schemas"]["RegionOut"];
 
 export function makeProduct(overrides: Partial<Product> = {}): Product {
   return {
@@ -27,6 +31,7 @@ export function makeProduct(overrides: Partial<Product> = {}): Product {
     price_cents: 3499,
     currency: "USD",
     in_stock: true,
+    low_stock: false,
     rating_average: null,
     rating_count: 0,
     image: {
@@ -75,8 +80,47 @@ export function makeSearchResponse(products: Product[] = [makeProduct()]): Searc
       { article_type: "Shirts", category_path: "apparel/topwear/shirts", score: 0.62 },
       { article_type: "Tshirts", category_path: "apparel/topwear/tshirts", score: 0.21 },
     ],
+    regions: [],
+    selected_region: 0,
     timings: { db_ms: 10, total_ms: 58, decode_ms: 5, embed_ms: 40 },
     cached: false,
+    applied: [],
+  };
+}
+
+/** `/search/garments`-ийн хариу: хувцас бүр өөрийн бараатай (id нь давхцахгүй байхаар `offset`-оор ялгана). */
+export function makeGarmentResponse(
+  garments: { products?: Product[]; box?: RegionOut["box"]; label?: string | null }[],
+): GarmentSearchResponse {
+  return {
+    garments: garments.map((garment, index) => ({
+      index,
+      region: {
+        box: garment.box ?? { x: 0, y: index / garments.length, width: 1, height: 1 / garments.length },
+        label: garment.label === undefined ? "top, t-shirt, sweatshirt" : garment.label,
+        score: 0.9 - index * 0.1,
+      },
+      detected: makeSearchResponse().detected,
+      results: (garment.products ?? [makeProduct({ id: 100 + index, slug: `g-${index}`, name: `Garment ${index} item` })]).map(
+        (product, i) => ({ product, similarity: 0.95 - i * 0.05 }),
+      ),
+    })),
+    timings: { db_ms: 12, total_ms: 90, decode_ms: 5, embed_ms: 40, detect_ms: 30 },
+  };
+}
+
+/** Нэг хувцастай (эсвэл бүтэн зургийн) `/search/garments` хариу: ердийн хайлтын хариутай ижил агуулгатай. */
+export function asGarmentResponse(response: SearchResponse): GarmentSearchResponse {
+  return {
+    garments: [
+      {
+        index: 0,
+        region: { box: { x: 0, y: 0, width: 1, height: 1 }, label: null, score: 1 },
+        detected: response.detected,
+        results: response.results,
+      },
+    ],
+    timings: response.timings,
   };
 }
 
@@ -114,14 +158,15 @@ import type { Order } from "@/features/orders/orders-api";
 export function makeAddress(overrides: Partial<Address> = {}): Address {
   return {
     id: 1,
-    full_name: "Ada Lovelace",
-    line1: "12 Analytical Way",
-    line2: null,
-    city: "London",
-    region: null,
-    postal_code: "N1 9GU",
-    country: "GB",
-    phone: null,
+    full_name: "Болд Батбаяр",
+    region: "Улаанбаатар",
+    city: "Баянгол",
+    khoroo: "3-р хороо",
+    line1: "Энхтайваны өргөн чөлөө 12",
+    line2: "45 тоот",
+    postal_code: "",
+    country: "MN",
+    phone: "+97699112233",
     is_default: true,
     ...overrides,
   };
@@ -130,6 +175,7 @@ export function makeAddress(overrides: Partial<Address> = {}): Address {
 export function makeOrder(overrides: Partial<Order> = {}): Order {
   const product = makeProduct();
   return {
+    charge: { currency: "USD", amount_minor: 7497 },
     number: "LK-ABCD2345",
     status: "paid",
     created_at: "2026-10-08T10:00:00Z",
@@ -146,11 +192,14 @@ export function makeOrder(overrides: Partial<Order> = {}): Order {
     total_cents: product.price_cents * 2 + 499,
     shipping_method: "standard",
     shipping_address: {
-      full_name: "Ada Lovelace",
-      line1: "12 Analytical Way",
-      city: "London",
-      postal_code: "N1 9GU",
-      country: "GB",
+      full_name: "Болд Батбаяр",
+      region: "Улаанбаатар",
+      city: "Баянгол",
+      khoroo: "3-р хороо",
+      line1: "Энхтайваны өргөн чөлөө 12",
+      postal_code: "",
+      country: "MN",
+      phone: "+97699112233",
     },
     contact_email: "ada@example.com",
     items: [
@@ -205,10 +254,12 @@ export function makeAdminOrder(overrides: Partial<AdminOrder> = {}): AdminOrder 
     cancelled_at: null,
     payment: {
       provider: "offline",
-      provider_payment_id: "pi_offline_123",
+      provider_payment_id: "pay_offline_123",
       status: "succeeded",
       amount_cents: 7497,
       currency: "USD",
+      charge_currency: "USD",
+      charge_minor: 7497,
       last_error: null,
       refund_id: null,
     },
@@ -295,7 +346,23 @@ export function makeStats(overrides: Partial<AdminStats> = {}): AdminStats {
       date: `2026-10-0${i + 1}`,
       revenue_cents: i === 3 ? 60000 : i * 5000,
       orders: i === 3 ? 4 : i,
+      units: i === 3 ? 6 : i,
+      new_customers: i % 2,
     })),
+    start: "2026-10-01",
+    end: "2026-10-07",
+    funnel: { created: 20, paid: 16, shipped: 12, delivered: 9, cancelled: 3, refunded: 1 },
+    by_category: [
+      { name: "Apparel", revenue_cents: 90000, units: 14 },
+      { name: "Footwear", revenue_cents: 40000, units: 5 },
+      { name: null, revenue_cents: 5000, units: 1 },
+    ],
+    repeat_customer_rate: 0.25,
+    refund_rate: 0.0625,
+    cancel_rate: 0.15,
+    avg_ship_hours: 6.5,
+    overdue_to_ship: 1,
+    ship_sla_hours: 24,
     status_counts: { paid: 3, pending: 2, shipped: 4, delivered: 20 },
     to_ship: 3,
     awaiting_payment: 2,

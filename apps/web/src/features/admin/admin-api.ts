@@ -9,6 +9,10 @@ export type AdminOrderPage = components["schemas"]["AdminOrderPage"];
 export type AdminOrderSummary = components["schemas"]["AdminOrderSummary"];
 export type AdminOrder = components["schemas"]["AdminOrderOut"];
 export type AdminStats = components["schemas"]["AdminStats"];
+export type FulfillmentBoard = components["schemas"]["FulfillmentBoard"];
+export type QueuedOrder = components["schemas"]["QueuedOrder"];
+export type AuditEntry = components["schemas"]["AuditEntry"];
+export type AuditPage = components["schemas"]["AuditPage"];
 export type AdminCustomerPage = components["schemas"]["AdminCustomerPage"];
 export type AdminCustomer = components["schemas"]["AdminCustomer"];
 export type AdminCustomerDetail = components["schemas"]["AdminCustomerDetail"];
@@ -24,8 +28,19 @@ export const ORDER_STATUSES = ["all", "pending", "paid", "shipped", "delivered",
 export const CUSTOMER_STATUSES = ["all", "active", "inactive"] as const;
 export const CUSTOMER_SORTS = ["newest", "spent", "orders", "name"] as const;
 export const REVIEW_STATUSES = ["all", "published", "hidden"] as const;
-export const STATS_PERIODS = [7, 30, 90] as const;
+export const STATS_PERIODS = [7, 30, 90, 365] as const;
 export const DEFAULT_PERIOD = 30;
+export const AUDIT_ENTITY_TYPES = ["all", "product", "order"] as const;
+
+/** Dashboard-ын хугацаа: сүүлийн `days` өдөр, эсвэл `start`..`end` (хоёулаа тооцогдоно) тусгай хугацаа. */
+export type StatsPeriod = { days: number; start?: string; end?: string };
+
+export type AuditListParams = {
+  entity: (typeof AUDIT_ENTITY_TYPES)[number];
+  actor: number;
+  action: string;
+  page: number;
+};
 export const PAGE_SIZE = 25;
 
 export type ProductListParams = {
@@ -144,8 +159,61 @@ export const refundAdminOrder = (number: string, body: RefundDetails) =>
 export const addAdminOrderNote = (number: string, text: string) =>
   call(browserApi().POST("/api/v1/admin/orders/{number}/notes", { ...orderPath(number), body: { text } }));
 
-export const fetchAdminStats = (days: number) =>
-  call(browserApi().GET("/api/v1/admin/stats", { params: { query: { days } } }));
+/** Хугацааны query: тусгай хугацаа бол start/end, үгүй бол сүүлийн `days` өдөр. */
+const periodQuery = (period: StatsPeriod) =>
+  period.start && period.end ? { start: period.start, end: period.end } : { days: period.days };
+
+export const fetchAdminStats = (period: StatsPeriod) =>
+  call(browserApi().GET("/api/v1/admin/stats", { params: { query: periodQuery(period) } }));
+
+export const fetchFulfillmentBoard = () => call(browserApi().GET("/api/v1/admin/fulfillment"));
+
+export const fetchAdminAudit = (params: AuditListParams) =>
+  call(
+    browserApi().GET("/api/v1/admin/audit", {
+      params: {
+        query: {
+          entity_type: params.entity === "all" ? undefined : params.entity,
+          actor_id: params.actor || undefined,
+          action: params.action || undefined,
+          page: params.page,
+          page_size: PAGE_SIZE,
+        },
+      },
+    }),
+  );
+
+/** CSV-г token-тойгоор татаж (энгийн холбоос Authorization header илгээхгүй) browser-т хадгалуулна. */
+async function saveBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+export async function downloadStatsCsv(period: StatsPeriod) {
+  const blob = await call(
+    browserApi().GET("/api/v1/admin/export/stats", {
+      params: { query: periodQuery(period) },
+      parseAs: "blob",
+    }),
+  );
+  await saveBlob(blob as Blob, `angel-stats-${period.start ?? `last-${period.days}-days`}.csv`);
+}
+
+export async function downloadOrdersCsv(params: OrderListParams) {
+  const blob = await call(
+    browserApi().GET("/api/v1/admin/export/orders", {
+      params: { query: { q: params.q || undefined, status: params.status } },
+      parseAs: "blob",
+    }),
+  );
+  await saveBlob(blob as Blob, "angel-orders.csv");
+}
 
 export const setAdminProductStock = (id: number, quantity: number) =>
   call(

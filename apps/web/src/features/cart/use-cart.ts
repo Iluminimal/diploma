@@ -1,9 +1,9 @@
 "use client";
 
+import { useUserMessage } from "@/lib/api/use-user-message";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/auth-store";
-import { userMessage } from "@/lib/api/errors";
 import { queryKeys } from "@/lib/query-keys";
 import {
   addCartItem,
@@ -43,6 +43,7 @@ function useCartMutation<Variables>(
   optimistic?: (cart: Cart, variables: Variables) => Cart,
 ) {
   const queryClient = useQueryClient();
+  const message = useUserMessage();
   const key = useCartKey();
   const lastOne = () => queryClient.isMutating({ mutationKey }) <= 1;
 
@@ -57,7 +58,7 @@ function useCartMutation<Variables>(
     },
     onError: (error, _variables, context) => {
       if (context?.previous) queryClient.setQueryData(key, context.previous);
-      toast.error(userMessage(error));
+      toast.error(message(error));
     },
     onSuccess: (cart) => {
       if (lastOne()) queryClient.setQueryData(key, cart);

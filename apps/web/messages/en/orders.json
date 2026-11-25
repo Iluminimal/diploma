@@ -1,0 +1,98 @@
+{
+  "status": {
+    "paid": "Paid",
+    "pending": "Awaiting payment",
+    "shipped": "Shipped",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded"
+  },
+  "progress": {
+    "label": "Order progress",
+    "placed": "Placed",
+    "notYet": ", not yet",
+    "current": ", current step",
+    "done": ", done"
+  },
+  "events": {
+    "history": "Order history",
+    "placed": "Order placed",
+    "paid": "Payment received",
+    "shipped": "Shipped",
+    "withCarrier": "With {carrier}",
+    "tracking": "Tracking number {number}",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled",
+    "refunded": "Refunded",
+    "refundedAuto": "Refunded automatically",
+    "restocked": "Items returned to stock",
+    "notRestocked": "Items not returned to stock",
+    "note": "Note",
+    "cancelReasons": {
+      "expired": "Not paid in time",
+      "admin": "Cancelled by the shop",
+      "amount_mismatch": "The amount paid did not match",
+      "payment_canceled": "The payment was cancelled",
+      "replaced": "Replaced by a newer checkout",
+      "payment_setup_failed": "Payment could not be set up",
+      "customer": "You cancelled it"
+    },
+    "refundReasons": {
+      "order_cancelled": "The payment arrived after the order was cancelled",
+      "amount_mismatch": "The amount paid did not match the order"
+    }
+  },
+  "detail": {
+    "placed": "Placed {date}",
+    "items": "Items in this order",
+    "lineMeta": "Qty {quantity} · {price} each",
+    "lineMetaSize": "Size {size} · Qty {quantity} · {price} each",
+    "writeReview": "Write a review",
+    "writeReviewFor": "for {name}",
+    "delivery": "Delivery",
+    "confirmationSent": "Confirmation sent to {email}",
+    "payment": "Payment summary",
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "free": "Free",
+    "total": "Total",
+    "methods": {
+      "standard": "Standard shipping",
+      "express": "Express shipping",
+      "pickup": "Store pickup"
+    }
+  },
+  "page": {
+    "allOrders": "All orders",
+    "order": "Order {number}",
+    "notFound": "We couldn't find that order on your account.",
+    "trackingWith": "Tracking with {carrier}: ",
+    "tracking": "Tracking: ",
+    "history": "Order history",
+    "loading": "Loading the order",
+    "reorder": "Buy again",
+    "reordering": "Adding…",
+    "reordered": "{count, plural, one {# item} other {# items}} added to your bag.",
+    "reorderNothing": "Nothing from this order could be added to your bag.",
+    "reorderSkipped": {
+      "unavailable": "{name} is no longer sold.",
+      "out_of_stock": "{name} is sold out.",
+      "size": "{name} is not available in that size any more.",
+      "bag_full": "{name} did not fit: your bag is full.",
+      "reduced": "{name}: only what is in stock was added."
+    }
+  },
+  "list": {
+    "loading": "Loading your orders",
+    "tryAgain": "Try again",
+    "none": "No orders yet",
+    "noneHint": "When you place an order it will show up here.",
+    "startShopping": "Start shopping",
+    "orders": "Orders",
+    "meta": "{date} · {count, plural, one {# item} other {# items}}",
+    "pages": "Orders pages",
+    "newer": "Newer",
+    "older": "Older",
+    "pageOf": "Page {page} of {pages}"
+  }
+}

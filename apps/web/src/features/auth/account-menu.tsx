@@ -2,6 +2,7 @@
 
 import { HEADER_CELL, PersonGlyph } from "@/components/layout/header-cell";
 import { UserAvatar } from "@/components/layout/user-avatar";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,6 +13,7 @@ import { useAuth } from "./auth-store";
 const AccountDropdown = dynamic(() => import("./account-dropdown").then((m) => m.AccountDropdown), { ssr: false });
 
 export function AccountMenu() {
+  const t = useTranslations("auth.menu");
   const status = useAuth((state) => state.status);
   const user = useAuth((state) => state.user);
   const pathname = usePathname();
@@ -23,7 +25,7 @@ export function AccountMenu() {
   if (status === "signedOut" || !user) {
     const next = pathname && pathname !== "/" ? `?next=${encodeURIComponent(pathname)}` : "";
     return (
-      <Link href={`/login${next}`} aria-label="Sign in" className={HEADER_CELL}>
+      <Link href={`/login${next}`} aria-label={t("signIn")} className={HEADER_CELL}>
         <PersonGlyph />
       </Link>
     );
@@ -34,7 +36,7 @@ export function AccountMenu() {
       <button
         type="button"
         className={HEADER_CELL}
-        aria-label={`Account: ${user.full_name}`}
+        aria-label={t("account", { name: user.full_name })}
         aria-haspopup="menu"
         onClick={() => setRequested(true)}
       >

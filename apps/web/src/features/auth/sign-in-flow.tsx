@@ -1,14 +1,19 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ApiError, userMessage } from "@/lib/api/errors";
+import { ApiError } from "@/lib/api/errors";
+import { useUserMessage } from "@/lib/api/use-user-message";
+import type { AuthTranslator } from "./auth-translator";
 import { useAuth } from "./auth-store";
 import { CodeStep } from "./code-step";
 import { IdentifierField } from "./identifier-field";
+import type { AuthMode } from "./auth-mode";
+import { ModeSwitch } from "./mode-switch";
 import { looksLikePhone, parseIdentifier, type Identifier } from "./identifier";
 import { landingPath } from "./landing";
 import { NameStep } from "./name-step";
@@ -18,34 +23,59 @@ import { useAuthActions } from "./use-auth-actions";
 import { useCountdown } from "./use-countdown";
 import { useRedirectWhenSignedIn } from "./use-redirect-when-signed-in";
 import type { CountryCode } from "libphonenumber-js/min";
+import { FormAlert } from "@/components/ui/form-alert";
 
 const RESEND_SECONDS = 60;
 type Step = "identify" | "password" | "code" | "name";
 
-function heading(step: Step, who: Identifier | null): { title: string; subtitle: string } {
+function heading(
+  step: Step,
+  who: Identifier | null,
+  mode: AuthMode,
+  t: AuthTranslator,
+): { title: string; subtitle: string } {
   switch (step) {
     case "password":
-      return { title: "Enter your password", subtitle: "Or get a one-time code by email instead. That also creates an account if you are new." };
+      return { title: t("flow.passwordTitle"), subtitle: t("flow.passwordSubtitle") };
     case "code":
-      return { title: "Enter the code", subtitle: `We sent a 6-digit code to ${who?.shown ?? "you"}. New here? It creates your account.` };
+      return {
+        title: t("flow.codeTitle"),
+        subtitle: who ? t("flow.codeSubtitle", { who: who.shown }) : t("flow.codeSubtitleYou"),
+      };
     case "name":
-      return { title: "Welcome to Angel", subtitle: "Your account is ready. What should we call you?" };
+      return { title: t("flow.nameTitle"), subtitle: t("flow.nameSubtitle") };
     default:
-      return { title: "Sign in or create account", subtitle: "Enter your email or phone number. New here? We'll create your account." };
+      return mode === "register"
+        ? { title: t("flow.registerTitle"), subtitle: t("flow.registerSubtitle") }
+        : { title: t("flow.loginTitle"), subtitle: t("flow.loginSubtitle") };
   }
 }
 
 /**
  * Нэвтрэх, бүртгүүлэх нь нэг flow (apple.com, airbnb.com шиг): имэйл эсвэл утасны дугаарын нэг
- * талбар, дараа нь бичсэнд тохирсон алхам. Утсанд SMS-ээр код очно; имэйлд нууц үг, эсвэл имэйлээр
+ * талбар, дараа нь бичсэнд тохирсон алхам. Дээд талын "Нэвтрэх | Бүртгүүлэх" сегмент нь зөвхөн
+ * эхний алхмыг өөрчилнө: бүртгүүлэх горимд имэйл нууц үг асуулгүй шууд код авна. Утсанд SMS-ээр код очно; имэйлд нууц үг, эсвэл имэйлээр
  * код. Шинэ хүний код бүртгэл үүсгэж, зөвхөн дараа нь нэр асууна. Ямар ч алхам бүртгэл байгаа
  * эсэхийг ил болгохгүй.
  */
-export function SignInFlow({ next, notice, social }: { next: string; notice?: string | null; social?: ReactNode }) {
+export function SignInFlow({
+  next,
+  notice,
+  social,
+  initialMode = "login",
+}: {
+  next: string;
+  notice?: string | null;
+  social?: ReactNode;
+  initialMode?: AuthMode;
+}) {
+  const t = useTranslations("auth");
+  const userMessage = useUserMessage();
   const router = useRouter();
   const { requestCode } = useAuthActions();
   const countdown = useCountdown();
   const [step, setStep] = useState<Step>("identify");
+  const [mode, setMode] = useState<AuthMode>(initialMode);
   const [text, setText] = useState("");
   const [region, setRegion] = useState<CountryCode>(DEFAULT_REGION);
   const [who, setWho] = useState<Identifier | null>(null);
@@ -55,7 +85,7 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
   useRedirectWhenSignedIn(next, !naming);
 
   const phone = looksLikePhone(text);
-  const { title, subtitle } = heading(step, who);
+  const { title, subtitle } = heading(step, who, mode, t);
 
   function change(raw: string) {
     setProblem(null);
@@ -89,11 +119,11 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
 
   async function identify(event: FormEvent) {
     event.preventDefault();
-    const parsed = parseIdentifier(text, region);
+    const parsed = parseIdentifier(text, region, t);
     if ("error" in parsed) return setProblem(parsed.error);
     setWho(parsed);
     setProblem(null);
-    if (parsed.kind === "email") return setStep("password");
+    if (parsed.kind === "email" && mode === "login") return setStep("password");
     if (await sendCode(parsed.destination)) setStep("code");
   }
 
@@ -112,9 +142,9 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
       </header>
 
       {notice && (
-        <p role="alert" className="border-destructive/30 bg-destructive/5 text-destructive rounded-xl border px-4 py-3 text-sm">
+        <FormAlert>
           {notice}
-        </p>
+        </FormAlert>
       )}
 
       <div key={step} className="animate-in fade-in slide-in-from-right-4 space-y-5 duration-300 motion-reduce:animate-none">
@@ -122,17 +152,24 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
           <button
             type="button"
             onClick={edit}
-            aria-label={`Change ${who.shown}`}
-            className="border-field bg-card hover:bg-secondary focus-visible:ring-ring/60 mx-auto flex max-w-full items-center gap-2 rounded-full border py-1.5 pr-3 pl-4 text-sm outline-none transition-colors focus-visible:ring-3"
+            aria-label={t("flow.change", { who: who.shown })}
+            className="border-field bg-card hover:bg-secondary focus-visible:ring-ring/50 mx-auto flex max-w-full items-center gap-2 rounded-full border py-1.5 pr-3 pl-4 type-caption outline-none transition-colors focus-visible:ring-3"
           >
             <span className="truncate font-medium">{who.shown}</span>
-            <span className="text-muted-foreground shrink-0 underline underline-offset-4">Edit</span>
+            <span className="text-muted-foreground shrink-0 underline underline-offset-4">{t("flow.edit")}</span>
           </button>
         )}
 
         {step === "identify" && (
           <>
-            <form onSubmit={identify} noValidate className="space-y-4" aria-label="Sign in or create account">
+            <ModeSwitch
+              mode={mode}
+              onChange={(value) => {
+                setProblem(null);
+                setMode(value);
+              }}
+            />
+            <form onSubmit={identify} noValidate className="space-y-4" aria-label={title}>
               <IdentifierField
                 value={text}
                 onChange={change}
@@ -142,7 +179,7 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
                 error={problem ?? undefined}
               />
               <Button type="submit" size="lg" disabled={busy} className="w-full">
-                {busy && <Loader2 className="animate-spin" />} Continue
+                {busy && <Loader2 className="animate-spin" />} {t("flow.continue")}
               </Button>
             </form>
             {social}
@@ -152,6 +189,7 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
         {step === "password" && who?.kind === "email" && (
           <PasswordStep
             email={who.destination}
+            next={next}
             onSignedIn={finish}
             codeBusy={busy}
             codeProblem={problem}
@@ -170,12 +208,12 @@ export function SignInFlow({ next, notice, social }: { next: string; notice?: st
               onNaming={() => setNaming(true)}
               onVerified={(isNew) => {
                 if (isNew) return setStep("name");
-                toast.success("Welcome back.");
+                toast.success(t("flow.welcomeBack"));
                 finish();
               }}
             />
             {problem && (
-              <p role="alert" className="text-destructive text-center text-sm">
+              <p role="alert" className="text-destructive text-center type-caption">
                 {problem}
               </p>
             )}

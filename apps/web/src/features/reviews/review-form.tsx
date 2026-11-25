@@ -1,21 +1,24 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import "@/lib/zod-jitless";
 import { z } from "zod";
 import { Field, fieldAria } from "@/components/forms/form-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useFieldError } from "@/i18n/use-field-error";
 import { RatingInput } from "./rating-input";
 import type { Review } from "./reviews-api";
 import { useCreateReview, useUpdateReview } from "./use-reviews";
 
 const schema = z.object({
-  rating: z.number({ error: "Choose a rating" }).int().min(1, "Choose a rating").max(5),
-  title: z.string().trim().max(120, "Use at most 120 characters"),
-  body: z.string().trim().max(2000, "Use at most 2,000 characters"),
+  rating: z.number({ error: "ratingRequired" }).int().min(1, "ratingRequired").max(5),
+  title: z.string().trim().max(120, "max120"),
+  body: z.string().trim().max(2000, "max2000"),
 });
 type Values = z.infer<typeof schema>;
 
@@ -29,6 +32,8 @@ export function ReviewForm({
   review?: Review;
   onDone?: () => void;
 }) {
+  const t = useTranslations("reviews.form");
+  const fieldError = useFieldError();
   const create = useCreateReview(productId);
   const update = useUpdateReview(productId);
   const {
@@ -46,7 +51,7 @@ export function ReviewForm({
 
   const submit = handleSubmit((values) => {
     const done = () => {
-      toast.success(review ? "Your review is updated." : "Thank you! Your review is up.");
+      toast.success(review ? t("updated") : t("posted"));
       onDone?.();
     };
     if (review) {
@@ -64,21 +69,21 @@ export function ReviewForm({
   });
 
   return (
-    <form onSubmit={submit} noValidate className="space-y-4" aria-label={review ? "Edit your review" : "Write a review"}>
-      <RatingInput value={rating} onChange={(next) => setValue("rating", next, { shouldValidate: true })} error={errors.rating?.message} />
-      <Field id="review-title" label="Headline (optional)" error={errors.title?.message}>
-        <Input {...fieldAria("review-title", errors.title?.message)} maxLength={120} className="h-11 rounded-xl" {...register("title")} />
+    <form onSubmit={submit} noValidate className="space-y-4" aria-label={review ? t("editLabel") : t("writeLabel")}>
+      <RatingInput value={rating} onChange={(next) => setValue("rating", next, { shouldValidate: true })} error={fieldError(errors.rating?.message)} />
+      <Field id="review-title" label={t("headline")} error={fieldError(errors.title?.message)}>
+        <Input {...fieldAria("review-title", fieldError(errors.title?.message))} maxLength={120} {...register("title")} />
       </Field>
-      <Field id="review-body" label="Your review (optional)" error={errors.body?.message}>
-        <Textarea {...fieldAria("review-body", errors.body?.message)} maxLength={2000} rows={4} {...register("body")} />
+      <Field id="review-body" label={t("body")} error={fieldError(errors.body?.message)}>
+        <Textarea {...fieldAria("review-body", fieldError(errors.body?.message))} maxLength={2000} rows={4} {...register("body")} />
       </Field>
       <div className="flex gap-2">
-        <Button type="submit" size="lg" className="h-11 rounded-full px-5" disabled={pending}>
-          {pending ? "Saving…" : review ? "Save changes" : "Post review"}
+        <Button type="submit" size="lg" disabled={pending}>
+          {pending ? t("saving") : review ? t("save") : t("post")}
         </Button>
         {review && (
-          <Button type="button" variant="outline" size="lg" className="h-11 rounded-full px-5" onClick={onDone}>
-            Cancel
+          <Button type="button" variant="outline" size="lg" onClick={onDone}>
+            {t("cancel")}
           </Button>
         )}
       </div>

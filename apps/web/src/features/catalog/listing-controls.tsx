@@ -1,11 +1,11 @@
 "use client";
 
 import { SlidersHorizontal } from "lucide-react";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useState, useSyncExternalStore } from "react";
-import { selectClass } from "@/components/forms/form-field";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { FilterGroup } from "./filter-fields";
 import { activeFilterCount, type ListingQuery, type Sort } from "./filters";
 import type { CatalogFilterOptions } from "./product";
@@ -16,13 +16,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 const MobileFiltersSheet = dynamic(() => import("./mobile-filters-sheet").then((m) => m.MobileFiltersSheet), {
   ssr: false,
 });
-
-const SORT_LABELS: Record<Sort, string> = {
-  relevance: "Most relevant",
-  newest: "Newest",
-  price_asc: "Price: low to high",
-  price_desc: "Price: high to low",
-};
 
 // Утас sidebar харуулдаггүй тул хэзээ ч татахгүй.
 const WideSidebar = dynamic(() => import("./sidebar-filters").then((m) => m.SidebarFilters), { ssr: false });
@@ -47,7 +40,7 @@ export function FilterSidebar({
     () => window.matchMedia(DESKTOP).matches,
     () => false,
   );
-  if (!wide) return <Skeleton aria-hidden className="bg-muted/50 h-96 rounded-2xl" />;
+  if (!wide) return <Skeleton aria-hidden className="bg-muted/50 h-96 rounded-[var(--radius-tile)]" />;
   return <WideSidebar options={options} query={query} {...scope} />;
 }
 
@@ -56,28 +49,31 @@ export function MobileFilters({
   query,
   ...scope
 }: { options: CatalogFilterOptions; query: ListingQuery } & FilterScope) {
+  const t = useTranslations("catalog");
   const [requested, setRequested] = useState(false);
   if (requested) return <MobileFiltersSheet options={options} query={query} defaultOpen {...scope} />;
   const count = activeFilterCount(query);
   return (
     <Button variant="outline" className="lg:hidden" aria-haspopup="dialog" onClick={() => setRequested(true)}>
       <SlidersHorizontal />
-      Filters{count > 0 && ` (${count})`}
+      {count > 0 ? t("filtersCount", { count }) : t("filters")}
     </Button>
   );
 }
 
 /** Native select: script ачаалахгүй, утсан дээр платформын өөрийн сонгогч, бүрэн a11y-тай. */
 export function SortSelect({ query }: { query: ListingQuery }) {
+  const t = useTranslations("catalog");
   const { apply } = useListingNavigation(query);
   const fallback: Sort = query.q ? "relevance" : "newest";
   const options: Sort[] = query.q
-    ? ["relevance", "newest", "price_asc", "price_desc"]
-    : ["newest", "price_asc", "price_desc"];
+    ? ["relevance", "popular", "rating", "newest", "price_asc", "price_desc"]
+    : ["newest", "popular", "rating", "price_asc", "price_desc"];
   return (
-    <select
-      aria-label="Sort by"
-      className={cn(selectClass, "h-10 w-auto min-w-44 rounded-full px-4 py-0 text-[0.9375rem]")}
+    <NativeSelect
+      variant="pill"
+      aria-label={t("sortBy")}
+      className="min-w-44"
       value={query.sort ?? fallback}
       onChange={(event) => {
         const sort = event.target.value as Sort;
@@ -86,9 +82,9 @@ export function SortSelect({ query }: { query: ListingQuery }) {
     >
       {options.map((sort) => (
         <option key={sort} value={sort}>
-          {SORT_LABELS[sort]}
+          {t(`sort.${sort}`)}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }

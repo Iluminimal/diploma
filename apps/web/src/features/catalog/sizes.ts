@@ -6,7 +6,8 @@ const SHOES = ["6", "7", "8", "9", "10", "11"];
 const KIDS_SHOES = ["10C", "11C", "12C", "13C", "1Y", "2Y"];
 const BELTS = ["S", "M", "L"];
 
-type SizeInfo = { label: string; sizes: string[] } | null;
+/** `label` нь `catalog` орчуулгын түлхүүр: "size" эсвэл "sizeUs". */
+type SizeInfo = { label: "size" | "sizeUs"; sizes: string[] } | null;
 
 /**
  * Размерыг ангиллаас гаргана: catalogue-д размерын өгөгдөл байхгүй. Размер утгагүй ангилал (цаг,
@@ -17,11 +18,11 @@ export function sizesFor(
 ): SizeInfo {
   const kids = p.gender === "Boys" || p.gender === "Girls";
   if (p.master_category === "Apparel") {
-    return { label: "Size", sizes: kids ? KIDS_CLOTHING : CLOTHING };
+    return { label: "size", sizes: kids ? KIDS_CLOTHING : CLOTHING };
   }
   if (p.master_category === "Footwear") {
-    return { label: "Size (US)", sizes: kids ? KIDS_SHOES : SHOES };
+    return { label: "sizeUs", sizes: kids ? KIDS_SHOES : SHOES };
   }
-  if (p.sub_category === "Belts") return { label: "Size", sizes: BELTS };
+  if (p.sub_category === "Belts") return { label: "size", sizes: BELTS };
   return null;
 }

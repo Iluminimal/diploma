@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import "./zoom.css";
 import { useRef, useState, type PointerEvent } from "react";
@@ -23,6 +24,7 @@ const SWIPE = 45; // хуудас эргүүлэхэд хэрэгтэй хэвт
  * байхгүй.
  */
 export function ProductGallery({ product, images: given }: Props) {
+  const t = useTranslations("catalog");
   const images = given?.length ? given : [product.image];
   const [index, setIndex] = useState(0);
   const stage = useRef<HTMLButtonElement>(null);
@@ -47,9 +49,8 @@ export function ProductGallery({ product, images: given }: Props) {
           <button
             ref={stage}
             type="button"
-            data-fly-source
-            aria-label={`Enlarge photo of ${product.name}`}
-            className="zoom-stage tile focus-visible:ring-ring/60 relative aspect-[3/4] flex-1 cursor-zoom-in touch-pan-y outline-none focus-visible:ring-3 dark:bg-white"
+            aria-label={t("enlargePhoto", { name: product.name })}
+            className="zoom-stage tile focus-visible:ring-ring/50 relative aspect-[3/4] flex-1 cursor-zoom-in touch-pan-y outline-none focus-visible:ring-3 dark:bg-white"
             onPointerMove={zoomAt}
             onPointerEnter={zoomAt}
             onPointerLeave={() => {
@@ -90,7 +91,7 @@ export function ProductGallery({ product, images: given }: Props) {
         </DialogTrigger>
         <DialogContent className="max-h-[92dvh] w-auto max-w-[min(92vw,640px)] p-2">
           <DialogTitle className="sr-only">{product.name}</DialogTitle>
-          <DialogDescription className="sr-only">Full-size product photo.</DialogDescription>
+          <DialogDescription className="sr-only">{t("fullSizePhoto")}</DialogDescription>
           <Image
             src={current.thumb_800}
             alt={product.name}
@@ -103,16 +104,16 @@ export function ProductGallery({ product, images: given }: Props) {
       </Dialog>
 
       {images.length > 1 && (
-        <ul className="flex gap-2 lg:flex-col" aria-label="Photos">
+        <ul className="flex gap-2 lg:flex-col" aria-label={t("photos")}>
           {images.map((img, i) => (
             <li key={img.thumb_400}>
               <button
                 type="button"
-                aria-label={`Show photo ${i + 1}`}
+                aria-label={t("showPhoto", { number: i + 1 })}
                 aria-current={i === index}
                 onClick={() => setIndex(i)}
                 className={cn(
-                  "relative block aspect-[3/4] w-16 overflow-hidden rounded-xl border-2 transition-[opacity,border-color] duration-300 outline-none focus-visible:ring-3 focus-visible:ring-ring/60",
+                  "relative block aspect-[3/4] w-16 overflow-hidden rounded-xl border-2 transition-[opacity,border-color] duration-300 outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                   i === index ? "border-foreground" : "border-transparent opacity-60 hover:opacity-100",
                 )}
               >

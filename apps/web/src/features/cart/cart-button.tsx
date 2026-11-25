@@ -1,10 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useCloseOnOtherFlyout } from "@/components/layout/bar-flyout";
 import { BagGlyph, HEADER_CELL } from "@/components/layout/header-cell";
+import { useIsStaff } from "@/features/auth/use-role";
 import { cn } from "@/lib/utils";
 import { useBagPanel } from "./cart-ui-store";
 import { useCart } from "./use-cart";
@@ -17,6 +19,8 @@ const BagPanel = dynamic(
 );
 
 export function CartButton() {
+  const t = useTranslations("cart");
+  const isStaff = useIsStaff();
   const { open, setOpen } = useBagPanel();
   const { data } = useCart();
   const pathname = usePathname();
@@ -31,14 +35,16 @@ export function CartButton() {
   const label = count > 99 ? "99+" : String(count);
   const width = count > 0 ? Math.min(label.length, 3) : 0;
 
+  // Ажилтанд сагс байхгүй (API мөн хаасан): bar-ын нүд хоосон үлдэхгүй, admin цэс account дотор.
+  if (isStaff) return null;
   return (
     <>
       <button
         ref={trigger}
+        data-cart-target
         type="button"
         className={cn(HEADER_CELL, "phone-bar-item")}
-        data-cart-button
-        aria-label={count ? `Bag, ${count} items` : "Bag"}
+        aria-label={t("bagCount", { count })}
         aria-haspopup="dialog"
         aria-expanded={open}
         onClick={() => setOpen(!open)}

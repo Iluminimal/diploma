@@ -1,10 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useUserMessage } from "@/lib/api/use-user-message";
 import { ShoppingBag } from "lucide-react";
 import Link from "next/link";
-import { AnimatedPrice } from "@/components/product/animated-price";
+import { Price } from "@/components/product/price";
 import { Button } from "@/components/ui/button";
-import { userMessage } from "@/lib/api/errors";
 import { CartLines, UndoBar } from "./cart-lines";
 import { FreeShippingProgress } from "./free-shipping-progress";
 import { useCart } from "./use-cart";
@@ -29,17 +30,19 @@ export function MiniCartSkeleton() {
 
 /** Bag-ийн агуулга. Хуудас бүрийн JS-д орохгүйн тулд lazy ачаална (cart-button.tsx-г хар). */
 export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
+  const t = useTranslations("cart");
+  const message = useUserMessage();
   const { data: cart, isPending, error, refetch } = useCart();
 
   if (isPending) return <MiniCartSkeleton />;
   if (error || !cart) {
     return (
-      <div className="space-y-3 text-sm">
+      <div className="space-y-3 type-caption">
         <p role="alert" className="text-destructive">
-          {userMessage(error)}
+          {message(error)}
         </p>
         <Button variant="outline" onClick={() => void refetch()}>
-          Try again
+          {t("tryAgain")}
         </Button>
       </div>
     );
@@ -50,14 +53,14 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
         <EmptyState
           icon={ShoppingBag}
           as="p"
-          title="Your Bag is empty"
-          description="Find something you love and it will wait for you here."
+          title={t("empty")}
+          description={t("emptyWait")}
           // apple.com-ын flyout-ын доорх хоосон Bag нь төвлөрсөн зураг биш, зүүн тийш эгнээтэй
           // гарчиг ба нэг мөр.
-          className="flex-1 pb-16 md:flex-none md:items-start md:px-0 md:py-0 md:pb-0 md:text-left md:[&>div:last-child]:justify-start md:[&>span]:hidden md:[&_.type-body]:text-xs"
+          className="flex-1 pb-16 md:flex-none md:items-start md:px-0 md:py-0 md:pb-0 md:text-left md:[&>div:last-child]:justify-start md:[&>span]:hidden md:[&_.type-body]:type-fine"
         >
           <Button asChild variant="bordered" onClick={onNavigate}>
-            <Link href="/products">Continue shopping</Link>
+            <Link href="/products">{t("continueShopping")}</Link>
           </Button>
         </EmptyState>
         {/* Сүүлийн мөрийг хасахад cart хоосон болно: буцах зам энд байна. */}
@@ -74,15 +77,15 @@ export function MiniCart({ onNavigate }: { onNavigate: () => void }) {
       <div className="border-border mt-8 space-y-3 border-t pt-6">
         <FreeShippingProgress subtotalCents={cart.subtotal_cents} />
         <div className="flex items-baseline justify-between">
-          <span className="type-body font-semibold">Subtotal</span>
-          <AnimatedPrice cents={cart.subtotal_cents} currency={cart.currency} className="type-body font-semibold" />
+          <span className="type-body font-semibold">{t("subtotal")}</span>
+          <Price cents={cart.subtotal_cents} currency={cart.currency} className="type-body font-semibold" />
         </div>
-        <p className="text-muted-foreground text-xs">Shipping is calculated at checkout.</p>
+        <p className="text-muted-foreground type-fine">{t("shippingAtCheckout")}</p>
         <Button asChild size="xl" className="w-full" onClick={onNavigate}>
-          <Link href="/checkout">Check Out</Link>
+          <Link href="/checkout">{t("checkOut")}</Link>
         </Button>
         <Button asChild variant="link" className="w-full" onClick={onNavigate}>
-          <Link href="/cart">View Bag</Link>
+          <Link href="/cart">{t("viewBag")}</Link>
         </Button>
       </div>
     </>

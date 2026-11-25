@@ -2,6 +2,7 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useAuth } from "@/features/auth/auth-store";
+import { signInAs } from "@/test/auth";
 import { json, stubApi } from "@/test/api-mock";
 import { makeAdminOrder } from "@/test/fixtures";
 import { renderWithQuery } from "@/test/render";
@@ -102,19 +103,38 @@ describe("AdminOrderView", () => {
     expect(await screen.findByRole("heading", { name: "Order LK-ABCD2345" })).toBeInTheDocument();
     expect(await screen.findByText(/account #3/)).toBeInTheDocument();
     expect(screen.getByText("succeeded via offline")).toBeInTheDocument();
-    expect(screen.getByText("pi_offline_123")).toBeInTheDocument();
+    expect(screen.getByText("pay_offline_123")).toBeInTheDocument();
     expect(screen.getByText("Alma Women Blue Kurta")).toBeInTheDocument();
   });
 
-  it("shows where the order is on its way, and offers what can be done next", async () => {
+  it("shows a warehouse worker where the order is on its way, and offers shipping", async () => {
+    signInAs("warehouse");
     stubApi({ "GET /api/v1/admin/orders/LK-ABCD2345": { body: makeAdminOrder({ status: "paid" }) } });
     renderWithQuery(<AdminOrderView number="LK-ABCD2345" />);
 
     await screen.findByRole("heading", { name: "Order LK-ABCD2345" });
     expect(await screen.findByRole("list", { name: "Order progress" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Mark as shipped" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Refund" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refund" })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Add a note")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "All orders" })).toHaveAttribute("href", "/admin/orders");
+  });
+
+  it("offers an administrator the refund and internal notes, but not shipping", async () => {
+    stubApi({ "GET /api/v1/admin/orders/LK-ABCD2345": { body: makeAdminOrder({ status: "paid" }) } });
+    renderWithQuery(<AdminOrderView number="LK-ABCD2345" />);
+
+    expect(await screen.findByRole("button", { name: "Refund" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Add a note")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mark as shipped" })).not.toBeInTheDocument();
+  });
+
+  it("offers a warehouse worker delivery of a shipped order", async () => {
+    signInAs("warehouse");
+    stubApi({ "GET /api/v1/admin/orders/LK-ABCD2345": { body: makeAdminOrder({ status: "shipped" }) } });
+    renderWithQuery(<AdminOrderView number="LK-ABCD2345" />);
+
+    expect(await screen.findByRole("button", { name: "Mark as delivered" })).toBeInTheDocument();
   });
 
   it("shows the tracking of a shipment and the history, including internal notes", async () => {
@@ -141,7 +161,6 @@ describe("AdminOrderView", () => {
     const history = within(screen.getByRole("region", { name: "History" }));
     expect(history.getByText("Gift box please")).toBeInTheDocument();
     expect(history.getByText("Order placed")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Mark as delivered" })).toBeInTheDocument();
   });
 
   it("adds a note to the history", async () => {

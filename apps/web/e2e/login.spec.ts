@@ -72,7 +72,7 @@ test("the cart is not shown to someone who signed out", async ({ shopperPage: pa
   const { addToCart } = await import("./support/api");
   await addToCart(api, account, products[0]!.id);
   await page.goto("/");
-  await expect(cartButton(page)).toHaveAttribute("aria-label", "Bag, 1 items");
+  await expect(cartButton(page)).toHaveAttribute("aria-label", "Bag, 1 item");
 
   await accountMenu(page).click();
   await page.getByRole("menuitem", { name: /Sign out/ }).click();

@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { makeProduct } from "@/test/fixtures";
-import { breadcrumbTrail, productJsonLd, serializeJsonLd } from "./json-ld";
+import { createVocab } from "@/i18n/vocab";
+import { catalogNav, makeProduct } from "@/test/fixtures";
+import { breadcrumbTrail, productDescription, productJsonLd, serializeJsonLd } from "./json-ld";
 import { formatPrice, productPath, productSubtitle } from "./product";
 import { sizesFor } from "./sizes";
 
 describe("product helpers", () => {
-  it("formats cents as currency, dropping .00", () => {
-    expect(formatPrice(3499)).toBe("$34.99");
-    expect(formatPrice(2500)).toBe("$25");
+  it("formats minor units as currency, tugrik whole and dropping .00", () => {
+    expect(formatPrice(8_790_000)).toBe("₮87,900"); // төгрөг, бутархайгүй
+    expect(formatPrice(3499, "USD")).toBe("$34.99");
+    expect(formatPrice(2500, "USD")).toBe("$25");
     expect(formatPrice(499, "EUR", "de-DE")).toContain("4,99");
   });
 
@@ -16,15 +18,19 @@ describe("product helpers", () => {
   });
 
   it("describes colour and type", () => {
-    expect(productSubtitle(makeProduct())).toBe("Blue · Kurtas");
-    expect(productSubtitle(makeProduct({ base_colour: null }))).toBe("Kurtas");
+    expect(productSubtitle(makeProduct(), createVocab("en"))).toBe("Blue · Kurtas");
+    expect(productSubtitle(makeProduct({ base_colour: null }), createVocab("en"))).toBe("Kurtas");
+  });
+
+  it("translates colour and type into Mongolian", () => {
+    expect(productSubtitle(makeProduct(), createVocab("mn"))).toBe("Цэнхэр · Курта");
   });
 });
 
 describe("sizesFor", () => {
   it("gives clothing, shoe and kids sizes by category", () => {
     expect(sizesFor(makeProduct())?.sizes).toContain("XL");
-    expect(sizesFor(makeProduct({ master_category: "Footwear", sub_category: "Shoes" }))?.label).toBe("Size (US)");
+    expect(sizesFor(makeProduct({ master_category: "Footwear", sub_category: "Shoes" }))?.label).toBe("sizeUs");
     expect(sizesFor(makeProduct({ gender: "Girls" }))?.sizes[0]).toBe("2-3Y");
   });
 
@@ -91,5 +97,44 @@ describe("product JSON-LD", () => {
       "/products?gender=Women&master_category=Apparel",
       "/products?gender=Women&article_type=Kurtas",
     ]);
+  });
+
+  it("links breadcrumbs to the category pages when the category tree is known", () => {
+    const shirt = makeProduct({ gender: "Men", master_category: "Apparel", sub_category: "Topwear", article_type: "Tshirts" });
+
+    expect(breadcrumbTrail(shirt, catalogNav).map((c) => c.href)).toEqual([
+      "/c/men",
+      "/c/men/apparel",
+      "/c/men/apparel/topwear/tshirts",
+    ]);
+  });
+
+  it("falls back to the filtered listing for a category the tree does not have", () => {
+    const odd = makeProduct({ gender: "Men", master_category: "Apparel", sub_category: "Topwear", article_type: "Ponchos" });
+
+    expect(breadcrumbTrail(odd, catalogNav).map((c) => c.href)).toEqual([
+      "/c/men",
+      "/c/men/apparel",
+      "/products?gender=Men&article_type=Ponchos",
+    ]);
+  });
+});
+
+describe("product description and JSON-LD language", () => {
+  it("is built from vocabulary terms, not English sentence fragments", () => {
+    const product = makeProduct({ base_colour: "Blue", usage: "Casual" });
+
+    expect(productDescription(product)).toBe("Alma Women Blue Kurta: Blue · Kurtas · Women · Casual.");
+    const mn = productDescription(product, createVocab("mn"));
+    expect(mn).toContain("Alma Women Blue Kurta:");
+    expect(mn).not.toContain("Blue ·");
+    expect(mn).not.toContain(" for ");
+  });
+
+  it("uses the shop's own word for Home and the translated category names in the breadcrumb data", () => {
+    const [, crumbs] = productJsonLd(makeProduct(), { vocab: createVocab("mn"), homeLabel: "Нүүр" }) as unknown as { itemListElement: { name: string }[] }[];
+
+    expect(crumbs?.itemListElement[0]?.name).toBe("Нүүр");
+    expect(crumbs?.itemListElement[1]?.name).toBe(createVocab("mn").gender("Women"));
   });
 });

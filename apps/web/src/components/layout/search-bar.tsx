@@ -4,12 +4,15 @@ import { useQuery } from "@tanstack/react-query";
 import { Camera, Clock, LayoutGrid, Search } from "lucide-react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, type ClipboardEvent, type DragEvent, type ReactNode } from "react";
 import { categoryHref, matchCategories } from "@/features/catalog/nav";
 import { readRecentSearches, rememberSearch } from "@/features/catalog/recent-searches";
-import { formatPrice, productPath } from "@/features/catalog/product";
-import { suggestProducts } from "@/features/catalog/suggest";
+import { productPath } from "@/features/catalog/product";
+import { popularProducts, suggestProducts } from "@/features/catalog/suggest";
+import { useFormat } from "@/i18n/use-format";
+import { useVocab } from "@/i18n/use-vocab";
 import { useCatalogNav } from "@/features/catalog/use-catalog-nav";
 import { firstImage, useImageInput } from "@/features/search/use-image-input";
 import { useDebounced } from "@/lib/use-debounced";
@@ -28,7 +31,7 @@ type Option =
   | { type: "recent"; key: string; label: string; href: string }
   | { type: "category"; key: string; label: string; context: string; count: number; href: string }
   | {
-      type: "product";
+      type: "product" | "popular";
       key: string;
       label: string;
       price: string;
@@ -52,6 +55,9 @@ type Props = {
 };
 
 export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }: Props) {
+  const t = useTranslations("layout.searchBar");
+  const format = useFormat();
+  const vocab = useVocab();
   const overlay = variant === "overlay";
   const router = useRouter();
   const listId = useId();
@@ -77,18 +83,35 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
     staleTime: 60_000,
   });
   const { data: nav } = useCatalogNav(open);
+  // Сүүлд хайсан юу ч байхгүй үед хоосон талбарт алдартай барааг санал болгоно.
+  const { data: popular = [] } = useQuery({
+    queryKey: ["suggest-popular"],
+    queryFn: ({ signal }) => popularProducts(signal),
+    enabled: open && typed.length === 0 && recent.length === 0,
+    staleTime: 600_000,
+  });
 
   const options = useMemo<Option[]>(() => {
     if (typed.length === 0) {
-      return recent.map((q) => ({ type: "recent", key: `r-${q}`, label: q, href: searchHref(q) }));
+      if (recent.length > 0) {
+        return recent.map((q) => ({ type: "recent", key: `r-${q}`, label: q, href: searchHref(q) }));
+      }
+      return popular.map((p) => ({
+        type: "popular",
+        key: `pop-${p.id}`,
+        label: p.name,
+        price: format.price(p.price_cents, p.currency),
+        image: p.image.thumb_400,
+        href: productPath(p),
+      }));
     }
     if (!enabled) return [];
     const categories: Option[] = nav
       ? matchCategories(nav, query, MAX_CATEGORIES).map(({ department, node }) => ({
           type: "category",
           key: `c-${department.slug}-${node.path}`,
-          label: node.name,
-          context: department.name,
+          label: vocab.category(node.name),
+          context: vocab.department(department.name),
           count: node.product_count,
           href: categoryHref(department.slug, node.path),
         }))
@@ -97,12 +120,12 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
       type: "product",
       key: `p-${p.id}`,
       label: p.name,
-      price: formatPrice(p.price_cents, p.currency),
+      price: format.price(p.price_cents, p.currency),
       image: p.image.thumb_400,
       href: productPath(p),
     }));
     return [...categories, ...items];
-  }, [typed, enabled, query, nav, products, recent]);
+  }, [typed, enabled, query, nav, products, popular, recent, format, vocab]);
 
   const showList =
     open &&
@@ -193,7 +216,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
         onDrop={onDrop}
       >
         <label htmlFor={`${listId}-input`} className="sr-only">
-          Search products
+          {t("label")}
         </label>
         <Search
           aria-hidden
@@ -213,7 +236,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           aria-activedescendant={active >= 0 ? `${listId}-opt-${active}` : undefined}
           autoComplete="off"
           enterKeyHint="search"
-          placeholder={dragging ? "Drop a photo to search" : overlay ? "Search Angel" : "Search for “red floral dress”"}
+          placeholder={dragging ? t("dropPhoto") : overlay ? t("placeholderOverlay") : t("placeholder")}
           value={text}
           onChange={(e) => {
             setText(e.target.value);
@@ -244,20 +267,20 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           className={cn(
             "placeholder:text-muted-foreground w-full border outline-none transition-[background-color,box-shadow,border-color] duration-200 focus-visible:ring-3",
             overlay
-              ? "bg-secondary focus-visible:bg-background focus-visible:ring-ring/40 h-14 rounded-2xl border-transparent pr-14 pl-12 text-lg tracking-tight md:h-10 md:rounded-none md:bg-transparent md:pr-12 md:pl-8 md:text-2xl md:font-semibold md:tracking-normal md:focus-visible:bg-transparent md:focus-visible:ring-0"
-              : "bg-muted/70 focus-visible:ring-ring/50 focus-visible:bg-background border-border h-10 rounded-full pr-12 pl-10 text-sm",
+              ? "bg-secondary focus-visible:bg-background focus-visible:ring-ring/50 h-14 rounded-2xl border-transparent pr-14 pl-12 type-intro tracking-tight md:h-10 md:rounded-none md:bg-transparent md:pr-12 md:pl-8 md:text-2xl md:font-semibold md:tracking-normal md:focus-visible:bg-transparent md:focus-visible:ring-0"
+              : "bg-muted/70 focus-visible:ring-ring/50 focus-visible:bg-background border-border h-10 rounded-full pr-12 pl-10 type-caption",
             dragging && "border-brand bg-brand/5 ring-brand/30 ring-3",
           )}
         />
         <button
           ref={photoButton}
           type="button"
-          aria-label="Search by photo"
+          aria-label={t("byPhoto")}
           aria-haspopup="dialog"
-          title="Search by photo"
+          title={t("byPhoto")}
           onClick={openPhotoSearch}
           className={cn(
-            "text-muted-foreground hover:text-foreground hover:bg-foreground/8 focus-visible:ring-ring/60 absolute top-1/2 grid -translate-y-1/2 place-items-center rounded-full outline-none transition-colors duration-200 focus-visible:ring-3",
+            "text-muted-foreground hover:text-foreground hover:bg-foreground/8 focus-visible:ring-ring/50 absolute top-1/2 grid -translate-y-1/2 place-items-center rounded-full outline-none transition-colors duration-200 focus-visible:ring-3",
             overlay ? "right-2.5 size-10 md:right-0 md:size-8" : "right-1.5 size-8",
           )}
         >
@@ -279,7 +302,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
         <ul
           id={listId}
           role="listbox"
-          aria-label="Suggestions"
+          aria-label={t("suggestions")}
           className={cn(
             "overflow-hidden",
             overlay
@@ -288,7 +311,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
           )}
         >
           {options.map((option, i) => {
-            const heading = options[i - 1]?.type !== option.type ? HEADINGS[option.type] : null;
+            const heading = options[i - 1]?.type !== option.type ? t(HEADING_KEY[option.type]) : null;
             return (
               <li
                 key={option.key}
@@ -298,7 +321,7 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
                 style={{ animationDelay: `${Math.min(i, 6) * 28}ms` }}
               >
                 {heading && (
-                  <p aria-hidden className="text-muted-foreground px-3 pt-2 pb-1 text-xs font-medium">
+                  <p aria-hidden className="text-muted-foreground px-3 pt-2 pb-1 type-fine font-medium">
                     {heading}
                   </p>
                 )}
@@ -313,14 +336,14 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
                     i === active && "bg-muted",
                   )}
                 >
-                  <OptionBody option={option} />
+                  <OptionBody option={option} query={query} />
                 </div>
               </li>
             );
           })}
           {typed.length >= MIN_CHARS && options.length === 0 && (
-            <li role="presentation" className="text-muted-foreground px-3 py-3 text-sm">
-              No matches for “{query}”.
+            <li role="presentation" className="text-muted-foreground px-3 py-3 type-caption">
+              {t("noMatches", { query })}
             </li>
           )}
           {hasProducts && (
@@ -329,9 +352,9 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
                 role="option"
                 aria-selected={false}
                 onClick={() => submit(text)}
-                className="text-muted-foreground hover:text-foreground cursor-pointer rounded-xl px-3 py-2.5 text-sm"
+                className="text-muted-foreground hover:text-foreground cursor-pointer rounded-xl px-3 py-2.5 type-caption"
               >
-                See all results for “{query}”
+                {t("seeAll", { query })}
               </div>
             </li>
           )}
@@ -342,14 +365,35 @@ export function SearchBar({ className, variant = "bar", onNavigate, quickLinks }
   );
 }
 
-const HEADINGS: Record<Option["type"], string> = {
-  recent: "Recent searches",
-  category: "Categories",
-  product: "Products",
-};
+const HEADING_KEY = { recent: "recent", category: "categories", product: "products", popular: "popular" } as const;
 
-function OptionBody({ option }: { option: Option }) {
-  if (option.type === "product") {
+/**
+ * Бичсэн текстэд таарсан хэсгийг тодруулна (`<mark>`: текст өөрчлөгдөхгүй тул screen reader
+ * ижил уншина). Таарахгүй бол текст хэвээр.
+ */
+export function Highlight({ text, query }: { text: string; query: string }) {
+  const needle = query.trim();
+  if (needle.length === 0) return <>{text}</>;
+  const parts = text.split(new RegExp(`(${needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "i"));
+  return (
+    <>
+      {parts.map((part, index) =>
+        index % 2 === 1 ? (
+          <mark key={index} className="text-foreground bg-transparent font-bold">
+            {part}
+          </mark>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
+function OptionBody({ option, query }: { option: Option; query: string }) {
+  const t = useTranslations("layout.searchBar");
+  const format = useFormat();
+  if (option.type === "product" || option.type === "popular") {
     return (
       <>
         <Image
@@ -361,8 +405,10 @@ function OptionBody({ option }: { option: Option }) {
           className="bg-muted h-[53px] w-10 rounded-md object-cover"
         />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-medium">{option.label}</span>
-          <span className="text-muted-foreground block text-xs">{option.price}</span>
+          <span className="block truncate type-caption font-medium">
+            {option.type === "product" ? <Highlight text={option.label} query={query} /> : option.label}
+          </span>
+          <span className="text-muted-foreground block type-fine">{option.price}</span>
         </span>
       </>
     );
@@ -373,12 +419,12 @@ function OptionBody({ option }: { option: Option }) {
       <span className="bg-muted text-muted-foreground grid size-10 shrink-0 place-items-center rounded-md">
         <Icon aria-hidden className="size-4" />
       </span>
-      <span className="min-w-0 flex-1 truncate text-sm font-medium">
-        {option.label}
-        {option.type === "category" && <span className="text-muted-foreground font-normal"> in {option.context}</span>}
+      <span className="min-w-0 flex-1 truncate type-caption font-medium">
+        {option.type === "category" ? <Highlight text={option.label} query={query} /> : option.label}
+        {option.type === "category" && <span className="text-muted-foreground font-normal"> {t("inContext", { context: option.context })}</span>}
       </span>
       {option.type === "category" && (
-        <span className="text-muted-foreground text-xs tabular-nums">{option.count.toLocaleString("en-US")}</span>
+        <span className="text-muted-foreground type-fine tabular-nums">{format.number(option.count)}</span>
       )}
     </>
   );

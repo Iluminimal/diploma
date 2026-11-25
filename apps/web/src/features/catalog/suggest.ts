@@ -18,3 +18,18 @@ export async function suggestProducts(q: string, signal?: AbortSignal) {
   if (!result.data) throw await errorFromResponse(result.response);
   return result.data.items;
 }
+
+/** Хоосон хайлтын талбарт "Алдартай": хамгийн их зарагдсан хэдэн бараа (түр cache-тэй). */
+export async function popularProducts(signal?: AbortSignal) {
+  let result;
+  try {
+    result = await createApiClient().GET("/api/v1/products", {
+      params: { query: { sort: "popular", page_size: 4 } },
+      signal,
+    });
+  } catch (cause) {
+    throw networkError(cause);
+  }
+  if (!result.data) throw await errorFromResponse(result.response);
+  return result.data.items;
+}

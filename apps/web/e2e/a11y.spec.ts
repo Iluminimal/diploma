@@ -3,15 +3,16 @@ import { pickCategory } from "./support/catalog";
 import { openSearch } from "./support/ui";
 import {
   addToCart,
-  adminSession,
   placePaidOrder,
   postReview,
   productPhoto,
   saveToWishlist,
   shipAndDeliver,
+  warehouseSession,
   userId,
 } from "./support/api";
 import { SCHEMES, VARIANTS, VIEWPORTS, expectNoViolations, scan, settled, sweep, type Variant } from "./support/axe";
+import { ENGLISH } from "./support/locale";
 
 /**
  * Бүх төрлийн дэлгэц дээр axe-ээр WCAG 2.1 A/AA-ийн автомат шалгалт: гэрэл ба харанхуй горим, утас
@@ -205,7 +206,7 @@ test.describe("signed in", () => {
 
     await sweep(page, "/account/orders", { ready: heading(page) });
     await sweep(page, `/account/orders/${number}`, { ready: () => expect(page.getByText("Payment summary")).toBeVisible() });
-    await sweep(page, "/account/addresses", { ready: () => expect(page.getByText("12 Analytical Way")).toBeVisible() });
+    await sweep(page, "/account/addresses", { ready: () => expect(page.getByText(/Энхтайваны өргөн чөлөө 12/)).toBeVisible() });
     await sweep(page, "/account/wishlist", { ready: heading(page) });
     await sweep(page, "/checkout", { ready: () => expect(page.getByRole("button", { name: /pay now/i })).toBeVisible() });
     await sweep(page, `/checkout/confirmation/${number}`, { ready: heading(page) });
@@ -220,10 +221,10 @@ test.describe("reviews and tracking", () => {
     account,
   }) => {
     test.setTimeout(240_000);
-    const admin = await adminSession(api);
+    const worker = await warehouseSession(api);
     const product = await newProduct();
     const number = await placePaidOrder(api, account, product.id);
-    await shipAndDeliver(api, admin, number);
+    await shipAndDeliver(api, worker, number);
 
     // Худалдан авагч: сэтгэгдэл бичих форм, дараа нь өөрийнх нь сэтгэгдэл.
     const reviewsReady = () => expect(page.getByRole("form", { name: "Write a review" })).toBeVisible();
@@ -235,7 +236,7 @@ test.describe("reviews and tracking", () => {
     });
 
     // Зочин сэтгэгдлийг харж, нэвтрэх урилгыг харна.
-    const visitor = await (await browser.newContext()).newPage();
+    const visitor = await (await browser.newContext({ storageState: ENGLISH })).newPage();
     await sweep(visitor, `/products/${product.id}`, {
       ready: () => expect(visitor.getByRole("heading", { name: "Fits well" })).toBeVisible(),
     });
@@ -246,49 +247,53 @@ test.describe("reviews and tracking", () => {
 });
 
 test.describe("admin", () => {
-  test("products and orders", async ({ adminPage: page, api, account, products }) => {
+  // Утсан дээр жагсаалтууд хүснэгтийн оронд карт (list) болж гарна: аль нэгийг нь хүлээнэ.
+  test("products and orders", async ({ warehousePage: page, api, account, products }) => {
     const [product] = products;
     const number = await placePaidOrder(api, account, product!.id);
     const ready = (text: string | RegExp) => () => expect(page.getByText(text).first()).toBeVisible();
 
-    await sweep(page, "/admin/products", { ready: () => expect(page.getByRole("table", { name: "Products" })).toBeVisible() });
+    await sweep(page, "/admin", { ready: () => expect(page.getByRole("region", { name: "Shipping queue" })).toBeVisible() });
+    await sweep(page, "/admin/products", { ready: () => expect(page.getByRole("table", { name: "Products" }).or(page.getByRole("list", { name: "Products" }))).toBeVisible() });
     await sweep(page, "/admin/products/new", { ready: () => expect(page.getByLabel("Photo", { exact: true })).toBeVisible() });
     await sweep(page, `/admin/products/${product!.id}`, { ready: () => expect(page.getByLabel("Name")).toBeVisible() });
-    await sweep(page, "/admin/orders", { ready: () => expect(page.getByRole("table", { name: /Orders/ })).toBeVisible() });
+    await sweep(page, "/admin/orders", { ready: () => expect(page.getByRole("table", { name: /Orders/ }).or(page.getByRole("list", { name: /Orders/ }))).toBeVisible() });
     await sweep(page, `/admin/orders/${number}`, { ready: ready("Customer and payment") });
   });
-  test("dashboard, inventory, customers and reviews", async ({ newProduct, adminPage: page, api, account }) => {
+  test("dashboard, orders, low stock, customers and reviews", async ({ newProduct, adminPage: page, api, account }) => {
     test.setTimeout(240_000);
-    const admin = await adminSession(api);
+    const worker = await warehouseSession(api);
     const product = await newProduct({ stock: 3 });
     const number = await placePaidOrder(api, account, product.id);
-    await shipAndDeliver(api, admin, number);
+    await shipAndDeliver(api, worker, number);
     await postReview(api, account, product.id, { rating: 5, title: "Lovely", body: "Would buy again." });
     const customer = await userId(api, account);
 
     await sweep(page, "/admin", { ready: () => expect(page.getByRole("img", { name: /Daily revenue/ })).toBeVisible() });
     await sweep(page, "/admin?days=7", { ready: () => expect(page.getByRole("img", { name: /Daily revenue/ })).toBeVisible() });
-    await sweep(page, "/admin/orders?status=delivered", { ready: () => expect(page.getByRole("table", { name: /Orders/ })).toBeVisible() });
+    await sweep(page, "/admin/orders?status=delivered", { ready: () => expect(page.getByRole("table", { name: /Orders/ }).or(page.getByRole("list", { name: /Orders/ }))).toBeVisible() });
     await sweep(page, `/admin/orders/${number}`, { ready: () => expect(page.getByRole("region", { name: "History" })).toBeVisible() });
-    await sweep(page, `/admin/inventory?q=${encodeURIComponent(product.name)}`, {
-      ready: () => expect(page.getByRole("table", { name: /Products on sale/ })).toBeVisible(),
+    await sweep(page, `/admin/products?stock=low&q=${encodeURIComponent(product.name)}`, {
+      ready: () => expect(page.getByRole("combobox", { name: "Stock level" })).toHaveValue("low"),
     });
-    await sweep(page, "/admin/customers", { ready: () => expect(page.getByRole("table", { name: "Customers" })).toBeVisible() });
+    await sweep(page, "/admin/customers", { ready: () => expect(page.getByRole("table", { name: "Customers" }).or(page.getByRole("list", { name: "Customers" }))).toBeVisible() });
     await sweep(page, `/admin/customers/${customer}`, { ready: () => expect(page.getByRole("region", { name: "Recent orders" })).toBeVisible() });
     await sweep(page, "/admin/reviews", { ready: () => expect(page.getByRole("list", { name: "Reviews, newest first" })).toBeVisible() });
+    await sweep(page, "/admin/activity", { ready: () => expect(page.getByRole("heading", { level: 1, name: "Activity log" })).toBeVisible() });
   });
 
-  test("the fulfilment dialogs", async ({ newProduct, adminPage: page, api, account }) => {
+  test("the fulfilment dialogs", async ({ newProduct, adminPage: admin, warehousePage: warehouse, api, account }) => {
     const product = await newProduct();
     const number = await placePaidOrder(api, account, product.id);
     const found = [];
     for (const variant of VARIANTS) {
-      await page.setViewportSize(VIEWPORTS[variant.viewport]);
-      await page.emulateMedia({ colorScheme: variant.scheme, reducedMotion: "reduce" });
-      for (const [button, dialogName] of [
-        ["Mark as shipped", "Mark as shipped"],
-        ["Refund", "Refund this order?"],
+      // Илгээх нь агуулахын ажилтных, буцаах нь админых: тус бүр өөрийн хуудсаар.
+      for (const [page, button, dialogName] of [
+        [warehouse, "Mark as shipped", "Mark as shipped"],
+        [admin, "Refund", "Refund this order?"],
       ] as const) {
+        await page.setViewportSize(VIEWPORTS[variant.viewport]);
+        await page.emulateMedia({ colorScheme: variant.scheme, reducedMotion: "reduce" });
         await page.goto(`/admin/orders/${number}`);
         await page.getByRole("button", { name: button, exact: true }).click();
         await expect(page.getByRole("dialog", { name: dialogName })).toBeVisible();

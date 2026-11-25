@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useFormat } from "@/i18n/use-format";
+import { useVocab } from "@/i18n/use-vocab";
 import { AnimatePresence, m } from "motion/react";
 import { Heart, Trash2 } from "lucide-react";
 import { useEffect } from "react";
@@ -8,7 +11,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { EASE_OUT_EXPO } from "@/components/motion/easing";
 import { MotionProvider } from "@/components/motion/motion-provider";
-import { AnimatedPrice } from "@/components/product/animated-price";
+import { Price } from "@/components/product/price";
 import { ProductImage } from "@/components/product/product-image";
 import { useAuth } from "@/features/auth/auth-store";
 import { productPath, productSubtitle } from "@/features/catalog/product";
@@ -27,9 +30,10 @@ type Props = {
 };
 
 export function CartLines({ cart, onNavigate, className }: Props) {
+  const t = useTranslations("cart");
   return (
     <>
-      <ul className={cn("divide-border divide-y", className)} aria-label="Items in your Bag">
+      <ul className={cn("divide-border divide-y", className)} aria-label={t("items")}>
         <MotionProvider>
           <AnimatePresence initial={false}>
             {cart.lines.map((line) => (
@@ -45,6 +49,7 @@ export function CartLines({ cart, onNavigate, className }: Props) {
 
 /** "Removed Blue Kurta. Undo": мөрийг хасснаас хойш хэдэн секунд, cart дотроо. */
 export function UndoBar() {
+  const t = useTranslations("cart");
   const removed = useBagPanel((state) => state.removed);
   const setRemoved = useBagPanel((state) => state.setRemoved);
   const add = useAddToCart();
@@ -62,9 +67,9 @@ export function UndoBar() {
   return (
     <div
       role="status"
-      className="bg-secondary animate-in fade-in slide-in-from-bottom-2 mt-3 flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm duration-300"
+      className="bg-secondary animate-in fade-in slide-in-from-bottom-2 mt-3 flex items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 type-caption duration-300"
     >
-      <span className="min-w-0 truncate">Removed {removed.name}</span>
+      <span className="min-w-0 truncate">{t("removed", { name: removed.name })}</span>
       <button
         type="button"
         className="text-brand shrink-0 font-semibold underline-offset-2 hover:underline"
@@ -73,13 +78,16 @@ export function UndoBar() {
           setRemoved(null);
         }}
       >
-        Undo
+        {t("undo")}
       </button>
     </div>
   );
 }
 
 function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () => void }) {
+  const t = useTranslations("cart");
+  const vocab = useVocab();
+  const format = useFormat();
   const router = useRouter();
   const pathname = usePathname();
   const status = useAuth((state) => state.status);
@@ -102,7 +110,7 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
 
   const saveForLater = () => {
     if (status !== "signedIn") {
-      toast("Sign in to save items for later.");
+      toast(t("signInToSave"));
       router.push(`/login?next=${encodeURIComponent(pathname || "/cart")}`);
       return;
     }
@@ -111,7 +119,7 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
       {
         onSuccess: () => {
           remove.mutate(line.id);
-          toast(`Saved ${product.name} to your wishlist`);
+          toast(t("savedToWishlist", { name: product.name }));
         },
       },
     );
@@ -136,13 +144,13 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
           <Link
             href={productPath(product)}
             onClick={onNavigate}
-            className="line-clamp-2 text-[1.0625rem] leading-snug font-semibold hover:underline"
+            className="line-clamp-2 type-body leading-snug font-semibold hover:underline"
           >
             {product.name}
           </Link>
           <button
             type="button"
-            aria-label={`Remove ${product.name} from your Bag`}
+            aria-label={t("removeItem", { name: product.name })}
             onClick={removeWithUndo}
             className="text-muted-foreground hover:text-foreground -mt-1 -mr-1 grid size-8 shrink-0 place-items-center rounded-full"
           >
@@ -150,23 +158,30 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
           </button>
         </div>
         <p className="text-muted-foreground type-caption">
-          {line.size ? `Size ${line.size} · ` : ""}
-          {productSubtitle(product)}
+          {line.size ? `${t("size", { size: line.size })} · ` : ""}
+          {productSubtitle(product, vocab)}
         </p>
         {line.issue === "out_of_stock" && (
-          <p role="status" className="text-destructive mt-1 text-xs font-medium">
-            Sold out. Remove it to check out.
+          <p role="status" className="text-destructive mt-1 type-fine font-medium">
+            {t("soldOutRemove")}
+          </p>
+        )}
+        {!soldOut && line.price_when_added_cents != null && line.price_when_added_cents !== line.unit_price_cents && (
+          <p role="status" className="text-muted-foreground mt-1 type-fine">
+            {t(line.unit_price_cents < line.price_when_added_cents ? "priceDropped" : "priceChanged", {
+              price: format.price(line.price_when_added_cents, product.currency),
+            })}
           </p>
         )}
         {line.issue === "low_stock" && (
-          <p role="status" className="text-destructive mt-1 text-xs font-medium">
-            Only {line.max_quantity} left.{" "}
+          <p role="status" className="text-destructive mt-1 type-fine font-medium">
+            {t("onlyLeft", { count: line.max_quantity })}{" "}
             <button
               type="button"
               className="underline underline-offset-2"
               onClick={() => setQuantity.mutate({ itemId: line.id, quantity: line.max_quantity })}
             >
-              Update to {line.max_quantity}
+              {t("updateTo", { count: line.max_quantity })}
             </button>
           </p>
         )}
@@ -175,14 +190,14 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
             type="button"
             onClick={saveForLater}
             disabled={toggleWishlist.isPending || remove.isPending}
-            className="text-muted-foreground hover:text-foreground mt-1 inline-flex w-fit items-center gap-1 text-xs underline-offset-2 hover:underline disabled:opacity-50"
+            className="text-muted-foreground hover:text-foreground mt-1 inline-flex w-fit items-center gap-1 type-fine underline-offset-2 hover:underline disabled:opacity-50"
           >
-            <Heart aria-hidden className="size-3" /> Save for later
+            <Heart aria-hidden className="size-3" /> {t("saveForLater")}
           </button>
         )}
         <div className="mt-auto flex items-center justify-between gap-2 pt-3">
           {soldOut ? (
-            <span className="text-muted-foreground text-sm">Qty {line.quantity}</span>
+            <span className="text-muted-foreground type-caption">{t("qty", { count: line.quantity })}</span>
           ) : (
             <QuantityStepper
               value={line.quantity}
@@ -191,10 +206,10 @@ function CartLineItem({ line, onNavigate }: { line: CartLine; onNavigate?: () =>
               onChange={(quantity) => setQuantity.mutate({ itemId: line.id, quantity })}
             />
           )}
-          <AnimatedPrice
+          <Price
             cents={line.line_total_cents}
             currency={product.currency}
-            className={cn("text-[1.0625rem] font-semibold", soldOut && "text-muted-foreground line-through")}
+            className={cn("type-body font-semibold", soldOut && "text-muted-foreground line-through")}
           />
         </div>
       </div>

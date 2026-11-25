@@ -42,10 +42,21 @@ describe("CustomersTable", () => {
     const [ada, grace] = within(table).getAllByRole("row").slice(1);
     expect(within(ada!).getByRole("link", { name: "Ada Lovelace" })).toHaveAttribute("href", "/admin/customers/3");
     expect(ada).toHaveTextContent("ada@example.com");
-    expect(ada).toHaveTextContent("$182.50");
+    expect(ada).toHaveTextContent("₮183");
     expect(ada).toHaveTextContent("Active");
     expect(grace).toHaveTextContent("Never");
     expect(grace).toHaveTextContent("Suspended");
+  });
+
+  it("sorts from the column headers: name A to Z, newest, most orders, top spenders", async () => {
+    stubApi({ "GET /api/v1/admin/customers": respond(page()) });
+    renderWithQuery(<CustomersTable params={{ ...params, sort: "spent" }} />);
+
+    const table = await screen.findByRole("table", { name: "Customers" });
+    expect(within(table).getByRole("columnheader", { name: /Spent/ })).toHaveAttribute("aria-sort", "descending");
+    expect(within(table).getByRole("link", { name: "Customer" })).toHaveAttribute("href", "/admin/customers?sort=name");
+    expect(within(table).getByRole("link", { name: "Joined" })).toHaveAttribute("href", "/admin/customers");
+    expect(within(table).getByRole("link", { name: "Orders" })).toHaveAttribute("href", "/admin/customers?sort=orders");
   });
 
   it("asks the API for the filters in the URL", async () => {

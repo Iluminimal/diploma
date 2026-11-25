@@ -15,11 +15,19 @@ type SearchState = {
   /** Хэрэглэгчийн сонгосон ангилал (null = аль ч). Илрүүлсэн ангилал зөвхөн санал. */
   articleType: string | null;
   refinement: string;
+  /** Зураг дээр олдсон хувцасны аль нь хайгдах вэ (API-ийн `regions` дахь индекс, 0 = хамгийн тод). */
+  regionIndex: number;
+  /** true бол нэг хувцасны (`regionIndex`) дэлгэрэнгүй харагдац; false бол бүх хувцас нэг дор. */
+  focused: boolean;
   setImage: (file: File) => void;
   clearImage: () => void;
   setFilters: (filters: CatalogFilters) => void;
   setArticleType: (articleType: string | null) => void;
   setRefinement: (text: string) => void;
+  /** Нэг хувцас руу шилжиж, түүнийг л хайна. */
+  focusRegion: (index: number) => void;
+  /** Бүх хувцасны нэгдсэн харагдац руу буцна. */
+  showAllGarments: () => void;
 };
 
 let nextId = 1;
@@ -33,6 +41,8 @@ export const useSearchStore = create<SearchState>((set, get) => ({
   filters: emptyFilters(),
   articleType: null,
   refinement: "",
+  regionIndex: 0,
+  focused: false,
   setImage: (file) => {
     const previous = get().image;
     if (previous) URL.revokeObjectURL(previous.previewUrl);
@@ -40,14 +50,18 @@ export const useSearchStore = create<SearchState>((set, get) => ({
       image: { id: nextId++, file, previewUrl: URL.createObjectURL(file) },
       articleType: null,
       refinement: "",
+      regionIndex: 0,
+      focused: false,
     });
   },
   clearImage: () => {
     const previous = get().image;
     if (previous) URL.revokeObjectURL(previous.previewUrl);
-    set({ image: null, articleType: null, refinement: "" });
+    set({ image: null, articleType: null, refinement: "", regionIndex: 0, focused: false });
   },
   setFilters: (filters) => set({ filters }),
   setArticleType: (articleType) => set({ articleType }),
   setRefinement: (refinement) => set({ refinement }),
+  focusRegion: (regionIndex) => set({ regionIndex, focused: true }),
+  showAllGarments: () => set({ regionIndex: 0, focused: false }),
 }));

@@ -1,14 +1,17 @@
 "use client";
 
 import { Check, ChevronDown } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { useFormat } from "@/i18n/use-format";
+import { useVocab } from "@/i18n/use-vocab";
 import { cn } from "@/lib/utils";
 import { isLightSwatch, swatchFor } from "./colors";
 import { toggleValue, type CatalogFilters, type MultiKey } from "./filters";
-import { formatPrice, type CatalogFilterOptions, type CategoryNode } from "./product";
+import { type CatalogFilterOptions, type CategoryNode } from "./product";
 
 export type FilterGroup = "gender" | "color" | "price" | "season" | "usage" | "stock";
 
@@ -28,7 +31,7 @@ type Props<T extends CatalogFilters> = {
 function Group({ title, children, defaultOpen = true }: { title: string; children: ReactNode; defaultOpen?: boolean }) {
   return (
     <details open={defaultOpen} className="group border-border border-b py-5 last:border-b-0">
-      <summary className="flex cursor-pointer list-none items-center justify-between text-[1.0625rem] font-semibold [&::-webkit-details-marker]:hidden">
+      <summary className="flex cursor-pointer list-none items-center justify-between type-body font-semibold [&::-webkit-details-marker]:hidden">
         {title}
         <ChevronDown className="text-muted-foreground size-4 transition-transform group-open:rotate-180" />
       </summary>
@@ -51,7 +54,7 @@ function CheckRow({
   return (
     <div className="flex items-center gap-2.5 py-1.5">
       <Checkbox id={id} checked={checked} onCheckedChange={onCheckedChange} />
-      <Label htmlFor={id} className="flex-1 cursor-pointer text-[0.9375rem] font-normal">
+      <Label htmlFor={id} className="flex-1 cursor-pointer type-caption font-normal">
         {label}
       </Label>
     </div>
@@ -84,6 +87,8 @@ function CategoryBranch<T extends CatalogFilters>({
   onChange,
   idPrefix,
 }: TreeProps<T> & { node: CategoryNode }) {
+  const t = useTranslations("catalog");
+  const vocab = useVocab();
   const key = TREE_KEY[node.level]!;
   const selected = value[key].includes(node.name);
   const [manual, setManual] = useState<boolean | null>(null);
@@ -97,15 +102,15 @@ function CategoryBranch<T extends CatalogFilters>({
           onClick={() => setManual(!open)}
           aria-expanded={open}
           aria-controls={panel}
-          aria-label={`${open ? "Hide" : "Show"} ${node.name} subcategories`}
-          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/60 grid size-7 shrink-0 place-items-center rounded-md outline-none focus-visible:ring-3"
+          aria-label={t(open ? "hideSubcategories" : "showSubcategories", { name: vocab.category(node.name) })}
+          className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 grid size-7 shrink-0 place-items-center rounded-md outline-none focus-visible:ring-3"
         >
           <ChevronDown aria-hidden className={cn("size-3.5 transition-transform", !open && "-rotate-90")} />
         </button>
         <div className="flex-1">
           <CheckRow
             id={`${idPrefix}-${node.path}`}
-            label={node.name}
+            label={vocab.category(node.name)}
             checked={selected}
             onCheckedChange={() => onChange(toggleValue(value, key, node.name))}
           />
@@ -121,6 +126,7 @@ function CategoryBranch<T extends CatalogFilters>({
 }
 
 function CategoryTree<T extends CatalogFilters>({ nodes, ...props }: TreeProps<T> & { nodes: CategoryNode[] }) {
+  const vocab = useVocab();
   return (
     <ul className="space-y-0.5">
       {nodes.map((node) => {
@@ -131,7 +137,7 @@ function CategoryTree<T extends CatalogFilters>({ nodes, ...props }: TreeProps<T
           <li key={node.path} className="pl-8">
             <CheckRow
               id={`${props.idPrefix}-${node.path}`}
-              label={node.name}
+              label={vocab.category(node.name)}
               checked={props.value[key].includes(node.name)}
               onCheckedChange={() => props.onChange(toggleValue(props.value, key, node.name))}
             />
@@ -142,6 +148,9 @@ function CategoryTree<T extends CatalogFilters>({ nodes, ...props }: TreeProps<T
   );
 }
 
+/** Үнийн slider-ын алхам: мянган төгрөг. */
+const PRICE_STEP = 1000;
+
 function PriceFilter<T extends CatalogFilters>({
   range,
   value,
@@ -151,9 +160,11 @@ function PriceFilter<T extends CatalogFilters>({
   value: T;
   onChange: (next: T) => void;
 }) {
-  // Slider бүхэл доллараар ажиллана; API, URL cent ашиглана.
-  const lo = Math.floor(range.min_cents / 100);
-  const hi = Math.ceil(range.max_cents / 100);
+  const t = useTranslations("catalog");
+  const format = useFormat();
+  // Slider бүхэл төгрөгөөр, мянгаар шатлан ажиллана; API, URL бага нэгж (төгрөг x 100) ашиглана.
+  const lo = Math.floor(range.min_cents / 100 / PRICE_STEP) * PRICE_STEP;
+  const hi = Math.ceil(range.max_cents / 100 / PRICE_STEP) * PRICE_STEP;
   const committed: [number, number] = [
     value.min_price !== undefined ? Math.round(value.min_price / 100) : lo,
     value.max_price !== undefined ? Math.round(value.max_price / 100) : hi,
@@ -175,16 +186,16 @@ function PriceFilter<T extends CatalogFilters>({
       <Slider
         min={lo}
         max={hi}
-        step={1}
+        step={PRICE_STEP}
         value={shown}
         onValueChange={(v) => setDragging([v[0]!, v[1]!])}
         onValueCommit={commit}
-        aria-label="Price range"
+        aria-label={t("priceRange")}
         className="py-3"
       />
-      <div className="text-muted-foreground mt-1 flex justify-between text-xs tabular-nums">
-        <span>{formatPrice(shown[0] * 100)}</span>
-        <span>{formatPrice(shown[1] * 100)}{shown[1] >= hi ? "+" : ""}</span>
+      <div className="text-muted-foreground mt-1 flex justify-between type-fine tabular-nums">
+        <span>{format.price(shown[0] * 100)}</span>
+        <span>{format.price(shown[1] * 100)}{shown[1] >= hi ? "+" : ""}</span>
       </div>
     </div>
   );
@@ -198,6 +209,8 @@ export function FilterFields<T extends CatalogFilters>({
   groups = ["gender", "color", "price", "season", "usage", "stock"],
   idPrefix = "f",
 }: Props<T>) {
+  const t = useTranslations("catalog");
+  const vocab = useVocab();
   const show = (g: (typeof groups)[number]) => groups.includes(g);
   return (
     <div>
@@ -205,19 +218,19 @@ export function FilterFields<T extends CatalogFilters>({
         <div className="border-border border-b pb-3">
           <CheckRow
             id={`${idPrefix}-in-stock`}
-            label="In stock only"
+            label={t("inStockOnly")}
             checked={value.in_stock}
             onCheckedChange={() => onChange({ ...value, in_stock: !value.in_stock })}
           />
         </div>
       )}
       {show("gender") && (
-        <Group title="Gender">
+        <Group title={t("gender")}>
           {options.genders.map((g) => (
             <CheckRow
               key={g}
               id={`${idPrefix}-gender-${g}`}
-              label={g}
+              label={vocab.gender(g)}
               checked={value.gender.includes(g)}
               onCheckedChange={() => onChange(toggleValue(value, "gender", g))}
             />
@@ -225,15 +238,15 @@ export function FilterFields<T extends CatalogFilters>({
         </Group>
       )}
       {showCategories && (
-        <Group title="Category">
+        <Group title={t("category")}>
           <div className="max-h-80 overflow-y-auto pr-1">
             <CategoryTree nodes={options.categories} value={value} onChange={onChange} idPrefix={`${idPrefix}-cat`} />
           </div>
         </Group>
       )}
       {show("color") && (
-        <Group title="Colour">
-          <ul className="flex flex-wrap gap-2" aria-label="Colour">
+        <Group title={t("colour")}>
+          <ul className="flex flex-wrap gap-2" aria-label={t("colour")}>
             {options.colors
               .filter((c) => c !== "NA")
               .map((color) => {
@@ -243,11 +256,11 @@ export function FilterFields<T extends CatalogFilters>({
                     <button
                       type="button"
                       aria-pressed={on}
-                      aria-label={color}
-                      title={color}
+                      aria-label={vocab.colour(color)}
+                      title={vocab.colour(color)}
                       onClick={() => onChange(toggleValue(value, "color", color))}
                       className={cn(
-                        "border-border focus-visible:ring-ring/60 relative grid size-7 place-items-center rounded-full border outline-none focus-visible:ring-3",
+                        "border-border focus-visible:ring-ring/50 relative grid size-7 place-items-center rounded-full border outline-none focus-visible:ring-3",
                         on && "ring-foreground ring-2 ring-offset-2 ring-offset-background",
                       )}
                       style={{ background: swatchFor(color) }}
@@ -263,7 +276,7 @@ export function FilterFields<T extends CatalogFilters>({
         </Group>
       )}
       {show("price") && (
-        <Group title="Price">
+        <Group title={t("price")}>
           <PriceFilter
             // URL гаднаас мужийг өөрчилбөл (жишээ нь "clear all") дахин mount хийнэ.
             key={`${value.min_price ?? ""}-${value.max_price ?? ""}`}
@@ -274,12 +287,12 @@ export function FilterFields<T extends CatalogFilters>({
         </Group>
       )}
       {show("season") && (
-        <Group title="Season" defaultOpen={false}>
+        <Group title={t("season")} defaultOpen={false}>
           {options.seasons.map((s) => (
             <CheckRow
               key={s}
               id={`${idPrefix}-season-${s}`}
-              label={s}
+              label={vocab.season(s)}
               checked={value.season.includes(s)}
               onCheckedChange={() => onChange(toggleValue(value, "season", s))}
             />
@@ -287,14 +300,14 @@ export function FilterFields<T extends CatalogFilters>({
         </Group>
       )}
       {show("usage") && (
-        <Group title="Occasion" defaultOpen={false}>
+        <Group title={t("occasion")} defaultOpen={false}>
           {options.usages
             .filter((u) => u !== "NA")
             .map((u) => (
               <CheckRow
                 key={u}
                 id={`${idPrefix}-usage-${u}`}
-                label={u}
+                label={vocab.usage(u)}
                 checked={value.usage.includes(u)}
                 onCheckedChange={() => onChange(toggleValue(value, "usage", u))}
               />

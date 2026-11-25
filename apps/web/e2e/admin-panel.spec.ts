@@ -8,7 +8,8 @@ import {
   registerAccount,
   stockOf,
 } from "./support/api";
-import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL, PASSWORD } from "./support/env";
+import { ADMIN_EMAIL, ADMIN_PASSWORD, API_URL, PASSWORD, WAREHOUSE_EMAIL, WAREHOUSE_PASSWORD } from "./support/env";
+import { ENGLISH } from "./support/locale";
 
 /** Хүн шиг форм бөглөж нэвтэрнэ. */
 async function signInThroughTheForm(page: Page, email: string, password: string, next?: string) {
@@ -21,25 +22,56 @@ async function signInThroughTheForm(page: Page, email: string, password: string,
 
 test.describe("landing", () => {
   test("an administrator lands in the admin area, a customer in the store", async ({ browser, account }) => {
-    const admin = await (await browser.newContext()).newPage();
+    const admin = await (await browser.newContext({ storageState: ENGLISH })).newPage();
     await signInThroughTheForm(admin, ADMIN_EMAIL, ADMIN_PASSWORD);
 
     await expect(admin).toHaveURL(/\/admin$/);
     await expect(admin.getByRole("heading", { level: 1, name: "Dashboard" })).toBeVisible();
 
-    const customer = await (await browser.newContext()).newPage();
+    const customer = await (await browser.newContext({ storageState: ENGLISH })).newPage();
     await signInThroughTheForm(customer, account.email, account.password);
 
     await expect(customer).toHaveURL(/localhost:\d+\/$/);
     await expect(customer.getByRole("heading", { level: 1 }).first()).toBeVisible();
   });
 
+  test("a warehouse worker lands on the warehouse board and sees only what their role needs", async ({ browser }) => {
+    const page = await (await browser.newContext({ storageState: ENGLISH })).newPage();
+    await signInThroughTheForm(page, WAREHOUSE_EMAIL, WAREHOUSE_PASSWORD);
+
+    await expect(page).toHaveURL(/\/admin$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Warehouse" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Shipping queue" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Stock alerts" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "My recent activity" })).toBeVisible();
+    const nav = page.getByRole("navigation", { name: "Admin" });
+    for (const section of ["Dashboard", "Orders", "Products"]) await expect(nav.getByRole("link", { name: section })).toBeVisible();
+    for (const section of ["Customers", "Reviews", "Activity log"]) await expect(nav.getByRole("link", { name: section })).toHaveCount(0);
+
+    await page.goto("/admin/customers");
+    await expect(page.getByText("This section is not part of your role.")).toBeVisible();
+    await page.goto("/admin/activity");
+    await expect(page.getByText("This section is not part of your role.")).toBeVisible();
+    await page.goto("/cart");
+    await expect(page).toHaveURL(/\/admin$/);
+  });
+
   test("an administrator who was headed somewhere else still goes there", async ({ browser }) => {
-    const page = await (await browser.newContext()).newPage();
+    const page = await (await browser.newContext({ storageState: ENGLISH })).newPage();
 
-    await signInThroughTheForm(page, ADMIN_EMAIL, ADMIN_PASSWORD, "/cart");
+    await signInThroughTheForm(page, ADMIN_EMAIL, ADMIN_PASSWORD, "/account");
 
-    await expect(page).toHaveURL(/\/cart$/);
+    await expect(page).toHaveURL(/\/account$/);
+  });
+
+  test("an administrator has no bag: /cart and /checkout send them back to the admin area", async ({
+    adminPage: page,
+  }) => {
+    await page.goto("/cart");
+    await expect(page).toHaveURL(/\/admin$/);
+
+    await page.goto("/checkout");
+    await expect(page).toHaveURL(/\/admin$/);
   });
 
   test("the admin area has its own shell: no shop navigation or footer, and a way back to the store", async ({
@@ -51,7 +83,7 @@ test.describe("landing", () => {
     await expect(page.getByRole("navigation", { name: "Main" })).toHaveCount(0);
     await expect(page.getByRole("contentinfo")).toHaveCount(0);
     const nav = page.getByRole("navigation", { name: "Admin" });
-    for (const section of ["Dashboard", "Orders", "Products", "Inventory", "Customers", "Reviews"]) {
+    for (const section of ["Dashboard", "Orders", "Products", "Customers", "Reviews"]) {
       await expect(nav.getByRole("link", { name: section })).toBeVisible();
     }
     await expect(nav.getByRole("link", { name: "Dashboard" })).toHaveAttribute("aria-current", "page");
@@ -82,6 +114,10 @@ test.describe("landing", () => {
       ["POST", "/admin/orders/LK-ABCD2345/ship"],
       ["POST", "/admin/orders/LK-ABCD2345/refund"],
       ["PUT", "/admin/products/1/stock"],
+      ["GET", "/admin/fulfillment"],
+      ["GET", "/admin/audit"],
+      ["GET", "/admin/export/stats"],
+      ["GET", "/admin/export/orders"],
     ] as const;
     for (const [method, path] of paths) {
       const visitor = await api.fetch(`${API_URL}/api/v1${path}`, { method, data: {} });
@@ -97,6 +133,7 @@ test.describe("landing", () => {
 
 test.describe("fulfilment", () => {
   test("an order goes from paid to delivered while the customer follows along, then reviews it", async ({ newProduct,
+    warehousePage: warehouse,
     adminPage: page,
     shopperPage: shopper,
     browser,
@@ -106,14 +143,14 @@ test.describe("fulfilment", () => {
     const product = await newProduct();
     const number = await placePaidOrder(api, account, product.id);
 
-    // --- админ захиалгыг илгээнэ ---
-    await page.goto(`/admin/orders?status=paid&q=${number}`);
-    await page.getByRole("link", { name: number }).click();
-    await expect(page.getByRole("heading", { level: 1, name: `Order ${number}` })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Mark as delivered" })).toHaveCount(0);
+    // --- агуулахын ажилтан захиалгыг илгээнэ ---
+    await warehouse.goto(`/admin/orders?status=paid&q=${number}`);
+    await warehouse.getByRole("link", { name: number }).click();
+    await expect(warehouse.getByRole("heading", { level: 1, name: `Order ${number}` })).toBeVisible();
+    await expect(warehouse.getByRole("button", { name: "Mark as delivered" })).toHaveCount(0);
 
-    await page.getByRole("button", { name: "Mark as shipped" }).click();
-    const dialog = page.getByRole("dialog", { name: "Mark as shipped" });
+    await warehouse.getByRole("button", { name: "Mark as shipped" }).click();
+    const dialog = warehouse.getByRole("dialog", { name: "Mark as shipped" });
     await dialog.getByRole("button", { name: "Mark as shipped" }).click();
     await expect(dialog.getByText("Enter the carrier")).toBeVisible();
     await expect(dialog.getByText("Enter the tracking number")).toBeVisible();
@@ -121,11 +158,11 @@ test.describe("fulfilment", () => {
     await dialog.getByLabel("Tracking number").fill("E2E 0146 1234");
     await dialog.getByRole("button", { name: "Mark as shipped" }).click();
 
-    const shipment = page.getByRole("region", { name: "Shipment" });
+    const shipment = warehouse.getByRole("region", { name: "Shipment" });
     await expect(shipment).toContainText("DHL");
     await expect(shipment).toContainText("E2E 0146 1234");
-    await expect(page.getByRole("button", { name: "Mark as delivered" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Mark as shipped" })).toHaveCount(0);
+    await expect(warehouse.getByRole("button", { name: "Mark as delivered" })).toBeVisible();
+    await expect(warehouse.getByRole("button", { name: "Mark as shipped" })).toHaveCount(0);
 
     // --- худалдан авагч захиалга хаана явааг харна ---
     await shopper.goto(`/account/orders/${number}`);
@@ -135,10 +172,11 @@ test.describe("fulfilment", () => {
     await expect(shopper.getByRole("link", { name: /Write a review/ })).toHaveCount(0);
 
     // --- хүргэгдсэн: одоо сэтгэгдэл бичиж болно ---
-    await page.getByRole("button", { name: "Mark as delivered" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Mark as delivered" }).click();
-    await expect(page.getByRole("button", { name: "Refund" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Mark as delivered" })).toHaveCount(0);
+    await warehouse.getByRole("button", { name: "Mark as delivered" }).click();
+    await warehouse.getByRole("dialog").getByRole("button", { name: "Mark as delivered" }).click();
+    // Буцаалт нь админых: агуулахын ажилтан харахгүй.
+    await expect(warehouse.getByRole("button", { name: "Refund" })).toHaveCount(0);
+    await expect(warehouse.getByRole("button", { name: "Mark as delivered" })).toHaveCount(0);
     expect((await orderOf(api, account, number)).events.map((e) => e.type)).toEqual(["placed", "paid", "shipped", "delivered"]);
 
     await shopper.reload();
@@ -155,7 +193,7 @@ test.describe("fulfilment", () => {
     await expect(shopper.getByRole("form", { name: "Write a review" })).toHaveCount(0);
 
     // --- зочин үүнийг харна, үнэлгээ нь хуудасны structured data-д орсон ---
-    const visitor = await (await browser.newContext()).newPage();
+    const visitor = await (await browser.newContext({ storageState: ENGLISH })).newPage();
     await visitor.goto(`/products/${product.id}`);
     const reviews = visitor.getByRole("region", { name: "Customer reviews" });
     await expect(reviews.getByRole("heading", { name: "Fits well" })).toBeVisible();
@@ -196,7 +234,7 @@ test.describe("fulfilment", () => {
     });
     expect(posted.status()).toBe(201);
 
-    const visitor = await (await browser.newContext()).newPage();
+    const visitor = await (await browser.newContext({ storageState: ENGLISH })).newPage();
     await visitor.goto(`/products?q=${encodeURIComponent(product.name)}`);
     const card = visitor.getByRole("article").filter({ hasText: product.name });
     await expect(card.getByRole("img", { name: "4 out of 5 stars" })).toBeVisible();
@@ -315,6 +353,9 @@ test.describe("running the shop", () => {
     await page.getByRole("navigation", { name: "Period" }).getByRole("link", { name: "7 days" }).click();
     await expect(page).toHaveURL(/\/admin\?days=7$/);
     await expect(page.getByRole("img", { name: /Daily revenue over the last 7 days/ })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Order funnel" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Operations" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Recent staff activity" })).toBeVisible();
     await page.getByText("Show the figures as a table").click();
     await expect(page.getByRole("table", { name: /Revenue and orders for each day/ }).getByRole("row")).toHaveCount(8);
   });
@@ -339,27 +380,63 @@ test.describe("running the shop", () => {
     expect(allowed.status()).toBe(200);
   });
 
-  test("an administrator sets the stock of a product", async ({ newProduct, adminPage: page, api }) => {
+  test("a stock change on the warehouse board shows up in the administrator's activity log", async ({
+    newProduct,
+    warehousePage: page,
+    adminPage: admin,
+    api,
+  }) => {
+    const adminAccount = await adminSession(api);
+    const product = await newProduct({ stock: 2 });
+
+    await page.goto("/admin");
+    const alert = page.getByRole("region", { name: "Stock alerts" }).getByRole("listitem").filter({ hasText: product.name });
+    await alert.getByLabel(`Set stock for ${product.name}`).fill("25");
+    await alert.getByRole("button", { name: "Save" }).click();
+    await expect.poll(() => stockOf(api, adminAccount, product.id)).toBe(25);
+    await expect(page.getByRole("region", { name: "My recent activity" })).toContainText("2 → 25");
+
+    await admin.goto("/admin/activity?action=product.stock");
+    const row = admin.getByRole("row").filter({ hasText: "2 → 25" });
+    await expect(row).toContainText("Set stock");
+    await expect(row.getByRole("link", { name: `Product #${product.id}` })).toBeVisible();
+  });
+
+  test("an administrator downloads the orders and the period as CSV", async ({ adminPage: page }) => {
+    await page.goto("/admin/orders");
+    const orders = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download CSV" }).click();
+    expect((await orders).suggestedFilename()).toBe("angel-orders.csv");
+
+    await page.goto("/admin");
+    const stats = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download CSV" }).click();
+    expect((await stats).suggestedFilename()).toMatch(/^angel-stats-/);
+  });
+
+  test("a warehouse worker sets the stock of a product and finds it again under Low stock", async ({ newProduct, warehousePage: page, api }) => {
     const admin = await adminSession(api);
     const product = await newProduct({ stock: 20 });
 
-    await page.goto(`/admin/inventory?q=${encodeURIComponent(product.name)}`);
-    const units = page.getByLabel(`Units in stock of ${product.name}`);
-    await expect(units).toHaveValue("20");
-    await units.fill("3");
-    await page.getByRole("form", { name: `Stock of ${product.name}` }).getByRole("button", { name: "Save" }).click();
+    await page.goto(`/admin/products/${product.id}`);
+    const stock = page.getByLabel("Stock", { exact: true });
+    await expect(stock).toHaveValue("20");
+    await stock.fill("3");
+    await page.getByRole("button", { name: "Save changes" }).click();
     await expect.poll(() => stockOf(api, admin, product.id)).toBe(3);
+    // The storefront says only a few are left, without the exact number.
+    const few = await (await api.get(`${API_URL}/api/v1/products/${product.id}`)).json();
+    expect(few.low_stock).toBe(true);
 
-    await page.getByRole("navigation", { name: "Stock level" }).getByRole("link", { name: "Low stock" }).click();
-    await expect(page.getByLabel(`Units in stock of ${product.name}`)).toHaveValue("3");
+    await page.goto(`/admin/products?stock=low&q=${encodeURIComponent(product.name)}`);
+    await expect(page.getByRole("combobox", { name: "Stock level" })).toHaveValue("low");
+    await expect(page.getByText(product.name).first()).toBeVisible();
 
-    await page.getByLabel(`Units in stock of ${product.name}`).fill("0");
-    await page.getByRole("form", { name: `Stock of ${product.name}` }).getByRole("button", { name: "Save" }).click();
+    await page.goto(`/admin/products/${product.id}`);
+    await page.getByLabel("Stock", { exact: true }).fill("0");
+    await page.getByRole("button", { name: "Save changes" }).click();
     await expect.poll(() => stockOf(api, admin, product.id)).toBe(0);
     const storefront = await (await api.get(`${API_URL}/api/v1/products/${product.id}`)).json();
     expect(storefront.in_stock).toBe(false);
-
-    await page.getByRole("navigation", { name: "Stock level" }).getByRole("link", { name: "Sold out" }).click();
-    await expect(page.getByRole("table").getByText("Sold out")).toBeVisible();
   });
 });

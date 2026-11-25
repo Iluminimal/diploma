@@ -12,12 +12,13 @@ describe("DeliveryInfo", () => {
     stubApi({ "GET /api/v1/checkout/shipping-methods": { body: methods } });
     renderWithQuery(<DeliveryInfo />);
 
-    expect(await screen.findByText("Standard shipping")).toBeInTheDocument();
-    expect(screen.getByText(/3-5 business days/)).toBeInTheDocument();
-    expect(screen.getByText("$4.99")).toBeInTheDocument();
-    expect(screen.getByText(/free over/)).toHaveTextContent("free over $100");
-    expect(screen.getByText("Express shipping")).toBeInTheDocument();
-    expect(screen.getByText("$12.99")).toBeInTheDocument();
+    expect(await screen.findByText("Standard delivery")).toBeInTheDocument();
+    expect(screen.getByText(/1-2 business days/)).toBeInTheDocument();
+    expect(screen.getByText("₮5,000")).toBeInTheDocument();
+    expect(screen.getByText(/free over/)).toHaveTextContent("free over ₮150,000");
+    expect(screen.getByText("Express delivery")).toBeInTheDocument();
+    expect(screen.getByText("₮12,000")).toBeInTheDocument();
+    expect(screen.getByText("Store pickup")).toBeInTheDocument();
   });
 
   it("falls back to a pointer to checkout when the prices cannot be loaded", async () => {

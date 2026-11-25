@@ -1,6 +1,7 @@
 "use client";
 
 import { SlidersHorizontal } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useSwipeDismiss } from "@/components/ui/use-swipe-dismiss";
@@ -35,6 +36,7 @@ export function MobileFiltersSheet({
   showCategories?: boolean;
   groups?: FilterGroup[];
 }) {
+  const t = useTranslations("catalog");
   const [open, setOpen] = useState(defaultOpen ?? false);
   const { apply } = useListingNavigation(query);
   const count = activeFilterCount(query);
@@ -45,14 +47,14 @@ export function MobileFiltersSheet({
       <SheetTrigger asChild>
         <Button variant="outline" size="lg" className="lg:hidden">
           <SlidersHorizontal />
-          Filters{count > 0 && ` (${count})`}
+          {count > 0 ? t("filtersCount", { count }) : t("filters")}
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="max-h-[88dvh] gap-0 rounded-t-3xl" {...swipe}>
         <SheetHeader className="touch-none">
           <span aria-hidden className="bg-muted-foreground/30 mx-auto mb-2 h-1 w-10 rounded-full" />
-          <SheetTitle>Filters</SheetTitle>
-          <SheetDescription className="sr-only">Narrow down the products shown.</SheetDescription>
+          <SheetTitle>{t("filters")}</SheetTitle>
+          <SheetDescription className="sr-only">{t("filtersDescription")}</SheetDescription>
         </SheetHeader>
         <div className="overflow-y-auto px-4 pb-4">
           <FilterFields
@@ -66,7 +68,7 @@ export function MobileFiltersSheet({
         </div>
         <SheetFooter className="border-border border-t">
           <Button size="lg" className="h-11 w-full" onClick={() => setOpen(false)}>
-            Show results
+            {t("showResults")}
           </Button>
         </SheetFooter>
       </SheetContent>

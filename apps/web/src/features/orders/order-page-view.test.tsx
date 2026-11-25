@@ -96,3 +96,22 @@ describe("OrderPageView", () => {
     expect(await screen.findByText(/couldn't find that order/)).toBeInTheDocument();
   });
 });
+
+describe("OrderPageView, a payment that is still open", () => {
+  it("lets the shopper pay or cancel from the order page", async () => {
+    stubApi({
+      "GET /api/v1/orders/LK-ABCD2345": {
+        body: makeOrder({
+          status: "pending",
+          expires_at: new Date(Date.now() + 20 * 60_000).toISOString(),
+          qpay: { qr_image: "iVBORw0KGgo=", qr_text: "0002", short_url: "https://s.qpay.mn/x", banks: [] },
+          charge: { currency: "MNT", amount_minor: 10_500_000 },
+        }),
+      },
+    });
+    renderWithQuery(<OrderPageView number="LK-ABCD2345" />);
+
+    expect(await screen.findByRole("img", { name: /QPay QR code/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Cancel this order" })).toBeInTheDocument();
+  });
+});

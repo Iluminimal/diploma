@@ -1,8 +1,8 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useAuth } from "@/features/auth/auth-store";
 import { respond, problem, stubApi } from "@/test/api-mock";
+import { signInAs } from "@/test/auth";
 import { makeAdminOrder } from "@/test/fixtures";
 import { renderWithQuery } from "@/test/render";
 import { availableActions, OrderActions } from "./order-actions";
@@ -12,13 +12,8 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }), use
 const NUMBER = "LK-ABCD2345";
 const route = (action: string) => `POST /api/v1/admin/orders/${NUMBER}/${action}`;
 
-beforeEach(() => {
-  useAuth.setState({
-    status: "signedIn",
-    accessToken: "t",
-    user: { id: 1, email: "a@b.co", full_name: "Admin", role: "admin", avatar_url: null, has_password: true, phone: null, email_verified: false, phone_verified: false, providers: [] as string[] },
-  });
-});
+// Илгээх, хүргэх нь агуулахын ажилтных, цуцлах, буцаах нь админых.
+beforeEach(() => signInAs("warehouse"));
 afterEach(() => vi.unstubAllGlobals());
 
 describe("availableActions", () => {
@@ -30,7 +25,23 @@ describe("availableActions", () => {
     ["cancelled", { ship: false, deliver: false, cancel: false, refund: false }],
     ["refunded", { ship: false, deliver: false, cancel: false, refund: false }],
   ] as const)("for a %s order", (status, expected) => {
-    expect(availableActions(status)).toEqual(expected);
+    expect({
+      ...availableActions(status, "warehouse"),
+      ...Object.fromEntries(
+        Object.entries(availableActions(status, "admin")).filter(([action]) => action === "cancel" || action === "refund"),
+      ),
+    }).toEqual(expected);
+  });
+
+  it("gives each action to one role only", () => {
+    expect(availableActions("paid", "warehouse")).toEqual({ ship: true, deliver: false, cancel: false, refund: false });
+    expect(availableActions("paid", "admin")).toEqual({ ship: false, deliver: false, cancel: false, refund: true });
+    expect(availableActions("pending", "admin").cancel).toBe(true);
+    expect(availableActions("pending", "warehouse").cancel).toBe(false);
+    expect(availableActions("shipped", "warehouse").deliver).toBe(true);
+    expect(availableActions("shipped", "admin").deliver).toBe(false);
+    expect(availableActions("paid", "customer")).toEqual({ ship: false, deliver: false, cancel: false, refund: false });
+    expect(availableActions("paid", undefined)).toEqual({ ship: false, deliver: false, cancel: false, refund: false });
   });
 });
 
@@ -42,13 +53,22 @@ describe("OrderActions", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
-  it("offers shipping and refunding for a paid order", () => {
+  it("offers a warehouse worker shipping, but no refund, for a paid order", () => {
     stubApi({});
     renderWithQuery(<OrderActions order={makeAdminOrder({ status: "paid" })} />);
 
     expect(screen.getByRole("button", { name: "Mark as shipped" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Refund" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Refund" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancel order" })).not.toBeInTheDocument();
+  });
+
+  it("offers an administrator the refund, but no shipping, for a paid order", () => {
+    signInAs("admin");
+    stubApi({});
+    renderWithQuery(<OrderActions order={makeAdminOrder({ status: "paid" })} />);
+
+    expect(screen.getByRole("button", { name: "Refund" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mark as shipped" })).not.toBeInTheDocument();
   });
 
   describe("shipping", () => {
@@ -117,6 +137,8 @@ describe("OrderActions", () => {
   });
 
   describe("cancelling", () => {
+    beforeEach(() => signInAs("admin"));
+
     it("cancels an unpaid order with a note", async () => {
       const api = stubApi({ [route("cancel")]: respond(makeAdminOrder({ status: "cancelled" })) });
       renderWithQuery(<OrderActions order={makeAdminOrder({ status: "pending", payment: null })} />);
@@ -143,6 +165,8 @@ describe("OrderActions", () => {
   });
 
   describe("refunding", () => {
+    beforeEach(() => signInAs("admin"));
+
     it("shows what will be refunded and needs a reason", async () => {
       const api = stubApi({});
       renderWithQuery(<OrderActions order={makeAdminOrder({ status: "delivered" })} />);

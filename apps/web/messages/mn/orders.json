@@ -1,0 +1,98 @@
+{
+  "status": {
+    "paid": "Төлөгдсөн",
+    "pending": "Төлбөр хүлээгдэж байна",
+    "shipped": "Илгээсэн",
+    "delivered": "Хүргэгдсэн",
+    "cancelled": "Цуцлагдсан",
+    "refunded": "Буцаагдсан"
+  },
+  "progress": {
+    "label": "Захиалгын явц",
+    "placed": "Захиалсан",
+    "notYet": ", хараахан болоогүй",
+    "current": ", одоогийн алхам",
+    "done": ", хийгдсэн"
+  },
+  "events": {
+    "history": "Захиалгын түүх",
+    "placed": "Захиалга хийгдсэн",
+    "paid": "Төлбөр хүлээн авсан",
+    "shipped": "Илгээсэн",
+    "withCarrier": "Тээвэрлэгч: {carrier}",
+    "tracking": "Илгээмжийн дугаар: {number}",
+    "delivered": "Хүргэгдсэн",
+    "cancelled": "Цуцлагдсан",
+    "refunded": "Төлбөр буцаагдсан",
+    "refundedAuto": "Төлбөр автоматаар буцаагдсан",
+    "restocked": "Бараа үлдэгдэлд буцаагдсан",
+    "notRestocked": "Бараа үлдэгдэлд буцаагдаагүй",
+    "note": "Тэмдэглэл",
+    "cancelReasons": {
+      "expired": "Хугацаандаа төлөөгүй",
+      "admin": "Дэлгүүр цуцалсан",
+      "amount_mismatch": "Төлсөн дүн таарсангүй",
+      "payment_canceled": "Төлбөр цуцлагдсан",
+      "replaced": "Шинэ захиалгаар солигдсон",
+      "payment_setup_failed": "Төлбөр эхлүүлж чадсангүй",
+      "customer": "Та өөрөө цуцалсан"
+    },
+    "refundReasons": {
+      "order_cancelled": "Захиалга цуцлагдсаны дараа төлбөр орж ирсэн",
+      "amount_mismatch": "Төлсөн дүн захиалгатай таарсангүй"
+    }
+  },
+  "detail": {
+    "placed": "Захиалсан огноо: {date}",
+    "items": "Энэ захиалгын бараа",
+    "lineMeta": "Тоо ширхэг {quantity} · Нэгж үнэ {price}",
+    "lineMetaSize": "Хэмжээ {size} · Тоо ширхэг {quantity} · Нэгж үнэ {price}",
+    "writeReview": "Сэтгэгдэл бичих",
+    "writeReviewFor": "({name})",
+    "delivery": "Хүргэлт",
+    "confirmationSent": "Баталгааг {email} хаяг руу илгээсэн",
+    "payment": "Төлбөрийн дүн",
+    "subtotal": "Дэд дүн",
+    "shipping": "Хүргэлт",
+    "free": "Үнэгүй",
+    "total": "Нийт",
+    "methods": {
+      "standard": "Энгийн хүргэлт",
+      "express": "Шуурхай хүргэлт",
+      "pickup": "Дэлгүүрээс авах"
+    }
+  },
+  "page": {
+    "allOrders": "Бүх захиалга",
+    "order": "Захиалга №{number}",
+    "notFound": "Таны бүртгэлээс энэ захиалга олдсонгүй.",
+    "trackingWith": "Илгээмж хянах ({carrier}): ",
+    "reorder": "Дахин захиалах",
+    "reordering": "Нэмж байна…",
+    "reordered": "{count} бараа сагсанд нэмэгдлээ.",
+    "reorderNothing": "Энэ захиалгын нэг ч барааг сагсанд нэмж чадсангүй.",
+    "reorderSkipped": {
+      "unavailable": "{name} зарагдахаа больсон.",
+      "out_of_stock": "{name} дууссан байна.",
+      "size": "{name} тэр хэмжээгээр байхгүй болсон.",
+      "bag_full": "{name} багтсангүй: сагс дүүрсэн байна.",
+      "reduced": "{name}: байгаа үлдэгдлээр л нэмэгдлээ."
+    },
+    "tracking": "Илгээмж хянах: ",
+    "history": "Захиалгын түүх",
+    "loading": "Захиалгыг ачаалж байна"
+  },
+  "list": {
+    "loading": "Захиалгуудыг ачаалж байна",
+    "tryAgain": "Дахин оролдох",
+    "none": "Одоогоор захиалга алга",
+    "noneHint": "Захиалга өгмөгц энд харагдана.",
+    "startShopping": "Бараа үзэх",
+    "orders": "Захиалгууд",
+    "meta": "{date} · {count} бараа",
+    "pages": "Захиалгын хуудаснууд",
+    "newer": "Шинэ захиалгууд",
+    "older": "Өмнөх захиалгууд",
+    "pageOf": "{page}/{pages} хуудас"
+  }
+}

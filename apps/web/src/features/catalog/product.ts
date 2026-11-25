@@ -1,8 +1,11 @@
+import { BASE_CURRENCY, formatMoney } from "@/i18n/currency";
+import type { Vocab } from "@/i18n/vocab";
 import type { components } from "@/lib/api/client";
 
 export type Product = components["schemas"]["ProductOut"];
 export type SearchHit = components["schemas"]["SearchHit"];
 export type SearchResponse = components["schemas"]["SearchResponse"];
+export type AppliedFilter = components["schemas"]["AppliedFilter"];
 export type CatalogFilterOptions = components["schemas"]["CatalogFilters"];
 export type CategoryNode = components["schemas"]["CategoryNode"];
 
@@ -14,15 +17,14 @@ export function productPath(product: Pick<Product, "id" | "slug">): string {
   return `/products/${product.id}/${product.slug}`;
 }
 
-export function formatPrice(cents: number, currency = "USD", locale = "en-US"): string {
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
-  }).format(cents / 100);
+/** Admin, захиалгын түүхэд: `useFormat().price`-тэй ижил дүрслэл, гэхдээ hook-гүй. */
+export function formatPrice(cents: number, currency: string = BASE_CURRENCY, locale = "en-US"): string {
+  return formatMoney(cents, currency, locale);
 }
 
 /** Бүтээгдэхүүний нэрийн доорх нэг мөрийн тайлбар, жишээ нь "Blue · Kurtas". */
-export function productSubtitle(p: Pick<Product, "article_type" | "base_colour">): string {
-  return [p.base_colour, p.article_type].filter(Boolean).join(" · ");
+export function productSubtitle(p: Pick<Product, "article_type" | "base_colour">, vocab: Vocab): string {
+  return [p.base_colour && vocab.colour(p.base_colour), p.article_type && vocab.category(p.article_type)]
+    .filter(Boolean)
+    .join(" · ");
 }

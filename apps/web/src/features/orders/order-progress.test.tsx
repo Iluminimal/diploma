@@ -1,13 +1,17 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { OrderProgress, orderSteps } from "./order-progress";
+import { translatorFor } from "@/test/intl";
+import type { OrdersTranslator } from "./orders-translator";
+
+const t = translatorFor("orders") as unknown as OrdersTranslator;
 
 const base = { created_at: "2026-10-01T10:00:00Z" };
 const paid = { ...base, paid_at: "2026-10-01T10:05:00Z" };
 const shipped = { ...paid, shipped_at: "2026-10-02T09:00:00Z" };
 const delivered = { ...shipped, delivered_at: "2026-10-04T15:00:00Z" };
 
-const labels = (order: Parameters<typeof orderSteps>[0]) => orderSteps(order).map((step) => `${step.label}:${step.done}`);
+const labels = (order: Parameters<typeof orderSteps>[0]) => orderSteps(order, t).map((step) => `${step.label}:${step.done}`);
 
 describe("orderSteps", () => {
   it("lists the four steps and which have happened", () => {

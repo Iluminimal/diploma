@@ -1,40 +1,51 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { geistSans } from "@/features/home/fonts";
 import { Departments } from "@/features/home/departments";
 import { Hero } from "@/features/home/hero";
 import { PhotoTile } from "@/features/home/photo-tile";
 import { RecentlyViewed } from "@/features/home/recently-viewed";
-import { NewArrivals } from "@/features/home/shelves";
+import { NewArrivals, PopularNow } from "@/features/home/shelves";
 import { JsonLdScripts } from "@/features/seo/json-ld-scripts";
 import { siteJsonLd } from "@/features/seo/site-json-ld";
 
-const description = "Upload a photo of something you love and find clothing that looks like it.";
-
-export const metadata: Metadata = {
-  alternates: { canonical: "/" },
-  openGraph: { title: "Angel: shop by photo", description, url: "/" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("home.meta");
+  return {
+    title: { absolute: t("title") },
+    description: t("description"),
+    alternates: { canonical: "/" },
+    openGraph: { title: t("title"), description: t("description"), url: "/" },
+  };
+}
 
 // Хүсэлт бүрт render хийнэ: хуудас каталогийн API-г уншдаг бөгөөд build үед (CI, Docker) API
 // байдаггүй. API client-ийн fetch cache (`revalidate`) эдгээрийг хямд байлгана.
 export const dynamic = "force-dynamic";
 
 /**
- * Нүүр хуудас apple.com-ийн загвартай: tile-ууд ирмэг хүртэл, 12px зайтай, тус бүр гарчиг, мөр,
- * товч, зурагтай. Дэлгүүрт хэрэгтэй зүйл л байна: санаа (зургаар хайх), department-үүд, шинэ бараа,
- * хэрэглэгч сүүлд үзсэн зүйл рүү буцах зам.
+ * Нүүр хуудас (GitHub хэв, `.gh`: цайвар анхдагч, Dark үед хар-цэнхэр, нарийн хүрээ, Geist): hero (үг бүр
+ * дараалан гарах гарчиг, зургаар хайхын demo), эрэлттэй бараа, гурван department card, зургаар хайх түүх
+ * (scroll-той хамт өрнөх алхмууд), шинэ бараа, сүүлд үзсэн. Хөдөлгөөн бүхэлдээ CSS
+ * (`styles/effects.css`); hero-ийн агуулга хэзээ ч нуугддаггүй (LCP). Токен: `styles/github.css`.
  */
 export default function Home() {
   return (
-    <div className="space-y-3">
+    <div className={`gh ${geistSans.variable}`}>
       <JsonLdScripts nodes={siteJsonLd()} />
-      <Suspense fallback={<div className="min-h-[36rem] md:min-h-[43rem]" />}>
+      <Suspense fallback={<div className="min-h-[50rem] lg:min-h-[38rem]" />}>
         <Hero />
       </Suspense>
       <Suspense fallback={null}>
+        <PopularNow />
+      </Suspense>
+      <Suspense fallback={<div className="min-h-[40rem]" />}>
         <Departments />
       </Suspense>
-      <PhotoTile />
+      <Suspense fallback={null}>
+        <PhotoTile />
+      </Suspense>
       <Suspense fallback={null}>
         <NewArrivals />
       </Suspense>

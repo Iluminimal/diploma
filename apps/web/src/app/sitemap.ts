@@ -8,7 +8,8 @@ import { categoryEntries, productEntries, sitemapIds, staticEntries } from "@/fe
 export const dynamic = "force-dynamic";
 
 export async function generateSitemaps() {
-  return sitemapIds(await countProducts());
+  // Docker/CI build үед API байхгүй: бүтэлгүйтвэл нэг файл (id 0) гэж үзнэ. Route нь dynamic тул дараагийн id-ууд хүсэлтээр шийдэгдэнэ.
+  return sitemapIds(await countProducts().catch(() => 0));
 }
 
 export default async function sitemap(props: { id: Promise<string> }): Promise<MetadataRoute.Sitemap> {

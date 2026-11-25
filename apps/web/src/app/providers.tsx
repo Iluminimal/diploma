@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import dynamic from "next/dynamic";
 import { AuthBootstrap } from "@/features/auth/auth-bootstrap";
+import { PendingWishlistReplay } from "@/features/wishlist/pending-wishlist-replay";
 import { useState, type ReactNode } from "react";
 
 // Toast ховор бөгөөд үйлдлийн дараа гарна, анхны paint-д хэзээ ч байхгүй: renderer-ийг түүний дараа
@@ -24,6 +25,7 @@ export function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
         <AuthBootstrap />
+        <PendingWishlistReplay />
         {children}
         <Toaster position="bottom-center" />
       </QueryClientProvider>

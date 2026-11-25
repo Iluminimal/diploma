@@ -1,6 +1,7 @@
 "use client";
 
 import type { CountryCode } from "libphonenumber-js/min";
+import { useTranslations } from "next-intl";
 import { FloatingLabel, floatingInputClass } from "@/components/forms/floating-label";
 import { cn } from "@/lib/utils";
 import { CountrySelect } from "./phone-input";
@@ -25,6 +26,7 @@ export function IdentifierField({
   onRegionChange: (region: CountryCode) => void;
   error?: string;
 }) {
+  const t = useTranslations("auth.identifier");
   return (
     <div className="space-y-2">
       <div className={cn("group relative", error && "animate-shake")}>
@@ -32,7 +34,7 @@ export function IdentifierField({
           <CountrySelect
             value={region}
             onChange={onRegionChange}
-            className="text-foreground focus-visible:ring-ring/50 absolute top-2 bottom-2 left-2 z-10 w-[6.5rem] rounded-lg bg-transparent px-2 text-base outline-none focus-visible:ring-3"
+            className="text-foreground focus-visible:ring-ring/50 absolute top-2 bottom-2 left-2 z-10 w-[6.5rem] rounded-lg bg-transparent px-2 type-body outline-none focus-visible:ring-3"
           />
         )}
         <input
@@ -55,11 +57,11 @@ export function IdentifierField({
           className={cn(floatingInputClass, phone && "pl-[7.75rem]")}
         />
         <FloatingLabel htmlFor="identifier" className={phone ? "left-[7.75rem]" : undefined}>
-          Email or phone number
+          {t("label")}
         </FloatingLabel>
       </div>
       {error && (
-        <p id="identifier-error" role="alert" className="text-destructive animate-in fade-in slide-in-from-top-1 text-sm duration-300">
+        <p id="identifier-error" role="alert" className="text-destructive animate-in fade-in slide-in-from-top-1 type-caption duration-300">
           {error}
         </p>
       )}

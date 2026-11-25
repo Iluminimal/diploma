@@ -2,7 +2,7 @@ import type { ShippingMethodId, ShippingMethods } from "./checkout-api";
 
 /**
  * Хуудасны шууд нийт дүнд зориулж хүргэлт хэд болохыг бодно. Жинхэнэ дүнг захиалга үүсгэхэд сервер
- * шийднэ; энэ нь түүний дүрмийг давтана (standard нь босгоос дээш үнэгүй).
+ * шийднэ; энэ нь түүний дүрмийг давтана (standard нь босгоос дээш үнэгүй, авах цэг үргэлж үнэгүй).
  */
 export function shippingCostFor(methods: ShippingMethods, id: ShippingMethodId, subtotalCents: number): number {
   const method = methods.items.find((m) => m.id === id);

@@ -143,7 +143,7 @@ test("the camera button inside the search bar opens a photo search", async ({ pa
   });
 
   await expect(page).toHaveURL(/\/search$/);
-  await expect(page.getByRole("status").filter({ hasText: /similar item/ })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: /similar item|garments? found/ })).toBeVisible();
 });
 
 test("the search box suggests categories and remembers searches", async ({ page, api }) => {

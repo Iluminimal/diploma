@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Button } from "@/components/ui/button";
 import { getAuthProviders } from "./providers";
 
@@ -35,13 +36,13 @@ export function googleStartHref(next: string): string {
  * ажиллана. Шинэ хэрэглэгчийн бүртгэлийг Google үүсгэнэ.
  */
 export async function GoogleSignIn({ next }: { next: string }) {
-  const { google } = await getAuthProviders();
+  const [{ google }, t] = await Promise.all([getAuthProviders(), getTranslations("auth.google")]);
   if (!google) return null;
   return (
     <div className="space-y-5">
-      <div className="text-muted-foreground flex items-center gap-3 text-xs" role="separator">
+      <div className="text-muted-foreground flex items-center gap-3 type-fine" role="separator">
         <span className="bg-border h-px flex-1" />
-        or
+        {t("or")}
         <span className="bg-border h-px flex-1" />
       </div>
       <Button asChild variant="outline" size="lg" className="w-full">
@@ -49,7 +50,7 @@ export async function GoogleSignIn({ next }: { next: string }) {
            оролдох байсан. */}
         <a href={googleStartHref(next)}>
           <GoogleMark />
-          Continue with Google
+          {t("continue")}
         </a>
       </Button>
     </div>

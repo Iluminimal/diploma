@@ -1,6 +1,7 @@
 "use client";
 
 import { Camera, ImagePlus, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRef, useState, type DragEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ function prefersNativeCamera(): boolean {
 }
 
 export function ImageDropzone({ onPicked, listenForPaste = false, className, size = "default" }: Props) {
+  const t = useTranslations("search.dropzone");
   const { pick, busy, error } = useImageInput();
   const fileRef = useRef<HTMLInputElement>(null);
   const captureRef = useRef<HTMLInputElement>(null);
@@ -79,26 +81,28 @@ export function ImageDropzone({ onPicked, listenForPaste = false, className, siz
         )}
       >
         <div className="bg-background grid size-14 place-items-center rounded-full">
-          {busy ? <Loader2 className="size-6 animate-spin" aria-label="Preparing photo" /> : <ImagePlus className="size-6" />}
+          {busy ? <Loader2 className="size-6 animate-spin" aria-label={t("preparing")} /> : <ImagePlus className="size-6" />}
         </div>
         <div className="space-y-1.5">
-          <p className="type-heading">{dragging ? "Drop to search" : "Drop a photo here"}</p>
+          <p className="type-heading">{dragging ? t("dropToSearch") : t("dropHere")}</p>
           <p className="text-muted-foreground type-caption">
-            or paste one with <kbd className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-mono text-xs">⌘/Ctrl V</kbd>
-            {size !== "compact" && ". JPEG, PNG, WebP or iPhone HEIC."}
+            {t.rich("paste", {
+              kbd: (chunks) => <kbd className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-mono type-fine">{chunks}</kbd>,
+            })}
+            {size !== "compact" && t("formats")}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Button size="lg" onClick={() => fileRef.current?.click()} disabled={busy}>
-            <ImagePlus /> Choose a photo
+            <ImagePlus /> {t("choose")}
           </Button>
           <Button variant="bordered" size="lg" onClick={takePhoto} disabled={busy}>
-            <Camera /> Take a photo
+            <Camera /> {t("take")}
           </Button>
         </div>
-        <p className="text-muted-foreground type-fine">Your photo is used only for this search and is never stored.</p>
+        <p className="text-muted-foreground type-fine">{t("private")}</p>
         {error && (
-          <p role="alert" className="text-destructive text-sm">
+          <p role="alert" className="text-destructive type-caption">
             {error}
           </p>
         )}
@@ -110,7 +114,7 @@ export function ImageDropzone({ onPicked, listenForPaste = false, className, siz
         accept={ACCEPT}
         className="sr-only"
         tabIndex={-1}
-        aria-label="Choose a photo"
+        aria-label={t("choose")}
         onChange={(e) => {
           void accept(e.target.files?.[0]);
           e.target.value = "";
@@ -123,7 +127,7 @@ export function ImageDropzone({ onPicked, listenForPaste = false, className, siz
         capture="environment"
         className="sr-only"
         tabIndex={-1}
-        aria-label="Take a photo with the camera"
+        aria-label={t("takeWithCamera")}
         onChange={(e) => {
           void accept(e.target.files?.[0]);
           e.target.value = "";

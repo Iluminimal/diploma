@@ -1,8 +1,9 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useFormat } from "@/i18n/use-format";
 import { useQuery } from "@tanstack/react-query";
 import { PackageCheck, Truck } from "lucide-react";
-import { Price } from "@/components/product/price";
 import { fetchShippingMethods } from "@/features/checkout/checkout-api";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
@@ -13,9 +14,11 @@ import { cn } from "@/lib/utils";
  * зөрөхгүй. Мэдэгдэх хүртэл юу ч зурахгүй.
  */
 export function FreeShippingProgress({ subtotalCents, className }: { subtotalCents: number; className?: string }) {
+  const t = useTranslations("cart");
+  const format = useFormat();
   const { data } = useQuery({
-    queryKey: queryKeys.shippingMethods,
-    queryFn: fetchShippingMethods,
+    queryKey: queryKeys.shippingMethods(),
+    queryFn: () => fetchShippingMethods(),
     staleTime: 600_000,
   });
   if (!data || data.free_shipping_threshold_cents <= 0) return null;
@@ -27,20 +30,22 @@ export function FreeShippingProgress({ subtotalCents, className }: { subtotalCen
 
   return (
     <div className={cn("space-y-2", className)}>
-      <p role="status" className="flex items-center gap-2 text-sm">
+      <p role="status" className="flex items-center gap-2 type-caption">
         <Icon aria-hidden className={cn("size-4 shrink-0", unlocked ? "text-success" : "text-muted-foreground")} />
         {unlocked ? (
-          <span className="font-medium">You&apos;ve unlocked free shipping</span>
+          <span className="font-medium">{t("freeUnlocked")}</span>
         ) : (
           <span>
-            You&apos;re <Price cents={threshold - subtotalCents} currency={data.currency} className="font-semibold" /> away
-            from free shipping
+            {t.rich("freeAway", {
+              amount: format.price(threshold - subtotalCents, data.currency),
+              b: (chunks) => <span className="font-semibold tabular-nums">{chunks}</span>,
+            })}
           </span>
         )}
       </p>
       <div
         role="progressbar"
-        aria-label="Progress to free shipping"
+        aria-label={t("freeProgress")}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent}
@@ -49,7 +54,7 @@ export function FreeShippingProgress({ subtotalCents, className }: { subtotalCen
         <div
           className={cn(
             "h-full rounded-full transition-[width,background-color] duration-700 ease-out-expo",
-            unlocked ? "bg-success" : "bg-foreground",
+            unlocked ? "free-glow bg-success" : "bg-foreground",
           )}
           style={{ width: `${percent}%` }}
         />

@@ -10,7 +10,7 @@ export function ListingSkeleton() {
         <Skeleton className="h-5 w-24 rounded" />
       </div>
       <div className="grid gap-10 lg:grid-cols-[16rem_1fr]">
-        <Skeleton className="hidden h-96 rounded-2xl lg:block" />
+        <Skeleton className="hidden h-96 rounded-[var(--radius-tile)] lg:block" />
         <ProductGridSkeleton count={12} columns={3} />
       </div>
     </div>

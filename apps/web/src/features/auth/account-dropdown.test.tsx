@@ -23,6 +23,13 @@ describe("AccountDropdown", () => {
     expect(screen.getByRole("menuitem", { name: "Admin" })).toHaveAttribute("href", "/admin");
   });
 
+  it("takes a warehouse worker to the warehouse board", () => {
+    renderWithQuery(<AccountDropdown user={user("warehouse")} defaultOpen />);
+
+    expect(screen.getByRole("menuitem", { name: "Workspace" })).toHaveAttribute("href", "/admin");
+    expect(screen.queryByRole("menuitem", { name: "Admin" })).not.toBeInTheDocument();
+  });
+
   it("has no admin link for a customer", () => {
     renderWithQuery(<AccountDropdown user={user("customer")} defaultOpen />);
 

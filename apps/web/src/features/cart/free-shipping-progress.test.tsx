@@ -12,17 +12,17 @@ const route = { "GET /api/v1/checkout/shipping-methods": { body: methods } };
 describe("FreeShippingProgress", () => {
   it("says how far the subtotal is from free shipping and fills the bar", async () => {
     stubApi(route);
-    renderWithQuery(<FreeShippingProgress subtotalCents={6_000} />);
+    renderWithQuery(<FreeShippingProgress subtotalCents={9_000_000} />);
 
-    expect(await screen.findByText("$40")).toBeInTheDocument(); // $100 босго - $60
+    expect(await screen.findByText("₮60,000")).toBeInTheDocument(); // ₮150,000 босго - ₮90,000
     expect(screen.getByRole("status")).toHaveTextContent("away from free shipping");
     const bar = screen.getByRole("progressbar", { name: "Progress to free shipping" });
-    expect(bar).toHaveAttribute("aria-valuenow", "60");
+    expect(bar).toHaveAttribute("aria-valuenow", "60"); // 90,000 / 150,000
   });
 
   it("congratulates once the threshold is reached", async () => {
     stubApi(route);
-    renderWithQuery(<FreeShippingProgress subtotalCents={12_000} />);
+    renderWithQuery(<FreeShippingProgress subtotalCents={15_000_000} />);
 
     expect(await screen.findByText("You've unlocked free shipping")).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "100");
@@ -30,7 +30,7 @@ describe("FreeShippingProgress", () => {
 
   it("shows nothing until the threshold is known", () => {
     stubApi({ "GET /api/v1/checkout/shipping-methods": () => new Promise<never>(() => {}) });
-    renderWithQuery(<FreeShippingProgress subtotalCents={6_000} />);
+    renderWithQuery(<FreeShippingProgress subtotalCents={9_000_000} />);
 
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });

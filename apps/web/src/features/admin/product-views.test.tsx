@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useAuth } from "@/features/auth/auth-store";
+import { signInAs } from "@/test/auth";
 import { json, stubApi } from "@/test/api-mock";
 import { makeAdminCategory, makeAdminProduct } from "@/test/fixtures";
 import { renderWithQuery } from "@/test/render";
@@ -24,18 +24,14 @@ const photo = () => new File(["pixels"], "shirt.jpg", { type: "image/jpeg" });
 
 beforeEach(() => {
   push.mockClear();
-  useAuth.setState({
-    status: "signedIn",
-    accessToken: "t",
-    user: { id: 1, email: "a@b.co", full_name: "Ada", role: "admin", avatar_url: null, has_password: true, phone: null, email_verified: false, phone_verified: false, providers: [] as string[] },
-  });
+  signInAs("warehouse");
 });
 afterEach(() => vi.unstubAllGlobals());
 
-async function fillRequired(price = "49.99") {
+async function fillRequired(price = "87900") {
   await userEvent.type(screen.getByLabelText("Name"), "Linen camp shirt");
   await userEvent.selectOptions(screen.getByLabelText("Category"), "9");
-  await userEvent.type(screen.getByLabelText("Price (USD)"), price);
+  await userEvent.type(screen.getByLabelText("Price (₮)"), price);
 }
 
 describe("NewProductView", () => {
@@ -57,7 +53,7 @@ describe("NewProductView", () => {
 
     expect(await screen.findByText("Enter a name")).toBeInTheDocument();
     expect(screen.getByText("Choose a category")).toBeInTheDocument();
-    expect(screen.getByText("Enter a price like 49.99")).toBeInTheDocument();
+    expect(screen.getByText("Enter a price in whole tugrik, like 87900")).toBeInTheDocument();
     // Зураггүй байгааг бусадтай нь хамт мэдээлнэ, дараагийн оролдлогод биш.
     expect(screen.getByText("Choose a photo of the product.")).toBeInTheDocument();
     await fillRequired();
@@ -82,7 +78,7 @@ describe("NewProductView", () => {
     expect(api.calls.filter((c) => c.method === "POST")).toHaveLength(0);
   });
 
-  it("uploads the photo with the price in cents and opens the new product", async () => {
+  it("uploads the photo with the price in minor units and opens the new product", async () => {
     const created = makeAdminProduct({ id: 41 });
     const api = stubApi({
       "GET /api/v1/admin/categories": { body: categories },
@@ -93,7 +89,7 @@ describe("NewProductView", () => {
 
     await userEvent.upload(screen.getByLabelText("Photo"), photo());
     expect(screen.getByAltText("Preview of the chosen photo")).toBeInTheDocument();
-    await fillRequired("49.99");
+    await fillRequired("87900");
     await userEvent.type(screen.getByLabelText("Colour (optional)"), "Blue");
     await userEvent.click(screen.getByRole("button", { name: "Create product" }));
 
@@ -106,7 +102,7 @@ describe("NewProductView", () => {
       category_id: "9",
       gender: "Women",
       base_colour: "Blue",
-      price_cents: "4999",
+      price_cents: "8790000",
       stock_quantity: "0",
       is_active: "true",
     });
@@ -134,7 +130,7 @@ describe("NewProductView", () => {
 });
 
 describe("EditProductView", () => {
-  const product = makeAdminProduct({ id: 7, price_cents: 4999, base_colour: "Blue" });
+  const product = makeAdminProduct({ id: 7, price_cents: 8_790_000, base_colour: "Blue" });
   const routes = {
     "GET /api/v1/admin/categories": { body: categories },
     "GET /api/v1/admin/products/7": { body: product },
@@ -145,7 +141,7 @@ describe("EditProductView", () => {
     renderWithQuery(<EditProductView id={7} />);
 
     expect(await screen.findByLabelText("Name")).toHaveValue("Linen camp shirt");
-    expect(screen.getByLabelText("Price (USD)")).toHaveValue("49.99");
+    expect(screen.getByLabelText("Price (₮)")).toHaveValue("87900");
     expect(screen.getByLabelText("Stock")).toHaveValue("12");
     expect(screen.getByLabelText("Category")).toHaveValue("9");
     expect(screen.getByText("On sale")).toBeInTheDocument();
@@ -154,13 +150,13 @@ describe("EditProductView", () => {
   it("sends only details in a PATCH, clearing emptied options with null", async () => {
     const api = stubApi({
       ...routes,
-      "PATCH /api/v1/admin/products/7": { body: { ...product, price_cents: 2500 } },
+      "PATCH /api/v1/admin/products/7": { body: { ...product, price_cents: 2_500_000 } },
     });
     renderWithQuery(<EditProductView id={7} />);
-    const price = await screen.findByLabelText("Price (USD)");
+    const price = await screen.findByLabelText("Price (₮)");
 
     await userEvent.clear(price);
-    await userEvent.type(price, "25");
+    await userEvent.type(price, "25000");
     await userEvent.clear(screen.getByLabelText("Colour (optional)"));
     await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
@@ -173,7 +169,7 @@ describe("EditProductView", () => {
       season: "Fall",
       usage: "Ethnic",
       year: 2012,
-      price_cents: 2500,
+      price_cents: 2_500_000,
       stock_quantity: 12,
     });
   });
@@ -207,6 +203,18 @@ describe("EditProductView", () => {
     await waitFor(() => expect(api.count("POST /api/v1/admin/products/7/deactivate")).toBe(1));
   });
 
+  it("shows an administrator the product read-only, with no way to save, withdraw or replace the photo", async () => {
+    signInAs("admin");
+    stubApi(routes);
+    renderWithQuery(<EditProductView id={7} />);
+
+    expect(await screen.findByLabelText("Name")).toBeDisabled();
+    expect(screen.getByText("Warehouse staff change products. You can only view them.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Save changes" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Withdraw" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Replace photo" })).not.toBeInTheDocument();
+  });
+
   it("says when the product does not exist", async () => {
     stubApi({
       "GET /api/v1/admin/categories": { body: categories },
@@ -215,5 +223,26 @@ describe("EditProductView", () => {
     renderWithQuery(<EditProductView id={7} />);
 
     expect(await screen.findByText("There is no such product.")).toBeInTheDocument();
+  });
+});
+
+describe("EditProductView, when the product changes elsewhere", () => {
+  it("keeps what is being typed and refreshes the fields that were not touched", async () => {
+    let product = makeAdminProduct({ id: 7, name: "Linen shirt", stock_quantity: 5, updated_at: "2026-10-01T10:00:00Z" });
+    stubApi({
+      "GET /api/v1/admin/categories": { body: categories },
+      "GET /api/v1/admin/products/7": () => json(product),
+    });
+    const { client } = renderWithQuery(<EditProductView id={7} />);
+    const name = await screen.findByLabelText("Name");
+    await userEvent.clear(name);
+    await userEvent.type(name, "Linen camp shirt");
+
+    // Stock is changed from another panel or tab: the product is refetched.
+    product = { ...product, stock_quantity: 9, updated_at: "2026-10-02T10:00:00Z" };
+    await client.invalidateQueries();
+
+    await waitFor(() => expect(screen.getByLabelText("Stock")).toHaveValue("9"));
+    expect(screen.getByLabelText("Name")).toHaveValue("Linen camp shirt");
   });
 });

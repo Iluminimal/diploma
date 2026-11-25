@@ -1,8 +1,9 @@
 import { test, expect } from "./fixtures";
-import { placePaidOrder } from "./support/api";
+import { adminSession, placePaidOrder, warehouseSession } from "./support/api";
 import { API_URL } from "./support/env";
 import { makePng } from "./support/images";
 import type { APIRequestContext } from "@playwright/test";
+import { ENGLISH } from "./support/locale";
 
 /** Энэ зургаар visual search хайхад хамгийн эхэнд гарах барааны id. */
 async function topResult(api: APIRequestContext, png: Buffer): Promise<number> {
@@ -38,12 +39,12 @@ test("customers and visitors cannot use the admin area", async ({ shopperPage: p
   await expect(page.getByText("You don't have access to this area")).toBeVisible();
   expect(adminCalls).toEqual([]);
 
-  const visitor = await (await browser.newContext()).newPage();
+  const visitor = await (await browser.newContext({ storageState: ENGLISH })).newPage();
   await visitor.goto("/admin/orders");
   await expect(visitor).toHaveURL(/\/login\?next=%2Fadmin%2Forders/);
 });
 
-test("the API refuses admin requests from anyone but an administrator", async ({ api, account }) => {
+test("the API refuses back-office requests from anyone but staff", async ({ api, account }) => {
   const anonymous = await api.get(`${API_URL}/api/v1/admin/products`);
   const customer = await api.get(`${API_URL}/api/v1/admin/products`, { headers: { Authorization: `Bearer ${account.token}` } });
 
@@ -52,8 +53,38 @@ test("the API refuses admin requests from anyone but an administrator", async ({
   expect((await customer.json()).type).toBe("urn:angel:problem:forbidden");
 });
 
-test("an administrator creates a product from a photo, edits it, replaces the photo and withdraws it", async ({
+test("an administrator can look at products but not change them, and a warehouse worker cannot see customers", async ({
   adminPage: page,
+  api,
+  newProduct,
+}) => {
+  const product = await newProduct({ stock: 7 });
+  const admin = await adminSession(api);
+  const worker = await warehouseSession(api);
+  const auth = (who: { token: string }) => ({ Authorization: `Bearer ${who.token}` });
+
+  // API: админ харна, өөрчилж чадахгүй; агуулахын ажилтан хэрэглэгч, статистик харахгүй.
+  expect((await api.get(`${API_URL}/api/v1/admin/products/${product.id}`, { headers: auth(admin) })).status()).toBe(200);
+  expect(
+    (await api.put(`${API_URL}/api/v1/admin/products/${product.id}/stock`, { headers: auth(admin), data: { quantity: 1 } })).status(),
+  ).toBe(403);
+  expect((await api.post(`${API_URL}/api/v1/admin/products/${product.id}/deactivate`, { headers: auth(admin) })).status()).toBe(403);
+  expect((await api.get(`${API_URL}/api/v1/admin/customers`, { headers: auth(worker) })).status()).toBe(403);
+  expect((await api.get(`${API_URL}/api/v1/admin/stats`, { headers: auth(worker) })).status()).toBe(403);
+  expect((await api.get(`${API_URL}/api/v1/admin/orders`, { headers: auth(worker) })).status()).toBe(200);
+
+  // UI: админ барааг харна, гэхдээ засах, хасах товч байхгүй.
+  await page.goto(`/admin/products/${product.id}`);
+  await expect(page.getByRole("heading", { level: 1, name: product.name })).toBeVisible();
+  await expect(page.getByLabel("Name")).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Save changes" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Withdraw" })).toHaveCount(0);
+  await page.goto("/admin/products/new");
+  await expect(page.getByText("This section is not part of your role.")).toBeVisible();
+});
+
+test("a warehouse worker creates a product from a photo, edits it, replaces the photo and withdraws it", async ({
+  warehousePage: page,
   api,
 }) => {
   const stamp = Date.now();
@@ -118,7 +149,7 @@ test("an administrator creates a product from a photo, edits it, replaces the ph
   await expect(page.getByRole("button", { name: `Restore ${name}` })).toBeVisible();
 });
 
-test("a bad photo or bad details do not create a product", async ({ adminPage: page }) => {
+test("a bad photo or bad details do not create a product", async ({ warehousePage: page }) => {
   await page.goto("/admin/products/new");
 
   await page.getByRole("button", { name: "Create product" }).click();
@@ -139,5 +170,5 @@ test("an administrator sees a customer's order with its payment", async ({ admin
   await expect(page.getByRole("heading", { name: `Order ${number}` })).toBeVisible();
   await expect(page.getByText(account.email).first()).toBeVisible();
   await expect(page.getByText("succeeded via offline")).toBeVisible();
-  await expect(page.getByText("12 Analytical Way").first()).toBeVisible();
+  await expect(page.getByText(/Энхтайваны өргөн чөлөө 12/).first()).toBeVisible();
 });

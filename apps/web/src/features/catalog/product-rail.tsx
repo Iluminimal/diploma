@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { ProductCard, ProductCardSkeleton } from "@/components/product/product-card";
 import { RailItem, ScrollRail } from "@/components/product/scroll-rail";
 import type { Product } from "./product";
@@ -17,8 +18,9 @@ export function ProductRail({ products, label }: { products: Product[]; label: s
 }
 
 export function RailSkeleton() {
+  const t = useTranslations("catalog");
   return (
-    <div className="flex gap-3 overflow-hidden sm:gap-5" role="status" aria-label="Loading">
+    <div className="flex gap-3 overflow-hidden sm:gap-5" role="status" aria-label={t("loading")}>
       {Array.from({ length: 6 }, (_, i) => (
         <div key={i} className="w-[44vw] max-w-56 shrink-0 sm:w-52 lg:w-60">
           <ProductCardSkeleton />

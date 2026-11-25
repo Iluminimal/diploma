@@ -32,20 +32,7 @@ describe("WishlistButton", () => {
       "/login?next=%2Fproducts%2F41885%2Falma-women-blue-kurta-60000",
     );
     expect(api.calls).toHaveLength(0); // зочин wishlist API-д хандахгүй
-  });
-
-  it("bursts when the heart is filled, but not for one that was already saved", async () => {
-    useAuth.setState({ status: "signedIn", accessToken: "t", user });
-    stubApi({
-      "GET /api/v1/wishlist": { body: { items: [] } },
-      "PUT /api/v1/wishlist/41885": { body: { items: [product] } },
-    });
-    const { container } = renderWithQuery(<WishlistButton product={product} />);
-    expect(container.querySelector(".animate-burst")).toBeNull();
-
-    await userEvent.click(screen.getByRole("button", { name: /save alma women blue kurta/i }));
-
-    expect(container.querySelectorAll(".animate-burst")).toHaveLength(6);
+    expect(window.sessionStorage.getItem("angel:pending-wishlist")).toContain('"id":41885'); // нэвтэрсний дараа хадгална
   });
 
   it("saves optimistically for a signed-in shopper", async () => {
@@ -87,5 +74,36 @@ describe("WishlistButton", () => {
 
     await waitFor(() => expect(api.count("DELETE /api/v1/wishlist/41885")).toBe(1));
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it("scatters a burst of six dots when a product is saved, and not when it is removed", async () => {
+    useAuth.setState({ status: "signedIn", accessToken: "t", user });
+    let items: unknown[] = [];
+    stubApi({
+      "GET /api/v1/wishlist": () => new Response(JSON.stringify({ items }), { headers: { "content-type": "application/json" } }),
+      "PUT /api/v1/wishlist/41885": () => {
+        items = [product];
+        return new Response(null, { status: 204 });
+      },
+      "DELETE /api/v1/wishlist/41885": () => {
+        items = [];
+        return new Response(null, { status: 204 });
+      },
+    });
+    const { container } = renderWithQuery(<WishlistButton product={product} />);
+    expect(container.querySelector(".heart-burst")).toBeNull();
+
+    await userEvent.click(await screen.findByRole("button", { name: /save alma women blue kurta/i }));
+
+    const burst = await waitFor(() => {
+      const found = container.querySelector(".heart-burst");
+      expect(found).not.toBeNull();
+      return found!;
+    });
+    expect(burst.querySelectorAll("i")).toHaveLength(6);
+    expect(burst).toHaveAttribute("aria-hidden", "true");
+
+    await userEvent.click(await screen.findByRole("button", { name: /remove alma women blue kurta/i }));
+    await waitFor(() => expect(container.querySelector(".heart-burst")).toBeNull());
   });
 });

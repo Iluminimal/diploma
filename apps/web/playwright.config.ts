@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { ENGLISH } from "./e2e/support/locale";
 
 /**
  * End-to-end тестүүд ажиллаж буй stack (API, web, Postgres/Redis)-ийг удирдана (docs/e2e.md).
@@ -19,6 +20,8 @@ export default defineConfig({
   timeout: 60_000,
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
+    // Сайтын өгөгдмөл хэл монгол; тестүүд англи текст шалгадаг (`e2e/support/locale.ts`).
+    storageState: ENGLISH,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     // Хиймэл камер: "Зураг авах" товчийг тестлэхэд хэрэгтэй, өөр юу ч үүнийг ашигладаггүй.

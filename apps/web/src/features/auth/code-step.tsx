@@ -1,9 +1,10 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { userMessage } from "@/lib/api/errors";
+import { useUserMessage } from "@/lib/api/use-user-message";
 import { OtpInput } from "./otp-input";
 import { useAuthActions } from "./use-auth-actions";
 
@@ -24,6 +25,8 @@ export function CodeStep({
   /** Шинэ бүртгэлд session хадгалахаас өмнө дуудна, ингэснээр хуудас хараахан redirect хийхгүй. */
   onNaming: () => void;
 }) {
+  const t = useTranslations("auth");
+  const userMessage = useUserMessage();
   const { signInWithCode } = useAuthActions();
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,7 +49,7 @@ export function CodeStep({
   }
 
   return (
-    <div className="space-y-4" aria-label="Enter your code">
+    <div className="space-y-4" aria-label={t("code.label")}>
       <div key={shake}>
         <OtpInput
           value={code}
@@ -59,12 +62,12 @@ export function CodeStep({
         />
       </div>
       {problem && (
-        <p role="alert" className="text-destructive text-sm">
+        <p role="alert" className="text-destructive type-caption">
           {problem}
         </p>
       )}
       <Button type="button" size="lg" disabled={busy || code.length < 6} onClick={() => verify(code)} className="w-full">
-        {busy && <Loader2 className="animate-spin" />} Continue
+        {busy && <Loader2 className="animate-spin" />} {t("flow.continue")}
       </Button>
       <button
         type="button"
@@ -74,9 +77,9 @@ export function CodeStep({
           setCode("");
           onResend();
         }}
-        className="text-muted-foreground hover:text-foreground mx-auto block text-sm underline underline-offset-4 disabled:no-underline disabled:opacity-60"
+        className="text-muted-foreground hover:text-foreground mx-auto block type-caption underline underline-offset-4 disabled:no-underline disabled:opacity-60"
       >
-        {resendIn > 0 ? `Resend code in ${resendIn}s` : "Resend code"}
+        {resendIn > 0 ? t("code.resendIn", { seconds: resendIn }) : t("code.resend")}
       </button>
     </div>
   );

@@ -8,6 +8,9 @@ import {
   REVIEW_STATUSES,
   STATS_PERIODS,
   STOCK_FILTERS,
+  AUDIT_ENTITY_TYPES,
+  type AuditListParams,
+  type StatsPeriod,
   type CustomerListParams,
   type OrderListParams,
   type ProductListParams,
@@ -78,10 +81,43 @@ export function parseInventoryParams(raw: Raw): ProductListParams {
   };
 }
 
-/** Dashboard-ын хугацаа (хоногоор); гэнэтийн утга өгвөл default-д буцна. */
-export function parsePeriod(raw: Raw): number {
+const DAY_MS = 86_400_000;
+const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+/** `YYYY-MM-DD` бодит огноо бол UTC-ийн өдрийн эхний millisecond, үгүй бол undefined. */
+function dayStart(value: string | undefined): number | undefined {
+  if (!value || !ISO_DAY.test(value)) return undefined;
+  const time = Date.parse(`${value}T00:00:00Z`);
+  return Number.isNaN(time) || new Date(time).toISOString().slice(0, 10) !== value ? undefined : time;
+}
+
+/**
+ * Dashboard-ын хугацаа. `?start=&end=` хүчинтэй тусгай хугацаа (эхлэл ≤ төгсгөл, ирээдүй биш, 366
+ * хоногоос ихгүй) бол түүнийг, үгүй бол `?days=` (7/30/90/365), гэнэтийн утгад default-ыг өгнө.
+ */
+export function parsePeriod(raw: Raw, now: Date = new Date()): StatsPeriod {
+  const start = first(raw.start);
+  const end = first(raw.end);
+  const from = dayStart(start);
+  const to = dayStart(end);
+  const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  if (from !== undefined && to !== undefined && from <= to && to <= today) {
+    const days = Math.round((to - from) / DAY_MS) + 1;
+    if (days <= 366) return { days, start, end };
+  }
   const days = Number(first(raw.days));
-  return STATS_PERIODS.find((period) => period === days) ?? DEFAULT_PERIOD;
+  return { days: STATS_PERIODS.find((period) => period === days) ?? DEFAULT_PERIOD };
+}
+
+export function parseAuditParams(raw: Raw): AuditListParams {
+  const actor = Number(first(raw.actor));
+  const action = (first(raw.action) ?? "").trim();
+  return {
+    entity: oneOf(AUDIT_ENTITY_TYPES, first(raw.entity), "all"),
+    actor: Number.isInteger(actor) && actor >= 1 ? actor : 0,
+    action: /^[a-z]+\.[a-z]+$/.test(action) ? action : "",
+    page: pageNumber(first(raw.page)),
+  };
 }
 
 /** Жагсаалтын query string; URL богино байлгахын тулд default утгыг орхино. */

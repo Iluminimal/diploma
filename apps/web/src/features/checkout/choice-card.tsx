@@ -18,7 +18,7 @@ export function ChoiceCard({ name, value, checked, onChange, children, aside }: 
   return (
     <label
       className={cn(
-        "border-field bg-card hover:border-foreground has-focus-visible:ring-ring/60 flex cursor-pointer items-start gap-3 rounded-xl border p-4 text-[0.9375rem] transition-[border-color,box-shadow] has-focus-visible:ring-3",
+        "border-field bg-card hover:border-foreground has-focus-visible:ring-ring/50 flex cursor-pointer items-start gap-3 rounded-xl border p-4 type-caption transition-[border-color,box-shadow] has-focus-visible:ring-3",
         checked && "border-primary shadow-[0_0_0_1px_var(--primary)]",
       )}
     >

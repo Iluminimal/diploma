@@ -1,11 +1,13 @@
 "use client";
 
 import { ArrowRight, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
+import { useVocab } from "@/i18n/use-vocab";
 import { cn } from "@/lib/utils";
 import { HEADER_CELL, SearchGlyph } from "@/components/layout/header-cell";
 import { DEPARTMENT_LINKS, categoryHref } from "@/features/catalog/nav";
@@ -15,25 +17,26 @@ import { useBarPanel } from "./bar-panel";
 // Хайлтын талбар, санал болголт, зураг сонгогч хайлт анх нээгдэхэд ачаалагдана.
 const SearchBar = dynamic(() => import("./search-bar").then((m) => m.SearchBar), { ssr: false });
 
-const QUICK_LINKS = [
-  ...DEPARTMENT_LINKS.map((d) => ({ href: categoryHref(d.slug), label: d.label })),
-  { href: "/products?sort=newest", label: "New arrivals" },
-  { href: "/search", label: "Search with a photo" },
-] as const;
-
 function QuickLinks({ onNavigate }: { onNavigate: () => void }) {
+  const t = useTranslations("layout.header");
+  const vocab = useVocab();
+  const links = [
+    ...DEPARTMENT_LINKS.map((d) => ({ href: categoryHref(d.slug), label: vocab.department(d.label) })),
+    { href: "/products?sort=newest", label: t("newArrivals") },
+    { href: "/search", label: t("searchWithPhoto") },
+  ];
   return (
-    <nav aria-label="Quick links" className="mt-8">
-      <p className="flyout-item text-muted-foreground mb-3 text-xs" style={{ "--i": 1 } as CSSProperties}>
-        Quick Links
+    <nav aria-label={t("quickLinks")} className="mt-8">
+      <p className="flyout-item text-muted-foreground mb-3 type-fine" style={{ "--i": 1 } as CSSProperties}>
+        {t("quickLinksHeading")}
       </p>
       <ul className="space-y-1 md:space-y-0">
-        {QUICK_LINKS.map((link, i) => (
+        {links.map((link, i) => (
           <li key={link.href} className="flyout-item" style={{ "--i": i + 2 } as CSSProperties}>
             <Link
               href={link.href}
               onClick={onNavigate}
-              className="hover:text-brand focus-visible:ring-ring/60 -mx-2 inline-flex items-center gap-3 rounded-md px-2 py-1 text-lg font-semibold tracking-tight outline-none transition-colors focus-visible:ring-3 md:py-1.5 md:text-xs md:leading-4 md:tracking-normal"
+              className="hover:text-brand focus-visible:ring-ring/50 -mx-2 inline-flex items-center gap-3 rounded-md px-2 py-1 type-intro font-semibold tracking-tight outline-none transition-colors focus-visible:ring-3 md:py-1.5 md:type-fine md:leading-4 md:tracking-normal"
             >
               <ArrowRight aria-hidden strokeWidth={1.5} className="text-muted-foreground size-4 shrink-0 md:size-3" />
               {link.label}
@@ -53,6 +56,7 @@ function QuickLinks({ onNavigate }: { onNavigate: () => void }) {
  * болчихно.
  */
 export function HeaderSearch() {
+  const t = useTranslations("layout.header");
   const pathname = usePathname();
   // Хаана нээснээ санана: навигацийн дараа effect-гүйгээр хаагдсан гэж тооцогдоно.
   const [openedAt, setOpenedAt] = useState<string | null>(null);
@@ -106,8 +110,8 @@ export function HeaderSearch() {
         ref={button}
         type="button"
         className={cn(HEADER_CELL, "phone-bar-item")}
-        aria-label="Search"
-        title="Search (press /)"
+        aria-label={t("searchOpen")}
+        title={t("searchTitle")}
         aria-keyshortcuts="/"
         aria-haspopup="dialog"
         aria-expanded={open}
@@ -126,7 +130,7 @@ export function HeaderSearch() {
             <div
               id="search-panel"
               role="dialog"
-              aria-label="Search"
+              aria-label={t("searchDialog")}
               data-open={open}
               inert={!open}
               onKeyDown={onKeyDown}
@@ -137,7 +141,7 @@ export function HeaderSearch() {
                    (logo, хайлт, bag алга), талбар нь доорх тусдаа мөрөнд. Md-ээс дээш X байхгүй:
                    bar үлдэж, түүний томруулагч panel-ийг хаана. */}
                 <div className="flex h-12 items-center justify-end md:hidden">
-                  <button type="button" className={HEADER_CELL} aria-label="Close search" onClick={close}>
+                  <button type="button" className={HEADER_CELL} aria-label={t("searchClose")} onClick={close}>
                     <X className="size-[18px]" strokeWidth={1.25} />
                   </button>
                 </div>

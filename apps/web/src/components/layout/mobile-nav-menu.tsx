@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { createPortal } from "react-dom";
@@ -12,26 +13,28 @@ import {
   type NavNode,
 } from "@/features/catalog/nav";
 import { useCatalogNav } from "@/features/catalog/use-catalog-nav";
+import type { Vocab } from "@/i18n/vocab";
+import { useVocab } from "@/i18n/use-vocab";
 import { cn } from "@/lib/utils";
 
 /** Drill-down-ы нэг алхам: "Shop all" хаашаа хөтлөх, доор нь юу байгаа. */
 type Step = { name: string; href: string; children: Step[] };
 
-function fromNode(department: string, node: NavNode): Step {
+function fromNode(department: string, node: NavNode, vocab: Vocab): Step {
   return {
-    name: node.name,
+    name: vocab.category(node.name),
     href: categoryHref(department, node.path),
-    children: node.children.map((child) => fromNode(department, child)),
+    children: node.children.map((child) => fromNode(department, child, vocab)),
   };
 }
 
-function departments(nav: CatalogNav | undefined): Step[] {
+function departments(nav: CatalogNav | undefined, vocab: Vocab): Step[] {
   return DEPARTMENT_LINKS.map((link) => {
     const department = nav?.departments.find((d) => d.slug === link.slug);
     return {
-      name: link.label,
+      name: vocab.department(link.label),
       href: categoryHref(link.slug),
-      children: department ? department.groups.map((group) => fromNode(link.slug, group)) : [],
+      children: department ? department.groups.map((group) => fromNode(link.slug, group, vocab)) : [],
     };
   });
 }
@@ -56,6 +59,8 @@ export function MobileMenuPanel({
   onClose: () => void;
   trigger: RefObject<HTMLButtonElement | null>;
 }) {
+  const t = useTranslations("layout.header");
+  const vocab = useVocab();
   const panel = useRef<HTMLDivElement>(null);
   const [stack, setStack] = useState<Step[]>([]);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
@@ -86,7 +91,11 @@ export function MobileMenuPanel({
     };
   }, [open, onClose, trigger]);
 
-  const root: Step = { name: "Menu", href: "/", children: departments(data) };
+  const root: Step = {
+    name: t("menu"),
+    href: "/",
+    children: departments(data, vocab),
+  };
   const current = stack.at(-1) ?? root;
   const top = stack.length === 0;
   const big = top ? "text-[1.75rem] leading-tight font-semibold tracking-tight" : "text-xl font-semibold tracking-tight";
@@ -96,7 +105,7 @@ export function MobileMenuPanel({
       id="mobile-menu"
       ref={panel}
       role="dialog"
-      aria-label="Menu"
+      aria-label={t("menu")}
       data-open={open}
       inert={!open}
       className="menu-panel bg-background fixed inset-x-0 top-12 bottom-0 z-30 overflow-y-auto overscroll-contain md:hidden"
@@ -109,25 +118,25 @@ export function MobileMenuPanel({
               setDirection("back");
               setStack(stack.slice(0, -1));
             }}
-            aria-label={`Back to ${stack.length > 1 ? stack[stack.length - 2]!.name : "menu"}`}
-            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/60 -ml-1 mb-3 inline-flex items-center gap-1 rounded-md py-1 pr-2 text-sm outline-none focus-visible:ring-3"
+            aria-label={t("backTo", { name: stack.length > 1 ? stack[stack.length - 2]!.name : t("menu") })}
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 -ml-1 mb-3 inline-flex items-center gap-1 rounded-md py-1 pr-2 type-caption outline-none focus-visible:ring-3"
           >
-            <ChevronLeft aria-hidden className="size-4" /> {stack.length > 1 ? stack[stack.length - 2]!.name : "Menu"}
+            <ChevronLeft aria-hidden className="size-4" /> {stack.length > 1 ? stack[stack.length - 2]!.name : t("menu")}
           </button>
         )}
 
         <nav
           key={stack.length}
-          aria-label={top ? "Main" : current.name}
+          aria-label={top ? t("main") : current.name}
           className={cn(
             "animate-in fade-in-0 flex flex-col duration-300",
             direction === "forward" ? "slide-in-from-right-6" : "slide-in-from-left-6",
           )}
         >
-          {!top && <h2 className="mb-2 text-3xl font-semibold tracking-tight">{current.name}</h2>}
+          {!top && <h2 className="mb-2 type-title font-semibold tracking-tight">{current.name}</h2>}
           {!top && (
             <Link href={current.href} onClick={onClose} className={cn(big, "menu-row py-2")} style={row(1)}>
-              Shop all {current.name}
+              {t("shopAll", { name: current.name })}
             </Link>
           )}
           {!top && current.children.length === 0 && isPending && <MenuSkeleton />}
@@ -159,7 +168,7 @@ export function MobileMenuPanel({
               className={cn(big, "menu-row py-2")}
               style={row(current.children.length + 1)}
             >
-              New
+              {t("new")}
             </Link>
           )}
         </nav>

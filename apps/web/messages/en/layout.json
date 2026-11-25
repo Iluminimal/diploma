@@ -1,0 +1,95 @@
+{
+  "meta": {
+    "title": "Angel: shop by photo",
+    "titleTemplate": "%s · Angel",
+    "description": "Upload a photo of something you love and find clothing that looks like it."
+  },
+  "skip": "Skip to content",
+  "themeToggle": "Toggle dark mode",
+  "language": {
+    "label": "Language",
+    "menu": "Language"
+  },
+  "localeBanner": {
+    "label": "Language suggestion",
+    "message": "Choose another language to see Angel in the language you prefer.",
+    "select": "Language",
+    "continue": "Continue",
+    "close": "Close"
+  },
+  "header": {
+    "main": "Main",
+    "new": "New",
+    "newArrivals": "New arrivals",
+    "searchWithPhoto": "Search with a photo",
+    "searchOpen": "Search",
+    "searchTitle": "Search (press /)",
+    "searchDialog": "Search",
+    "searchClose": "Close search",
+    "quickLinks": "Quick links",
+    "quickLinksHeading": "Quick Links",
+    "categoriesOf": "{department} categories",
+    "popularIn": "Popular in {department}",
+    "viewAll": "View all {group}",
+    "menuOpen": "Open menu",
+    "menuClose": "Close menu",
+    "menu": "Menu",
+    "backTo": "Back to {name}",
+    "shopAll": "Shop all {name}"
+  },
+  "searchBar": {
+    "dropPhoto": "Drop a photo to search",
+    "placeholderOverlay": "Search Angel",
+    "placeholder": "Search for “red floral dress”",
+    "byPhoto": "Search by photo",
+    "suggestions": "Suggestions",
+    "noMatches": "No matches for “{query}”.",
+    "seeAll": "See all results for “{query}”",
+    "inContext": "in {context}",
+    "recent": "Recent searches",
+    "popular": "Popular right now",
+    "categories": "Categories",
+    "products": "Products",
+    "label": "Search products"
+  },
+  "footer": {
+    "shop": "Shop",
+    "discover": "Discover",
+    "account": "Your account",
+    "searchByPhoto": "Search by photo",
+    "allProducts": "All products",
+    "newArrivals": "New arrivals",
+    "profile": "Profile",
+    "orders": "Orders",
+    "wishlist": "Wishlist",
+    "bag": "Bag",
+    "moreWays": "More ways to shop: <photo>search with a photo</photo> or <all>browse everything</all>.",
+    "copyright": "Copyright © {year} Angel. All rights reserved."
+  },
+  "lost": {
+    "searchLabel": "Search the shop",
+    "searchPlaceholder": "Search the shop",
+    "popular": "Popular places",
+    "newArrivals": "New arrivals",
+    "searchByPhoto": "Search by photo"
+  },
+  "notFound": {
+    "title": "We couldn't find that page",
+    "body": "The product may have been removed, or the link is mistyped. Try a search, or start from one of these."
+  },
+  "error": {
+    "mark": "Oops",
+    "title": "Something went wrong",
+    "retry": "Try again",
+    "globalBody": "The page could not be shown. Trying again usually fixes it."
+  },
+  "ui": {
+    "breadcrumb": "breadcrumb",
+    "hidePassword": "Hide password",
+    "showPassword": "Show password",
+    "scrollLeft": "Scroll left",
+    "scrollRight": "Scroll right",
+    "loadingProducts": "Loading products",
+    "close": "Close"
+  }
+}

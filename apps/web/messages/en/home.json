@@ -1,0 +1,38 @@
+{
+  "meta": {
+    "title": "Angel: shop by photo",
+    "description": "Upload a photo of something you love and find clothing that looks like it."
+  },
+  "hero": {
+    "label": "Shop by photo",
+    "heading": "Shop <g>by photo.</g>",
+    "newArrivals": "New arrivals"
+  },
+  "departments": {
+    "women": {
+      "label": "Women"
+    },
+    "men": {
+      "label": "Men"
+    },
+    "kids": {
+      "label": "Kids"
+    }
+  },
+  "photo": {
+    "label": "Search with a photo",
+    "heading": "From photo to Bag.",
+    "tryIt": "Try it",
+    "open": "Open photo search",
+    "steps": {
+      "shoot": "Upload a photo",
+      "match": "We find the match",
+      "buy": "Add to Bag"
+    }
+  },
+  "newArrivals": "New arrivals",
+  "popular": "Popular",
+  "shopAll": "Shop all",
+  "recentlyViewed": "Recently viewed",
+  "seeAll": "See all"
+}

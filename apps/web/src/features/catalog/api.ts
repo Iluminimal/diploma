@@ -83,3 +83,12 @@ export const getSimilarProducts = cache((id: number, limit = 12) =>
     }),
   ),
 );
+
+/** "Хослуулах бараа": нэмэлт ангиллын, ижил хүйсийн хамгийн их зарагдсан бараа. */
+export const getCompleteTheLook = cache((id: number, limit = 8) =>
+  unwrap(
+    createApiClient(300).GET("/api/v1/products/{product_id}/complete-the-look", {
+      params: { path: { product_id: id }, query: { limit } },
+    }),
+  ),
+);

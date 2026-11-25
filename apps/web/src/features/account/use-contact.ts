@@ -73,6 +73,17 @@ export function useSessions(enabled: boolean) {
   });
 }
 
+/** Бүртгэлийн сүүлийн аюулгүй байдлын үйл явдлууд (нэвтрэлт, нууц үг солих, төхөөрөмж цуцлах). */
+export function useSecurityEvents(enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.securityEvents,
+    queryFn: () => call(browserApi().GET("/api/v1/auth/security-events")),
+    enabled,
+    // Профайл руу орох бүрд шинээр: хэн нэгэн нэвтэрсэн бол эзэн даруй харах ёстой.
+    staleTime: 0,
+  });
+}
+
 /** Нэг төхөөрөмжийг гаргана. Яг энэ browser-ыг гаргавал санах ойн session-ыг бас цэвэрлэнэ. */
 export function useRevokeSession() {
   const queryClient = useQueryClient();

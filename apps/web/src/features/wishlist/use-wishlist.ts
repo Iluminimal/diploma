@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/auth-store";
 import type { Product } from "@/features/catalog/product";
-import { userMessage } from "@/lib/api/errors";
+import { useUserMessage } from "@/lib/api/use-user-message";
 import { queryKeys } from "@/lib/query-keys";
 import { fetchWishlist, saveProduct, unsaveProduct, type Wishlist } from "./wishlist-api";
 
@@ -22,6 +22,7 @@ export function useWishlist() {
 
 export function useToggleWishlist() {
   const queryClient = useQueryClient();
+  const userMessage = useUserMessage();
   const userId = useAuth((state) => state.user?.id);
   const key = [...queryKeys.wishlist, userId];
 

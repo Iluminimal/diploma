@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/auth-store";
-import { userMessage } from "@/lib/api/errors";
+import { useUserMessage } from "@/lib/api/use-user-message";
 import { queryKeys } from "@/lib/query-keys";
 import {
   createReview,
@@ -45,6 +45,7 @@ export function useReviews(productId: number, sort: ReviewSort, page: number, in
  */
 function useReviewMutation<V, R>(productId: number, mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();
+  const userMessage = useUserMessage();
   return useMutation({
     mutationFn,
     onError: (error) => toast.error(userMessage(error)),

@@ -9,8 +9,8 @@ import { AddressesView } from "./addresses-view";
 
 vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { error: vi.fn(), success: vi.fn() }) }));
 
-const home = makeAddress({ id: 1, line1: "12 Analytical Way", is_default: true });
-const work = makeAddress({ id: 2, full_name: "Ada at Work", line1: "1 Engine Road", is_default: false });
+const home = makeAddress({ id: 1, is_default: true });
+const work = makeAddress({ id: 2, full_name: "Ada at Work", line1: "Бага тойруу 14", line2: null, is_default: false });
 
 beforeEach(() =>
   useAuth.setState({ status: "signedIn", accessToken: "t", user: { id: 1, email: "a@b.co", full_name: "Ada", role: "customer" as const, avatar_url: null, has_password: true, phone: null, email_verified: false, phone_verified: false, providers: [] as string[] } }),
@@ -25,7 +25,8 @@ describe("AddressesView", () => {
     const list = await screen.findByRole("list", { name: "Saved addresses" });
     const [first, second] = within(list).getAllByRole("listitem");
     expect(first).toHaveTextContent("Default");
-    expect(first).toHaveTextContent("12 Analytical Way");
+    expect(first).toHaveTextContent("Улаанбаатар, Баянгол, 3-р хороо · Энхтайваны өргөн чөлөө 12 · 45 тоот");
+    expect(first).toHaveTextContent("+976 9911 2233");
     expect(second).not.toHaveTextContent("Default");
     expect(within(second!).getByRole("button", { name: "Make default" })).toBeInTheDocument();
   });
@@ -63,19 +64,24 @@ describe("AddressesView", () => {
   it("edits an address in place", async () => {
     const api = stubApi({
       "GET /api/v1/addresses": { body: { items: [home] } },
-      "PATCH /api/v1/addresses/1": { body: { ...home, city: "Leeds" } },
+      "PATCH /api/v1/addresses/1": { body: { ...home, city: "Хан-Уул" } },
     });
     renderWithQuery(<AddressesView />);
 
-    await userEvent.click(await screen.findByRole("button", { name: /Edit address for Ada Lovelace/ }));
-    const city = screen.getByLabelText("City");
-    expect(city).toHaveValue("London");
-    await userEvent.clear(city);
-    await userEvent.type(city, "Leeds");
+    await userEvent.click(await screen.findByRole("button", { name: /Edit address for Болд Батбаяр/ }));
+    const district = screen.getByLabelText("District");
+    expect(district).toHaveValue("Баянгол");
+    expect(screen.getByLabelText("Phone number")).toHaveValue("9911 2233"); // +976 угтваргүй
+    await userEvent.selectOptions(district, "Хан-Уул");
     await userEvent.click(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => expect(api.count("PATCH /api/v1/addresses/1")).toBe(1));
-    expect(api.calls.find((c) => c.method === "PATCH")?.body).toMatchObject({ city: "Leeds", country: "GB" });
+    expect(api.calls.find((c) => c.method === "PATCH")?.body).toMatchObject({
+      region: "Улаанбаатар",
+      city: "Хан-Уул",
+      phone: "+97699112233",
+      country: "MN",
+    });
   });
 
   it("adds an address and validates the form first", async () => {
@@ -95,20 +101,24 @@ describe("AddressesView", () => {
     expect(api.count("POST /api/v1/addresses")).toBe(0);
 
     await userEvent.type(screen.getByLabelText("Full name"), "Ada at Work");
-    await userEvent.type(screen.getByLabelText("Address", { selector: "input" }), "1 Engine Road");
-    await userEvent.type(screen.getByLabelText("City"), "London");
-    await userEvent.type(screen.getByLabelText("Postal code"), "N1 9GU");
+    await userEvent.type(screen.getByLabelText("Phone number"), "8811-2233");
+    await userEvent.selectOptions(screen.getByLabelText("District"), "Баянгол");
+    await userEvent.type(screen.getByLabelText("Street, building, apartment"), "Бага тойруу 14");
     await userEvent.click(screen.getByRole("button", { name: "Save address" }));
 
     await waitFor(() => expect(api.count("POST /api/v1/addresses")).toBe(1));
     expect(api.calls.find((c) => c.method === "POST")?.body).toMatchObject({
       full_name: "Ada at Work",
+      phone: "+97688112233",
+      region: "Улаанбаатар",
+      city: "Баянгол",
+      line1: "Бага тойруу 14",
       line2: null,
-      region: null,
-      phone: null,
-      country: "US",
+      khoroo: null,
+      postal_code: "",
+      country: "MN",
     });
-    expect(await screen.findByText("1 Engine Road · London · N1 9GU, GB")).toBeInTheDocument();
+    expect(await screen.findByText("Улаанбаатар, Баянгол, 3-р хороо · Бага тойруу 14")).toBeInTheDocument();
   });
 
   it("shows the form straight away when nothing is saved", async () => {
@@ -116,7 +126,60 @@ describe("AddressesView", () => {
     renderWithQuery(<AddressesView />);
 
     expect(await screen.findByText("No saved addresses")).toBeInTheDocument();
-    expect(screen.getByRole("form", { name: "Address details" })).toBeInTheDocument();
+    expect(screen.getByRole("form", { name: "Delivery address" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Use as my default address")).not.toBeInTheDocument(); // анхных нь үндсэн хаяг
+  });
+});
+
+describe("AddressForm for Mongolia", () => {
+  const open = async () => {
+    stubApi({ "GET /api/v1/addresses": { body: { items: [] } } });
+    renderWithQuery(<AddressesView />);
+    await screen.findByRole("form", { name: "Delivery address" });
+  };
+
+  it("starts in Ulaanbaatar with a district list, and offers no country choice", async () => {
+    await open();
+
+    expect(screen.getByLabelText("Province / city")).toHaveValue("Улаанбаатар");
+    expect(within(screen.getByLabelText("District")).getAllByRole("option")).toHaveLength(10); // 9 дүүрэг + сонгох
+    expect(screen.queryByLabelText("Country")).not.toBeInTheDocument();
+    expect(screen.getByText("+976")).toBeInTheDocument();
+  });
+
+  it("switches to a free-text soum and bag for an aimag, and forgets the old district", async () => {
+    await open();
+    await userEvent.selectOptions(screen.getByLabelText("District"), "Баянгол");
+
+    await userEvent.selectOptions(screen.getByLabelText("Province / city"), "Дархан-Уул");
+
+    const soum = screen.getByLabelText("Soum");
+    expect(soum.tagName).toBe("INPUT");
+    expect(soum).toHaveValue("");
+    expect(screen.getByLabelText("Bag")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Khoroo")).not.toBeInTheDocument();
+  });
+
+  it("rejects a phone that is not an 8-digit Mongolian number and a postal code that is not 5 digits", async () => {
+    await open();
+    await userEvent.type(screen.getByLabelText("Full name"), "Болд");
+    await userEvent.type(screen.getByLabelText("Phone number"), "12345");
+    await userEvent.selectOptions(screen.getByLabelText("District"), "Баянгол");
+    await userEvent.type(screen.getByLabelText("Street, building, apartment"), "Бага тойруу 14");
+    await userEvent.type(screen.getByLabelText("Postal code (optional)"), "12");
+    await userEvent.click(screen.getByRole("button", { name: "Save address" }));
+
+    expect(await screen.findByText("Enter an 8-digit Mongolian phone number")).toBeInTheDocument();
+    expect(screen.getByText("Use a 5-digit postal code or leave it empty")).toBeInTheDocument();
+  });
+
+  it("requires a district for Ulaanbaatar", async () => {
+    await open();
+    await userEvent.type(screen.getByLabelText("Full name"), "Болд");
+    await userEvent.type(screen.getByLabelText("Phone number"), "99112233");
+    await userEvent.type(screen.getByLabelText("Street, building, apartment"), "Бага тойруу 14");
+    await userEvent.click(screen.getByRole("button", { name: "Save address" }));
+
+    expect(await screen.findByText("Choose a district")).toBeInTheDocument();
   });
 });

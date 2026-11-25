@@ -1,19 +1,24 @@
 "use client";
 
 import { Laptop, Loader2, Smartphone } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { userMessage } from "@/lib/api/errors";
+import { useFormat } from "@/i18n/use-format";
+import { useUserMessage } from "@/lib/api/use-user-message";
 import { useRevokeOtherSessions, useRevokeSession, useSessions } from "./use-contact";
 
-const when = new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" });
+const WHEN: Intl.DateTimeFormatOptions = { dateStyle: "medium", timeStyle: "short" };
 
 /**
  * Бүртгэлд нэвтэрсэн төхөөрөмжүүд; аль нэгийг нь (эсвэл одоогийнхоос бусад бүгдийг) гаргах
  * боломжтой.
  */
 export function DevicesCard() {
+  const t = useTranslations("account.devices");
+  const format = useFormat();
+  const userMessage = useUserMessage();
   const sessions = useSessions(true);
   const revoke = useRevokeSession();
   const revokeOthers = useRevokeOtherSessions();
@@ -23,17 +28,17 @@ export function DevicesCard() {
   return (
     <section className="tile space-y-5 p-6 sm:p-8">
       <header className="space-y-1">
-        <h2 className="type-heading">Your devices</h2>
-        <p className="text-muted-foreground text-sm">Where you&apos;re signed in. Sign out any you don&apos;t recognise.</p>
+        <h2 className="type-heading">{t("title")}</h2>
+        <p className="text-muted-foreground type-caption">{t("description")}</p>
       </header>
       {sessions.isPending ? (
-        <Skeleton aria-busy aria-label="Loading your devices" className="h-24 rounded-2xl" />
+        <Skeleton aria-busy aria-label={t("loading")} className="h-24 rounded-[var(--radius-tile)]" />
       ) : sessions.isError ? (
-        <p role="alert" className="text-destructive text-sm">
+        <p role="alert" className="text-destructive type-caption">
           {userMessage(sessions.error)}
         </p>
       ) : (
-        <ul aria-label="Devices" className="divide-border divide-y">
+        <ul aria-label={t("label")} className="divide-border divide-y">
           {list.map((session) => {
             const Icon = /iPhone|iPad|Android/.test(session.device) ? Smartphone : Laptop;
             return (
@@ -41,16 +46,16 @@ export function DevicesCard() {
                 <div className="flex items-start gap-3">
                   <Icon aria-hidden className="text-muted-foreground mt-0.5 size-5 shrink-0" />
                   <div>
-                    <p className="text-sm font-medium">
+                    <p className="type-caption font-medium">
                       {session.device}
                       {session.current && (
-                        <span className="bg-secondary text-muted-foreground ml-2 rounded-full px-2 py-0.5 text-xs font-normal">
-                          This device
+                        <span className="bg-secondary text-muted-foreground ml-2 rounded-full px-2 py-0.5 type-fine font-normal">
+                          {t("thisDevice")}
                         </span>
                       )}
                     </p>
-                    <p className="text-muted-foreground text-sm">
-                      Active {when.format(new Date(session.last_used_at))}
+                    <p className="text-muted-foreground type-caption">
+                      {t("active", { when: format.dateTime(session.last_used_at, WHEN) })}
                       {session.ip ? ` · ${session.ip}` : ""}
                     </p>
                   </div>
@@ -58,20 +63,19 @@ export function DevicesCard() {
                 {!session.current && (
                   <Button
                     variant="outline"
-                    className="h-9 rounded-full px-4"
                     disabled={revoke.isPending}
-                    aria-label={`Sign out ${session.device}`}
+                    aria-label={t("signOutDevice", { device: session.device })}
                     onClick={() =>
                       revoke.mutate(
                         { id: session.id, current: session.current },
                         {
-                          onSuccess: () => toast.success("Signed out."),
+                          onSuccess: () => toast.success(t("signedOut")),
                           onError: (error) => toast.error(userMessage(error)),
                         },
                       )
                     }
                   >
-                    Sign out
+                    {t("signOut")}
                   </Button>
                 )}
               </li>
@@ -82,16 +86,15 @@ export function DevicesCard() {
       {others > 0 && (
         <Button
           variant="outline"
-          className="h-10 rounded-full px-4"
           disabled={revokeOthers.isPending}
           onClick={() =>
             revokeOthers.mutate(undefined, {
-              onSuccess: () => toast.success("Signed out everywhere else."),
+              onSuccess: () => toast.success(t("signedOutOthers")),
               onError: (error) => toast.error(userMessage(error)),
             })
           }
         >
-          {revokeOthers.isPending && <Loader2 className="animate-spin" />} Sign out everywhere else
+          {revokeOthers.isPending && <Loader2 className="animate-spin" />} {t("signOutOthers")}
         </Button>
       )}
     </section>

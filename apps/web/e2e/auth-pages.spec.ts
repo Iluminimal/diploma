@@ -5,8 +5,8 @@ test("the sign in page is one field for an email or a phone number, then Google"
   const providers = await (await api.get(`${API_URL}/api/v1/auth/providers`)).json();
   await page.goto("/login");
 
-  await expect(page.getByRole("heading", { name: "Sign in or create account" })).toBeVisible();
-  await expect(page.getByRole("tab")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Sign in", exact: true })).toBeVisible();
+  await expect(page.getByRole("tab")).toHaveCount(2);
   const field = page.getByLabel("Email or phone number");
   await expect(field).toBeFocused();
   await field.fill("4155552671");
@@ -45,9 +45,9 @@ test("a wrong password points people who used Google or a code to the other ways
   await expect(alert).toContainText("Continue with Google");
 });
 
-test("the old register address leads to the sign in page and keeps where you were going", async ({ page }) => {
+test("the register address opens the create-account tab and keeps where you were going", async ({ page }) => {
   await page.goto("/register?next=/account/orders");
 
-  await expect(page).toHaveURL(/\/login\?next=%2Faccount%2Forders$/);
-  await expect(page.getByRole("heading", { name: "Sign in or create account" })).toBeVisible();
+  await expect(page).toHaveURL(/\/login\?mode=register&next=%2Faccount%2Forders$/);
+  await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
 });

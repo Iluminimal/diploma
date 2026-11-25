@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { AuthShell } from "@/features/auth/auth-shell";
 import { ForgotPasswordForm } from "@/features/auth/forgot-password-form";
+import { safeNext } from "@/features/auth/safe-next";
 
-export const metadata: Metadata = {
-  title: "Reset your password",
-  robots: { index: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("auth.forgot");
+  return { title: t("title"), robots: { index: false } };
+}
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage({ searchParams }: PageProps<"/forgot-password">) {
+  const [params, t] = await Promise.all([searchParams, getTranslations("auth.forgot")]);
   return (
-    <AuthShell
-      title="Reset your password"
-      subtitle="We'll send a code to the phone number or email on your account."
-    >
-      <ForgotPasswordForm />
+    <AuthShell title={t("title")} subtitle={t("subtitle")}>
+      <ForgotPasswordForm next={safeNext(params.next)} />
     </AuthShell>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ImageDropzone } from "./image-dropzone";
@@ -15,13 +16,14 @@ type Props = {
  * ажиллуулна. Эхний товшилтоор ачаална: dialog library-г дагуулна.
  */
 export function PhotoSearchDialog({ open, onOpenChange }: Props) {
+  const t = useTranslations("search.dialog");
   const router = useRouter();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Search by photo</DialogTitle>
-          <DialogDescription>Show us something you like and we&apos;ll find similar pieces.</DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <ImageDropzone
           size="compact"

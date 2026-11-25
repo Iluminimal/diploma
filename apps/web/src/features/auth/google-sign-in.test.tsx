@@ -3,6 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GoogleSignIn, googleStartHref } from "./google-sign-in";
 import { oauthErrorMessage } from "./oauth-errors";
 import { getAuthProviders } from "./providers";
+import { translatorFor } from "@/test/intl";
+import type { AuthTranslator } from "./auth-translator";
+
+const t = translatorFor("auth") as unknown as AuthTranslator;
 
 vi.mock("./providers", () => ({ getAuthProviders: vi.fn() }));
 const providers = vi.mocked(getAuthProviders);
@@ -41,14 +45,14 @@ describe("GoogleSignIn", () => {
 
 describe("oauthErrorMessage", () => {
   it.each(["google_denied", "google_failed", "google_unverified", "account_disabled"])("explains %s", (code) => {
-    expect(oauthErrorMessage(code)).toEqual(expect.any(String));
+    expect(oauthErrorMessage(code, t)).toEqual(expect.any(String));
   });
 
   it("takes the first of repeated parameters", () => {
-    expect(oauthErrorMessage(["google_denied", "x"])).toContain("cancelled");
+    expect(oauthErrorMessage(["google_denied", "x"], t)).toContain("cancelled");
   });
 
   it.each([undefined, "", "<script>", "constructor", "something_else"])("says nothing for %s", (code) => {
-    expect(oauthErrorMessage(code)).toBeNull();
+    expect(oauthErrorMessage(code, t)).toBeNull();
   });
 });

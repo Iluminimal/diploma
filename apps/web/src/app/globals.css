@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../styles/effects.css";
+@import "../styles/github.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -20,7 +22,6 @@
   --animate-grow: grow-x 700ms var(--ease-out-expo) both;
   --animate-draw: draw 650ms var(--ease-out-expo) both;
   --animate-scan: scan 1.8s var(--ease-in-out-quart) infinite;
-  --animate-burst: burst 650ms var(--ease-out-expo) forwards;
   --animate-highlight: highlight 2.2s var(--ease-out-expo);
   --animate-pop: pop 420ms var(--ease-out-expo);
   --animate-float: float 7s ease-in-out infinite;
@@ -79,17 +80,6 @@
       transform: translateY(210%);
     }
   }
-  /* Зүрх дүүрэх үед түүнээс нисэх жижиг тоосонцор. */
-  @keyframes burst {
-    0% {
-      opacity: 1;
-      transform: rotate(var(--a)) translateY(-5px) scale(1);
-    }
-    100% {
-      opacity: 0;
-      transform: rotate(var(--a)) translateY(-19px) scale(0.2);
-    }
-  }
   /* Дөнгөж нэмсэн мөр нэг удаа гэрэлтэж тогтоно. */
   @keyframes highlight {
     0% {
@@ -125,6 +115,10 @@
   --color-brand: var(--brand);
   --color-brand-foreground: var(--brand-foreground);
   --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-star: var(--star);
+  --color-destructive-text: var(--destructive-text);
   --shadow-soft: var(--elevation-soft);
   --color-ring: var(--ring);
   --color-input: var(--input);
@@ -158,6 +152,11 @@
   --brand: #0066cc;
   --brand-foreground: #ffffff;
   --success: oklch(0.45 0.12 155);
+  /* Статусын өнгө: warning нь цэг, дүүргэлтэд; warning-foreground, destructive-text нь текстэд (контраст). */
+  --warning: oklch(0.75 0.16 75);
+  --warning-foreground: oklch(0.5 0.13 65);
+  --star: oklch(0.78 0.16 75);
+  --destructive-text: oklch(0.52 0.22 27.325);
   --elevation-soft: 0 1px 2px oklch(0 0 0 / 5%), 0 8px 24px -12px oklch(0 0 0 / 12%);
   --background: #ffffff;
   --foreground: #1d1d1f;
@@ -185,16 +184,25 @@
   /* apple.com-ийн flyout-ууд: bar-ын доорх хуудас, хуудасны үлдсэнийг бүрхэх хөшиг. */
   --flyout: #fafafc;
   --curtain: rgb(232 232 237 / 0.4);
+  /* Admin: macOS-ийн grouped хэв. Хуудас саарал, самбар цагаан (харанхуй горимд эсрэгээр). */
+  --admin-canvas: #f5f5f7;
+  --admin-surface: #ffffff;
+  --admin-hairline: oklch(0 0 0 / 7%);
 }
 
 .dark {
   --brand: #2997ff;
   --brand-foreground: #000000;
   --success: oklch(0.75 0.14 155);
+  --warning-foreground: oklch(0.85 0.14 80);
+  --destructive-text: oklch(0.82 0.14 22);
   --elevation-soft: 0 1px 2px oklch(0 0 0 / 40%), 0 8px 24px -12px oklch(0 0 0 / 60%);
   --background: #000000;
   --flyout: #161617;
   --curtain: rgb(29 29 31 / 0.4);
+  --admin-canvas: #000000;
+  --admin-surface: #1d1d1f;
+  --admin-hairline: oklch(1 0 0 / 9%);
   --foreground: #f5f5f7;
   --card: #1d1d1f;
   --card-foreground: #f5f5f7;
@@ -356,6 +364,16 @@
   }
 }
 
+/* Admin-ы хуудас ба самбарын гадаргуу (macOS grouped list): `admin-canvas` дээр `admin-surface` самбар. */
+@utility admin-canvas {
+  background-color: var(--admin-canvas);
+}
+@utility admin-surface {
+  background-color: var(--admin-surface);
+  border-radius: var(--radius-tile);
+  box-shadow: 0 0 0 1px var(--admin-hairline), var(--elevation-soft);
+}
+
 /* Chevron-тэй цэнхэр текст холбоос ("Learn more >", "Shop >"). */
 @utility link-more {
   color: var(--brand);
@@ -461,11 +479,6 @@
     scale: 0.94;
   }
 }
-@keyframes photo-rise {
-  from {
-    translate: 0 3rem;
-  }
-}
 @supports (animation-timeline: view()) {
   @media (prefers-reduced-motion: no-preference) {
     .tile-copy {
@@ -483,12 +496,6 @@
       animation-timeline: view();
       animation-range: entry calc(var(--i, 0) * 8%) entry calc(55% + var(--i, 0) * 8%);
     }
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .photo-rise {
-    animation: photo-rise 900ms var(--ease-out-expo) both;
-    animation-delay: calc(120ms + var(--i, 0) * 110ms);
   }
 }
 
@@ -810,9 +817,6 @@ html[data-bar-panel] .header-elevate {
  */
 .press-card:is(:hover, :focus-visible) [data-card-photo] {
   view-transition-name: product-hero;
-}
-body:has(.press-card:is(:hover, :focus-visible)) [data-fly-source] {
-  view-transition-name: none;
 }
 @layer components {
   .press-card {

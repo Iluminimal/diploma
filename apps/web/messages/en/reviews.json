@@ -1,0 +1,60 @@
+{
+  "outOf5": "{rating} out of 5 stars",
+  "title": "Customer reviews",
+  "loading": "Loading reviews…",
+  "tryAgain": "Try again",
+  "count": "{count, plural, one {# review} other {# reviews}}",
+  "none": "No reviews yet. Be the first to share what you think.",
+  "byStars": "Ratings by number of stars",
+  "stars": "{stars, plural, one {# star} other {# stars}}",
+  "starsCount": "{count, plural, one {review} other {reviews}}",
+  "you": "You",
+  "hidden": "Hidden",
+  "hiddenNote": "The shop has hidden this review. Only you can see it.",
+  "edit": "Edit",
+  "delete": "Delete",
+  "deleteTitle": "Delete your review?",
+  "deleteDescription": "It disappears from the product page and from its rating. You can write a new one afterwards.",
+  "keep": "Keep it",
+  "deleted": "Your review is deleted.",
+  "deleteSubmit": "Delete review",
+  "signInToReview": "<link>Sign in</link> to review this product if you have bought it.",
+  "write": "Write a review",
+  "onlyBuyers": "Only customers who have bought this product can review it.",
+  "yours": "Your review",
+  "showing": "Showing {from}–{to} of {total}",
+  "sortLabel": "Sort reviews",
+  "sort": {
+    "newest": "Most recent",
+    "highest": "Highest rated",
+    "lowest": "Lowest rated"
+  },
+  "list": "Reviews",
+  "pages": "Reviews pages",
+  "previous": "Previous",
+  "next": "Next",
+  "pageOf": "Page {page} of {pages}",
+  "rating": {
+    "label": "Your rating",
+    "option": "{stars, plural, one {# star} other {# stars}}, {word}",
+    "words": {
+      "1": "Poor",
+      "2": "Fair",
+      "3": "Good",
+      "4": "Very good",
+      "5": "Excellent"
+    }
+  },
+  "form": {
+    "editLabel": "Edit your review",
+    "writeLabel": "Write a review",
+    "headline": "Headline (optional)",
+    "body": "Your review (optional)",
+    "saving": "Saving…",
+    "save": "Save changes",
+    "post": "Post review",
+    "cancel": "Cancel",
+    "updated": "Your review is updated.",
+    "posted": "Thank you! Your review is up."
+  }
+}

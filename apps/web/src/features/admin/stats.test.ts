@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bars, change, niceCeiling } from "./stats";
+import { change, niceCeiling } from "./stats";
 
 describe("change", () => {
   it("is a rounded percentage against the previous period", () => {
@@ -37,23 +37,5 @@ describe("niceCeiling", () => {
     [120000, 200000],
   ])("rounds %d up to %d", (value, expected) => {
     expect(niceCeiling(value)).toBe(expected);
-  });
-});
-
-describe("bars", () => {
-  it("scales to the ceiling and fits the slots", () => {
-    const result = bars([0, 50, 100], 100);
-
-    expect(result.map((bar) => Math.round(bar.height))).toEqual([0, 50, 100]);
-    expect(result[0]!.x).toBeLessThan(result[1]!.x);
-    expect(result[2]!.x + result[2]!.width).toBeLessThanOrEqual(100);
-  });
-
-  it("keeps a small non-zero day visible", () => {
-    expect(bars([1, 10_000], 10_000)[0]!.height).toBeGreaterThan(1);
-  });
-
-  it("handles an empty series", () => {
-    expect(bars([], 1)).toEqual([]);
   });
 });

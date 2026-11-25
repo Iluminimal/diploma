@@ -1,31 +1,37 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Check, Loader2, ShoppingBag } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Price } from "@/components/product/price";
 import { Button } from "@/components/ui/button";
+import { useIsStaff } from "@/features/auth/use-role";
 import { cn } from "@/lib/utils";
 import { SizeSelector } from "@/features/catalog/size-selector";
 import type { Product } from "@/features/catalog/product";
 import { WishlistButton } from "@/features/wishlist/wishlist-button";
+import { AdminNotice } from "./admin-notice";
+import { flyToBag } from "@/components/motion/fly-to-bag";
 import { useBagPanel } from "./cart-ui-store";
-import { flyToCart } from "./fly-to-cart";
 import { useAddToCart } from "./use-cart";
 
 type Props = {
   product: Product;
   /** `sizesFor`-оос: размергүй бүтээгдэхүүнд (цаг, цүнх г.м.) null. */
-  sizes: { label: string; sizes: string[] } | null;
+  sizes: { label: "size" | "sizeUs"; sizes: string[] } | null;
 };
 
 /** Размер сонголт, "Add to Bag", wishlist зүрх: бүтээгдэхүүний хуудасны интерактив хэсэг. */
 export function PurchasePanel({ product, sizes }: Props) {
+  const t = useTranslations("cart");
+  const tc = useTranslations("catalog");
   const [size, setSize] = useState<string | null>(null);
   const [missingSize, setMissingSize] = useState(false);
   // Размер дутах бүрд нэмэгдэнэ, ингэснээр сэгсрэлт аль хэдийн явж байсан ч дахин эхэлнэ.
   const [shake, setShake] = useState(0);
   const [justAdded, setJustAdded] = useState(false);
   const add = useAddToCart();
+  const isStaff = useIsStaff();
   const openDrawer = useBagPanel((state) => state.setOpen);
   const setAdded = useBagPanel((state) => state.setAdded);
   const buttonRow = useRef<HTMLDivElement>(null);
@@ -53,7 +59,7 @@ export function PurchasePanel({ product, sizes }: Props) {
     return () => window.clearTimeout(timer);
   }, [justAdded]);
 
-  const addToCart = (pressed: HTMLElement | null) => {
+  const addToCart = () => {
     if (sizes && !size) {
       setMissingSize(true);
       setShake((count) => count + 1);
@@ -64,26 +70,28 @@ export function PurchasePanel({ product, sizes }: Props) {
     add.mutate(
       { product_id: product.id, size: size ?? "", quantity: 1 },
       {
-        onSuccess: async () => {
+        onSuccess: () => {
+          flyToBag(document.querySelector(".zoom-stage img[data-active='true']"));
           setJustAdded(true);
           setAdded({ productId: product.id, size: size ?? "" });
-          await flyToCart(document.querySelector("[data-fly-source]"), pressed, product.image.thumb_400);
           openDrawer(true);
         },
       },
     );
   };
 
+  if (isStaff) return <AdminNotice />;
+
   return (
     <div className="space-y-6">
       <p role="status" className="sr-only">
-        {justAdded ? `${product.name} was added to your Bag.` : ""}
+        {justAdded ? t("wasAdded", { name: product.name }) : ""}
       </p>
       {sizes && (
         <div ref={sizeBox}>
           <div key={shake} className={cn(shake > 0 && "animate-shake")}>
             <SizeSelector
-              label={sizes.label}
+              label={tc(sizes.label)}
               sizes={sizes.sizes}
               disabled={!product.in_stock}
               value={size}
@@ -99,12 +107,15 @@ export function PurchasePanel({ product, sizes }: Props) {
             <p
               id="size-error"
               role="alert"
-              className="text-destructive animate-in fade-in slide-in-from-top-1 mt-2 text-sm duration-300"
+              className="text-destructive animate-in fade-in slide-in-from-top-1 mt-2 type-caption duration-300"
             >
-              Please select a size.
+              {t("selectSize")}
             </p>
           )}
         </div>
+      )}
+      {product.in_stock && product.low_stock && (
+        <p className="text-warning-foreground type-caption font-medium">{t("lowStock")}</p>
       )}
       <div ref={buttonRow} className="flex flex-col gap-3">
         <Button
@@ -112,12 +123,17 @@ export function PurchasePanel({ product, sizes }: Props) {
           size="xl"
           className="w-full"
           disabled={!product.in_stock || add.isPending}
-          onClick={(event) => addToCart(event.currentTarget)}
+          onClick={addToCart}
         >
           <AddIcon pending={add.isPending} added={justAdded} />
-          {justAdded ? "Added" : product.in_stock ? "Add to Bag" : "Sold out"}
+          {justAdded ? t("added") : product.in_stock ? t("addToBag") : t("soldOut")}
         </Button>
-        <WishlistButton product={product} variant="button" className="h-12 w-full text-[1.0625rem] font-normal" />
+        {!product.in_stock && (
+          <Button asChild variant="outline" size="lg" className="w-full">
+            <a href="#similar-heading">{tc("viewSimilar")}</a>
+          </Button>
+        )}
+        <WishlistButton product={product} variant="button" className="h-12 w-full type-body font-normal" />
       </div>
       <div
         // Үндсэн товч дэлгэцээс гарахад дээш гулсаж гарна; бусад үед нуугдана (tab дарааллаас ч
@@ -137,11 +153,11 @@ export function PurchasePanel({ product, sizes }: Props) {
           type="button"
           disabled={add.isPending}
           // Үндсэн товчтой ижил нэр биш: screen reader энэ хуудсанд хоёуланг нь таарна.
-          aria-label={`Add ${product.name} to Bag`}
-          onClick={(event) => addToCart(event.currentTarget)}
+          aria-label={t("addNamed", { name: product.name })}
+          onClick={addToCart}
         >
           <AddIcon pending={add.isPending} added={justAdded} />
-          {justAdded ? "Added" : "Add to Bag"}
+          {justAdded ? t("added") : t("addToBag")}
         </Button>
       </div>
     </div>

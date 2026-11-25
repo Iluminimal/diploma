@@ -37,3 +37,22 @@ describe("ProductCard", () => {
     expect(screen.getByText("92% match")).toBeInTheDocument();
   });
 });
+
+describe("ProductCard badges and quick add", () => {
+  it.each([
+    [{ low_stock: true }, true],
+    [{ low_stock: false }, false],
+    [{ low_stock: true, in_stock: false }, false],
+  ])("shows the few-left badge for %j: %s", (overrides, shown) => {
+    renderWithQuery(<ProductCard product={makeProduct(overrides)} />);
+
+    expect(screen.queryByText("Few left") !== null).toBe(shown);
+  });
+
+  it("offers a quick add button outside the link, so the card stays one link", () => {
+    renderWithQuery(<ProductCard product={makeProduct()} />);
+
+    expect(screen.getByRole("button", { name: /Quick add Alma Women Blue Kurta/ })).toBeInTheDocument();
+    expect(screen.getAllByRole("link")).toHaveLength(1);
+  });
+});

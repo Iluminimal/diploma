@@ -1,35 +1,41 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Price } from "@/components/product/price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchShippingMethods } from "@/features/checkout/checkout-api";
+import { useFormat } from "@/i18n/use-format";
+import { useShippingText } from "@/features/checkout/shipping-text";
 import { queryKeys } from "@/lib/query-keys";
 
 /** Хүргэлт хэд, хэр удах вэ: checkout-ын ашигладаг endpoint-оос уншина. */
 export function DeliveryInfo() {
+  const t = useTranslations("catalog.delivery");
+  const shipping = useShippingText();
+  const format = useFormat();
   const { data, isPending, isError } = useQuery({
-    queryKey: queryKeys.shippingMethods,
-    queryFn: fetchShippingMethods,
+    queryKey: queryKeys.shippingMethods(),
+    queryFn: () => fetchShippingMethods(),
     staleTime: 600_000,
   });
   if (isPending) return <Skeleton aria-hidden className="h-16 rounded-lg" />;
-  if (isError) return <p className="text-muted-foreground">Delivery options are shown at checkout.</p>;
+  if (isError) return <p className="text-muted-foreground">{t("atCheckout")}</p>;
   const free = data.free_shipping_threshold_cents;
   return (
     <ul className="space-y-2">
       {data.items.map((method) => (
         <li key={method.id} className="flex items-baseline justify-between gap-4">
           <span>
-            <span className="font-medium">{method.label}</span>
-            <span className="text-muted-foreground"> · {method.estimated_days}</span>
+            <span className="font-medium">{shipping.label(method)}</span>
+            <span className="text-muted-foreground"> · {shipping.days(method)}</span>
           </span>
           <span className="tabular-nums">
             {method.id === "standard" && free > 0 ? (
               <>
                 <Price cents={method.price_cents} currency={data.currency} />
                 <span className="text-muted-foreground">
-                  , free over <Price cents={free} currency={data.currency} />
+                  {t("freeOver", { price: format.price(free, data.currency) })}
                 </span>
               </>
             ) : (

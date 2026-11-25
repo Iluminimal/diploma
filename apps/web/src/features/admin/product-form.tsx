@@ -2,12 +2,18 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ImagePlus, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import { useForm } from "react-hook-form";
-import { Field, fieldAria, selectClass } from "@/components/forms/form-field";
+import { Controller, useForm } from "react-hook-form";
+import { Panel } from "@/components/admin/panel";
+import { Field, fieldAria } from "@/components/forms/form-field";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { useFieldError } from "@/i18n/use-field-error";
+import { useVocab } from "@/i18n/use-vocab";
 import type { AdminCategory, AdminProduct } from "./admin-api";
 import {
   GENDERS,
@@ -26,30 +32,41 @@ type Props = {
   product?: AdminProduct;
   submitLabel: string;
   onSubmit: (payload: ProductPayload, photo: File | null) => Promise<unknown>;
+  /** Админ барааг зөвхөн харна: талбарууд идэвхгүй, хадгалах товч байхгүй. */
+  readOnly?: boolean;
 };
 
-const input = "h-11 rounded-xl";
 
 /** Ангиллыг "Apparel › Topwear" хэлбэрээр бүлэглэнэ, дэлгүүрийн шүүлтүүрийн үүрлэлттэй адил. */
-function groupCategories(categories: AdminCategory[]) {
+function groupCategories(categories: AdminCategory[], name: (value: string) => string) {
   const groups = new Map<string, AdminCategory[]>();
   for (const category of categories) {
-    const label = `${category.master_category} › ${category.sub_category}`;
+    const label = `${name(category.master_category)} › ${name(category.sub_category)}`;
     groups.set(label, [...(groups.get(label) ?? []), category]);
   }
   return [...groups];
 }
 
-export function ProductForm({ categories, product, submitLabel, onSubmit }: Props) {
+export function ProductForm({ categories, product, submitLabel, onSubmit, readOnly = false }: Props) {
+  const t = useTranslations("admin.productForm");
+  const fieldError = useFieldError();
+  const vocab = useVocab();
   const creating = product === undefined;
   const {
     register,
     handleSubmit,
+    control,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: toFormValues(product),
   });
+  // Бараа өөр газраас (нөөц, идэвхжүүлэлт) өөрчлөгдвөл form-ын хүрээгүй талбарууд шинэчлэгдэнэ, харин
+  // хэрэглэгчийн бичиж байгаа зүйл устахгүй (form-ыг дахин mount хийхгүй).
+  useEffect(() => {
+    if (product) reset(toFormValues(product), { keepDirtyValues: true });
+  }, [product, reset]);
   const [photo, setPhoto] = useState<{ file: File; url: string } | null>(null);
   const [photoError, setPhotoError] = useState<string>();
   const previewUrl = useRef<string>(null);
@@ -73,7 +90,7 @@ export function ProductForm({ categories, product, submitLabel, onSubmit }: Prop
 
   const missingPhoto = () => {
     if (!creating || photo) return false;
-    setPhotoError("Choose a photo of the product.");
+    setPhotoError("adminPhotoRequired");
     return true;
   };
   const submit = handleSubmit(
@@ -91,96 +108,116 @@ export function ProductForm({ categories, product, submitLabel, onSubmit }: Prop
   );
 
   return (
-    <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2" aria-label="Product details">
+    <form onSubmit={submit} noValidate className="space-y-4 md:space-y-6" aria-label={t("label")}>
+      <fieldset disabled={readOnly} className="contents">
       {creating && (
-        <div className="space-y-2 sm:col-span-2">
-          <Field
-            id="photo"
-            label="Photo"
-            error={photoError}
-            hint="JPEG, PNG or WebP, up to 8 MB. Visual search uses this photo to find the product."
-          >
-            <Input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="h-11 rounded-xl py-2"
-              onChange={choosePhoto}
-              {...fieldAria("photo", photoError, "Photo hint")}
-            />
-          </Field>
-          {photo ? (
-            // eslint-disable-next-line @next/next/no-img-element -- локал blob preview, optimize хийх зүйлгүй
-            <img src={photo.url} alt="Preview of the chosen photo" className="bg-muted h-40 w-32 rounded-xl object-cover" />
-          ) : (
-            <p className="text-muted-foreground flex items-center gap-2 text-xs">
-              <ImagePlus aria-hidden className="size-4" /> No photo chosen yet
-            </p>
-          )}
-        </div>
+        <Panel id="photo-section" title={t("sectionPhoto")}>
+          <div className="grid gap-4 sm:grid-cols-[8rem_1fr] sm:items-start">
+            {photo ? (
+              // eslint-disable-next-line @next/next/no-img-element -- локал blob preview, optimize хийх зүйлгүй
+              <img src={photo.url} alt={t("preview")} className="bg-muted h-40 w-32 rounded-2xl object-cover" />
+            ) : (
+              <div className="bg-muted text-muted-foreground flex h-40 w-32 flex-col items-center justify-center gap-2 rounded-2xl p-3 text-center text-xs">
+                <ImagePlus aria-hidden className="size-6" /> {t("noPhoto")}
+              </div>
+            )}
+            <Field id="photo" label={t("photo")} error={fieldError(photoError)} hint={t("photoHint")}>
+              <Input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="h-11 rounded-xl py-2"
+                onChange={choosePhoto}
+                {...fieldAria("photo", photoError, "Photo hint")}
+              />
+            </Field>
+          </div>
+        </Panel>
       )}
 
-      <Field id="name" label="Name" error={errors.name?.message} className="sm:col-span-2">
-        <Input className={input} {...fieldAria("name", errors.name?.message)} {...register("name")} />
-      </Field>
-      <Field id="category_id" label="Category" error={errors.category_id?.message} className="sm:col-span-2">
-        <select className={selectClass} {...fieldAria("category_id", errors.category_id?.message)} {...register("category_id")}>
-          <option value="">Select a category</option>
-          {groupCategories(categories).map(([label, items]) => (
-            <optgroup key={label} label={label}>
-              {items.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.article_type}
+      <Panel id="basics-section" title={t("sectionBasics")}>
+        <div className="grid gap-4">
+          <Field id="name" label={t("name")} error={fieldError(errors.name?.message)}>
+            <Input {...fieldAria("name", errors.name?.message)} {...register("name")} />
+          </Field>
+          <Field id="category_id" label={t("category")} error={fieldError(errors.category_id?.message)}>
+            <NativeSelect {...fieldAria("category_id", errors.category_id?.message)} {...register("category_id")}>
+              <option value="">{t("selectCategory")}</option>
+              {groupCategories(categories, vocab.category).map(([label, items]) => (
+                <optgroup key={label} label={label}>
+                  {items.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {vocab.category(category.article_type)}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </NativeSelect>
+          </Field>
+        </div>
+      </Panel>
+
+      <Panel id="attributes-section" title={t("sectionAttributes")}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field id="gender" label={t("gender")} error={fieldError(errors.gender?.message)}>
+            <NativeSelect {...fieldAria("gender", errors.gender?.message)} {...register("gender")}>
+              {GENDERS.map((gender) => (
+                <option key={gender} value={gender}>
+                  {vocab.gender(gender)}
                 </option>
               ))}
-            </optgroup>
-          ))}
-        </select>
-      </Field>
-      <Field id="gender" label="Gender" error={errors.gender?.message}>
-        <select className={selectClass} {...fieldAria("gender", errors.gender?.message)} {...register("gender")}>
-          {GENDERS.map((gender) => (
-            <option key={gender} value={gender}>
-              {gender}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field id="base_colour" label="Colour (optional)" error={errors.base_colour?.message}>
-        <Input className={input} {...fieldAria("base_colour", errors.base_colour?.message)} {...register("base_colour")} />
-      </Field>
-      <Field id="season" label="Season (optional)" error={errors.season?.message}>
-        <select className={selectClass} {...fieldAria("season", errors.season?.message)} {...register("season")}>
-          <option value="">Not specified</option>
-          {SEASONS.map((season) => (
-            <option key={season} value={season}>
-              {season}
-            </option>
-          ))}
-        </select>
-      </Field>
-      <Field id="usage" label="Usage (optional)" error={errors.usage?.message}>
-        <Input className={input} {...fieldAria("usage", errors.usage?.message)} {...register("usage")} />
-      </Field>
-      <Field id="year" label="Year (optional)" error={errors.year?.message}>
-        <Input inputMode="numeric" className={input} {...fieldAria("year", errors.year?.message)} {...register("year")} />
-      </Field>
-      <Field id="price" label="Price (USD)" error={errors.price?.message} hint="For example 49.99">
-        <Input inputMode="decimal" className={input} {...fieldAria("price", errors.price?.message, "hint")} {...register("price")} />
-      </Field>
-      <Field id="stock_quantity" label="Stock" error={errors.stock_quantity?.message}>
-        <Input inputMode="numeric" className={input} {...fieldAria("stock_quantity", errors.stock_quantity?.message)} {...register("stock_quantity")} />
-      </Field>
+            </NativeSelect>
+          </Field>
+          <Field id="base_colour" label={t("colour")} error={fieldError(errors.base_colour?.message)}>
+            <Input {...fieldAria("base_colour", errors.base_colour?.message)} {...register("base_colour")} />
+          </Field>
+          <Field id="season" label={t("season")} error={fieldError(errors.season?.message)}>
+            <NativeSelect {...fieldAria("season", errors.season?.message)} {...register("season")}>
+              <option value="">{t("notSpecified")}</option>
+              {SEASONS.map((season) => (
+                <option key={season} value={season}>
+                  {vocab.season(season)}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
+          <Field id="usage" label={t("usage")} error={fieldError(errors.usage?.message)}>
+            <Input {...fieldAria("usage", errors.usage?.message)} {...register("usage")} />
+          </Field>
+          <Field id="year" label={t("year")} error={fieldError(errors.year?.message)}>
+            <Input inputMode="numeric" {...fieldAria("year", errors.year?.message)} {...register("year")} />
+          </Field>
+        </div>
+      </Panel>
+
+      <Panel id="pricing-section" title={t("sectionPricing")}>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field id="price" label={t("price")} error={fieldError(errors.price?.message)} hint={t("priceHint")}>
+            <Input inputMode="numeric" {...fieldAria("price", errors.price?.message, "hint")} {...register("price")} />
+          </Field>
+          <Field id="stock_quantity" label={t("stock")} error={fieldError(errors.stock_quantity?.message)}>
+            <Input inputMode="numeric" {...fieldAria("stock_quantity", errors.stock_quantity?.message)} {...register("stock_quantity")} />
+          </Field>
+        </div>
+      </Panel>
+
       {creating && (
-        <label className="flex items-center gap-2.5 text-sm sm:col-span-2">
-          <input type="checkbox" className="accent-foreground size-4" {...register("is_active")} />
-          On sale as soon as it is created
-        </label>
+        <Panel id="status-section" title={t("sectionStatus")}>
+          <label className="flex items-center gap-2.5 text-sm">
+            <Controller control={control} name="is_active" render={({ field }) => <Checkbox checked={field.value} onCheckedChange={(checked) => field.onChange(checked === true)} ref={field.ref} />} />
+            {t("onSale")}
+          </label>
+        </Panel>
       )}
-      <div className="flex gap-2 sm:col-span-2">
-        <Button type="submit" size="lg" disabled={isSubmitting} className="h-11 rounded-full px-5 text-sm">
-          {isSubmitting && <Loader2 aria-hidden className="animate-spin" />} {submitLabel}
-        </Button>
-      </div>
+
+      </fieldset>
+
+      {!readOnly && (
+        <div className="admin-surface sticky bottom-4 z-10 flex justify-end gap-2 p-3 backdrop-blur-xl">
+          <Button type="submit" size="lg" disabled={isSubmitting} className="h-10 rounded-full px-6 text-sm">
+            {isSubmitting && <Loader2 aria-hidden className="animate-spin" />} {submitLabel}
+          </Button>
+        </div>
+      )}
     </form>
   );
 }

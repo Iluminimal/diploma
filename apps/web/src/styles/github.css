@@ -1,0 +1,192 @@
+/*
+ * Нүүр хуудасны GitHub загвар. Бүх зүйл `.gh` wrapper-ийн дотор: токенуудыг энд дахин тодорхойлдог
+ * тул Button, ProductCard, ProductRail нүүр дээр GitHub-ийн палитр, ногоон primary товчтой болж,
+ * бусад хуудас хуучнаараа үлдэнэ. Анхдагч нь цайвар (GitHub light); хэрэглэгч Dark/System сонговол
+ * `.dark .gh` хар-цэнхэр палитрыг өгнө (theme-ийг дагана).
+ */
+@layer components {
+  .gh {
+    color-scheme: light;
+    --background: #ffffff;
+    --foreground: #1f2328;
+    --card: #f6f8fa;
+    --card-foreground: #1f2328;
+    --popover: #ffffff;
+    --popover-foreground: #1f2328;
+    --primary: #1f883d;
+    --primary-foreground: #ffffff;
+    --primary-hover: #1a7f37;
+    --primary-active: #187733;
+    --secondary: #f6f8fa;
+    --secondary-foreground: #1f2328;
+    --muted: #f6f8fa;
+    --muted-foreground: #59636e;
+    --accent: #eaeef2;
+    --accent-foreground: #1f2328;
+    --border: #d1d9e0;
+    --input: #d1d9e0;
+    --ring: #0969da;
+    --field: #818b98;
+    --brand: #0969da;
+    --brand-foreground: #ffffff;
+    --radius: 0.5rem;
+    --radius-tile: 0.75rem;
+    --gh-sunken: #f6f8fa;
+    --gh-hover: #0969da;
+    --gh-hover-glow: rgb(9 105 218 / 0.28);
+    --gh-hover-ring: rgb(9 105 218 / 0.18);
+    --gh-bordered-hover: #818b98;
+    --gh-frame-shadow: rgb(31 35 40 / 0.18);
+    --gh-purple: #8250df;
+    --gh-green: #1a7f37;
+    --gh-accent-from: #bf3989;
+    --gh-accent-via: #8250df;
+    --gh-accent-to: #0969da;
+    --gh-glow-1: rgb(130 80 223 / 0.16);
+    --gh-glow-2: rgb(9 105 218 / 0.14);
+    --gh-glow-3: rgb(191 57 137 / 0.12);
+    --font-gh-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-gh-sans);
+  }
+  .dark .gh {
+    color-scheme: dark;
+    --background: #0d1117;
+    --foreground: #e6edf3;
+    --card: #161b22;
+    --card-foreground: #e6edf3;
+    --popover: #161b22;
+    --popover-foreground: #e6edf3;
+    --primary: #238636;
+    --primary-hover: #2ea043;
+    --primary-active: #1f7a30;
+    --secondary: #161b22;
+    --secondary-foreground: #e6edf3;
+    --muted: #161b22;
+    --muted-foreground: #9198a1;
+    --accent: #21262d;
+    --accent-foreground: #e6edf3;
+    --border: #30363d;
+    --input: #30363d;
+    --ring: #2f81f7;
+    --field: #6e7681;
+    --brand: #58a6ff;
+    --brand-foreground: #0d1117;
+    --gh-sunken: #010409;
+    --gh-hover: #58a6ff;
+    --gh-hover-glow: rgb(47 129 247 / 0.7);
+    --gh-hover-ring: rgb(88 166 255 / 0.25);
+    --gh-bordered-hover: #8b949e;
+    --gh-frame-shadow: rgb(47 129 247 / 0.45);
+    --gh-purple: #a371f7;
+    --gh-green: #3fb950;
+    --gh-accent-from: #f778ba;
+    --gh-accent-via: #a371f7;
+    --gh-accent-to: #58a6ff;
+    --gh-glow-1: rgb(137 87 229 / 0.32);
+    --gh-glow-2: rgb(47 129 247 / 0.26);
+    --gh-glow-3: rgb(219 97 162 / 0.22);
+  }
+
+  /* Гарчиг: том, жижиг letter-spacing, 600. */
+  .gh-title {
+    font-size: clamp(2.5rem, 6.4vw, 4.5rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  .gh-h2 {
+    font-size: clamp(1.75rem, 3.6vw, 2.5rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+  /* Өнгөт цэгтэй жижиг шошго: хэсэг бүрийн дээр (`--e` өнгө). */
+  .gh-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--e, var(--gh-purple));
+  }
+  .gh-eyebrow::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: currentColor;
+  }
+
+  /* Гурван зөөлөн гэрэл (ягаан, цэнхэр, ягаан-ягаан): зөвхөн radial-gradient, blur-гүй, хөдөлгөөнгүй. */
+  .gh-glow {
+    background:
+      radial-gradient(36rem 26rem at 12% 0%, var(--gh-glow-1), transparent 70%),
+      radial-gradient(40rem 28rem at 58% -4%, var(--gh-glow-2), transparent 70%),
+      radial-gradient(30rem 24rem at 96% 8%, var(--gh-glow-3), transparent 70%);
+  }
+  /* Хүрээтэй demo card. */
+  .gh-frame {
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: var(--card);
+    overflow: hidden;
+    box-shadow: 0 30px 80px -40px var(--gh-frame-shadow);
+  }
+}
+
+/* Utility-ийн дээгүүр (layer-гүй): `tile` utility ба `rounded-full` Button-ыг энд дарна. */
+.gh .tile {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-tile);
+  transition:
+    border-color 200ms ease,
+    box-shadow 300ms ease;
+}
+.gh .tile:is(:hover, :focus-visible) {
+  border-color: color-mix(in srgb, var(--gh-hover) 60%, transparent);
+}
+/* Department card: том булан, hover дээр цэнхэр гэрэл. */
+.gh .gh-card {
+  border-radius: 1rem;
+}
+.gh .gh-card:is(:hover, :focus-visible) {
+  border-color: var(--gh-hover);
+  box-shadow:
+    0 0 0 1px var(--gh-hover-ring),
+    0 24px 60px -28px var(--gh-hover-glow);
+}
+.gh [data-variant] {
+  border-radius: 0.5rem;
+}
+.gh [data-variant="bordered"] {
+  border-color: var(--border);
+  background-color: transparent;
+  color: var(--foreground);
+}
+.gh [data-variant="bordered"]:hover {
+  background-color: var(--accent);
+  border-color: var(--gh-bordered-hover);
+  color: var(--foreground);
+}
+.gh .link-more {
+  color: var(--brand);
+}
+/* Акцент үг: градиент нь үг (`.word`) бүр дээр, учир нь `background-clip: text` inline-block хүүхдүүдэд үйлчилдэггүй. */
+.gh .text-gradient {
+  background: none;
+  color: inherit;
+}
+.gh .text-gradient .word {
+  background-image: linear-gradient(100deg, var(--gh-accent-from) 0%, var(--gh-accent-via) 45%, var(--gh-accent-to) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Үсгийн доош сунаж гарсан хэсэг хайчлагдахгүй. */
+  padding-bottom: 0.1em;
+}

@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Angel: shop by photo";
+export const alt = "Angel: зургаар хувцас хайх";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -30,10 +30,10 @@ export default function OpenGraphImage() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div style={{ fontSize: 84, fontWeight: 700, lineHeight: 1.05, letterSpacing: -3 }}>
-            Shop by photo. Find the pieces that match.
+            Зургаар хувцас хайх. Тохирох хувцсаа ол.
           </div>
           <div style={{ fontSize: 34, color: "#a3a3a3" }}>
-            Show Angel a look you love and shop visually similar fashion.
+            Таалагдсан хувцасныхаа зургийг оруулаад, түүнтэй төстэй хувцсыг олоорой.
           </div>
         </div>
       </div>

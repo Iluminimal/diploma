@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { ImageInputError, normalizeImage } from "./normalize-image";
 import { useSearchStore } from "./search-store";
@@ -9,6 +10,7 @@ import { useSearchStore } from "./search-store";
  * өгнө.
  */
 export function useImageInput() {
+  const t = useTranslations("search.imageErrors");
   const setImage = useSearchStore((s) => s.setImage);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,13 +23,13 @@ export function useImageInput() {
         setImage(await normalizeImage(blob));
         return true;
       } catch (cause) {
-        setError(cause instanceof ImageInputError ? cause.message : "We couldn't open that photo.");
+        setError(cause instanceof ImageInputError ? t(cause.code) : t("generic"));
         return false;
       } finally {
         setBusy(false);
       }
     },
-    [setImage],
+    [setImage, t],
   );
 
   return { pick, busy, error, clearError: () => setError(null) };

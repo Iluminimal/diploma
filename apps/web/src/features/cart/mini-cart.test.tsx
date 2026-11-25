@@ -78,6 +78,7 @@ describe("MiniCart", () => {
       "PATCH /api/v1/cart/items/10": problem(409, "Not enough stock", {
         type: "urn:angel:problem:insufficient-stock",
         detail: "Only 2 of Blue Kurta can be added.",
+        available: 2,
       }),
     });
     renderWithQuery(<MiniCart onNavigate={vi.fn()} />);
@@ -85,7 +86,7 @@ describe("MiniCart", () => {
 
     await userEvent.click(screen.getByRole("button", { name: "Increase quantity of Blue Kurta" }));
 
-    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Only 2 of Blue Kurta can be added."));
+    await waitFor(() => expect(toastError).toHaveBeenCalledWith("Only 2 can be added."));
     expect(within(screen.getAllByRole("listitem")[0]!).getByText("2")).toBeInTheDocument();
     expect(screen.getByText("$110")).toBeInTheDocument();
   });

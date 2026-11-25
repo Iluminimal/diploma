@@ -3,9 +3,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/auth-store";
-import { userMessage } from "@/lib/api/errors";
+import { isStaffRole } from "@/features/auth/roles";
+import { useUserMessage } from "@/lib/api/use-user-message";
 import { queryKeys } from "@/lib/query-keys";
+import { runLimited, tally } from "./bulk";
 import {
+  DEFAULT_PERIOD,
   addAdminOrderNote,
   cancelAdminOrder,
   createAdminProduct,
@@ -18,7 +21,9 @@ import {
   fetchAdminProduct,
   fetchAdminProducts,
   fetchAdminReviews,
+  fetchAdminAudit,
   fetchAdminStats,
+  fetchFulfillmentBoard,
   refundAdminOrder,
   replaceAdminProductImage,
   setAdminCustomerActive,
@@ -28,6 +33,8 @@ import {
   shipAdminOrder,
   updateAdminProduct,
   type AdminProductChanges,
+  type AuditListParams,
+  type StatsPeriod,
   type CustomerListParams,
   type OrderListParams,
   type ProductListParams,
@@ -36,7 +43,14 @@ import {
   type ShipDetails,
 } from "./admin-api";
 
-/** Query-үүд баталгаажсан админыг хүлээнэ, тиймээс энгийн хэрэглэгч хүсэлт ч илгээхгүй. */
+/** Query-үүд баталгаажсан ажилтныг хүлээнэ, тиймээс энгийн хэрэглэгч хүсэлт ч илгээхгүй. */
+function useIsStaff() {
+  const status = useAuth((state) => state.status);
+  const role = useAuth((state) => state.user?.role);
+  return status === "signedIn" && isStaffRole(role);
+}
+
+/** Хэрэглэгч, сэтгэгдэл, статистик нь зөвхөн админых: агуулахын ажилтан эдгээрийг хүсэх ёсгүй (API 403). */
 function useIsAdmin() {
   const status = useAuth((state) => state.status);
   const role = useAuth((state) => state.user?.role);
@@ -44,7 +58,7 @@ function useIsAdmin() {
 }
 
 export function useAdminProducts(params: ProductListParams) {
-  const enabled = useIsAdmin();
+  const enabled = useIsStaff();
   return useQuery({
     queryKey: [...queryKeys.admin.products, params],
     queryFn: () => fetchAdminProducts(params),
@@ -54,7 +68,7 @@ export function useAdminProducts(params: ProductListParams) {
 }
 
 export function useAdminProduct(id: number) {
-  const enabled = useIsAdmin();
+  const enabled = useIsStaff();
   return useQuery({
     queryKey: queryKeys.admin.product(id),
     queryFn: () => fetchAdminProduct(id),
@@ -63,7 +77,7 @@ export function useAdminProduct(id: number) {
 }
 
 export function useAdminCategories() {
-  const enabled = useIsAdmin();
+  const enabled = useIsStaff();
   return useQuery({
     queryKey: queryKeys.admin.categories,
     queryFn: fetchAdminCategories,
@@ -73,7 +87,7 @@ export function useAdminCategories() {
 }
 
 export function useAdminOrders(params: OrderListParams) {
-  const enabled = useIsAdmin();
+  const enabled = useIsStaff();
   return useQuery({
     queryKey: [...queryKeys.admin.orders, params],
     queryFn: () => fetchAdminOrders(params),
@@ -83,7 +97,7 @@ export function useAdminOrders(params: OrderListParams) {
 }
 
 export function useAdminOrder(number: string) {
-  const enabled = useIsAdmin();
+  const enabled = useIsStaff();
   return useQuery({
     queryKey: queryKeys.admin.order(number),
     queryFn: () => fetchAdminOrder(number),
@@ -94,6 +108,7 @@ export function useAdminOrder(number: string) {
 /** Mutation алдаагаа өөрөө toast-оор мэдээлдэг тул дуудагч зөвхөн амжилтыг боловсруулна. */
 function useProductMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();
+  const userMessage = useUserMessage();
   return useMutation({
     mutationFn,
     onError: (error) => toast.error(userMessage(error)),
@@ -118,14 +133,61 @@ export const useReplaceProductImage = () =>
 export const useSetProductActive = () =>
   useProductMutation(({ id, active }: { id: number; active: boolean }) => setAdminProductActive(id, active));
 
-export function useAdminStats(days: number) {
+/** Олон барааг нэг дор хасах/сэргээх: одоо байгаа endpoint-ыг 4-өөр зэрэг дуудна. */
+export const useBulkSetProductActive = () =>
+  useProductMutation(async ({ ids, active }: { ids: readonly number[]; active: boolean }) =>
+    tally(await runLimited(ids, 4, (id) => setAdminProductActive(id, active))),
+  );
+
+export function useAdminStats(period: StatsPeriod) {
   const enabled = useIsAdmin();
   return useQuery({
-    queryKey: queryKeys.admin.stats(days),
-    queryFn: () => fetchAdminStats(days),
+    queryKey: queryKeys.admin.stats(period),
+    queryFn: () => fetchAdminStats(period),
     enabled,
     placeholderData: (previous) => previous,
   });
+}
+
+/** Агуулахын самбар: захиалга, нөөц хурдан өөрчлөгддөг тул нээлттэй tab дээр минут тутам шинэчилнэ. */
+export function useFulfillmentBoard() {
+  const enabled = useIsStaff();
+  return useQuery({
+    queryKey: queryKeys.admin.fulfillment,
+    queryFn: fetchFulfillmentBoard,
+    enabled,
+    refetchInterval: 60_000,
+  });
+}
+
+export function useAdminAudit(params: AuditListParams) {
+  const enabled = useIsAdmin();
+  return useQuery({
+    queryKey: [...queryKeys.admin.audit, params],
+    queryFn: () => fetchAdminAudit(params),
+    enabled,
+    placeholderData: (previous) => previous,
+  });
+}
+
+/**
+ * Sidebar-ын тоон тэмдэг. Админ: dashboard-ын анхдагч (30 хоног) хүсэлттэй нэг cache. Статистик нь
+ * админых тул агуулахын ажилтанд агуулахын самбарын тоог (илгээх, нөөц дууссан/багассан) ашиглана.
+ */
+export function useNavBadges(): { orders?: number; products?: number } {
+  const isAdmin = useIsAdmin();
+  const warehouse = useIsStaff() && !isAdmin;
+  const { data: stats } = useAdminStats({ days: DEFAULT_PERIOD });
+  const board = useQuery({
+    queryKey: queryKeys.admin.fulfillment,
+    queryFn: fetchFulfillmentBoard,
+    enabled: warehouse,
+    refetchInterval: 60_000,
+  });
+  if (isAdmin) {
+    return stats ? { orders: stats.to_ship, products: stats.low_stock_total + stats.out_of_stock_total } : {};
+  }
+  return board.data ? { orders: board.data.to_ship, products: board.data.out_of_stock + board.data.low_stock } : {};
 }
 
 export function useAdminCustomers(params: CustomerListParams) {
@@ -160,6 +222,7 @@ export function useAdminReviews(params: ReviewListParams) {
  */
 function useShopMutation<V, R>(mutationFn: (variables: V) => Promise<R>) {
   const queryClient = useQueryClient();
+  const userMessage = useUserMessage();
   return useMutation({
     mutationFn,
     onError: (error) => toast.error(userMessage(error)),
@@ -187,5 +250,11 @@ export const useSetStock = () =>
   useShopMutation(({ id, quantity }: { id: number; quantity: number }) => setAdminProductStock(id, quantity));
 export const useSetCustomerActive = () =>
   useShopMutation(({ id, active }: { id: number; active: boolean }) => setAdminCustomerActive(id, active));
+/** Олон сэтгэгдлийг нэг дор нуух/нийтлэх (одоо байгаа endpoint-ыг 4-өөр зэрэг дуудна). */
+export const useBulkSetReviewPublished = () =>
+  useShopMutation(async ({ ids, published }: { ids: readonly number[]; published: boolean }) =>
+    tally(await runLimited(ids, 4, (id) => setAdminReviewPublished(id, published))),
+  );
+
 export const useSetReviewPublished = () =>
   useShopMutation(({ id, published }: { id: number; published: boolean }) => setAdminReviewPublished(id, published));

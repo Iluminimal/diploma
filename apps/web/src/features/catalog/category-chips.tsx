@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { useFormat } from "@/i18n/use-format";
 import { cn } from "@/lib/utils";
 
 export type Chip = { label: string; href: string; count?: number };
 
 /** Шудрах боломжтой холбоосын мөр: /products дээр department, /c/... хуудсанд дараагийн түвшин. */
 export function CategoryChips({ label, items, className }: { label: string; items: Chip[]; className?: string }) {
+  const format = useFormat();
   if (items.length === 0) return null;
   return (
     <nav aria-label={label} className={cn("-mx-4 mb-6 md:mx-0", className)}>
@@ -13,11 +15,11 @@ export function CategoryChips({ label, items, className }: { label: string; item
           <li key={chip.href} className="shrink-0">
             <Link
               href={chip.href}
-              className="group/chip bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background focus-visible:ring-ring/60 inline-flex h-10 items-center gap-2 rounded-full px-4 text-[0.9375rem] outline-none transition-colors duration-200 focus-visible:ring-3"
+              className="group/chip bg-secondary text-secondary-foreground hover:bg-foreground hover:text-background focus-visible:ring-ring/50 inline-flex h-10 items-center gap-2 rounded-full px-4 type-caption outline-none transition-colors duration-200 focus-visible:ring-3"
             >
               {chip.label}
               {chip.count !== undefined && (
-                <span className="text-muted-foreground group-hover/chip:text-background/75 text-xs tabular-nums">{chip.count.toLocaleString("en-US")}</span>
+                <span className="text-muted-foreground group-hover/chip:text-background/75 type-fine tabular-nums">{format.number(chip.count)}</span>
               )}
             </Link>
           </li>

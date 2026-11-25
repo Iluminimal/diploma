@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useId, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export function SizeSelector({ label, sizes, disabled, value, onChange, invalid, describedBy }: Props) {
+  const t = useTranslations("catalog");
   const name = useId();
   const [internal, setInternal] = useState<string | null>(null);
   const selected = value !== undefined ? value : internal;
@@ -28,10 +30,10 @@ export function SizeSelector({ label, sizes, disabled, value, onChange, invalid,
 
   return (
     <fieldset disabled={disabled} aria-describedby={invalid ? describedBy : undefined} className="space-y-3">
-      <legend className="flex w-full items-baseline justify-between text-[1.0625rem] font-semibold">
+      <legend className="flex w-full items-baseline justify-between type-body font-semibold">
         <span>{label}</span>
         <span className="text-muted-foreground type-caption font-normal" aria-live="polite">
-          {selected ? `Selected: ${selected}` : "Select a size"}
+          {selected ? t("sizeSelected", { size: selected }) : t("sizeSelect")}
         </span>
       </legend>
       <div className="flex flex-wrap gap-2.5">
@@ -52,10 +54,10 @@ export function SizeSelector({ label, sizes, disabled, value, onChange, invalid,
                 htmlFor={id}
                 className={cn(
                   invalid ? "border-destructive/60" : "border-field",
-                  "bg-card flex h-12 min-w-14 cursor-pointer items-center justify-center rounded-xl border px-4 text-[1.0625rem] transition-[border-color,box-shadow] select-none",
+                  "bg-card flex h-12 min-w-14 cursor-pointer items-center justify-center rounded-xl border px-4 type-body transition-[border-color,box-shadow] select-none",
                   // Apple-ийн сонголтын tile: сонгосон нь 2px цэнхэр хүрээтэй.
                   "hover:border-foreground peer-checked:border-primary peer-checked:shadow-[0_0_0_1px_var(--primary)]",
-                  "peer-focus-visible:ring-ring/60 peer-focus-visible:ring-3 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 peer-disabled:hover:border-input",
+                  "peer-focus-visible:ring-ring/50 peer-focus-visible:ring-3 peer-disabled:cursor-not-allowed peer-disabled:opacity-40 peer-disabled:hover:border-input",
                 )}
               >
                 {size}

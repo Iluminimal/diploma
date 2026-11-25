@@ -2,35 +2,33 @@ import { describe, expect, it } from "vitest";
 import { makeAdminProduct } from "@/test/fixtures";
 import {
   buildCreateForm,
-  centsToDollars,
-  dollarsToCents,
   imageProblem,
+  minorToTogrog,
   productSchema,
   toChanges,
   toFormValues,
   toPayload,
+  togrogToMinor,
 } from "./product-values";
 
-const valid = { ...toFormValues(), name: "Linen shirt", category_id: "9", price: "49.99" };
+const valid = { ...toFormValues(), name: "Linen shirt", category_id: "9", price: "87900" };
 
 describe("prices", () => {
   it.each([
-    ["49.99", 4999],
+    ["87900", 8_790_000],
     ["50", 5000],
-    ["0.5", 50],
-    ["0.05", 5],
     ["0", 0],
-    ["1000.10", 100010],
-  ])("%s dollars is %i cents", (text, cents) => {
-    expect(dollarsToCents(text)).toBe(cents);
+    ["1250000", 125_000_000],
+  ])("%s tugrik is %i minor units", (text, minor) => {
+    expect(togrogToMinor(text)).toBe(minor);
   });
 
-  it("shows cents as dollars", () => {
-    expect(centsToDollars(4999)).toBe("49.99");
-    expect(centsToDollars(5000)).toBe("50.00");
+  it("shows minor units as whole tugrik", () => {
+    expect(minorToTogrog(8_790_000)).toBe("87900");
+    expect(minorToTogrog(5000)).toBe("50");
   });
 
-  it.each(["", "abc", "49.999", "-5", "1,50", "123456", ".5"])("rejects %j as a price", (price) => {
+  it.each(["", "abc", "49.99", "-5", "1,50", "12345678", ".5"])("rejects %j as a price", (price) => {
     expect(productSchema.safeParse({ ...valid, price }).success).toBe(false);
   });
 });
@@ -65,18 +63,18 @@ describe("payloads", () => {
       season: "Summer",
       usage: null,
       year: 2024,
-      price_cents: 4999,
+      price_cents: 8_790_000,
       stock_quantity: 7,
       is_active: true,
     });
   });
 
   it("round-trips a product through the form", () => {
-    const product = makeAdminProduct({ price_cents: 1250, season: null, base_colour: "Blue" });
+    const product = makeAdminProduct({ price_cents: 12_500_000, season: null, base_colour: "Blue" });
 
     const payload = toPayload(toFormValues(product));
 
-    expect(payload.price_cents).toBe(1250);
+    expect(payload.price_cents).toBe(12_500_000);
     expect(payload.season).toBeNull();
     expect(payload.base_colour).toBe("Blue");
     expect(payload.category_id).toBe(product.category_id);
@@ -88,7 +86,7 @@ describe("payloads", () => {
     const form = buildCreateForm(toPayload({ ...valid, base_colour: "Blue" }), photo);
 
     expect(form.get("file")).toBeInstanceOf(File);
-    expect(form.get("price_cents")).toBe("4999");
+    expect(form.get("price_cents")).toBe("8790000");
     expect(form.get("category_id")).toBe("9");
     expect(form.get("is_active")).toBe("true");
     expect(form.get("base_colour")).toBe("Blue");
@@ -111,9 +109,9 @@ describe("photo checks", () => {
   });
 
   it("rejects other types, empty files and huge files", () => {
-    expect(imageProblem(new File(["x"], "a.gif", { type: "image/gif" }))).toMatch(/JPEG, PNG or WebP/);
-    expect(imageProblem(new File([], "a.jpg", { type: "image/jpeg" }))).toMatch(/empty/);
+    expect(imageProblem(new File(["x"], "a.gif", { type: "image/gif" }))).toBe("adminImageType");
+    expect(imageProblem(new File([], "a.jpg", { type: "image/jpeg" }))).toBe("adminImageEmpty");
     const big = new File([new Uint8Array(8 * 1024 * 1024 + 1)], "a.jpg", { type: "image/jpeg" });
-    expect(imageProblem(big)).toMatch(/8 MB/);
+    expect(imageProblem(big)).toBe("adminImageSize");
   });
 });

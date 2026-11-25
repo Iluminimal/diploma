@@ -3,6 +3,7 @@ import { test, expect } from "./fixtures";
 import { addAddress, addToCart, placePaidOrder, registerAccount } from "./support/api";
 import { API_URL } from "./support/env";
 import { addToCartFromProductPage, cartButton, pickProduct } from "./support/ui";
+import { ENGLISH, withEnglish } from "./support/locale";
 
 test("checkout needs an account", async ({ page, products }, testInfo) => {
   await addToCartFromProductPage(page, pickProduct(products, testInfo.workerIndex));
@@ -29,18 +30,18 @@ test("a signed-in shopper pays with the demo card and sees the order afterwards"
   await expect(page).toHaveURL(/\/checkout$/);
 
   // Шинэ хаягийг хадгалаад сонгоно.
-  await page.getByLabel("Full name").fill("Ada Lovelace");
-  await page.getByLabel("Address", { exact: true }).fill("12 Analytical Way");
-  await page.getByLabel("City").fill("Springfield");
-  await page.getByLabel("Postal code").fill("12345");
+  await page.getByLabel("Full name").fill("Болд Батбаяр");
+  await page.getByLabel("Phone number").fill("99112233");
+  await page.getByLabel("District").selectOption("Баянгол");
+  await page.getByLabel("Street, building, apartment").fill("Энхтайваны өргөн чөлөө 12");
   await page.getByRole("button", { name: "Use this address" }).click();
-  await expect(page.getByRole("radio", { name: /Ada Lovelace/ })).toBeChecked();
-  await expect(page.getByText("Demo payment, no real charge.", { exact: false }).first()).toBeVisible();
+  await expect(page.getByRole("radio", { name: /Болд Батбаяр/ })).toBeChecked();
+  await expect(page.getByText("Test payment", { exact: true })).toBeVisible();
 
   // Шуурхай хүргэлт илүү үнэтэй.
   const pay = page.getByRole("button", { name: /pay now/i });
   const standard = await pay.innerText();
-  await page.locator("label", { hasText: "Express shipping" }).click();
+  await page.locator("label", { hasText: "Express delivery" }).click();
   await expect.poll(() => pay.innerText()).not.toBe(standard);
 
   await pay.click();
@@ -54,7 +55,7 @@ test("a signed-in shopper pays with the demo card and sees the order afterwards"
   await page.goto("/account/orders");
   await page.getByRole("link", { name: new RegExp(number!) }).click();
   await expect(page.getByRole("heading", { name: `Order ${number}` })).toBeVisible();
-  await expect(page.getByText("12 Analytical Way").first()).toBeVisible();
+  await expect(page.getByText(/Энхтайваны өргөн чөлөө 12/).first()).toBeVisible();
   await expect(page.getByText(product.name).first()).toBeVisible();
   await expect(cartButton(page)).toHaveAttribute("aria-label", "Bag");
 });
@@ -107,14 +108,14 @@ test("another customer cannot see an order, in the app or in the API", async ({
   });
   expect(direct.status()).toBe(404);
 
-  const context = await browser.newContext({ storageState: { cookies: other.cookies, origins: [] } });
+  const context = await browser.newContext({ storageState: withEnglish(other.cookies) });
   const page = await context.newPage();
   await page.goto(`/account/orders/${number}`);
   await expect(page.getByText("We couldn't find that order on your account.")).toBeVisible();
   await context.close();
   await otherApi.dispose();
 
-  const anonymous = await browser.newContext();
+  const anonymous = await browser.newContext({ storageState: ENGLISH });
   const visitor = await anonymous.newPage();
   await visitor.goto(`/account/orders/${number}`);
   await expect(visitor).toHaveURL(/\/login\?next=/);

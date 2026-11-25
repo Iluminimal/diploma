@@ -1,16 +1,17 @@
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { Order } from "./orders-api";
 
-const LABELS: Record<Order["status"], { label: string; className: string }> = {
-  paid: { label: "Paid", className: "bg-success/15 text-success" },
-  pending: { label: "Awaiting payment", className: "bg-muted text-muted-foreground" },
-  shipped: { label: "Shipped", className: "bg-brand/10 text-brand" },
-  delivered: { label: "Delivered", className: "bg-success/15 text-success" },
-  cancelled: { label: "Cancelled", className: "bg-destructive/10 text-destructive dark:text-[oklch(0.82_0.14_22)]" },
-  refunded: { label: "Refunded", className: "bg-muted text-muted-foreground" },
+const CLASSES: Record<Order["status"], string> = {
+  paid: "bg-success/15 text-success",
+  pending: "bg-muted text-muted-foreground",
+  shipped: "bg-brand/10 text-brand",
+  delivered: "bg-success/15 text-success",
+  cancelled: "bg-destructive/10 text-destructive-text",
+  refunded: "bg-muted text-muted-foreground",
 };
 
 export function StatusBadge({ status }: { status: Order["status"] }) {
-  const { label, className } = LABELS[status];
-  return <span className={cn("inline-flex rounded-full px-2.5 py-1 text-xs font-medium", className)}>{label}</span>;
+  const t = useTranslations("orders.status");
+  return <span className={cn("inline-flex rounded-full px-2.5 py-1 type-fine font-medium", CLASSES[status])}>{t(status)}</span>;
 }

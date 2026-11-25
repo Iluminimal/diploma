@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { toHref, type ListingQuery } from "./filters";
@@ -17,7 +18,7 @@ export function pageWindow(current: number, pages: number): (number | "gap")[] {
 }
 
 const ITEM =
-  "inline-flex size-10 items-center justify-center rounded-full text-sm tabular-nums outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/60";
+  "inline-flex size-10 items-center justify-center rounded-full type-caption tabular-nums outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50";
 
 export function Pagination({
   query,
@@ -28,13 +29,14 @@ export function Pagination({
   pages: number;
   path?: string;
 }) {
+  const t = useTranslations("catalog");
   if (pages <= 1) return null;
   const current = Math.min(query.page, pages);
   const href = (page: number) => toHref(path, { ...query, page });
   return (
-    <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-1">
+    <nav aria-label={t("pagination")} className="mt-12 flex items-center justify-center gap-1">
       {current > 1 ? (
-        <Link href={href(current - 1)} rel="prev" aria-label="Previous page" className={cn(ITEM, "hover:bg-muted")}>
+        <Link href={href(current - 1)} rel="prev" aria-label={t("previousPage")} className={cn(ITEM, "hover:bg-muted")}>
           <ChevronLeft className="size-4" />
         </Link>
       ) : null}
@@ -47,7 +49,7 @@ export function Pagination({
           <Link
             key={p}
             href={href(p)}
-            aria-label={`Page ${p}`}
+            aria-label={t("page", { page: p })}
             aria-current={p === current ? "page" : undefined}
             className={cn(ITEM, p === current ? "bg-primary text-primary-foreground" : "hover:bg-muted")}
           >
@@ -56,7 +58,7 @@ export function Pagination({
         ),
       )}
       {current < pages ? (
-        <Link href={href(current + 1)} rel="next" aria-label="Next page" className={cn(ITEM, "hover:bg-muted")}>
+        <Link href={href(current + 1)} rel="next" aria-label={t("nextPage")} className={cn(ITEM, "hover:bg-muted")}>
           <ChevronRight className="size-4" />
         </Link>
       ) : null}

@@ -2,9 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Ban, CheckCheck, RotateCcw, Truck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
+import "@/lib/zod-jitless";
 import { z } from "zod";
 import { Field, fieldAria } from "@/components/forms/form-field";
 import { Price } from "@/components/product/price";
@@ -21,55 +23,72 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/features/auth/auth-store";
+import { useFieldError } from "@/i18n/use-field-error";
 import type { AdminOrder } from "./admin-api";
 import { useCancelOrder, useDeliverOrder, useRefundOrder, useShipOrder } from "./use-admin";
 
-const CARRIERS = ["DHL", "UPS", "FedEx", "USPS", "Royal Mail"];
+// Захиалга ихэвчлэн Монгол доторх тээврээр явдаг: Улаанбаатарт өөрийн хүргэлт, аймагт шуудан.
+const CARRIERS = ["Монгол шуудан", "Өөрийн хүргэлт"];
 
 type Action = "ship" | "deliver" | "cancel" | "refund" | null;
 
-/** Захиалгад одоогийн төлвөөр нь юу хийж болох вэ (өөрийг нь API татгалзана). */
-export function availableActions(status: AdminOrder["status"]) {
+/**
+ * Захиалгад одоогийн төлвөөр нь, мөн хэрэглэгчийн role-оор юу хийж болох вэ (өөрийг нь API татгалзана):
+ * илгээх, хүргэх нь агуулахын ажилтных; цуцлах, буцаах нь админых.
+ */
+export function availableActions(status: AdminOrder["status"], role: string | undefined) {
+  const warehouse = role === "warehouse";
+  const admin = role === "admin";
   return {
-    ship: status === "paid",
-    deliver: status === "shipped",
-    cancel: status === "pending",
-    refund: status === "paid" || status === "shipped" || status === "delivered",
+    ship: warehouse && status === "paid",
+    deliver: warehouse && status === "shipped",
+    cancel: admin && status === "pending",
+    refund: admin && (status === "paid" || status === "shipped" || status === "delivered"),
   };
 }
 
 export function OrderActions({ order }: { order: AdminOrder }) {
+  const t = useTranslations("admin.actions");
   const [open, setOpen] = useState<Action>(null);
-  const can = availableActions(order.status);
+  // Диалог нээгдэх бүрд шинэ төлөвтэй: өмнөх удаагийн бичсэн шалтгаан, "буцаан нөөцлөх"-ийн сонголт
+  // (захиалгын одоогийн төлвөөс гарсан өгөгдмөл) үлдэхгүй.
+  const [session, setSession] = useState(0);
+  const role = useAuth((state) => state.user?.role);
+  const can = availableActions(order.status, role);
   if (!can.ship && !can.deliver && !can.cancel && !can.refund) return null;
   const close = () => setOpen(null);
+  const show = (action: Exclude<Action, null>) => {
+    setSession((count) => count + 1);
+    setOpen(action);
+  };
 
   return (
     <>
       {can.ship && (
-        <Button className="h-10 rounded-full px-4" onClick={() => setOpen("ship")}>
-          <Truck aria-hidden /> Mark as shipped
+        <Button onClick={() => show("ship")}>
+          <Truck aria-hidden /> {t("markShipped")}
         </Button>
       )}
       {can.deliver && (
-        <Button className="h-10 rounded-full px-4" onClick={() => setOpen("deliver")}>
-          <CheckCheck aria-hidden /> Mark as delivered
+        <Button onClick={() => show("deliver")}>
+          <CheckCheck aria-hidden /> {t("markDelivered")}
         </Button>
       )}
       {can.refund && (
-        <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setOpen("refund")}>
-          <RotateCcw aria-hidden /> Refund
+        <Button variant="outline" onClick={() => show("refund")}>
+          <RotateCcw aria-hidden /> {t("refund")}
         </Button>
       )}
       {can.cancel && (
-        <Button variant="outline" className="h-10 rounded-full px-4" onClick={() => setOpen("cancel")}>
-          <Ban aria-hidden /> Cancel order
+        <Button variant="outline" onClick={() => show("cancel")}>
+          <Ban aria-hidden /> {t("cancelOrder")}
         </Button>
       )}
-      <ShipDialog order={order} open={open === "ship"} onClose={close} />
-      <DeliverDialog order={order} open={open === "deliver"} onClose={close} />
-      <CancelDialog order={order} open={open === "cancel"} onClose={close} />
-      <RefundDialog order={order} open={open === "refund"} onClose={close} />
+      <ShipDialog key={`ship-${session}`} order={order} open={open === "ship"} onClose={close} />
+      <DeliverDialog key={`deliver-${session}`} order={order} open={open === "deliver"} onClose={close} />
+      <CancelDialog key={`cancel-${session}`} order={order} open={open === "cancel"} onClose={close} />
+      <RefundDialog key={`refund-${session}`} order={order} open={open === "refund"} onClose={close} />
     </>
   );
 }
@@ -77,12 +96,14 @@ export function OrderActions({ order }: { order: AdminOrder }) {
 type DialogProps = { order: AdminOrder; open: boolean; onClose: () => void };
 
 const shipSchema = z.object({
-  carrier: z.string().trim().min(1, "Enter the carrier").max(40, "Use at most 40 characters"),
-  tracking_number: z.string().trim().min(1, "Enter the tracking number").max(100, "Use at most 100 characters"),
+  carrier: z.string().trim().min(1, "adminCarrier").max(40, "adminMax40"),
+  tracking_number: z.string().trim().min(1, "adminTracking").max(100, "adminMax100"),
 });
 type ShipValues = z.infer<typeof shipSchema>;
 
 function ShipDialog({ order, open, onClose }: DialogProps) {
+  const t = useTranslations("admin.actions");
+  const fieldError = useFieldError();
   const ship = useShipOrder();
   const {
     register,
@@ -96,7 +117,7 @@ function ShipDialog({ order, open, onClose }: DialogProps) {
       { number: order.number, ...values },
       {
         onSuccess: () => {
-          toast.success(`Order ${order.number} is marked as shipped. The customer has been emailed.`);
+          toast.success(t("shippedToast", { number: order.number }));
           reset();
           onClose();
         },
@@ -109,17 +130,14 @@ function ShipDialog({ order, open, onClose }: DialogProps) {
       <DialogContent>
         <form onSubmit={submit} noValidate className="space-y-4">
           <DialogHeader>
-            <DialogTitle>Mark as shipped</DialogTitle>
-            <DialogDescription>
-              Order {order.number}. The customer is emailed the tracking number and sees it on their order.
-            </DialogDescription>
+            <DialogTitle>{t("markShipped")}</DialogTitle>
+            <DialogDescription>{t("shipDesc", { number: order.number })}</DialogDescription>
           </DialogHeader>
-          <Field id="carrier" label="Carrier" error={errors.carrier?.message}>
+          <Field id="carrier" label={t("carrier")} error={fieldError(errors.carrier?.message)}>
             <Input
               {...fieldAria("carrier", errors.carrier?.message)}
               list="carriers"
               autoComplete="off"
-              className="h-11 rounded-xl"
               {...register("carrier")}
             />
             <datalist id="carriers">
@@ -128,20 +146,19 @@ function ShipDialog({ order, open, onClose }: DialogProps) {
               ))}
             </datalist>
           </Field>
-          <Field id="tracking_number" label="Tracking number" error={errors.tracking_number?.message}>
+          <Field id="tracking_number" label={t("tracking")} error={fieldError(errors.tracking_number?.message)}>
             <Input
               {...fieldAria("tracking_number", errors.tracking_number?.message)}
               autoComplete="off"
-              className="h-11 rounded-xl"
               {...register("tracking_number")}
             />
           </Field>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Not yet
+              {t("notYet")}
             </Button>
             <Button type="submit" disabled={ship.isPending}>
-              {ship.isPending ? "Saving…" : "Mark as shipped"}
+              {ship.isPending ? t("saving") : t("markShipped")}
             </Button>
           </DialogFooter>
         </form>
@@ -151,32 +168,31 @@ function ShipDialog({ order, open, onClose }: DialogProps) {
 }
 
 function DeliverDialog({ order, open, onClose }: DialogProps) {
+  const t = useTranslations("admin.actions");
   const deliver = useDeliverOrder();
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Mark as delivered?</DialogTitle>
-          <DialogDescription>
-            Order {order.number} arrived. The customer is emailed, and can then review what they bought.
-          </DialogDescription>
+          <DialogTitle>{t("deliverTitle")}</DialogTitle>
+          <DialogDescription>{t("deliverDesc", { number: order.number })}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Not yet
+            {t("notYet")}
           </Button>
           <Button
             disabled={deliver.isPending}
             onClick={() =>
               deliver.mutate(order.number, {
                 onSuccess: () => {
-                  toast.success(`Order ${order.number} is marked as delivered.`);
+                  toast.success(t("deliveredToast", { number: order.number }));
                   onClose();
                 },
               })
             }
           >
-            {deliver.isPending ? "Saving…" : "Mark as delivered"}
+            {deliver.isPending ? t("saving") : t("markDelivered")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -185,19 +201,17 @@ function DeliverDialog({ order, open, onClose }: DialogProps) {
 }
 
 function CancelDialog({ order, open, onClose }: DialogProps) {
+  const t = useTranslations("admin.actions");
   const cancel = useCancelOrder();
   const [reason, setReason] = useState("");
   return (
     <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Cancel this order?</DialogTitle>
-          <DialogDescription>
-            Order {order.number} has not been paid. The items go back in stock and the payment is cancelled, so it can no
-            longer be paid. The customer is emailed.
-          </DialogDescription>
+          <DialogTitle>{t("cancelTitle")}</DialogTitle>
+          <DialogDescription>{t("cancelDesc", { number: order.number })}</DialogDescription>
         </DialogHeader>
-        <Field id="cancel-reason" label="Note (optional)" hint="Kept in the order's history, not shown to the customer.">
+        <Field id="cancel-reason" label={t("noteOptional")} hint={t("noteHint")}>
           <Textarea
             id="cancel-reason"
             aria-describedby="cancel-reason-hint"
@@ -208,7 +222,7 @@ function CancelDialog({ order, open, onClose }: DialogProps) {
         </Field>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
-            Keep the order
+            {t("keepOrder")}
           </Button>
           <Button
             variant="destructive"
@@ -218,7 +232,7 @@ function CancelDialog({ order, open, onClose }: DialogProps) {
                 { number: order.number, reason: reason.trim() },
                 {
                   onSuccess: () => {
-                    toast.success(`Order ${order.number} is cancelled.`);
+                    toast.success(t("cancelledToast", { number: order.number }));
                     setReason("");
                     onClose();
                   },
@@ -226,7 +240,7 @@ function CancelDialog({ order, open, onClose }: DialogProps) {
               )
             }
           >
-            {cancel.isPending ? "Cancelling…" : "Cancel order"}
+            {cancel.isPending ? t("cancelling") : t("cancelOrder")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -235,12 +249,14 @@ function CancelDialog({ order, open, onClose }: DialogProps) {
 }
 
 const refundSchema = z.object({
-  reason: z.string().trim().min(1, "Say why it is being refunded").max(300, "Use at most 300 characters"),
+  reason: z.string().trim().min(1, "adminRefundReason").max(300, "adminMax300"),
   restock: z.boolean(),
 });
 type RefundValues = z.infer<typeof refundSchema>;
 
 function RefundDialog({ order, open, onClose }: DialogProps) {
+  const t = useTranslations("admin.actions");
+  const fieldError = useFieldError();
   const refund = useRefundOrder();
   const amount = order.payment?.amount_cents ?? order.total_cents;
   const {
@@ -262,7 +278,7 @@ function RefundDialog({ order, open, onClose }: DialogProps) {
       { number: order.number, ...values },
       {
         onSuccess: () => {
-          toast.success(`Order ${order.number} is refunded. The customer has been emailed.`);
+          toast.success(t("refundedToast", { number: order.number }));
           reset();
           onClose();
         },
@@ -275,15 +291,15 @@ function RefundDialog({ order, open, onClose }: DialogProps) {
       <DialogContent>
         <form onSubmit={submit} noValidate className="space-y-4">
           <DialogHeader>
-            <DialogTitle>Refund this order?</DialogTitle>
+            <DialogTitle>{t("refundTitle")}</DialogTitle>
             <DialogDescription>
-              The customer gets all of{" "}
-              <Price cents={amount} currency={order.currency} className="text-foreground font-medium" /> back, shipping
-              included. A refund cannot be undone.
+              {t("refundDescPre")}{" "}
+              <Price cents={amount} currency={order.currency} className="text-foreground font-medium" />{" "}
+              {t("refundDescPost")}
             </DialogDescription>
           </DialogHeader>
-          <Field id="refund-reason" label="Reason" error={errors.reason?.message} hint="Kept in the order's history.">
-            <Textarea {...fieldAria("refund-reason", errors.reason?.message, "Kept in the order's history.")} maxLength={300} {...register("reason")} />
+          <Field id="refund-reason" label={t("reason")} error={fieldError(errors.reason?.message)} hint={t("reasonHint")}>
+            <Textarea {...fieldAria("refund-reason", errors.reason?.message, t("reasonHint"))} maxLength={300} {...register("reason")} />
           </Field>
           <div className="flex items-start gap-3">
             <Checkbox
@@ -293,16 +309,16 @@ function RefundDialog({ order, open, onClose }: DialogProps) {
               className="mt-0.5"
             />
             <div className="space-y-0.5">
-              <Label htmlFor="restock">Put the items back in stock</Label>
-              <p className="text-muted-foreground text-xs">Leave this off for goods that were lost or damaged.</p>
+              <Label htmlFor="restock">{t("restock")}</Label>
+              <p className="text-muted-foreground text-xs">{t("restockHint")}</p>
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Keep the order
+              {t("keepOrder")}
             </Button>
             <Button type="submit" variant="destructive" disabled={refund.isPending}>
-              {refund.isPending ? "Refunding…" : "Refund order"}
+              {refund.isPending ? t("refunding") : t("refundOrder")}
             </Button>
           </DialogFooter>
         </form>

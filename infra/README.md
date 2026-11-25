@@ -11,3 +11,8 @@ make infra-reset   # зогсоож, өгөгдлийг УСТГАНА
 
 Postgres `127.0.0.1:5433`, Redis `127.0.0.1:6379` порт дээр сонсоно. Нэвтрэх мэдээлэл, өгөгдлийн сангийн нэр `.env`-ээс
 ирнэ (`make infra` анх удаа `.env.example`-ээс хуулж үүсгэнэ).
+
+## Production
+
+`docker-compose.prod.yml` + `Caddyfile` нь deploy-д зориулагдсан бүрэн stack (Caddy HTTPS, web, api, Postgres, Redis); `.env.prod`-оор
+тохируулна. Заавар: [`docs/deploy.md`](../docs/deploy.md).

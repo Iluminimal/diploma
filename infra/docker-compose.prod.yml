@@ -1,0 +1,118 @@
+# Бүрэн stack (deploy): Caddy (HTTPS) -> web (Next.js) -> api (FastAPI) -> Postgres (pgvector), Redis.
+# Зөвхөн Caddy 80/443-г нээнэ; бусад үйлчилгээ дотоод сүлжээнд. Тохиргоо нь `.env.prod`
+# (`.env.prod.example`-ээс хуулна), заавар: docs/deploy.md.
+#
+#   docker compose -f infra/docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# Төслийн нэр нь dev compose-оос (`angel`) зориудаар өөр: нэг машин дээр volume, сүлжээ хуваалцахгүй.
+name: angel-prod
+
+x-api-env: &api-env
+  env_file: ../.env.prod
+  environment:
+    APP_ENV: prod
+    DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-angel}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-angel}
+    REDIS_URL: redis://redis:6379/0
+    # Нэг origin: browser бүх зүйлийг (API, зураг) сайтын хаягаар дууддаг, web нь /api/v1, /media-г API руу дамжуулдаг.
+    CORS_ORIGINS: ${SITE_URL:?set SITE_URL}
+    MEDIA_BASE_URL: ${SITE_URL}/media
+    WEB_BASE_URL: ${SITE_URL}
+    GOOGLE_REDIRECT_URI: ${SITE_URL}/api/v1/auth/google/callback
+    QPAY_CALLBACK_BASE_URL: ${SITE_URL}
+    COOKIE_SECURE: "true"
+    # API-д зөвхөн Caddy -> web -> api сүлжээгээр хүрнэ: X-Forwarded-For-ийг итгэнэ.
+    TRUST_PROXY_HEADERS: "true"
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-angel}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-angel}
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    # Cache, rate limit: хадгалах шаардлагагүй.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Нэг удаагийн migration; амжилттай дууссаны дараа л api асна.
+  migrate:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: angel-api:${TAG:-latest}
+    <<: *api-env
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    image: angel-api:${TAG:-latest}
+    <<: *api-env
+    restart: unless-stopped
+    volumes:
+      # Барааны зураг (thumbnail) ба Hugging Face / YOLO weights (анхны асалтад татна).
+      - media:/data/media
+      - hf-cache:/hf
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ../apps/web
+      args:
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL:?set SITE_URL}
+        NEXT_PUBLIC_API_URL: ${SITE_URL}
+        API_INTERNAL_URL: http://api:8000
+    image: angel-web:${TAG:-latest}
+    restart: unless-stopped
+    environment:
+      API_INTERNAL_URL: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  media:
+  hf-cache:
+  caddy-data:
+  caddy-config:

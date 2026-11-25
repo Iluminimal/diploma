@@ -1,0 +1,19 @@
+# API image-ийн build context нь репозиторийн root (`docker build -f apps/api/Dockerfile .`).
+.git
+.github
+.claude
+.env
+.env.*
+!.env.example
+apps/web
+apps/api/.venv
+apps/api/tests
+apps/api/.pytest_cache
+apps/api/.mypy_cache
+apps/api/.ruff_cache
+**/__pycache__
+data
+models
+docs
+infra
+backups

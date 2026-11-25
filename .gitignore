@@ -9,6 +9,7 @@
 .env
 .env.*
 !.env.example
+!.env.prod.example
 
 # python
 __pycache__/
@@ -36,6 +37,8 @@ next-env.d.ts
 /data/
 /models/
 docs/openapi.json
+# benchmark-ийн embedding кэш (make benchmark)
+docs/perf/embeddings/
 
 # local, non-repository material
 docs/thesis/

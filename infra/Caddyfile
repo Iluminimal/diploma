@@ -1,0 +1,7 @@
+# Домэйн (SITE_ADDRESS): Caddy Let's Encrypt-ээр HTTPS-ийг өөрөө авч, шинэчилнэ. Локал шалгалтад
+# SITE_ADDRESS=localhost (Caddy-ийн өөрийн cert) эсвэл :80 (HTTP, cert-гүй) тавина.
+# Нэг origin: бүх хүсэлт web (Next.js) руу; /api/v1, /media-г web өөрөө API руу дамжуулдаг.
+{$SITE_ADDRESS} {
+	encode zstd gzip
+	reverse_proxy web:3000
+}

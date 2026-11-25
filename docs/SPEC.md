@@ -68,7 +68,7 @@ pgvector:
 `POST /api/v1/search/image` (multipart upload). Pipeline:
 1. Validate content-type and size (max ~8 MB); decode safely with Pillow; strip EXIF;
    fix orientation; reject decompression bombs.
-2. Garment localization behind a clean interface (YOLO pluggable later). Start with
+2. Garment localization behind a clean interface (`GarmentLocalizer`; YOLO is implemented in `ml/yolo.py`, see `docs/search-api.md`). Originally started with
    zero-shot FashionCLIP category prediction on the whole image. Return the predicted
    category so the UI can show "Detected: Shirts" and let the user override.
 3. Compute the FashionCLIP image embedding, L2-normalize.
@@ -80,7 +80,10 @@ Also:
 - `POST /api/v1/search/text` (FashionCLIP text embedding, e.g. "red floral dress")
 - `POST /api/v1/search/hybrid` (image + text refinement via weighted sum of normalized
   embeddings, e.g. "like this but in blue")
-- `GET /api/v1/products/{id}/similar` (uses stored embedding, no inference)
+- `GET /api/v1/products/{id}/similar` (uses stored embedding, no inference; optional `query` blends
+  a text in, "like this but in red")
+- `interpret=true` on the text, hybrid and similar searches turns colour, gender, season, usage,
+  price ("under $50", "50 мянгаас доош") and "in stock" in the text (Mongolian or English) into filters
 
 Performance targets: image search p95 under ~400 ms on CPU (DB + inference, warm model;
 document measured numbers); similar-products under 50 ms. Cache text embeddings and
@@ -97,14 +100,15 @@ similar-product results (in-memory or Redis LRU).
   results grid with similarity badge, filter chips, text refinement input
 - Cart: persisted for guests, merged on login; Bag panel; quantity updates; stock
   validation
-- Checkout: address form, shipping method, summary, Stripe in TEST mode with idempotent
+- Checkout: address form, shipping method, summary, QPay (sandbox) with idempotent
   webhook handling, confirmation page
 - Auth: register, login, logout, refresh, protected routes, account page
 - Account: order history, order detail, saved addresses, wishlist
 - Search bar with debounced text search and suggestions
-- Admin (minimal): protected area to list/create/edit/deactivate products and view
-  orders; creating a product from an uploaded image computes and stores its embedding
-- Transactional emails stubbed behind an interface (console log in dev)
+- Back office with two staff roles: a warehouse worker (own login) lists/creates/edits/deactivates products,
+  sets stock and ships orders; an administrator views products and orders, cancels/refunds, and sees customers,
+  reviews and figures. Creating a product from an uploaded image computes and stores its embedding
+- Transactional emails behind an interface: SMTP (Mailpit catches them in dev; any SMTP provider in prod), console log as fallback
 
 ## 6. Design direction
 Clean, minimal, modern: think Vercel, Linear, Apple Store, COS, Zara.
@@ -140,7 +144,7 @@ behind an interface so the model can be swapped).
   (testcontainers or compose); search pipeline tests with fixture images; recall sanity
   test (a product's image returns itself at rank 1)
 - Frontend: Vitest + Testing Library for key components; Playwright e2e for visual
-  search, add to cart, checkout (Stripe test mode), login
+  search, add to cart, checkout (QPay sandbox / demo payment), login
 - CI runs all of the above
 
 ## 9. Definition of done (per phase)

@@ -25,6 +25,11 @@
 болгож, pgvector-тэй PostgreSQL-д хадгална. Хайлтад оруулсан зургийг мөн адил вектор болгоод, өгөгдлийн сан хамгийн ойрхон
 бараануудыг буцаана.
 
+Нэг зураг дээр олон хувцас (цамц, өмд, гутал) байвал эхлээд [YOLOv8m](https://huggingface.co/NovaAstro/YOLOv8m_fashion)
+detector хувцас бүрийг тусад нь олж, хэрэглэгч сонгосон хэсгийг л хайна. FashionCLIP-ийг Marqo-FashionSigLIP, ResNet-50-тай
+харьцуулсан офлайн туршилт. Вэб камер нээлттэй үед хувцсыг шууд цэгэн хүрээгээр тойруулж харуулна (кадр хадгалагдахгүй, унтрааж болно). Харьцуулалт: [`docs/ml-comparison.md`](docs/ml-comparison.md). Detector нь Ultralytics сан ашигладаг тул
+AGPL-3.0 лицензийг анхаарна.
+
 ## Ашигласан технологи
 
 | | |
@@ -32,7 +37,7 @@
 | Web | Next.js 16, React 19, TypeScript, Tailwind CSS v4, shadcn/ui, TanStack Query |
 | API | Python 3.12, FastAPI, Pydantic v2, SQLAlchemy 2 (async), Alembic |
 | Өгөгдөл | PostgreSQL + pgvector, Redis |
-| ML | PyTorch дээрх FashionCLIP |
+| ML | PyTorch дээрх FashionCLIP, YOLOv8 (Ultralytics) |
 | Хэрэгсэл | uv, Ruff, mypy, ESLint, Vitest, Playwright, GitHub Actions |
 
 ## Эхлэх
@@ -41,7 +46,7 @@
 
 ```bash
 make install   # API болон web-ийн сангуудыг суулгах
-make infra     # Postgres, Redis-ийг Docker-т асаах (анх удаа .env үүсгэнэ)
+make infra     # Postgres, Redis, Mailpit-ийг Docker-т асаах (анх удаа .env үүсгэнэ); имэйл: http://localhost:8025
 make migrate   # өгөгдлийн сангийн хүснэгтүүдийг үүсгэх
 
 make api       # 1-р terminal: API  http://localhost:8000
@@ -55,7 +60,7 @@ make ingest ARGS="--limit 500"   # Kaggle fashion датасетийн 500 ба�
 ```
 
 Эхлээд `.env` дахь `DATASET_DIR`-д датасетийн фолдерын замыг зааж өгнө. Дэлгэрэнгүй: [`docs/ml-pipeline.md`](docs/ml-pipeline.md).
-Админ самбарыг турших: `make create-admin EMAIL=you@example.com`, дараа нь <http://localhost:3000/admin> хаягаар орно.
+Админ самбарыг турших: `make create-admin EMAIL=you@example.com`, дараа нь <http://localhost:3000/admin> хаягаар орно. Агуулахын ажилтан (бараа нэмэх/хасах, нөөц, захиалга илгээх) `make create-warehouse EMAIL=worker@example.com`-оор үүснэ; тэр нэвтэрмэгц бараа руу орно.
 
 ## Түгээмэл командууд
 
@@ -103,7 +108,7 @@ Backend-ийн давхарга: `routes → services → repositories → model
 Эдгээр нь англиар бичигдсэн:
 [Архитектур](docs/architecture.md) · [Хөгжүүлэлтийн гарын авлага](docs/development.md) · [Шаардлага](docs/SPEC.md) ·
 [Хайлтын API](docs/search-api.md) · [ML pipeline](docs/ml-pipeline.md) · [Худалдаа](docs/commerce.md) ·
-[Frontend](docs/frontend.md) · [Админ](docs/admin.md) · [End-to-end тест](docs/e2e.md)
+[Frontend](docs/frontend.md) · [Админ](docs/admin.md) · [Deploy](docs/deploy.md) · [End-to-end тест](docs/e2e.md)
 
 ## Лиценз
 

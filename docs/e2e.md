@@ -35,7 +35,7 @@ make e2e-clean                                                # afterwards: remo
 ```
 
 This is the real catalogue and the real FashionCLIP model. `global-setup.ts` creates the e2e administrator
-(`e2e-admin@example.com`, password in `e2e/support/env.ts`) with the same CLI an operator uses. `make e2e-clean` deletes
+(`admin@example.com`) and a warehouse worker (`warehouse@example.com`), passwords in `e2e/support/env.ts`, with the same CLI an operator uses (`make create-admin`, `make create-warehouse`). Specs use the `warehousePage` fixture (and `warehouseSession`) for products, stock and shipping, and `adminPage` for refunds, cancels, customers, the dashboard, the activity log and the CSV downloads; the warehouse board is exercised by setting a stock from it and finding the change in the log. `make e2e-clean` deletes
 `e2e-*@example.com` customers and the phone customers in `+1415555xxxx` with their orders, and the products named `E2E ...` (the API can withdraw a product but not
 delete it) with their photos. It refuses to run when `APP_ENV=prod`.
 
@@ -99,5 +99,5 @@ so start from a fresh database when you want a clean run.
 
 ## Not covered
 
-HEIC upload (needs a HEIC file and macOS `sips`; unit-tested in `normalize-image.test.ts`), Stripe (offline gateway only),
+HEIC upload (needs a HEIC file and macOS `sips`; unit-tested in `normalize-image.test.ts`), QPay (offline gateway only),
 and anything with a screen reader or a real phone.

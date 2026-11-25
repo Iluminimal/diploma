@@ -115,6 +115,13 @@ old (Next's cache). The rating on cards and in the page header, which come from 
 * **Wishlist** (`/wishlist`, `PUT|DELETE /wishlist/{product_id}`): idempotent, accounts only.
 * **Addresses** (`/addresses`): up to 10, exactly one default (partial unique index), other people's ids are 404.
 
+**Price when added.** `cart_items.price_cents_at_add` is the unit price when the line first went in (adding more of it keeps it;
+older lines are null). A line whose current price differs shows "Price changed / dropped: it was X when you added it".
+
+**Buy again.** `POST /orders/{number}/reorder` (your own order; 404 otherwise, 403 for staff) puts each line back with the same size
+and quantity, limited by the stock now and the bag limits, in one transaction. The reply has the cart, how many lines went in, and
+`skipped: [{name, reason}]` with `unavailable`, `out_of_stock`, `size`, `bag_full` or `reduced` (a smaller quantity went in).
+
 ## Checkout and orders
 
 `POST /checkout` (header `Idempotency-Key`) turns the cart into a **pending order that holds the stock**:
@@ -152,17 +159,86 @@ link. The customer is emailed when the order ships (carrier and tracking number)
 
 ## Payments
 
-`PAYMENTS_MODE=offline` (default in `.env.example`): no provider. `POST /checkout/orders/{number}/simulate-payment` marks
-an order paid through the same settlement code a webhook uses; it answers 404 with a real gateway, and the API refuses to
-start with offline mode when `APP_ENV=prod`. This is what the web app's demo "Pay now" calls.
+Prices are stored in **togrog minor units** (togrog x 100, `price_cents`; 87,900 ₮ = `8790000`) and the shop prices in one
+currency only, `CURRENCY=MNT`, like Amazon or Apple price each market in its local currency: there is no conversion, the
+amount shown is the amount charged. The payment provider is behind `PaymentGateway` (`payments/`); settlement
+(`services/commerce/payments.py`) is the only place that turns a confirmed payment into an order change, and it applies
+each payment exactly once (the provider's payment id is stored in `payment_events` in the same transaction).
 
-`PAYMENTS_MODE=stripe`: real PaymentIntents behind `PaymentGateway` (`payments/`). Needs `STRIPE_SECRET_KEY` and
-`STRIPE_WEBHOOK_SECRET`; `POST /webhooks/stripe` verifies the signature over the raw body, stores the event id and
-applies the change in one transaction (exactly once however often Stripe redelivers), handles `payment_intent.succeeded`,
-`payment_failed` (order stays open) and `canceled`, and refunds a payment that arrives for an order that was already
-cancelled or has the wrong amount. **This path is covered by tests with signed payloads and a fake gateway, but has not
-been run against Stripe**: there were no keys. The web app has no Stripe code; wiring Stripe.js would need a payment
-element and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
+`PAYMENTS_MODE=offline` (default in `.env.example`): no provider. `POST /checkout/orders/{number}/simulate-payment` marks
+an order paid through the same settlement code; it answers 404 with a real gateway, and the API refuses to start with
+offline mode when `APP_ENV=prod`. This is what the web app's test-payment button calls (there is no card form). Offline charges in the shop currency.
+
+`PAYMENTS_MODE=qpay`: QPay Merchant API v2 (`payments/qpay_gateway.py`, https://developer.qpay.mn). Needs
+`QPAY_CLIENT_ID`, `QPAY_CLIENT_SECRET` and `QPAY_INVOICE_CODE` (the sandbox's public test values are `TEST_MERCHANT`,
+`123456`, `TEST_INVOICE`; prod refuses the sandbox URL). The flow:
+
+1. `POST /checkout` reserves the stock, then creates one QPay invoice per order for exactly the order total (`charge_currency`
+   and `charge_minor` on the payment equal the order's; a gateway that charges another currency is refused as misconfigured).
+   Invoice creation is serialised per order (advisory lock), because QPay rejects a second invoice with the same number.
+   The response carries the QR image, QPay short link and bank-app deep links (`payment.qpay`).
+2. The customer scans the QR (or opens their bank app on a phone) and pays.
+3. QPay calls `GET|POST /webhooks/qpay?order=…`. The notification is **not signed**, so it is only a trigger: the API asks
+   QPay (`payment/check`) and settles only what QPay confirms. Forged calls change nothing.
+4. While the QR is on screen the page reads the order status from **our own API** (`GET /orders/{number}`, every 3 seconds,
+   paused in a hidden tab) and moves to the confirmation page as soon as the status is `paid`. This never calls QPay (QPay
+   discourages frequent polling); it only picks up what step 3 settled.
+5. The callback must be reachable from the internet (`QPAY_CALLBACK_BASE_URL`; locally a cloudflared/ngrok tunnel). Without
+   it the status stays `pending`, so the customer presses "check my payment": `POST /checkout/orders/{number}/check-payment`
+   asks QPay once and settles what it confirms; the page also does that once when the customer returns from their bank app.
+   Nothing in the browser asks QPay on a timer.
+
+A payment for a different amount or currency than the invoiced one, or one that arrives after the order was cancelled
+(expired or replaced by a newer checkout), is refunded automatically (refund, falling back to QPay's cancel for non-card
+payments). Unpaid invoices are deleted when their order expires. **The sandbox flow (token, invoice with QR and bank
+links, check, cancel) was run against `merchant-sandbox.qpay.mn`; paying an invoice needs QPay's test tools.**
+
+## Turning QPay on
+
+1. **Credentials.** Sandbox: the public test values `QPAY_CLIENT_ID=TEST_MERCHANT`, `QPAY_CLIENT_SECRET=123456`,
+   `QPAY_INVOICE_CODE=TEST_INVOICE`, `QPAY_BASE_URL=https://merchant-sandbox.qpay.mn`. Production: your own merchant values
+   from QPay (contract with QPay), `QPAY_BASE_URL=https://merchant.qpay.mn`. Never commit them.
+2. **Check them first:** `make qpay-check` (`scripts/qpay_smoke.py`) reads `QPAY_*` from `.env` and, over the real network,
+   gets a token, creates a 100 MNT test invoice, checks that the QR, short url and bank links come back, confirms
+   `payment/check` reports it unpaid and cancels it. Nothing is charged. It refuses `APP_ENV=prod`. It works while
+   `PAYMENTS_MODE` is still `offline`. (Run against the public sandbox: token, invoice with QR and 23 bank links, check and
+   cancel all succeeded.)
+3. **Switch:** `PAYMENTS_MODE=qpay`, restart `make api` (no `payments_disabled` warning should appear).
+4. **Callback (optional locally):** QPay calls `QPAY_CALLBACK_BASE_URL/api/v1/webhooks/qpay`, so it must be reachable from the
+   internet: `cloudflared tunnel --url http://localhost:8000` and put its https address in `QPAY_CALLBACK_BASE_URL`. Without a
+   tunnel the "I've paid, check payment" button does the same `payment/check`.
+5. **Paying in the sandbox** needs QPay's own sandbox test tools or test account; a real bank app cannot pay a sandbox invoice.
+6. **Production:** HTTPS domain, `APP_ENV=prod` (the API refuses to start with offline mode, the sandbox url or missing
+   credentials), the callback on the public domain.
+
+The gateway discards its token and fetches a new one from `/v2/auth/token`, once, when QPay answers 401 or 403, as QPay's
+guide asks; a second rejection is reported as a provider error.
+
+## Resuming, cancelling and emails
+
+An order that waits for payment (`pending`) carries `expires_at` (creation time + `ORDER_PENDING_TTL_MINUTES`) and, with QPay,
+the same `qpay` block as the checkout response, so the QR, bank links and a countdown can be shown again from the order page,
+the confirmation page or after a reload: the payment is never lost. `POST /orders/{number}/cancel` lets the customer cancel
+an unpaid order (409 `invalid-order-transition` otherwise): the QPay invoice is closed first, and if the customer paid in the
+meantime the cancel is refused and the payment settles normally; then the stock is released (`cancel_reason = "customer"`).
+Replaying a checkout `Idempotency-Key` whose order has expired or been cancelled answers 409 `attempt-expired`.
+
+Emails (logged in development): the payment confirmation lists the items, delivery method, address, phone and total; an
+order that expires unpaid sends a short "nothing was charged, your Bag is unchanged" notice (`services/commerce/order_text.py`).
+
+## Delivery addresses and shipping
+
+The shop delivers inside Mongolia only. An address (`/addresses`) is `region` (one of the 21 aimags or Ulaanbaatar,
+`core/mongolia.py`), `city` (a district of Ulaanbaatar, chosen from the nine, or a soum), `khoroo` (khoroo or bag), `line1`
+(street, building, apartment), `line2` (entrance, floor, door code), an optional 5-digit `postal_code` and a required
+Mongolian phone (stored as E.164 `+976…`, so a courier can call). `country` is always `MN`. The web form lists the same data
+(`features/account/mongolia.ts`; change both together).
+
+The delivery zone follows the region: Ulaanbaatar is `ub`, every aimag is `rural` (`services/commerce/shipping.py`).
+`GET /checkout/shipping-methods?zone=ub|rural` lists what is offered: `standard` (5,000 ₮ in Ulaanbaatar, 10,000 ₮ in the
+aimags, free from 150,000 ₮), `express` (Ulaanbaatar only, same day, 12,000 ₮) and `pickup` (free, at `PICKUP_ADDRESS`).
+`POST /checkout` rejects a method the address's zone does not offer (422 `shipping-unavailable`). Prices and the free
+threshold are settings (`SHIPPING_*`, `FREE_SHIPPING_THRESHOLD_CENTS`).
 
 ## Known limits
 
@@ -172,6 +248,6 @@ element and `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`.
   so a password can only be set or changed while signed in.
 * Registration reveals whether an email exists (409); it is rate limited, and the alternative would need email verification.
 * Emails are logged, not sent (`core/mail.py`).
-* Refunds are always for the full amount; there are no returns, discount codes or tax. Refunds go through whatever
-  `PaymentGateway` is configured (offline in development), and against real Stripe the path is tested with a fake gateway only.
+* Refunds are always for the full amount, at the locked rate; there are no returns, discount codes or tax. Refunds go
+  through whatever `PaymentGateway` is configured (offline in development); QPay refunds were not run in the sandbox.
 * Reviews have no photos, "helpful" votes or replies, and cannot be reported by customers (only hidden by an administrator).

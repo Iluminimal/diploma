@@ -121,6 +121,7 @@ jobs:
       DATABASE_URL: postgresql+asyncpg://angel:angel@localhost:5432/angel
       REDIS_URL: redis://localhost:6379/0
       EMBEDDER: fake
+      LOCALIZER: fake
       PAYMENTS_MODE: offline
       # Google-гүйгээр Google нэвтрэлт: API-ийн хиймэл хувилбар зөвшөөрлийн дэлгэцээс бусад жинхэнэ урсгалыг ажиллуулна.
       OAUTH_MODE: fake
@@ -133,6 +134,7 @@ jobs:
       MEDIA_DIR: /tmp/angel-media
       MEDIA_BASE_URL: http://localhost:8000/media
       E2E_FAKE_MODEL: "1"
+      E2E_FAKE_LOCALIZER: "1"
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v10.2.0
@@ -190,9 +192,14 @@ jobs:
           retention-days: 7
 
   infra:
-    name: Infra (compose file valid)
+    name: Infra (compose files valid, production images build)
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
       - run: docker compose -f infra/docker-compose.dev.yml config --quiet
+      - name: Production compose is valid and both images build (nothing is pushed)
+        run: |
+          cp .env.prod.example .env.prod
+          docker compose -f infra/docker-compose.prod.yml --env-file .env.prod config --quiet
+          docker compose -f infra/docker-compose.prod.yml --env-file .env.prod build migrate web

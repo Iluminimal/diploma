@@ -39,7 +39,31 @@ resetting a password. Table `otp_challenges`; `services/accounts/otp.py`.
 `core/sms.py` is an interface like `Mailer` and `PaymentGateway`: `SMS_MODE=console` (default) writes the message to the API log,
 so in development **read the code from the `make api` output** (`"event": "sms_sent"`); `SMS_MODE=twilio` sends it through Twilio
 (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`). `APP_ENV=prod` refuses the console sender and a fixed code.
-Emails are still logged by `ConsoleMailer` until real delivery is added.
+
+### Email
+
+Email subjects and bodies, SMS texts and API error messages are written in Mongolian (the web app shows its own localized
+message per error `type`). A Mongolian SMS is encoded as UCS-2, so one message holds 70 characters instead of 160: the code
+text is kept short.
+
+`core/mail.py` follows the same pattern. `MAIL_MODE=smtp` (the `.env.example` default) delivers through SMTP with `SmtpMailer`;
+`MAIL_MODE=console` only logs (the code default, so tests never open a socket). In development `make infra` starts
+[Mailpit](https://mailpit.axllent.org), a local mail catcher: every email the API sends (codes, welcome, order updates) lands in
+<http://localhost:8025> and never leaves the machine, so it costs nothing and needs no account. In production point
+`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_STARTTLS=true` and `MAIL_FROM` at a real provider;
+`APP_ENV=prod` refuses `MAIL_MODE=console`.
+
+A failed SMTP send is handled by what the email is for. A code that could not be delivered answers `503`
+(`email-unavailable`) so the person knows to retry. Notification emails (welcome, order status, payment confirmation) go
+through `BestEffortMailer`: they are sent after the database commit, so a mail outage is logged (`email_dropped`) instead of
+turning a finished sign-up or payment into a `500`.
+
+### Trying real SMS for free
+
+Sending to real phones costs money, so development uses `SMS_MODE=console`. To see one real text on your own phone, a
+[Twilio trial](https://www.twilio.com/docs/usage/trials) account gives free credit but only sends to phone numbers you have
+verified in the Twilio console (messages start with "Sent from a Twilio Trial account"). Set `SMS_MODE=twilio` and the three
+`TWILIO_*` values in your untracked `.env`, then sign in with that number. Check in the console that your country is supported.
 
 `OTP_DEV_CODE=000000` makes every code that value. It exists for the end-to-end tests and demos, and is refused in production.
 
@@ -49,7 +73,7 @@ Everything here is under the same-origin check and `no-store`.
 
 | Endpoint | What it does |
 | --- | --- |
-| `POST /otp/request` `{destination}` | send a sign-in code to a phone number or email. Always `202` for a valid destination. `422` invalid, `429` too soon, `503` SMS failed |
+| `POST /otp/request` `{destination}` | send a sign-in code to a phone number or email. Always `202` for a valid destination. `422` invalid, `429` too soon, `503` SMS or email failed |
 | `POST /otp/verify` `{destination, code}` | sign in, **creating the account on first use**; merges the guest cart; `is_new_user` tells the page to ask for a name. `400` wrong/expired, `429` too many guesses |
 | `POST /password/forgot` `{destination}` | `202` always; a code goes to the account's phone or email |
 | `POST /password/reset` `{destination, code, new_password}` | sets the password, ends **every** login, signs this browser in |
@@ -71,6 +95,27 @@ limit as login). Accounts that only use codes or Google have nothing to prove be
   code proves who does (the same rule as signing in with Google, see `commerce.md`).
 * **Devices.** `refresh_tokens` records the User-Agent and address of the request that created each login (copied along when a
   token rotates). `describe_device` turns the header into a short label. Revoking a login revokes its whole token family.
+* **Security activity.** `security_events` (migration `a9d3e5f7b126`) gets one row per sign-in (`login`, with the method
+  `password`, `otp` or `google`), failed password attempt on an account that exists (`login_failed`; an unknown email leaves nothing),
+  `new_device`, `password_changed`, `password_reset`, `sessions_revoked`, `email_changed` and `phone_changed`, written in the same
+  transaction as the action so a refused action leaves no row. `GET /auth/security-events` returns your last 30, newest first, with the
+  device label and the address with its last part hidden (`203.0.113.x`). The profile shows them under **Security activity**.
+* **New device.** A sign-in whose User-Agent never had a login on the account before (and that is not its very first session) is a
+  `new_device`: an email goes to the owner with the device and the time, after the transaction commits (`AuthService.queue_notice` /
+  `deliver_notices`; a mail failure never breaks the sign-in). Phone-only accounts get the event but no message.
+* **Notices.** Changing or resetting the password tells the owner's email; changing the email tells the **old** address, so someone who
+  took over an account cannot move it quietly.
+* **Daily limit.** On top of 5 failures per 5 minutes per email there is `RATE_LIMIT_LOGIN_EMAIL_DAILY` (20 per day): the next attempt is a
+  429 even with the right password, and the owner gets one email when the limit is reached. A successful sign-in does not reset the daily
+  count; changing or resetting the password does.
+* **Weak passwords.** Length (10 to 128) stays the schema's rule; `core/passwords.py` also refuses, with `urn:angel:problem:weak-password`
+  and a `reason` (`common`, `repeated`, `contains_identity`), a password in `core/common_passwords.txt` or a common word with a few
+  characters added (`password1234`, not `password-horse-battery-staple`), one made of one or two characters, and one that contains
+  the owner's name or the email's local part. There is deliberately no call to a breach service: no part of a password leaves the
+  server. On a reset the check runs *before* the code is spent. The web mirrors the first two rules in `password-strength.ts` for the
+  strength meter; the API decides.
+* **Staff sessions.** An administrator's or warehouse worker's refresh token lives `STAFF_REFRESH_TTL_HOURS` (12) after its last use,
+  and each rotation starts the window again (an idle timeout, not an absolute one).
 * **Deleting an account** anonymises it as before; the typed confirmation is now the email, or the phone number if there is no email
   (`DeleteAccountRequest.confirm`), and the phone and verification times are cleared.
 

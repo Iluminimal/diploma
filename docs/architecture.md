@@ -40,8 +40,8 @@ models/     ORM tables (Product, Order, User …); db/ holds the engine and the 
 ```
 
 Alongside them: `schemas/` (Pydantic request and response shapes, kept apart from the ORM models), `core/` (settings,
-security, errors, rate limiting, dependency wiring in `deps.py`), `ml/` (FashionCLIP behind an interface), `ingestion/`
-(the dataset pipeline), `oauth/` (Google), `payments/` (the gateway interface: Stripe and an offline demo one), `storage.py`
+security, errors, rate limiting, dependency wiring in `deps.py`), `ml/` (FashionCLIP and the YOLO garment localizer behind interfaces; `ml/benchmark/` compares models offline), `ingestion/`
+(the dataset pipeline), `oauth/` (Google), `payments/` (the gateway interface: QPay and an offline demo one), `storage.py`
 (photos on disk, behind an interface), and `cli/` (command-line tools).
 
 ### Domains
@@ -55,7 +55,7 @@ the same place in every layer:
 | `accounts` | who people are | register, sign in, profile, addresses, Google sign-in |
 | `commerce` | buying | cart, wishlist, checkout, orders, payments, shipping, webhooks, fulfilment (ship, deliver, cancel, refund) |
 | `reviews` | what customers say | writing, editing and listing reviews, the product's rating |
-| `admin` | the back office | dashboard figures, customers, product management, order and review moderation |
+| `admin` | the back office | dashboard figures and CSV exports, customers, order and review moderation, the staff activity log (administrator); product management, stock, shipping and the warehouse board (warehouse worker) |
 | `system` | the service itself | health and readiness |
 
 Shared pieces that belong to no single domain stay at the top of their layer: `services/mappers.py` (ORM to schema),
@@ -67,7 +67,7 @@ The tests mirror this: `tests/{accounts,admin,catalog,commerce,core,ingestion,ml
 ### Following one request: "ship an order"
 
 1. `api/v1/admin/orders.py`: `POST /api/v1/admin/orders/{number}/ship`. The admin package (`api/v1/admin/__init__.py`)
-   puts a rate limit, the administrator check and `no-store` in front of every admin route.
+   puts a rate limit, the staff check (administrator or warehouse worker) and `no-store` in front of every admin route; each endpoint then names the role it needs (`AdminDep`, `WarehouseDep`, `StaffDep`).
 2. `services/commerce/order_fulfillment.py`: locks the order, checks it is paid, records the shipment, writes an event, emails
    the customer.
 3. `repositories/commerce/orders.py`: the queries (`get_for_update`, `add_event`).
@@ -95,7 +95,7 @@ Server Components are the default; a file is a client component only when it nee
 | add a setting | `core/config.py` (with its default) and `.env.example` |
 | add a page | `apps/web/src/app/<url>/page.tsx` rendering a component from `features/<feature>/` |
 | add a command | `angel/cli/` and a Makefile target |
-| change what an email says | the service that sends it (`services/commerce/order_fulfillment.py` for order emails), through the `Mailer` in `core/mail.py` |
+| change what an email says | the service that sends it (`services/commerce/order_fulfillment.py` for order emails), through the `Mailer` in `core/mail.py` (`SmtpMailer` in dev goes to Mailpit, http://localhost:8025) |
 
 ## Rules that keep it understandable
 

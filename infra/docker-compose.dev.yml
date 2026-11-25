@@ -1,4 +1,4 @@
-# Зөвхөн хөгжүүлэлтийн үйлчилгээ (Postgres + pgvector, Redis). API болон web-ийг шууд (`make api`, `make web`)
+# Зөвхөн хөгжүүлэлтийн үйлчилгээ (Postgres + pgvector, Redis, Mailpit). API болон web-ийг шууд (`make api`, `make web`)
 # ажиллуулдаг тул PyTorch Apple MPS ашиглаж чадна. Бүрэн stack compose нь deploy хийхэд зориулагдсан.
 name: angel
 
@@ -32,6 +32,23 @@ services:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    # Имэйл баригч (SMTP :1025, Web UI :8025): `MAIL_MODE=smtp` үед API-ийн илгээсэн нэг удаагийн
+    # код, захиалгын имэйлийг жинхэнэ интернет рүү гаргалгүй http://localhost:8025 дээр харна.
+    # Олон архитектурын image (linux/amd64 + linux/arm64).
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: 500
+    ports:
+      - "127.0.0.1:${MAILPIT_SMTP_PORT:-1025}:1025"
+      - "127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
       interval: 5s
       timeout: 3s
       retries: 10

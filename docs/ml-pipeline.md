@@ -82,7 +82,7 @@ workers. The full run did **41,885 products in 16 min 10 s (about 43 img/s)** wi
 running alongside. WebP `method=2` instead of 4 halves encoding time for ~4% larger files.
 
 **Storage.** 83,770 WebP files, 1.3 GB (400 px and 800 px longest side). Database: 247 MB total,
-of which the HNSW index is 107 MB. Money is integer cents (`price_cents`, USD); prices and stock are
+of which the HNSW index is 107 MB. Money is integer minor units (`price_cents`, togrog x 100); prices and stock are
 generated from `sha256(seed:source_id)` so they do not depend on row order or `--limit`.
 
 ## Retrieval quality (mAP)
@@ -120,6 +120,34 @@ relevance by label is a proxy for what a person finds similar, so the numbers ar
 relevant products per class are very uneven (`R` runs from 1 to thousands), which is why the random baseline is reported.
 Reproduce: `cd apps/api && uv run python ../../scripts/evaluate_map.py --out ../../docs/perf/map.json`
 (`--mode image --dataset <path to the Kaggle folder> [--phone]` for the real pipeline).
+
+## Garment localization (YOLO)
+
+FashionCLIP embeds the whole picture, so a photo of an outfit gives one vector that mixes the shirt, the trousers
+and the shoes. `ml/yolo.py` puts a detector in front of it: every garment it finds becomes a *region*, the user
+(or the default, the most prominent one) picks one, and only that crop is embedded and searched. The API shape is
+in `docs/search-api.md`. On synthetic multi-garment photos it lifts category mAP@10 from 0.207 (whole image)
+to 0.771 (oracle 0.839), costing about 65 ms per search; method and numbers in `docs/ml-comparison.md`, which also compares
+FashionCLIP with Marqo-FashionSigLIP and an ImageNet ResNet-50.
+
+Choosing the weights (Apple M1, MPS, one 640 px photo; the three candidates were each run on collages of a
+t-shirt, jeans and shoes, a dress, a handbag and heels, and a shirt, trousers and a watch):
+
+| Candidate | Classes | Licence | ms (MPS) | Outcome |
+| --- | --- | --- | --- | --- |
+| `Bingsu/adetailer` `deepfashion2_yolov8s-seg.pt` | 13 DeepFashion2 garments | Apache-2.0 | 53 | Found tops, trousers, dresses, but **no shoes, bags or watches**, which are a third of the catalogue |
+| `kesimeg/yolov8n-clothing-detection` | `clothing`, `shoes`, `bags`, `accessories` | none stated | 30 | Covers every master category but is too coarse to name the garment, and boxed one item twice |
+| **`NovaAstro/YOLOv8m_fashion`** | 46 Fashionpedia classes | Apache-2.0 | 72 | Tops, pants, dresses, shoes, bags, watches, belts; also garment *parts* (sleeve, pocket, collar), which `ml/yolo.py` drops |
+
+All three were checked (pickle opcodes listed without loading, no `os`/`subprocess`/`eval` imports) before being
+loaded, and the chosen one is downloaded from a pinned commit because `.pt` files are pickles.
+
+Post-processing in `ml/yolo.py`: class-agnostic NMS (IoU 0.5), confidence 0.25, only garment and accessory classes
+(`GARMENT_CLASSES`), boxes below 1% of the picture dropped, at most 5 regions, 5% padding on the crop, and the order
+`score * sqrt(area)`. No detection means the whole picture is the one region. A plain catalogue photo is cropped too (the detector fires on
+about 90% of them), which costs a little: category mAP@10 0.809 against 0.825 for the whole picture. Detection and embedding share one lock around the GPU (`ml/gpu.py`) because MPS must not be used from two
+threads at once. Weights are about 200 MB, cached by Hugging Face on first start; the model loads in the lifespan
+and warms up like FashionCLIP does. Ultralytics is AGPL-3.0.
 
 ## Search settings
 

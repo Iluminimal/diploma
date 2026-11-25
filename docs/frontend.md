@@ -10,13 +10,13 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 | `/` | per request | apple.com-style tile home page, see "The home page" below |
 | `/products` | per request | URL-synced filters, sort and pagination; everything in the query string; the place for free-text search results |
 | `/c/{department}[/{group}[/{sub}[/{type}]]]` | per request | category pages, e.g. `/c/men/apparel/topwear/tshirts`: breadcrumbs (+ `BreadcrumbList` JSON-LD), drill-down sidebar with counts, the same filters and grid as `/products`; an unknown or empty category is a real 404 |
-| `/products/{id}/{slug}` | per request | gallery, size selector, breadcrumbs, a star rating under the name, **customer reviews** (average, distribution, sort and paging; a form for people who bought it), similar-products rail, metadata, JSON-LD (Product with `aggregateRating` once rated, and BreadcrumbList) |
+| `/products/{id}/{slug}` | per request | gallery, size selector, breadcrumbs, a star rating under the name, **customer reviews** (average, distribution, sort and paging; a form for people who bought it), a delivery line under the price (from the shipping methods), a **Complete the look** rail, the similar-products rail, recently viewed, metadata, JSON-LD (Product with `aggregateRating` once rated, and BreadcrumbList) |
 | `/search` | per request | visual search (client side) |
-| `/login`, `/register` (redirect), `/forgot-password` | per request | `/login` is one flow for signing in and signing up (`SignInFlow`): one "email or phone number" field, then a code for a phone number, or a password (or a code) for an email; a new account is created by its first code and asked for a name (see `docs/accounts.md`). `/register` redirects to it; `?next=` is honoured for same-site paths only; "Continue with Google" appears when the API has it configured (`GET /auth/providers`), and `/login?error=` shows a message for the few known codes (see `docs/commerce.md`) |
+| `/login`, `/register` (redirect), `/forgot-password` | per request | `/login` is one flow for signing in and signing up (`SignInFlow`), with a visible "Sign in | Create account" switch (`ModeSwitch`, `?mode=register`; staff accounts are never self-registered, see `docs/admin.md`): one "email or phone number" field, then a code for a phone number, or a password (or a code) for an email; a new account is created by its first code and asked for a name (see `docs/accounts.md`). `/register` redirects to `/login?mode=register`, where an email goes straight to a code instead of asking for a password; `?next=` is honoured for same-site paths only; "Continue with Google" appears when the API has it configured (`GET /auth/providers`), and `/login?error=` shows a message for the few known codes (see `docs/commerce.md`) |
 | `/cart` | static shell | the cart is client data (guest or account), see below |
 | `/checkout`, `/checkout/confirmation/{number}` | static shell | needs a session; demo payment |
 | `/account/profile`, `/account/orders`, `/account/orders/{number}`, `/account/addresses`, `/account/wishlist` | static shell | need a session. The profile page: name, how you sign in (phone, email, Google, password: add / change / verify / remove), your devices, delete account. An order page has a progress stepper, the tracking number, the history and a "Write a review" link per delivered item |
-| `/admin` (dashboard), `/admin/orders` (+ `{number}`), `/admin/products` (+ `new`, `{id}`), `/admin/inventory`, `/admin/customers` (+ `{id}`), `/admin/reviews` | static shell | administrators only; `noindex`; they have their own shell (sidebar, no shop header or footer: `ShopChrome` in the root layout skips the storefront chrome under `/admin`); see `docs/admin.md` |
+| `/admin` (the dashboard for an administrator, the warehouse board for a warehouse worker: `StaffHome`), `/admin/orders` (+ `{number}`), `/admin/products` (+ `new`, `{id}`), `/admin/customers` (+ `{id}`), `/admin/reviews`, `/admin/activity` (the staff activity log, administrator) | static shell | staff only (administrator or warehouse worker, each with their own sections); `noindex`; they have their own shell (sidebar, no shop header or footer: `ShopChrome` in the root layout skips the storefront chrome under `/admin`); see `docs/admin.md` |
 | `/sitemap/{n}.xml`, `/robots.txt` | per request | 10,000 products per sitemap file (`GET /catalog/sitemap` gives id, slug and last change); private and low-value paths are disallowed; `robots.txt` still works when the API is down |
 | `/icon`, `/apple-icon`, `/opengraph-image` | static | generated (no binary assets) |
 
@@ -36,6 +36,33 @@ Zustand. `make web` serves it on :3000; it needs `make api` for data.
 * **Sizes** (`catalog/sizes.ts`) come from the category (clothing, shoes, kids, belts; none for watches, bags, ...) because
   the catalogue has no size data. The API validates against the same table (`apps/api/src/angel/services/catalog/sizes.py`); keep the
   two in step.
+
+## Language
+
+The site is **Mongolian first**. `i18n/request.ts` picks the language from the `NEXT_LOCALE` cookie and otherwise uses
+`DEFAULT_LOCALE = "mn"`: the browser's `Accept-Language` is ignored, so an English-language browser still opens in
+Mongolian. English is one click away in the footer switcher (the choice is a one-year cookie); a visitor with no cookie
+whose browser prefers English is offered it by the banner. The currency follows the language until the shopper picks one
+(Mongolian → ₮, English → $).
+
+* Texts live in `messages/{mn,en}/*.json` (one namespace per area, `admin` included); `i18n/messages.test.ts` fails if a key is
+  missing on either side or a placeholder differs. Catalogue words (categories, colours, genders, seasons, usages) are
+  translated by `i18n/vocab-mn.ts`; a value without an entry shows in English, so a new dataset value needs a line there.
+  Product names come from the dataset and stay in English.
+* The API's own texts (error `title`/`detail`, emails, SMS, shipping method names) are Mongolian too. The web app maps each
+  error `type` to its own message in both languages (`lib/api/errors.ts`), so the English UI does not show the Mongolian
+  server text except as a last fallback.
+* The admin area follows the same language (it used to be English only) and has its own macOS-style look (`docs/admin.md`).
+  Everything is priced in togrog (`i18n/currency.ts`): there is no currency switcher and no exchange rate.
+* **One set of form and status primitives** (Apple look: pill buttons, 12px-radius fields, hairlines): `ui/button`, `ui/input`,
+  `ui/native-select` (a real `<select>` with a chevron; `variant="pill"` for toolbars; replaces the old `selectClass` and the
+  admin-only select), `ui/checkbox`, `ui/form-alert` (the one-line error above a form) and `Field`. Do not restyle them with
+  `h-11 rounded-xl`-type overrides; use `size`/`variant`. Text uses the `type-*` scale (`type-body` 17px, `type-caption` 14px,
+  `type-fine` 12px), not `text-sm`/`text-[…rem]`; status colours are tokens (`success`, `warning`, `warning-foreground`, `star`,
+  `destructive-text`) so dark mode needs no per-component overrides. Focus rings are `ring-3 ring-ring/50` everywhere. There is
+  no decorative motion beyond the page transitions (no fly-to-cart, no counting numbers).
+* End-to-end tests read English, so `playwright.config.ts` and every context a spec creates carry an `NEXT_LOCALE=en`
+  cookie (`e2e/support/locale.ts`); `e2e/language.spec.ts` covers the Mongolian default.
 
 ## Design language (Apple-style)
 
@@ -298,7 +325,7 @@ How the pieces fit (API side: `docs/commerce.md`):
   charge"**; card values are validated for shape but never sent anywhere. "Pay now" creates the order (stock is reserved
   server side, `Idempotency-Key` per attempt, kept across a dropped connection and renewed after any definite answer) and
   calls `simulate-payment`, which only exists when the API runs with `PAYMENTS_MODE=offline`. The confirmation page polls
-  until the order is paid. No Stripe code or keys are in the web app.
+  until the order is paid. With QPay it shows the QR code and bank-app links and reads the order status from our own API every 3 seconds (paused in a hidden tab), so it moves to the confirmation page by itself once the server has settled the payment; "check my payment" asks QPay once, for when the callback cannot reach the API. No payment keys are in the web app.
 * **Reviews** (`features/reviews`): the product page renders the first page on the server and the browser refetches a current
   copy at once (`initialDataUpdatedAt: 0`), so a new or hidden review shows without waiting for Next's 60 s cache. A signed-in
   customer's request carries their token and learns whether they bought it and what their own review is. The star picker is a
@@ -328,10 +355,13 @@ the OS camera sheet on touch devices (`<input capture="environment">`), and a `g
 
 Results: grid with a "NN% match" badge, a "Detected: Shirts" chip (the zero-shot guess is a suggestion; picking a
 category, from the top three or any article type, applies it as `article_type`), quick filter chips plus a sheet for colour,
-price, season and occasion, and a "refine with words" box (adds `query`, which switches the request to hybrid search).
+price, season and occasion, and a "refine with words" box (adds `query` and `interpret=true`, which switches the request to hybrid search). A line under it lists what the API understood from the words ("Colour: Blue", "Up to ₮ 175,000"; `AppliedFilters`); to change it, edit the text.
 Filter changes are debounced 400 ms and results are cached per (photo, filters, category, text), so going back to an
 earlier combination does not spend one of the API's 20 image searches per minute. Rate-limit, size, type and network
 errors are shown in plain words (`lib/api/errors.ts`).
+
+On a product page, the "You may also like" rail has the same box (`features/catalog/similar-refine.tsx`): the server
+renders the plain rail, and a refinement calls `GET /products/{id}/similar?query=…&interpret=true` and swaps the rail.
 
 Not done: cropping the photo before searching (SPEC §5 mentions "preview with crop").
 
@@ -447,3 +477,60 @@ check with `make lighthouse` after touching the header or the home page.
 
 Not done: statically generating the home page (it reads the API at request time, see Routes), and Lighthouse in CI
 (runner variance would make a hard gate flaky; `make lighthouse` is the gate).
+
+
+## The home page look: GitHub style (`styles/github.css`) and its motion (`styles/effects.css`)
+
+Only the home page is GitHub-styled. Its wrapper is `.gh` (`app/page.tsx`): it redefines the colour tokens so `Button`, `ProductCard` and `ProductRail` pick them
+up on this page and nowhere else. Light is the default (`#ffffff` canvas, `#f6f8fa` cards, `#d1d9e0` hairlines, green `#1f883d` primary button, `#0969da`
+links); `.dark .gh` gives the dark pair (`#0d1117`, `#161b22`, `#30363d`, `#238636`, `#58a6ff`), so the page follows the theme. Every colour that is not a
+standard token (hover border and glow, glow gradients, accent headline gradient, eyebrow purple/green) is a `--gh-*` variable defined in both blocks. Fonts are
+Geist Sans (`features/home/fonts.ts`, Cyrillic included), imported only by the home page so Next.js loads them only for that route. (GitHub's own Mona Sans has no
+Cyrillic subset, so it cannot carry Mongolian.) The store's default theme is light: a visitor with no saved choice gets light, whatever the OS prefers; "dark"
+and "system" are used only when picked (`ThemeScript`, `ThemeProvider`).
+
+| Part | What it is |
+| --- | --- |
+| **Hero** | purple/blue/pink glow behind it (`.gh-glow`, three radial gradients, no blur, never animated); left: coloured eyebrow (`.gh-eyebrow`), big headline whose words rise one after another out of their own mask (`SplitWords`, `translate` only, text always in the DOM), green + outlined buttons; right: a framed card (`.gh-frame`) with three real products, the middle one scanned. One column and centred on a phone |
+| **Popular** | `PopularNow` (`shelves.tsx`): the 12 most popular in-stock products (`popular()` in `home-data.ts`, `sort=popular`) in a rail, right after the hero, with a `Shop all →` link to `/products?sort=popular` |
+| **Departments** | three equal cards (`.tile .gh-card`), each photo is the second most popular apparel piece of that department (so it never repeats the shelf above): photo on top (settles from 1.22x, `.reveal-scale`), a coloured dot, the name and `↗` below; the whole card is one link; the border and a blue glow light up on hover |
+| **Photo-search story** | `.story` is 260vh tall with a sticky stage; one `view-timeline: --story` runs: step 1 (photo), step 2 (blue scan line sweeps, detection frames appear), step 3 (three similar pieces fly in); the active step card is bright, the others dim, a progress line fills. No pin without scroll-driven support, on a phone or with reduced motion: everything is visible at normal height |
+| **Shelves** | new arrivals and recently viewed: a heading with a blue `All →` link and bordered cards |
+| **Card tilt, magnet, fly to bag, heart burst** | unchanged from before: `CardTilt` (one delegated pointer listener in the root layout), `flyToBag` (Web Animations API), `.heart-burst`, `.free-glow`, `.card-in` |
+
+Rules that `src/styles/effects.test.ts` enforces: no animation or transition outside `prefers-reduced-motion: no-preference` (it looks inside nested `@media`
+and `@supports`), no hover outside a hover-capable pointer, scroll-driven effects only under `@supports (animation-timeline: view())`, no layout property
+and no blur in a keyframe. The hero headline and buttons are never hidden (no `opacity`); below-the-fold sections are `defer-render` (except the pinned
+story, whose scroll length must be real) and their images `fetchPriority="low"`.
+
+Home page order: hero -> popular -> departments -> the pinned photo-search story -> new arrivals -> recently viewed. Copy is deliberately short: the hero has no
+paragraph, the department cards only a name, the story steps only a title.
+
+## Security headers and the CSP
+
+`src/proxy.ts` runs on every page (not `/api`, `/media`, static files or prefetches) and puts a **per-request nonce** into
+`Content-Security-Policy` (`src/lib/security-headers.ts`, pure functions with tests): scripts run only with that nonce
+(`'strict-dynamic'` trusts what they load), styles may be inline, images are this origin, `data:`, `blob:` and https (Google profile
+photos), `connect-src` is this origin plus the API's own origin (a few calls, such as search suggestions and the category tree, go to the
+API directly), frames, objects and other `<base>`s are closed, and violations go to `POST /api/v1/security/csp-report` (logged as
+`csp_violation`, query strings dropped). `CSP_MODE` is `enforce` in production and `report-only` in development (HMR needs `unsafe-eval`,
+allowed there only); `upgrade-insecure-requests` is added only behind https so a local http build still works. The nonce reaches the
+layout's theme script through the request header (`app/layout.tsx` reads it; do not make `ThemeScript` itself async, React then streams it
+out of `<head>` and hydration fails). JSON-LD scripts carry no nonce: they are data, not executed. Zod is put in `jitless` mode
+(`lib/zod-jitless.ts`, imported before any schema in client code) so it never tries `new Function`, which the CSP forbids.
+`next.config.ts` adds the fixed headers: `X-Content-Type-Options`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options:
+DENY`, `Permissions-Policy` (camera for this origin only), `Cross-Origin-Opener-Policy: same-origin` and, in production, HSTS.
+The API adds its own (`core/security_headers.py`): nosniff, no-referrer, `X-Frame-Options`, `Cross-Origin-Resource-Policy: same-site`, a
+closed `Permissions-Policy`, `Content-Security-Policy: default-src 'none'` (not on the Swagger page) and HSTS when `COOKIE_SECURE`.
+
+## Storefront shortcuts (Phase 3)
+
+* **Quick add** (`features/cart/quick-add.tsx`): a "+" over the bottom-right of every in-stock card (on hover or focus with a mouse,
+  always on touch). A product without sizes goes in with one tap; otherwise a small popover asks for the size and adds as soon as
+  one is chosen, then opens the bag like the product page does. Not shown to staff. It sits next to the card's link, not inside it.
+* Cards say **Few left** (`low_stock`); the sort menu has **Best selling** and **Top rated**; an empty result and the cart page
+  show a **Best sellers** rail (`PopularRail`, server component).
+* **Header search** highlights the typed part of each suggestion (`Highlight`, a `<mark>`), and with nothing typed and no recent
+  searches offers four popular products.
+* Not done on purpose: "notify me when back" (no email transport yet), and remembering only searches that had results (the search
+  box cannot know yet when it is submitted). The checkout summary was already sticky.

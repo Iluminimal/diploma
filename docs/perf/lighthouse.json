@@ -1,176 +1,160 @@
 {
   "lighthouse": "13.5.0",
   "preset": "mobile, simulated slow 4G",
-  "runs": 5,
-  "measured": "2026-10-12T15:49:07.407Z",
+  "runs": 3,
+  "measured": "2026-11-25T16:05:07.227Z",
   "pages": {
     "home": {
       "url": "/",
       "runs": [
-        88,
-        91,
-        91,
-        91,
-        91
+        82,
+        81,
+        90
       ],
-      "performance": 91,
+      "performance": 82,
       "accessibility": 100,
-      "bestPractices": 100,
+      "bestPractices": 96,
       "seo": 100,
-      "fcp": 1511,
-      "lcp": 3488,
-      "tbt": 26,
+      "fcp": 1367,
+      "lcp": 4726,
+      "tbt": 80,
       "cls": 0,
-      "si": 1511,
-      "transferKb": 434,
-      "jsKb": 217
+      "si": 1885,
+      "transferKb": 631,
+      "jsKb": 295
     },
     "listing": {
       "url": "/products",
       "runs": [
-        92,
-        93,
-        93,
-        92,
-        92
+        83,
+        86,
+        86
       ],
-      "performance": 92,
+      "performance": 86,
       "accessibility": 100,
-      "bestPractices": 100,
+      "bestPractices": 96,
       "seo": 100,
-      "fcp": 1059,
-      "lcp": 3329,
-      "tbt": 23,
+      "fcp": 1211,
+      "lcp": 4165,
+      "tbt": 29,
       "cls": 0,
-      "si": 1059,
-      "transferKb": 398,
-      "jsKb": 212
+      "si": 1211,
+      "transferKb": 542,
+      "jsKb": 312
     },
     "filtered": {
       "url": "/products?gender=Women&sort=price_asc",
       "runs": [
-        90,
-        93,
-        93,
-        93,
-        93
+        86,
+        87,
+        87
       ],
-      "performance": 93,
+      "performance": 87,
       "accessibility": 100,
-      "bestPractices": 100,
+      "bestPractices": 96,
       "seo": 100,
-      "fcp": 1061,
-      "lcp": 3183,
-      "tbt": 24,
+      "fcp": 1214,
+      "lcp": 4094,
+      "tbt": 29,
       "cls": 0,
-      "si": 1061,
-      "transferKb": 366,
-      "jsKb": 212
+      "si": 1214,
+      "transferKb": 498,
+      "jsKb": 312
     },
     "category": {
       "url": "/c/men/apparel",
       "runs": [
-        89,
-        92,
-        91,
-        92,
-        92
+        67,
+        87,
+        87
       ],
-      "performance": 92,
+      "performance": 87,
       "accessibility": 100,
-      "bestPractices": 100,
+      "bestPractices": 96,
       "seo": 100,
-      "fcp": 1059,
-      "lcp": 3426,
-      "tbt": 34,
+      "fcp": 1216,
+      "lcp": 4109,
+      "tbt": 60,
       "cls": 0,
-      "si": 1059,
-      "transferKb": 414,
-      "jsKb": 220
+      "si": 1216,
+      "transferKb": 531,
+      "jsKb": 312
     },
     "product": {
-      "url": "/products/41874/avirate-black-silvery-grey-dress-59988",
+      "url": "/products/41885/alma-women-blue-kurta-60000",
       "runs": [
-        93,
-        96,
-        93,
-        96,
-        93
+        85,
+        88,
+        86
       ],
-      "performance": 93,
+      "performance": 86,
       "accessibility": 100,
-      "bestPractices": 100,
+      "bestPractices": 96,
       "seo": 100,
-      "fcp": 1061,
-      "lcp": 3243,
-      "tbt": 27,
+      "fcp": 1209,
+      "lcp": 4156,
+      "tbt": 20,
       "cls": 0,
-      "si": 1061,
-      "transferKb": 374,
-      "jsKb": 279
+      "si": 1209,
+      "transferKb": 529,
+      "jsKb": 372
     },
     "search": {
       "url": "/search",
       "runs": [
-        93,
-        93,
-        93,
-        93,
-        93
+        90,
+        96,
+        92
       ],
-      "performance": 93,
+      "performance": 92,
       "accessibility": 100,
-      "bestPractices": 100,
+      "bestPractices": 96,
       "seo": 100,
-      "fcp": 909,
-      "lcp": 3241,
-      "tbt": 21,
+      "fcp": 932,
+      "lcp": 3288,
+      "tbt": 73,
       "cls": 0,
-      "si": 909,
-      "transferKb": 354,
-      "jsKb": 304
+      "si": 932,
+      "transferKb": 463,
+      "jsKb": 378
     },
     "cart": {
       "url": "/cart",
       "runs": [
-        96,
-        96,
-        96,
-        96,
-        96
+        80,
+        88,
+        88
       ],
-      "performance": 96,
+      "performance": 88,
       "accessibility": 100,
-      "bestPractices": 100,
-      "seo": 63,
-      "fcp": 907,
-      "lcp": 2788,
-      "tbt": 16,
+      "bestPractices": 96,
+      "seo": 66,
+      "fcp": 1067,
+      "lcp": 3886,
+      "tbt": 62,
       "cls": 0,
-      "si": 907,
-      "transferKb": 308,
-      "jsKb": 257
+      "si": 1067,
+      "transferKb": 504,
+      "jsKb": 342
     },
     "login": {
       "url": "/login",
       "runs": [
-        94,
-        94,
-        94,
-        94,
+        91,
+        91,
         94
       ],
-      "performance": 94,
+      "performance": 91,
       "accessibility": 100,
-      "bestPractices": 100,
+      "bestPractices": 96,
       "seo": 63,
-      "fcp": 911,
-      "lcp": 3107,
-      "tbt": 23,
+      "fcp": 921,
+      "lcp": 3442,
+      "tbt": 93,
       "cls": 0,
-      "si": 919,
-      "transferKb": 354,
-      "jsKb": 291
+      "si": 1104,
+      "transferKb": 406,
+      "jsKb": 323
     }
   }
 }

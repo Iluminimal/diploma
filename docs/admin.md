@@ -1,56 +1,139 @@
 # Admin area
 
 The shop's back office: a dashboard, orders through their whole life (ship, deliver, cancel, refund, notes), the
-catalogue, stock, customers and review moderation. API under `/api/v1/admin` (interactive docs: `/api/v1/docs`), UI under
+catalogue, stock, customers and review moderation. Two staff roles share it (see "Who can do what"): the **administrator**
+runs the shop, the **warehouse worker** (агуулахын ажилтан) looks after the products, the stock and the shipping. API under `/api/v1/admin` (interactive docs: `/api/v1/docs`), UI under
 `/admin`. The customer-facing side of orders and reviews is in `docs/commerce.md`.
 
-## Getting an administrator, and signing in
+## Getting a staff account, and signing in
 
-Registering through the app always creates a customer. The only way to get an administrator is the command line, so
-there is no sign-up form to attack:
+Registering through the app always creates a customer. The only way to get an administrator or a warehouse worker is the
+command line, so there is no sign-up form to attack:
 
 ```bash
 make create-admin EMAIL=you@example.com             # asks for a password (twice, not echoed)
 make create-admin EMAIL=you@example.com ARGS=--keep-password   # promote an existing account, keep its password
 ADMIN_PASSWORD=... make create-admin EMAIL=...      # non-interactive (CI); never pass a password as an argument
 cd apps/api && uv run python -m angel.cli.admin revoke-admin --email you@example.com
+
+make create-warehouse EMAIL=worker@example.com      # the same for a warehouse worker (same flags and ADMIN_PASSWORD)
+cd apps/api && uv run python -m angel.cli.admin revoke-warehouse --email worker@example.com
 ```
 
-An administrator who signs in (password form, register form or Google) and did not ask for a particular page lands on
-`/admin`; one who was headed somewhere else (`?next=/cart`) still goes there. Customers land where they always did. The
-rule is `landingPath` in `features/auth/landing.ts` for the forms and `OAuthService.complete` for Google.
+Both commands turn the account into the role you ask for, so `create-warehouse` on an administrator's email moves them
+to the warehouse role (and the other way round). `revoke-*` turns either back into a customer.
 
-`users.role` is `customer` or `admin` (a CHECK constraint). The role is **read from the database on every admin request**
-and is never copied into the access token, so demoting or deactivating someone takes effect immediately, even for a token
-that has not expired. Everything admin is behind `get_current_admin` (`core/deps.py`): 401 without a valid token (or for
-a deactivated account), 403 (`urn:angel:problem:forbidden`) for a customer. Admin routes also have their own rate limit
-(`RATE_LIMIT_ADMIN`, default 120 per minute per client address).
+A staff member who signs in (password form, register form or Google) and did not ask for a particular page lands on
+their own home: `/admin` for both. The administrator gets the shop dashboard, the warehouse worker the warehouse board (see
+"Dashboard" and "The warehouse board"); one who was headed somewhere else (`?next=/cart`) still goes there. Customers land where they always
+did. The rule is `landingPath` / `staffHome` in `features/auth/` for the forms and `OAuthService.complete` for Google
+(which sends both roles to `/admin`).
+
+`users.role` is `customer`, `admin` or `warehouse` (a CHECK constraint). The role is **read from the database on every
+admin request** and is never copied into the access token, so demoting or deactivating someone takes effect immediately,
+even for a token that has not expired. Access is decided by `require_roles(...)` in `core/deps.py`, which gives three
+dependencies: `AdminDep` (administrator), `WarehouseDep` (warehouse worker) and `StaffDep` (either). All of them answer 401
+without a valid token (or for a deactivated account) and 403 (`urn:angel:problem:forbidden`) for the wrong role. The admin
+router (`api/v1/admin/__init__.py`) puts the rate limit, `StaffDep` and `no-store` in front of everything; the customers,
+reviews, stats, audit and export sections add `get_current_admin` on top, and the products, orders and fulfilment-board
+endpoints name their own role.
+Admin routes also have their own rate limit (`RATE_LIMIT_ADMIN`, default 120 per minute per client address). Staff cannot
+use the cart or checkout (`forbid_staff_shopping`), and neither role can delete its own account from the profile page.
+
+### Who can do what
+
+| | administrator | warehouse worker |
+| --- | --- | --- |
+| Look at products, categories, stock | yes (read-only) | yes |
+| Create, edit, replace the photo, withdraw or restore a product, set stock | no (403) | **yes** |
+| Look at orders | yes | yes |
+| Ship, deliver | no (403) | **yes** |
+| Cancel, refund, internal notes | **yes** | no (403) |
+| Customers, reviews, dashboard figures, activity log, CSV exports | **yes** | no (403) |
+| The warehouse board (`GET /admin/fulfillment`) | yes | **yes** |
+
+The split is the point: whoever handles the goods records what happens to them, and whoever handles the money and the
+customers does not touch the shelves. Every change by staff is written to the **activity log** (see below) and logged with
+the actor's id, and the order timeline records who shipped or delivered. The warehouse worker's sidebar has the board,
+Orders and Products; their badges come from the board's own numbers (orders to ship, products sold out or running low)
+because the dashboard query is the administrator's.
 
 ## The shell
 
-`/admin` has its own frame instead of the storefront's: a sidebar (Dashboard, Orders, Products, Inventory, Customers,
-Reviews), "View store", the theme toggle and the account menu; on a phone the sidebar becomes a strip of pills across the
-top. The storefront's header and footer are not rendered there (`ShopChrome` in the root layout checks the path), so there
+`/admin` has its own frame instead of the storefront's, in the style of a macOS window: a translucent sidebar with two groups
+(Store: Dashboard, Orders, Products; People: Customers, Reviews; Oversight: Activity log; a warehouse worker sees only Dashboard, Orders and Products) and number
+badges (orders to ship, products to restock, taken from the dashboard's own stats query for an administrator), a blurred top bar (global search, "View store", the theme toggle and the
+account menu) and white panels on a grey canvas (`admin-canvas` / `admin-surface` in `globals.css`; inverted in dark mode). On
+a phone the sidebar becomes a scrolling strip of pills and lists become cards. **⌘K / Ctrl+K** (or `/`, or the search box)
+opens a command palette (`features/admin/command-palette.tsx`, built on `cmdk`): jump to a section, or type two characters or
+more to find an order number, a product or a customer; the results come from the existing `?q=` admin list endpoints, so there
+is no extra API. The storefront's header and footer are not rendered there (`ShopChrome` in the root layout checks the path), so there
 is no shop navigation to get lost in. `AdminGate` shows signed-out visitors the login page (with a way back) and customers
-a "no access" message, and their browser sends no admin request at all. That gate is for the visitor's benefit; **the API
+a "no access" message, and their browser sends no admin request at all; `RoleGate` does the same inside the area for a
+section that belongs to the other staff role (a warehouse worker opening the dashboard, an administrator opening "New product"). That gate is for the visitor's benefit; **the API
 is what enforces access**, and the e2e suite checks both. `/admin` is `noindex`, disallowed in `robots.txt`, and covered by
 the edge proxy's session check.
 
+The brand block at the top-left (mark, "Angel", the role as a small pill) is centred vertically and starts 24px from the edge, the
+same line as the icons and group titles below it.
+
+The admin follows the site's language (Mongolian by default, English from the footer switcher; texts in `messages/*/admin.json`) and
+shows prices in the shop currency (₮), the same as the storefront. Product prices are typed in whole togrog.
+
 ## Dashboard
 
-`GET /admin/stats?days=30` (7, 30 or 90 in the UI; 1 to 366 in the API) and `/admin?days=7`. Everything is computed from the
-orders, order items, products and users tables: there is no separate reporting store.
+`GET /admin/stats?days=30` (7, 30, 90 or 365 in the UI; 1 to 366 in the API) and `/admin?days=7`, or a **custom period**:
+`?start=2026-11-01&end=2026-11-25` (both dates, the end inclusive and not in the future, at most 366 days; the UI has two date
+fields; anything invalid falls back to 30 days). Everything is computed from the orders, order items, products and users
+tables: there is no separate reporting store.
 
 * **Revenue** is the total of orders that are `paid`, `shipped` or `delivered`, **by the day they were paid** (UTC days). A
   refunded order is not revenue; a cancelled one never was. **Orders**, **units** and **average order** use the same set.
 * **New customers** are accounts created in the period (administrators and anonymised accounts are left out).
 * Each figure is compared with the **equally long period just before**: "up 12%", "unchanged", "down 40%", or, when there was
   nothing before, "new" (a percentage of zero would be meaningless).
-* The chart is drawn by hand (no chart library): SVG bars (`RevenueChart`) with the axis labels as text around them and the
-  same numbers as a table under "Show the figures as a table", so it works with a screen reader and does not blur on a phone.
+* Each figure is a tile (`Stat`) with a small trend line; the chart is drawn by hand (no chart library): a smooth area
+  curve (`RevenueChart`, monotone interpolation so a quiet day never dips below zero) with a hover tooltip, the axis labels as
+  text, and the same numbers as a table under "Show the figures as a table", so it works with a screen reader and does not
+  blur on a phone.
+* Six tiles: revenue, orders, average order, units sold, new customers and **repeat buyers** (buyers with 2 or more orders in
+  the period, of all who bought); the first five carry a trend line over the period's days (`Sparkline`).
+* **Order funnel**: of the orders *placed* in the period, how many were paid, shipped, delivered, cancelled, refunded (each
+  counted by its timestamp, as a share of those placed).
+* **Operations**: orders paid more than `SHIP_SLA_HOURS` (default 24) ago and still not shipped, the average time from payment to
+  shipping, the refund rate (of orders paid in the period) and the cancellation rate (of orders placed). A rate with nothing
+  to divide is `null`, shown as "No data", never as 0%.
+* **Sales by category**: revenue by top-level category, the six biggest and the rest as "Other".
+* **Recent staff activity**: the last eight rows of the activity log.
 * **Needs attention** links to what is waiting: paid orders to ship, orders awaiting payment, products low on stock
   (`LOW_STOCK_THRESHOLD`, default 5, at or below and not yet sold out) and sold out. Also: recent orders, top products by
   revenue, the low-stock products.
+
+### CSV exports
+
+Administrator only. `GET /admin/export/stats` (the same period parameters) is one row per day: date, revenue, orders, units,
+new customers. `GET /admin/export/orders` takes the order list's `q` and `status` and returns up to 10 000 orders, newest first.
+Both come as UTF-8 with a BOM, so Excel opens Mongolian text correctly, and any text that starts with `=`, `+`, `-` or `@` is
+quoted with a leading `'` so a customer's name cannot become a spreadsheet formula (`core/csv_export.py`). The buttons download through the
+authenticated client, because a plain link would not carry the access token.
+
+## The warehouse board
+
+`/admin` for a warehouse worker (`GET /admin/fulfillment`, open to both staff roles, with no revenue or customer figures): four
+tiles (to ship, **overdue** against `SHIP_SLA_HOURS`, shipped today with the number delivered, average hours to ship over the
+last 7 days), the **shipping queue** (paid orders, longest waiting first, 15 rows, a late one marked, each linking to the order
+to ship it), **stock alerts** (sold out and low products, emptiest first, with a field to set the stock right there) and the
+worker's own last ten actions. It refreshes every minute while the tab is open. "Today" is the UTC day, like the dashboard.
+
+## Activity log
+
+Every change by staff is one row of `staff_audit_log` (`models/audit.py`): who (`actor_id`, plus `actor_label` so the name survives
+a deleted account), the action (`product.create|update|image|activate|deactivate|stock`, `order.ship|deliver|cancel|refund|note`),
+the object (`product` id or `order` number) and a small JSON `data` (stock `previous` and `quantity`, the carrier, the reason).
+The row is written **in the same transaction** as the change, so a refused or failed action leaves no trace and a successful one
+cannot lose its row; setting a stock to the value it already has logs nothing. Rows are only ever added and are not pruned yet.
+`GET /admin/audit?actor_id&entity_type&action&page` (administrator) feeds `/admin/activity`: a filterable, paged table in which
+a name, an action or an object links to the matching filter or page.
 
 ## Orders
 
@@ -87,22 +170,34 @@ timeline shows the first six types and only the carrier and tracking number or t
 
 **UI.** `/admin/orders` has a tab per status with counts ("To ship" is `paid`), search by number or email, and paging in the
 URL. An order page has a progress stepper, the lines, a shipment panel, customer and payment, a history timeline and the note
-box. The buttons shown depend on the state (`availableActions`); ship, refund and cancel open dialogs with their fields
+box (administrators only). The buttons shown depend on the state and the role (`availableActions`); ship, refund and cancel open dialogs with their fields
 (carrier and tracking number; reason and "put the items back in stock", which defaults to on for an order that has not left
 the warehouse and off otherwise; an optional note), and a failed action keeps the dialog open.
 
-## Inventory and stock
+## Stock
 
 `PUT /admin/products/{id}/stock {quantity}` sets the number on the shelf (0 to 100 000) under the product row lock, the same
 lock checkout takes to reserve stock, so a recount cannot be lost to a sale at the same moment (or the other way round).
 It writes the number given, not a difference, so two people recounting cannot compound. `GET /admin/products` gained
-`stock=low|out`. `/admin/inventory` lists what is on sale, lowest stock first, with an inline number field and Save per
-product, tabs for all / low / sold out, and search. Stock stays per product, not per size.
+`stock=low|out`, which the products list offers as a "Stock level" select (any / low / sold out) and the dashboard and the
+sidebar badge link to (`/admin/products?stock=low`); sort by "Lowest stock first" to work through it. The number itself is set
+on the product's edit page (there is no separate inventory screen). Stock stays per product, not per size. Only a warehouse
+worker can change it; an administrator sees the number and the filters but the field is read-only. (A refund with "put the
+items back in stock" still returns units: that is part of the administrator's order action, not a manual change.)
+
+## Lists, selection and bulk actions
+
+Every list uses the same pieces from `components/admin/`: `DataTable` (sticky header, sortable column headers that link to
+the `sort` URL parameter and set `aria-sort`, row checkboxes, one **card list instead of the table on a phone**, never
+both), `SegmentedNav` (tabs with counts, `aria-current`), `NativeSelect` (`components/ui`), `SearchForm`, `StatusDot`, `Panel`, `Stat` and
+`BulkBar`. Products and reviews can be **selected and changed at once**: a floating bar offers Withdraw / Restore (products) or
+Hide / Publish (reviews), runs the existing per-item endpoints four at a time (`features/admin/bulk.ts`), and reports how many
+worked. Products also have a table / photo-grid switch (remembered in the browser).
 
 ## Customers
 
 `GET /admin/customers` (search by name or email, `status`, `sort` newest / spent / orders / name), `GET /admin/customers/{id}`
-(profile, how they sign in, their latest orders). "Orders" counts orders that were paid (including later refunded ones);
+(profile, how they sign in, their latest orders; the page shows tiles for orders, spent, average order and last order). "Orders" counts orders that were paid (including later refunded ones);
 "spent" is what was paid for the ones that stand.
 
 `POST /admin/customers/{id}/deactivate|activate` suspends or reinstates an account. **Suspending** sets `is_active = false`
@@ -118,6 +213,9 @@ command-line action.
 transaction) and stays with its author, who is told it is hidden. The rules for writing reviews are in `docs/commerce.md`.
 
 ## Products
+
+Everything below needs a warehouse worker, except the three `GET`s, which any staff member may call (an administrator
+looks, a warehouse worker changes).
 
 | Endpoint | |
 | --- | --- |
@@ -160,7 +258,7 @@ addresses, payments, tracking numbers, history events, stock decrements and revi
 orders are fixed: one awaiting payment, two just paid). It is deterministic for a `--seed`, **refuses `APP_ENV=prod`**, does
 nothing if the demo customers already exist, and `make seed-demo-clean` removes exactly what it made, gives the stock back and
 recomputes the affected ratings. Options: `make seed-demo ARGS="--customers 40 --orders 120 --days 60 --seed 7"`. Refunding a
-demo order works with `PAYMENTS_MODE=offline` (the default for development); a real Stripe key would refuse the made-up
+demo order works with `PAYMENTS_MODE=offline` (the default for development); a real QPay gateway would refuse the made-up
 payment ids.
 
 ## Tests
@@ -172,14 +270,14 @@ payment ids.
   restock on and off, cancel, emails, events, what the customer may see), `test_admin_dashboard_api.py` (the figures against
   hand-built orders, customers, suspending, stock, access), `test_reviews_api.py` (below), `test_demo_seed.py` (the data is
   consistent, repeatable and removable), `test_admin_units.py`.
-* Web: `src/features/admin/*.test.ts(x)` (gate, nav, dashboard, orders and their dialogs, inventory, customers, reviews,
+* Web: `src/features/admin/*.test.ts(x)` (gate, nav, dashboard, orders and their dialogs, customers, reviews,
   list parameters, the figures' arithmetic), `components/shop-chrome.test.tsx`, `features/auth/landing.test.ts`.
-* End to end: `apps/web/e2e/admin.spec.ts` and `admin-panel.spec.ts`; accessibility sweeps in `a11y.spec.ts`; see
+* End to end (run as an administrator and as a warehouse worker, `make e2e` creates both): `apps/web/e2e/admin.spec.ts` and `admin-panel.spec.ts`; accessibility sweeps in `a11y.spec.ts`; see
   `docs/e2e.md`.
 
 ## Limits
 
-No product deletion, bulk actions, audit log beyond the order history, product description or gallery of several photos, and
-no S3 storage (photos go to local disk through the `Storage` interface, as in development). One administrator role: no finer
-permissions, and nobody can be promoted from the UI. No discount codes, returns, tax or partial refunds. Emails are logged,
+No product deletion, product description or gallery of several photos, no retention policy for the activity log, and
+no S3 storage (photos go to local disk through the `Storage` interface, as in development). Two staff roles and no finer
+permissions inside them, and nobody can be promoted from the UI. No stock movement history beyond the activity log's before/after. No discount codes, returns, tax or partial refunds. Emails are logged,
 not sent.
